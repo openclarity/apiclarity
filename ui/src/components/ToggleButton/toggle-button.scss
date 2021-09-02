@@ -1,0 +1,14 @@
+@import 'utils/scss_variables.module.scss';
+
+.toggle-button-wrapper {
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+    cursor: pointer;
+
+    .toggle-button-title {
+        font-size: 14px;
+        line-height: 19px;
+        color: $color-grey-black;
+    }
+}

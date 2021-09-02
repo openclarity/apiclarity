@@ -1,0 +1,35 @@
+@import 'utils/scss_variables.module.scss';
+
+.ag-button {
+    border: none;
+    background-color: transparent;
+    height: 28px;
+
+    &.ag-button--primary {
+        font-size: 14px;
+        line-height: 16px;
+        border-radius: 50px;
+        display: inline-block;
+        background-color: $color-main-light;
+        color: $color-grey-black;
+        padding: 0px 25px;
+
+        &:disabled {
+            background-color: $color-grey-light;
+            color: $color-grey;
+        }
+    }
+    &.ag-button--secondary {
+        font-size: 12px;
+        line-height: 16px;
+        color: $color-main;
+        text-decoration: underline;
+        padding: 0;
+    }
+    &.clickable:not(:disabled) {
+        cursor: pointer;
+    }
+    &:disabled {
+        cursor: not-allowed;
+    }
+}

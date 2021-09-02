@@ -1,0 +1,22 @@
+@import 'utils/scss_variables.module.scss';
+
+.tag-wrapper {
+    display: inline-block;
+    
+    .tag-container {
+        background-color: $color-main;
+        color: white;
+        text-transform: uppercase;
+        padding: 5px 10px;
+        font-size: 12px;
+        line-height: 18px;
+        display: inline-block;
+
+        &.rounded {
+            padding: 5px;
+            font-size: 14px;
+            line-height: 14px;
+            border-radius: 2px;
+        }
+    }
+}

@@ -1,0 +1,9 @@
+@import 'utils/scss_variables.module.scss';
+
+.chart-tooltip-content {
+    background-color: $color-grey-black;
+    color: white;
+    font-size: 12px;
+    line-height: 18px;
+    padding: 10px;
+}

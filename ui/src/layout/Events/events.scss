@@ -1,0 +1,60 @@
+@import 'utils/scss_variables.module.scss';
+
+.events-page {
+    .events-page-title {
+        .icon {
+            color: $color-main;
+            margin-left: 10px;
+        }
+    }
+    .events-filters-wrapper {
+        position: relative;
+
+        .time-filter-wrapper {
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+        .general-filter-wrapper {
+            .filter-form-wrapper {
+                position: relative;
+
+                .custom-filter-display-wrapper {
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                }
+            }
+        }
+    }
+    .events-tab-title {
+        display: flex;
+        align-items: center;
+
+        .icon {
+            margin-right: 7px;
+            width: 24px;
+            height: 24px;
+        }
+    }
+    .page-container {
+        position: relative;
+
+        .table-wrapper {
+            .pagination-container {
+                position: absolute;
+                top: 10px;
+                right: 20px;
+            }
+            .specs-diff-alert-icon {
+                width: 14px;
+                height: 14px;
+                color: $color-warning;
+            }
+        }
+        .events-chart-wrapper {
+            width: 100%;
+            height: 500px;
+        }
+    }
+}

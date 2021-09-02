@@ -1,0 +1,22 @@
+export const ICON_NAMES = {
+    DASHBOARD: "dashboard",
+    INVENTORY: "inventory",
+    EVENTS: "events",
+    X_MARK: "x-mark",
+    CHECK_MARK: "check-mark",
+    STROKE: "stroke",
+    SORT: "sort",
+    CHEVRON_RIGHT: "chevron-right",
+    CHEVRON_RIGHT_DOUBLE: "chevron-right-double",
+    ALERT: "alert",
+    ALERT_ROUND: "alert-round",
+    ARROW_LEFT: "arrow-left",
+    START_TIME: "start-time",
+    END_TIME: "end-time",
+    FILTER: "filter",
+    DOWNLOAD: "download",
+    DOWNLOAD_JSON: "download-json",
+    REFRESH: "refresh",
+    TABLE: "table",
+    GRAPH: "graph"
+}

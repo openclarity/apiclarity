@@ -1,0 +1,31 @@
+@import 'utils/scss_variables.module.scss';
+
+.dashboard-content-wrapper {
+    display: flex;
+    height: 602px;
+    
+    .api-usage-container {
+        min-width: 876px;
+        flex-grow: 1;
+    }
+    .page-container {
+        padding: 30px;
+    }
+    .dashboard-counters-wrapper {
+        margin-left: 20px;
+        width: 427px;
+
+        .page-container {
+            height: calc(50% - 10px);
+
+            &:last-child {
+                margin-top: 20px;
+            }
+        }
+        .latest-spec-wrapper {
+            .latest-spec-time {
+                color: $color-grey-dark;
+            }
+        }
+    }
+}

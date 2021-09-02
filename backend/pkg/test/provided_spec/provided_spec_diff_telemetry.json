@@ -1,0 +1,68 @@
+{
+  "request_id": "e34fe93d-ba40-9467-baa3-97936eb57471",
+  "scheme": "",
+  "destination_address": "10.116.207.196:8000",
+  "source_address": "10.116.207.197:8000",
+  "scnt_request": {
+    "method": "POST",
+    "path": "/api/dashboard/apiUsage/mostUsed",
+    "host": "",
+    "version": "",
+    "headers": [
+      [
+        "host",
+        "httpbin:8000"
+      ],
+      [
+        "user-agent",
+        "curl/7.35.0"
+      ],
+      [
+        "accept",
+        "application/json"
+      ],
+      [
+        "x-forwarded-proto",
+        "http"
+      ],
+      [
+        "x-request-id",
+        "e34fe93d-ba40-9467-baa3-97936eb57478"
+      ]
+    ],
+    "body": "",
+    "truncated_body": false
+  },
+  "scnt_response": {
+    "status_code": "200",
+    "version": "",
+    "headers": [
+      [
+        "server",
+        "istio-envoy"
+      ],
+      [
+        "date",
+        "Mon, 16 Aug 2021 10:40:41 GMT"
+      ],
+      [
+        "content-type",
+        "application/json"
+      ],
+      [
+        "content-length",
+        "709"
+      ],
+      [
+        "access-control-allow-origin",
+        "*"
+      ],
+      [
+        "access-control-allow-credentials",
+        "true"
+      ]
+    ],
+    "body": "",
+    "truncated_body": false
+  }
+}

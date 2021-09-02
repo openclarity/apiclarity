@@ -1,0 +1,25 @@
+.merge-modal {
+    .select-wrapper {
+        margin: 10px 0;
+        max-height: 150px;
+        overflow-y: auto;
+
+        .checkbox-list-select-wrapper .ag-checkbox-wrapper .ag-checkbox {
+            align-items: flex-start;
+
+            .merge-review-path-display {
+                .merge-review-path-display-path {
+                    display: inline-flex;
+                    flex-wrap: wrap;
+                }
+                .merge-review-path-display-methods {
+                    margin-top: 10px;
+    
+                    .tag-wrapper {
+                        margin-right: 5px;
+                    }
+                }
+            }
+        }
+    }
+}

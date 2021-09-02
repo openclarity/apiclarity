@@ -1,0 +1,4 @@
+.idea
+db.db
+backend/bin/*
+*.gob

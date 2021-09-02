@@ -1,0 +1,946 @@
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "APIClarity APIs"
+
+basePath: /api
+
+schemes:
+  - http
+
+consumes: [ "application/json" ]
+produces: [ "application/json" ]
+
+paths:
+  /apiEvents:
+    get:
+      summary: 'Get API events'
+      parameters:
+        - $ref: '#/parameters/startTime'
+        - $ref: '#/parameters/endTime'
+        - $ref: '#/parameters/page'
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/apiEventSortKey'
+        - $ref: '#/parameters/sortDir'
+        - $ref: '#/parameters/showNonApi'
+        - $ref: '#/parameters/methodIsFilter'
+        - $ref: '#/parameters/pathIsFilter'
+        - $ref: '#/parameters/pathIsNotFilter'
+        - $ref: '#/parameters/pathStartsWithFilter'
+        - $ref: '#/parameters/pathEndsWithFilter'
+        - $ref: '#/parameters/pathContainsFilter'
+        - $ref: '#/parameters/statusCodeIsFilter'
+        - $ref: '#/parameters/statusCodeIsNotFilter'
+        - $ref: '#/parameters/statusCodeGteFilter'
+        - $ref: '#/parameters/statusCodeLteFilter'
+        - $ref: '#/parameters/sourceIPIsFilter'
+        - $ref: '#/parameters/sourceIPIsNotFilter'
+        - $ref: '#/parameters/destinationIPIsFilter'
+        - $ref: '#/parameters/destinationIPIsNotFilter'
+        - $ref: '#/parameters/destinationPortIsFilter'
+        - $ref: '#/parameters/destinationPortIsNotFilter'
+        - $ref: '#/parameters/hasSpecDiffFilter'
+        - $ref: '#/parameters/specIsFilter'
+        - $ref: '#/parameters/specIsNotFilter'
+        - $ref: '#/parameters/specStartsWithFilter'
+        - $ref: '#/parameters/specEndsWithFilter'
+        - $ref: '#/parameters/specContainsFilter'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: 'object'
+            required:
+              - total
+            properties:
+              total:
+                type: 'integer'
+                description: 'Total events count in the given time range and filters'
+              items:
+                type: 'array'
+                description: 'List of API events in the given time range, filters and page. List length must be lower or equal to pageSize'
+                items:
+                  $ref: '#/definitions/ApiEvent'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /apiEvents/{eventId}:
+    get:
+      summary: 'Get API event'
+      parameters:
+        - name: 'eventId'
+          description: 'API event ID'
+          in: 'path'
+          type: 'integer'
+          format: 'uint32'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/ApiEvent'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /apiEvents/{eventId}/reconstructedSpecDiff:
+    get:
+      summary: 'Get API event reconstructed spec diff'
+      parameters:
+        - name: 'eventId'
+          description: 'API event ID'
+          in: 'path'
+          type: 'integer'
+          format: 'uint32'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/ApiEventSpecDiff'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /apiEvents/{eventId}/providedSpecDiff:
+    get:
+      summary: 'Get API event provided spec diff'
+      parameters:
+        - name: 'eventId'
+          description: 'API event ID'
+          in: 'path'
+          type: 'integer'
+          format: 'uint32'
+          required: true
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/ApiEventSpecDiff'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /apiInventory:
+    get:
+      summary: 'Get API inventory'
+      parameters:
+        - $ref: '#/parameters/apiType'
+        - $ref: '#/parameters/page'
+        - $ref: '#/parameters/pageSize'
+        - $ref: '#/parameters/apiInventorySortKey'
+        - $ref: '#/parameters/sortDir'
+        - $ref: '#/parameters/apiNameIsFilter'
+        - $ref: '#/parameters/apiNameIsNotFilter'
+        - $ref: '#/parameters/apiNameStartsWithFilter'
+        - $ref: '#/parameters/apiNameEndsWithFilter'
+        - $ref: '#/parameters/apiNameContainsFilter'
+        - $ref: '#/parameters/portIsFilter'
+        - $ref: '#/parameters/portIsNotFilter'
+        - $ref: '#/parameters/hasProvidedSpecFilter'
+        - $ref: '#/parameters/hasReconstructedSpecFilter'
+        - $ref: '#/parameters/apiIdFilter'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: 'object'
+            required:
+              - total
+            properties:
+              total:
+                type: 'integer'
+                description: 'Total filtered APIs count'
+              items:
+                type: 'array'
+                description: 'List of filtered APIs in the given page. List length must be lower or equal to pageSize'
+                items:
+                  $ref: '#/definitions/ApiInfo'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /dashboard/apiUsage:
+    get:
+      summary: 'Get API usage'
+      parameters:
+        - $ref: '#/parameters/startTime'
+        - $ref: '#/parameters/endTime'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/ApiUsages'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /dashboard/apiUsage/mostUsed:
+    get:
+      summary: 'Get most used APIs'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: 'array'
+            items:
+              $ref: '#/definitions/ApiCount'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /dashboard/apiUsage/latestDiffs:
+    get:
+      summary: 'Get latest spec diffs'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: 'array'
+            items:
+              $ref: '#/definitions/SpecDiffTime'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /apiInventory/{apiId}/specs:
+    get:
+      summary: 'Get provided and reconstructed open api specs for a specific API'
+      parameters:
+        - $ref: '#/parameters/apiId'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/OpenApiSpecs'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /apiInventory/{apiId}/specs/providedSpec:
+    put:
+      summary: 'Add or edit a spec for a specific API'
+      parameters:
+        - $ref: '#/parameters/apiId'
+        - in: 'body'
+          name: 'body'
+          required: true
+          schema:
+            description: 'Json or Yaml representing openapi spec V2'
+            $ref: '#/definitions/rawSpec'
+      responses:
+        '201':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/rawSpec'
+        '400':
+          description: 'Spec validation failure'
+          schema:
+            type: 'string'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /apiInventory/{apiId}/reconstructed_swagger.json:
+    get:
+      summary: 'Get reconstructed API spec json file'
+      parameters:
+        - $ref: '#/parameters/apiId'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            description: 'spec in json format'
+            type: 'object'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /apiInventory/{apiId}/provided_swagger.json:
+    get:
+      summary: 'Get provided API spec json file'
+      parameters:
+        - $ref: '#/parameters/apiId'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            description: 'spec in json format'
+            type: 'object'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /apiUsage/hitCount:
+    get:
+      summary: 'Get a hit count within a selected timeframe for the filtered API events'
+      parameters:
+        - $ref: '#/parameters/startTime'
+        - $ref: '#/parameters/endTime'
+        - $ref: '#/parameters/showNonApi'
+        - $ref: '#/parameters/methodIsFilter'
+        - $ref: '#/parameters/pathIsFilter'
+        - $ref: '#/parameters/pathIsNotFilter'
+        - $ref: '#/parameters/pathStartsWithFilter'
+        - $ref: '#/parameters/pathEndsWithFilter'
+        - $ref: '#/parameters/pathContainsFilter'
+        - $ref: '#/parameters/statusCodeIsFilter'
+        - $ref: '#/parameters/statusCodeIsNotFilter'
+        - $ref: '#/parameters/statusCodeGteFilter'
+        - $ref: '#/parameters/statusCodeLteFilter'
+        - $ref: '#/parameters/sourceIPIsFilter'
+        - $ref: '#/parameters/sourceIPIsNotFilter'
+        - $ref: '#/parameters/destinationIPIsFilter'
+        - $ref: '#/parameters/destinationIPIsNotFilter'
+        - $ref: '#/parameters/destinationPortIsFilter'
+        - $ref: '#/parameters/destinationPortIsNotFilter'
+        - $ref: '#/parameters/hasSpecDiffFilter'
+        - $ref: '#/parameters/specIsFilter'
+        - $ref: '#/parameters/specIsNotFilter'
+        - $ref: '#/parameters/specStartsWithFilter'
+        - $ref: '#/parameters/specEndsWithFilter'
+        - $ref: '#/parameters/specContainsFilter'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: 'array'
+            items:
+              $ref: '#/definitions/HitCount'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /apiInventory/{apiId}/suggestedReview:
+    get:
+      summary: 'Get reconstructed spec for review'
+      parameters:
+        - $ref: '#/parameters/apiId'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/SuggestedReview'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /apiInventory/{reviewId}/approvedReview:
+    post:
+      summary: 'Apply the approved review to create the reconstructed spec'
+      parameters:
+        - $ref: '#/parameters/reviewId'
+        - in: 'body'
+          name: 'body'
+          required: true
+          schema:
+            description: 'Approved review'
+            $ref: '#/definitions/ApprovedReview'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/responses/Success'
+        default:
+          $ref: '#/responses/UnknownError'
+
+parameters:
+  startTime:
+    name: 'startTime'
+    description: 'Start time of the query'
+    in: 'query'
+    type: 'string'
+    format: date-time
+    required: true
+
+  endTime:
+    name: 'endTime'
+    description: 'End time of the query'
+    in: 'query'
+    type: 'string'
+    format: date-time
+    required: true
+
+  page:
+    name: 'page'
+    description: 'Page number of the query'
+    in: 'query'
+    type: 'integer'
+    required: true
+
+  apiIdFilter:
+    name: 'apiId'
+    description: 'api id to return'
+    in: 'query'
+    type: 'string'
+    required: false
+
+  pageSize:
+    name: 'pageSize'
+    description: 'Maximum items to return'
+    in: 'query'
+    type: 'integer'
+    required: true
+    minimum: 1
+    maximum: 50
+
+  sortDir:
+    name: 'sortDir'
+    description: 'Sorting direction'
+    in: 'query'
+    type: 'string'
+    enum:
+      - ASC
+      - DESC
+    required: false
+    default: 'ASC'
+
+  apiEventSortKey:
+    name: 'sortKey'
+    description: 'Sort key'
+    in: 'query'
+    type: 'string'
+    enum:
+      - time
+      - method
+      - path
+      - statusCode
+      - sourceIP
+      - destinationIP
+      - destinationPort
+      - hasSpecDiff
+      - hostSpecName
+    required: true
+
+  apiInventorySortKey:
+    name: 'sortKey'
+    description: 'Sort key'
+    in: 'query'
+    type: 'string'
+    enum:
+      - name
+      - port
+      - hasReconstructedSpec
+      - hasProvidedSpec
+    required: true
+
+  apiType:
+    name: 'type'
+    description: 'API type [INTERNAL or EXTERNAL]'
+    in: 'query'
+    type: 'string'
+    enum: # if you edit this you need to edit ApiType in 'definitions' too
+      - INTERNAL
+      - EXTERNAL
+    required: true
+
+  showNonApi:
+    name: 'showNonApi'
+    in: 'query'
+    type: 'boolean'
+    required: true
+
+  methodIsFilter:
+    name: 'method[is]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+      enum: # if you edit this you need to edit HttpMethod in 'definitions' too
+        - GET
+        - HEAD
+        - POST
+        - PUT
+        - DELETE
+        - CONNECT
+        - OPTIONS
+        - TRACE
+        - PATCH
+    required: false
+
+  pathIsFilter:
+    name: 'path[is]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+    required: false
+
+  pathIsNotFilter:
+    name: 'path[isNot]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+    required: false
+
+  pathStartsWithFilter:
+    name: 'path[start]'
+    in: 'query'
+    type: 'string'
+    required: false
+
+  pathEndsWithFilter:
+    name: 'path[end]'
+    in: 'query'
+    type: 'string'
+    required: false
+
+  pathContainsFilter:
+    name: 'path[contains]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+    required: false
+
+  statusCodeIsFilter:
+    name: 'statusCode[is]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+    required: false
+
+  statusCodeIsNotFilter:
+    name: 'statusCode[isNot]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+    required: false
+
+  statusCodeGteFilter:
+    name: 'statusCode[gte]'
+    description: "greater than or equal"
+    in: 'query'
+    type: 'string'
+    required: false
+
+  statusCodeLteFilter:
+    name: 'statusCode[lte]'
+    description: "less than or equal"
+    in: 'query'
+    type: 'string'
+    required: false
+
+  sourceIPIsFilter:
+    name: 'sourceIP[is]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+    required: false
+
+  sourceIPIsNotFilter:
+    name: 'sourceIP[isNot]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+    required: false
+
+  destinationIPIsFilter:
+    name: 'destinationIP[is]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+    required: false
+
+  destinationIPIsNotFilter:
+    name: 'destinationIP[isNot]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+    required: false
+
+  destinationPortIsFilter:
+    name: 'destinationPort[is]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+    required: false
+
+  destinationPortIsNotFilter:
+    name: 'destinationPort[isNot]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+    required: false
+
+  hasSpecDiffFilter:
+    name: 'hasSpecDiff[is]'
+    in: 'query'
+    type: 'boolean'
+    required: false
+
+  specIsFilter:
+    name: 'spec[is]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+    required: false
+
+  specIsNotFilter:
+    name: 'spec[isNot]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+    required: false
+
+  specStartsWithFilter:
+    name: 'spec[start]'
+    in: 'query'
+    type: 'string'
+    required: false
+
+  specEndsWithFilter:
+    name: 'spec[end]'
+    in: 'query'
+    type: 'string'
+    required: false
+
+  specContainsFilter:
+    name: 'spec[contains]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+    required: false
+
+  apiNameIsFilter:
+    name: 'name[is]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+    required: false
+
+  apiNameIsNotFilter:
+    name: 'name[isNot]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+    required: false
+
+  apiNameStartsWithFilter:
+    name: 'name[start]'
+    in: 'query'
+    type: 'string'
+    required: false
+
+  apiNameEndsWithFilter:
+    name: 'name[end]'
+    in: 'query'
+    type: 'string'
+    required: false
+
+  apiNameContainsFilter:
+    name: 'name[contains]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+    required: false
+
+  portIsFilter:
+    name: 'port[is]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+    required: false
+
+  portIsNotFilter:
+    name: 'port[isNot]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+    required: false
+
+  hasProvidedSpecFilter:
+    name: 'hasProvidedSpec[is]'
+    in: 'query'
+    type: 'boolean'
+    required: false
+
+  hasReconstructedSpecFilter:
+    name: 'hasReconstructedSpec[is]'
+    in: 'query'
+    type: 'boolean'
+    required: false
+
+  apiId:
+    name: 'apiId'
+    in: 'path'
+    type: 'integer'
+    format: 'uint32'
+    required: true
+
+  reviewId:
+    name: 'reviewId'
+    in: 'path'
+    type: 'integer'
+    format: 'uint32'
+    required: true
+
+definitions:
+  ApiEvent:
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+        format: 'uint32'
+      time:
+        type: 'string'
+        format: 'date-time'
+      method:
+        $ref: '#/definitions/HttpMethod'
+      path:
+        type: 'string'
+      query:
+        type: 'string'
+      statusCode:
+        type: 'integer'
+      sourceIP:
+        type: 'string'
+      destinationIP:
+        type: 'string'
+      destinationPort:
+        type: 'integer'
+      hasReconstructedSpecDiff:
+        type: 'boolean'
+        default: false
+      hasProvidedSpecDiff:
+        type: 'boolean'
+        default: false
+      hostSpecName:
+        type: 'string'
+      apiInfoId:
+        type: 'integer'
+        description: 'hold the relevant api spec info id'
+        format: 'uint32'
+      apiType:
+        $ref: '#/definitions/ApiType'
+
+  ApiEventSpecDiff:
+    type: 'object'
+    required:
+      - oldSpec
+      - newSpec
+    properties:
+      oldSpec:
+        description: 'Old spec json string'
+        type: 'string'
+      newSpec:
+        description: 'New spec json string'
+        type: 'string'
+
+  ApiInfo:
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+        format: 'uint32'
+      name:
+        description: 'API name'
+        type: 'string'
+      port:
+        type: 'integer'
+      hasReconstructedSpec:
+        type: 'boolean'
+        default: false
+      hasProvidedSpec:
+        type: 'boolean'
+        default: false
+
+  ApiUsages:
+    type: 'object'
+    properties:
+      existingApis:
+        type: 'array'
+        items:
+          $ref: '#/definitions/ApiUsage'
+      newApis:
+        type: 'array'
+        items:
+          $ref: '#/definitions/ApiUsage'
+      apisWithDiff:
+        type: 'array'
+        items:
+          $ref: '#/definitions/ApiUsage'
+
+  ApiUsage:
+    type: 'object'
+    properties:
+      numOfCalls:
+        type: 'integer'
+        x-omitempty: false
+      time:
+        type: 'string'
+        format: date-time
+
+  ApiCount:
+    type: 'object'
+    properties:
+      apiInfoId:
+        type: 'integer'
+        description: 'hold the relevant api info id'
+        format: 'uint32'
+      apiType:
+        $ref: '#/definitions/ApiType'
+      numCalls:
+        type: 'integer'
+      apiHostName:
+        type: 'string'
+      apiPort:
+        type: 'integer'
+
+  SpecDiffTime:
+    type: 'object'
+    properties:
+      apiEventId:
+        type: 'integer'
+        format: 'uint32'
+      time:
+        type: 'string'
+        format: date-time
+      apiHostName:
+        type: 'string'
+
+  HttpMethod:
+    type: string
+    enum:
+      - GET
+      - HEAD
+      - POST
+      - PUT
+      - DELETE
+      - CONNECT
+      - OPTIONS
+      - TRACE
+      - PATCH
+
+  ApiType:
+    type: string
+    enum:
+      - INTERNAL
+      - EXTERNAL
+
+  ApiResponse:
+    description: 'An object that is return in all cases of failures.'
+    type: 'object'
+    properties:
+      message:
+        type: 'string'
+
+  SuccessResponse:
+    description: 'An object that is return in cases of success that return nothing.'
+    type: 'object'
+    properties:
+      message:
+        type: 'string'
+
+  OpenApiSpecs:
+    description: 'An object representing the provided and reconstructed API specs'
+    type: 'object'
+    properties:
+      providedSpec:
+        $ref: '#/definitions/SpecInfo'
+      reconstructedSpec:
+        $ref: '#/definitions/SpecInfo'
+
+  SpecInfo:
+    description: 'An object containing info about a spec'
+    type: 'object'
+    properties:
+      tags:
+        type: array
+        items:
+          $ref: '#/definitions/SpecTag'
+
+  rawSpec:
+    description: 'spec in json or yaml format'
+    type: 'object'
+    properties:
+      rawSpec:
+        type: 'string'
+        description: 'spec in json or yaml format'
+
+  SpecTag:
+    type: 'object'
+    properties:
+      description:
+        type: 'string'
+      name:
+        type: 'string'
+      methodAndPathList:
+        type: array
+        items:
+          $ref: '#/definitions/MethodAndPath'
+
+  MethodAndPath:
+    type: 'object'
+    properties:
+      path:
+        type: 'string'
+      method:
+        $ref: '#/definitions/HttpMethod'
+
+  HitCount:
+    type: 'object'
+    properties:
+      count:
+        type: 'integer'
+        format: int64
+        x-omitempty: false
+      time:
+        type: 'string'
+        format: 'date-time'
+
+  SuggestedReview:
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+        format: 'uint32'
+      reviewPathItems:
+        type: 'array'
+        items:
+          description: 'The suggested path items'
+          $ref: '#/definitions/ReviewPathItem'
+
+  ReviewPathItem:
+    type: 'object'
+    properties:
+      suggestedPath:
+        description: 'Represents the parameterized path suggested by the engine'
+        type: 'string'
+      apiEventsPaths:
+        description: 'Group of api event paths (original) that suggestedPath is representing'
+        type: 'array'
+        items:
+          $ref: '#/definitions/ApiEventPathAndMethods'
+
+  ApiEventPathAndMethods:
+    type: 'object'
+    properties:
+      path:
+        type: 'string'
+      methods:
+        type: 'array'
+        items:
+          $ref: '#/definitions/HttpMethod'
+
+  ApprovedReview:
+    type: 'object'
+    properties:
+      reviewPathItems:
+        type: 'array'
+        items:
+          $ref: '#/definitions/ReviewPathItem'
+
+responses:
+  UnknownError:
+    description: 'unknown error'
+    schema:
+      $ref: '#/definitions/ApiResponse'
+  Success:
+    description: 'success message'
+    schema:
+      $ref: '#/definitions/SuccessResponse'

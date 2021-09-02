@@ -1,0 +1,95 @@
+@import 'utils/scss_variables.module.scss';
+
+$content-margin: 30px;
+
+.inventory-details-spec-wrapper {
+    position: relative;
+    min-height: 300px;
+    
+    .spec-inner-tabs-wrapper {
+        display: flex;
+        align-items: center;
+        height: 50px;
+        padding: 0 20px;
+        background-color: $color-grey-off-white;
+        border: 1px solid  $color-grey-light;
+
+        .inner-tab-item {
+            margin-right: 40px;
+            font-size: 14px;
+            line-height: 16px;
+            color: $color-grey-dark;
+            cursor: pointer;
+
+            &.selected {
+                color: $color-grey-black;
+                font-weight: bold;
+            }
+        }
+    }
+    .not-selected-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 30px;
+
+        .not-selected-title {
+            font-size: 18px;
+            line-height: 18px;
+            color: $color-main;
+            margin-bottom: 60px;
+
+            button,
+            a {
+                font-size: 18px;
+                line-height: 18px;
+                height: auto;
+                color: $color-main;
+            }
+        }
+    }
+    .spec-display-wrapper {
+        min-height: 340px;
+        display: flex;
+        overflow: hidden;
+
+        .select-pane {
+            width: 33%;
+            border-right: 1px solid $color-grey-light;
+        }
+        .display-pane {
+            flex-grow: 1;
+
+            .tag-selected-wrapper {
+                .tag-selected-methods-list {
+                    .methods-list-title {
+                        font-weight: bold;
+                        font-size: 14px;
+                        line-height: 14px;
+                        margin: 40px 0 15px $content-margin;
+                    }
+                    .list-display-wrapper .method-item-title .tag-wrapper {
+                        width: 100px;
+                    }
+                }
+            }
+            .selected-method-wrapper {
+                .method-item-title .tag-wrapper {
+                    margin-right: 20px;
+                }
+            }
+            .selected-back-header {
+                display: flex;
+                align-items: center;
+                color: $color-main;
+                border-bottom: 1px solid $color-grey-light;
+                margin: 0 $content-margin;
+                padding: 20px 0;
+
+                .arrow-icon {
+                    margin-right: 20px;
+                }
+            }
+        }
+    }
+}

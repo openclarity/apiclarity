@@ -1,0 +1,59 @@
+@import 'utils/scss_variables.module.scss';
+
+$input-height: 36px;
+
+.path-display-wrapper {
+    position: relative;
+
+    &.open {
+        background-color: $color-blue-light;
+        margin: -10px;
+        padding: 10px;
+    }
+    &:not(.open) {
+        .path-item:hover {
+            cursor: pointer;
+            text-decoration: underline;
+            color: $color-main;
+        } 
+    }
+    .path-item {
+        color: $color-grey-black;
+
+        &.param {
+            font-weight: bold;
+        }
+    }
+    .param-input-wrapper {
+        margin-top: 10px;
+
+        .param-input-title {
+            font-style: normal;
+            font-weight: bold;
+            font-size: 14px;
+            line-height: 16px;
+            margin-bottom: 5px;
+        }
+        .param-input-container {
+            display: flex;
+            align-items: center;
+
+            input {
+                height: $input-height;
+                width: 350px;
+                border: 1px solid $color-grey-light;
+                box-sizing: border-box;
+                outline: none;
+                padding: 5px;
+            }
+            .param-ok-button {
+                height: $input-height;
+                width: $input-height;
+                min-width: $input-height;
+                padding: 0;
+                border-radius: 0 5px 5px 0;
+                margin-right: 10px;
+            }
+        }
+    }
+}

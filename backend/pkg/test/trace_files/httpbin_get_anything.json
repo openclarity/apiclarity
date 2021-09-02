@@ -1,0 +1,68 @@
+{
+  "request_id": "e34fe93d-ba40-9467-baa3-97936eb57471",
+  "scheme": "",
+  "destination_address": "10.116.207.196:8000",
+  "source_address": "10.116.207.197:8000",
+  "scnt_request": {
+    "method": "GET",
+    "path": "/anything",
+    "host": "",
+    "version": "",
+    "headers": [
+      [
+        "host",
+        "httpbin:8000"
+      ],
+      [
+        "user-agent",
+        "curl/7.35.0"
+      ],
+      [
+        "accept",
+        "application/json"
+      ],
+      [
+        "x-forwarded-proto",
+        "http"
+      ],
+      [
+        "x-request-id",
+        "e34fe93d-ba40-9467-baa3-97936eb57478"
+      ]
+    ],
+    "body": "",
+    "truncated_body": false
+  },
+  "scnt_response": {
+    "status_code": "200",
+    "version": "",
+    "headers": [
+      [
+        "server",
+        "istio-envoy"
+      ],
+      [
+        "date",
+        "Mon, 16 Aug 2021 10:40:41 GMT"
+      ],
+      [
+        "content-type",
+        "application/json"
+      ],
+      [
+        "content-length",
+        "709"
+      ],
+      [
+        "access-control-allow-origin",
+        "*"
+      ],
+      [
+        "access-control-allow-credentials",
+        "true"
+      ]
+    ],
+    "body": "ewogICJhcmdzIjoge30sIAogICJkYXRhIjogIiIsIAogICJmaWxlcyI6IHt9LCAKICAiZm9ybSI6IHt9LCAKICAiaGVhZGVycyI6IHsKICAgICJBY2NlcHQiOiAiYXBwbGljYXRpb24vanNvbiIsIAogICAgIkhvc3QiOiAiaHR0cGJpbjo4MDAwIiwgCiAgICAiVXNlci1BZ2VudCI6ICJjdXJsLzcuMzUuMCIsIAogICAgIlgtQjMtUGFyZW50c3BhbmlkIjogImFmMGQ4NzM2YzNlMTFmYzciLCAKICAgICJYLUIzLVNhbXBsZWQiOiAiMSIsIAogICAgIlgtQjMtU3BhbmlkIjogImIzNjJhM2NiY2JiYzg3MWIiLCAKICAgICJYLUIzLVRyYWNlaWQiOiAiMDM1MzFkNDMyYTFhYzZjOGFmMGQ4NzM2YzNlMTFmYzciLCAKICAgICJYLUVudm95LUF0dGVtcHQtQ291bnQiOiAiMSIsIAogICAgIlgtRm9yd2FyZGVkLUNsaWVudC1DZXJ0IjogIkJ5PXNwaWZmZTovL2NsdXN0ZXIubG9jYWwvbnMvdHJhY2VzLXRlc3Qvc2EvaHR0cGJpbjtIYXNoPTZjMmIxOTNmNWZiYTBhMmYzOGY1NDA3MGE2YmQwMDc0ZWRiY2JlZGU3ODgzOTgwYmFhMmY2NjgxMmU0NjI4OGU7U3ViamVjdD1cIlwiO1VSST1zcGlmZmU6Ly9jbHVzdGVyLmxvY2FsL25zL3RyYWNlcy10ZXN0L3NhL2N1cmwiCiAgfSwgCiAgImpzb24iOiBudWxsLCAKICAibWV0aG9kIjogIkdFVCIsIAogICJvcmlnaW4iOiAiMTI3LjAuMC42IiwgCiAgInVybCI6ICJodHRwOi8vaHR0cGJpbjo4MDAwL2FueXRoaW5nIgp9Cg==",
+    "truncated_body": false
+  }
+}

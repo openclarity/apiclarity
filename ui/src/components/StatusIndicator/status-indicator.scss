@@ -1,0 +1,18 @@
+@import 'utils/scss_variables.module.scss';
+
+.status-indicator-wrapper {
+    display: flex;
+    align-items: center;
+
+    .status-indicator {
+        width: 4px;
+        height: 4px;
+        border-radius: 50px;
+        background-color: $color-success;
+        margin-right: 13px;
+
+        &.error {
+            background-color: $color-error;
+        }
+    }
+}

@@ -1,0 +1,14 @@
+@import 'utils/scss_variables.module.scss';
+
+.review-confirmation-modal {
+    .approve-alert {
+        display: flex;
+        align-items: center;
+        margin-top: 5px;
+
+        .icon {
+            margin-right: 5px;
+            color: $color-main;
+        }
+    }
+}

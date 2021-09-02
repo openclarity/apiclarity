@@ -1,0 +1,50 @@
+@import 'utils/scss_variables.module.scss';
+
+.pagination-container {
+    font-size: 14px;
+    line-height: 19px;
+    color: $color-grey-black;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    .pagination-navigation {
+        margin-left: 20px;
+        display: flex;
+
+        .pagination-item {
+            width: 30px;
+            height: 30px;
+            background-color: $color-grey-lighter;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            cursor: pointer;
+            
+            &:not(:last-child) {
+                margin-right: 5px;
+            }
+            &.pagination-arrow {
+                .icon {
+                    width: 18px;
+                    height: 18px;
+                }
+                &.left .icon {
+                    transform: rotate(180deg);
+                }
+                &.disabled {
+                    cursor: not-allowed;
+                    color: $color-grey;
+                }
+            }
+            &.pagination-dots {
+                background-color: transparent;
+                cursor: auto;
+            }
+            &.is-active {
+                background-color: $color-main-light;
+            }
+        }
+    }
+    
+}

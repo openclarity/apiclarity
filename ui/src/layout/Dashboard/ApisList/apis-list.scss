@@ -1,0 +1,35 @@
+@import 'utils/scss_variables.module.scss';
+
+.apis-list-wrapper {
+    position: relative;
+    color: $color-grey-black;
+
+    .apis-list-titles {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 12px;
+        line-height: 18px;
+    }
+    .apis-list-item-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 34px;
+        font-size: 14px;
+        line-height: 18px;
+
+        &:not(:last-child) {
+            border-bottom: 1px solid $color-grey-lighter;
+        }
+        .api-name {
+            cursor: pointer;
+            white-space: nowrap; 
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-right: 10px;
+        }
+    }
+}

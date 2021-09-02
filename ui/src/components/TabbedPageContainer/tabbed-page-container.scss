@@ -1,0 +1,36 @@
+@import 'utils/scss_variables.module.scss';
+
+.tabs-container {
+    height: 48px;
+    width: 100%;
+    border-bottom: 3px solid $color-grey-lighter;
+
+    .tab-item {
+        display: inline-block;
+        text-decoration: none;
+        padding: 0 30px;
+        height: 100%;
+        font-size: 14px;
+        line-height: 19px;
+        letter-spacing: 0.30625px;
+        color: $color-grey-black;
+
+        &.active:not(.disabled) {
+            font-weight: bold;
+            border-bottom: 3px solid $color-main-light;
+        }
+        &.disabled {
+            color: $color-grey;
+            cursor: default;
+        }
+        > div {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+    }
+}
+.tab-content.with-margin {
+    padding: 20px;
+}

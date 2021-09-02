@@ -1,0 +1,32 @@
+@import 'utils/scss_variables.module.scss';
+
+.list-display-wrapper {
+    .list-display-item-wrapper {
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 30px;
+        color: $color-main;
+        font-size: 14px;
+        line-height: 16px;
+        cursor: pointer;
+        border-top: 1px solid $color-grey-light;
+
+        &:last-child {
+            border-bottom: 1px solid $color-grey-light;
+        }
+        &.selected {
+            background-color: $color-blue;
+        }
+        .list-display-item {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: calc(100% - 20px);
+        }
+        .arrow-icon {
+            color: $color-grey-black;
+        }
+    }
+}

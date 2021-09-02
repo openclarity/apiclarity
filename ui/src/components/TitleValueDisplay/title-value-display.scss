@@ -1,0 +1,28 @@
+@import 'utils/scss_variables.module.scss';
+
+.title-value-display-wrapper {
+    min-width: 220px;
+
+    .title-value-display-title {
+        font-weight: bold;
+        font-size: 12px;
+        line-height: 14px;
+        color: $color-grey-black;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+    }
+    .title-value-display-content {
+        font-size: 14px;
+        color: $color-grey-dark;
+        word-wrap: break-word;
+    }
+}
+
+.title-value-display-row {
+    display: flex;
+    margin-bottom: 40px;
+
+    .title-value-display-wrapper:not(:last-child) {
+        margin-right: 10px;
+    }
+}

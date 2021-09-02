@@ -1,0 +1,22 @@
+@import 'utils/scss_variables.module.scss';
+
+.events-details-page {
+    .title-value-display-wrapper {
+        &.path-display,
+        &.query-display {
+            max-width: 600px;
+        }
+        &.spec-display {
+            width: 600px;
+
+            button {
+                font-size: 14px;
+                height: auto;
+            }
+        }
+    }
+    .spec-diff-wrapper {
+        position: relative;
+        min-height: 300px;
+    }
+}

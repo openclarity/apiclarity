@@ -1,0 +1,3 @@
+[submodule "wasm-filters"]
+	path = wasm-filters
+	url = git@github.com:apiclarity/wasm-filters.git

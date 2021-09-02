@@ -1,0 +1,209 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: apiclarity
+  labels:
+    istio-injection: disabled
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apiclarity
+  namespace: apiclarity
+  labels:
+    app: apiclarity
+spec:
+  ports:
+    - name: trace-server
+      port: 9000
+      protocol: TCP
+      targetPort: 9000
+    - name: backend
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: apiclarity
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: apiclarity
+  namespace: apiclarity
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: apiclarity
+  namespace: apiclarity
+type: Opaque
+data:
+  DB_PASS: "dGVzdDEyMzQ=" #"test1234"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apiclarity
+  namespace: apiclarity
+  labels:
+    app: apiclarity
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apiclarity
+  template:
+    metadata:
+      labels:
+        app: apiclarity
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      serviceAccountName: apiclarity
+      containers:
+        - name: apiclarity
+          image: akpsdocker/apiclarity:latest
+          args:
+            - run
+          env:
+          - name: DB_PASS
+            valueFrom:
+              secretKeyRef:
+                name: apiclarity
+                key: DB_PASS
+          readinessProbe:
+            httpGet:
+              path: /healthz/ready
+              port: 8081
+            periodSeconds: 30
+            failureThreshold: 5
+            timeoutSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz/live
+              port: 8081
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            failureThreshold: 5
+            timeoutSeconds: 10
+          securityContext:
+            capabilities:
+              drop:
+                - all
+            runAsNonRoot: true
+            runAsGroup: 1000
+            runAsUser: 1000
+            privileged: false
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              memory: "200Mi"
+              cpu: "100m"
+            limits:
+              memory: "1000Mi"
+              cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: apiclarity
+spec:
+  ports:
+    - port: 3306
+  selector:
+    app: mysql
+  clusterIP: None
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: apiclarity
+spec:
+  selector:
+    matchLabels:
+      app: mysql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mysql
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - image: mysql:5.6
+          name: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: apiclarity
+                  key: DB_PASS
+          ports:
+            - containerPort: 3306
+              name: mysql
+          volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-persistent-storage
+          persistentVolumeClaim:
+            claimName: mysql-pv-claim
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-pv-volume
+  namespace: apiclarity
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/var/lib/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pv-claim
+  namespace: apiclarity
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: apiclarity
+  namespace: apiclarity
+rules:
+- apiGroups: [""]
+  resources: ["nodes", "services"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: apiclarity
+  namespace: apiclarity
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: apiclarity
+subjects:
+  - kind: ServiceAccount
+    name: apiclarity
+    namespace: apiclarity
+---

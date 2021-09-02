@@ -1,0 +1,96 @@
+@import 'utils/scss_variables.module.scss';
+
+$filter-field-width: 200px;
+
+.general-filter-wrapper {
+    margin-bottom: 20px;
+    
+    .show-filters-button {
+        display: flex;
+        align-items: center;
+        
+        &.pressed {
+            border: 1px solid $color-main-light;
+            background-color: white;
+            color: $color-main-light;
+        }
+        .icon {
+            height: 16px;
+            width: 16px;
+            margin-right: 5px;
+        }
+    }
+    .filter-form {
+        display: flex;
+        align-items: center;
+        margin-top: 20px;
+    
+        .filter-form-field {
+            min-width: $filter-field-width;
+            height: 38px;
+            margin-right: 10px;
+        
+            &:not(.filter-field-value) {
+                max-width: $filter-field-width;
+            }
+            &.text-field {
+                color: $color-grey-black;
+                border: 1px solid $color-grey-light;
+                border-radius: 2px;
+                padding: 2px 8px;
+                box-sizing: border-box;
+                outline: none;
+                font-size: 14px;
+                line-height: 18px;
+                font-family: CiscoSansTT;
+                background-color: white;
+    
+                &::placeholder {
+                        color: $color-grey-dark;
+                    }
+                &:disabled {
+                    background-color: white;
+                    color: $color-grey;
+                    cursor: not-allowed;
+    
+                    &::placeholder {
+                        color: $color-grey;
+                    }
+                }
+            }
+        }
+        .add-filter-button {
+            border-radius: 2px;
+            height: 32px;
+            padding: 0 10px;
+            font-size: 12px;
+            line-height: 16px;
+        }
+    }
+    .filters-display-wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        
+        &:not(.is-empty) {
+            margin-top: 20px;
+        }
+        .filter-display-item {
+            color: $color-grey-black;
+            background-color: $color-blue-light;
+            border: 1px solid $color-blue;
+            font-size: 10px;
+            line-height: 14px;
+            padding: 5px 10px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            margin-right: 10px;
+
+            .icon {
+                width: 10px;
+                height: 10px;
+                margin-left: 10px;
+            }
+        }
+    }
+}

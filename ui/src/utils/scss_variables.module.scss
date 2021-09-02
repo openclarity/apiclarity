@@ -1,0 +1,48 @@
+// Params
+$top-bar-height: 60px;
+$side-bar-width: 60px;
+
+// Brand
+$color-main: #27446E;
+$color-main-dark: #13274A;
+$color-main-light: #40B5F5;
+
+// // Greys
+$color-grey: #AEB5BC;
+$color-grey-off-white: #F9FCFE;
+$color-grey-light: #DFE2E5;
+$color-grey-lighter: #E8EDF2;
+$color-grey-black: #222529;
+$color-grey-dark: #596068;
+
+// // Blues
+$color-blue: #CFEBFB;
+$color-blue-light: #EEF7FC;
+
+// Shadows
+$color-shadow-main: #20264d;
+$color-shadow-dark: #222b36;
+
+// Background:
+$color-background: #F6F6F6;
+
+// Status
+$color-error: #D0392A;
+$color-error-dark: #771F16;
+$color-error-light: #F1D8D5;
+$color-success: #38CDA0;
+$color-warning: #F0AD42;
+$color-warning-dark: #D48931;
+$color-status-violet: #721BD5;
+
+:export {
+    color-main: $color-main;
+    color-main-dark: $color-main-dark;
+    color-main-light: $color-main-light;
+    color-grey: $color-grey;
+    color-grey-light: $color-grey-light;
+    color-grey-lighter: $color-grey-lighter;
+    color-grey-dark: $color-grey-dark;
+    color-grey-black: $color-grey-black;
+    color-status-violet: $color-status-violet;
+}
