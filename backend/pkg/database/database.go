@@ -34,7 +34,7 @@ import (
 )
 
 const (
-	dbName           = "app_gazr"
+	dbName           = "apiclarity"
 	DBUser           = "root" // TODO: We shouldn't use the root user
 	DBPasswordEnvVar = "DB_PASS"
 	DBHost           = "mysql"
