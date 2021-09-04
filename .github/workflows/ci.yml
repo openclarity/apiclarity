@@ -27,3 +27,6 @@ jobs:
 
     - name: Run verification
       run: make check
+
+    - name: Build Docker image
+      run: make docker
