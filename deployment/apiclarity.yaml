@@ -62,7 +62,7 @@ spec:
       serviceAccountName: apiclarity
       containers:
         - name: apiclarity
-          image: gcr.io/eticloud/k8sec/apiclarity
+          image: ghcr.io/apiclarity/apiclarity
           args:
             - run
           env:
