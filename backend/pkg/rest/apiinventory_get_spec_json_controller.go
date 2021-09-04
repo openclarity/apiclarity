@@ -17,13 +17,13 @@ package rest
 
 import (
 	"fmt"
+	"github.com/apiclarity/apiclarity/api/server/models"
+	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
+	"github.com/apiclarity/apiclarity/backend/pkg/database"
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/spec"
 	log "github.com/sirupsen/logrus"
-	"github.com/apiclarity/apiclarity/api/server/models"
-	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
-	"github.com/apiclarity/apiclarity/backend/pkg/database"
 )
 
 type swaggerType string

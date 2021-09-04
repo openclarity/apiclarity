@@ -45,13 +45,11 @@ func (t *TestSpec) WithPathItem(path string, pathItem oapi_spec.PathItem) *TestS
 	return t
 }
 
-
 func (ts *TestSpec) String(t *testing.T) string {
 	B, err := json.Marshal(ts.Spec)
 	assert.NilError(t, err)
 	return string(B)
 }
-
 
 type TestPathItem struct {
 	PathItem oapi_spec.PathItem
@@ -92,7 +90,7 @@ type TestOperation struct {
 func NewTestOperation() *TestOperation {
 	return &TestOperation{
 		Op: &oapi_spec.Operation{
-			OperationProps:   oapi_spec.OperationProps{},
+			OperationProps: oapi_spec.OperationProps{},
 		},
 	}
 }
@@ -101,4 +99,3 @@ func (o *TestOperation) WithTags(tags []string) *TestOperation {
 	o.Op.Tags = tags
 	return o
 }
-

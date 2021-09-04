@@ -20,7 +20,7 @@ import (
 )
 
 type Monitor struct {
-	nodeMonitor *NodeMonitor
+	nodeMonitor    *NodeMonitor
 	serviceMonitor *ServiceMonitor
 }
 

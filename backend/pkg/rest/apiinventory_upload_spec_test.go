@@ -25,7 +25,6 @@ var yamlSpec = "---\nswagger: '2.0'\ninfo:\n  title: Sample API\n  description: 
 var nonValidYamlSpec = "---\nswagger: '2.0'\nhost: api.example.com\nbasePath: \"/v1\"\nschemes:\n- https\npaths:\n  \"/cats\":\n    get:\n      summary: Returns a list of cats.\n      description: Optional extended description in Markdown.\n      produces:\n      - application/json\n      responses:\n        '200':\n          description: OK\n"
 var nonValidYaml = "---\nswagger '2.0'\ninfo:\n  title: Sample API\n  description: API description in Markdown.\n  version: 1.0.0\nhost: api.example.com\nbasePath: \"/v1\"\nschemes:\n- https\npaths:\n  \"/cats\":\n    get:\n      summary: Returns a list of cats.\n      description: Optional extended description in Markdown.\n      produces:\n      - application/json\n      responses:\n        '200':\n          description: OK"
 
-
 func Test_validateJsonSpec(t *testing.T) {
 	type args struct {
 		rawSpec []byte
@@ -36,36 +35,36 @@ func Test_validateJsonSpec(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "json spec - valid",
-			args:    args{
+			name: "json spec - valid",
+			args: args{
 				rawSpec: []byte(jsonSpec),
 			},
 			wantErr: false,
 		},
 		{
-			name:    "yaml spec - not valid",
-			args:    args{
+			name: "yaml spec - not valid",
+			args: args{
 				rawSpec: []byte(yamlSpec),
 			},
 			wantErr: true,
 		},
 		{
-			name:    "not valid - string",
-			args:    args{
+			name: "not valid - string",
+			args: args{
 				rawSpec: []byte("foo"),
 			},
 			wantErr: true,
 		},
 		{
-			name:    "not a valid json",
-			args:    args{
+			name: "not a valid json",
+			args: args{
 				rawSpec: []byte(nonValidJson),
 			},
 			wantErr: true,
 		},
 		{
-			name:    "not a valid spec - json",
-			args:    args{
+			name: "not a valid spec - json",
+			args: args{
 				rawSpec: []byte(nonValidJsonSpec),
 			},
 			wantErr: true,

@@ -28,7 +28,7 @@ import (
 type NodeMonitor struct {
 	podCIDRsMap *sync.Map // Hold parsed nodes podCIDR (*net.IPNet)
 	clientset   kubernetes.Interface
-	stopCh     chan struct{}
+	stopCh      chan struct{}
 }
 
 func CreateNodeMonitor(clientset kubernetes.Interface) (*NodeMonitor, error) {
@@ -40,8 +40,6 @@ func CreateNodeMonitor(clientset kubernetes.Interface) (*NodeMonitor, error) {
 		stopCh:      stopCh,
 	}, nil
 }
-
-
 
 func (m *NodeMonitor) Start() {
 	log.Info("Starting Node monitor")

@@ -16,9 +16,9 @@
 package healthz
 
 import (
+	"github.com/apiclarity/apiclarity/backend/pkg/common"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"github.com/apiclarity/apiclarity/backend/pkg/common"
 )
 
 type Server struct {

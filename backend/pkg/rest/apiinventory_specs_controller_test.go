@@ -16,12 +16,12 @@
 package rest
 
 import (
+	"github.com/apiclarity/apiclarity/api/server/models"
+	"github.com/apiclarity/apiclarity/backend/pkg/test"
 	"net/http"
 	"reflect"
 	"sort"
 	"testing"
-	"github.com/apiclarity/apiclarity/api/server/models"
-	"github.com/apiclarity/apiclarity/backend/pkg/test"
 )
 
 func Test_createTagsListFromRawSpec(t *testing.T) {
@@ -61,7 +61,7 @@ func Test_createTagsListFromRawSpec(t *testing.T) {
 				rawSpec: test.NewTestSpec().
 					WithPathItem("/some/path", test.NewTestPathItem().
 						WithOperation(http.MethodGet, test.NewTestOperation().WithTags([]string{"tag1", "tag2"}).Op).
-					    WithOperation(http.MethodPut, test.NewTestOperation().WithTags([]string{"tag1", "tag2"}).Op).
+						WithOperation(http.MethodPut, test.NewTestOperation().WithTags([]string{"tag1", "tag2"}).Op).
 						PathItem).String(t),
 			},
 			want: []*models.SpecTag{

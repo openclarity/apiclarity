@@ -17,13 +17,13 @@ package rest
 
 import (
 	"fmt"
+	"github.com/apiclarity/apiclarity/api/server/models"
+	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
+	"github.com/apiclarity/apiclarity/backend/pkg/database"
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/spec"
 	log "github.com/sirupsen/logrus"
-	"github.com/apiclarity/apiclarity/api/server/models"
-	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
-	"github.com/apiclarity/apiclarity/backend/pkg/database"
 )
 
 const defaultTagName = "default-tag"
@@ -66,7 +66,7 @@ func createSpecInfo(rawSpec string) (*models.SpecInfo, error) {
 		return nil, fmt.Errorf("failed to create tags list from raw spec: %v. %v", rawSpec, err)
 	}
 	return &models.SpecInfo{
-		Tags:    tags,
+		Tags: tags,
 	}, nil
 }
 

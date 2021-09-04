@@ -24,7 +24,7 @@ import (
 )
 
 func FieldInTable(table, field string) string {
-	return table+"."+field
+	return table + "." + field
 }
 
 func Paginate(page, pageSize int64) func(db *gorm.DB) *gorm.DB {

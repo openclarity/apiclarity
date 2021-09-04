@@ -36,7 +36,7 @@ const (
 	timeColumnName                     = "time"
 	methodColumnName                   = "method"
 	pathColumnName                     = "path"
-	pathIdColumnName          = "pathId"
+	pathIdColumnName                   = "pathId"
 	queryColumnName                    = "query"
 	statusCodeColumnName               = "statusCode"
 	sourceIPColumnName                 = "sourceIP"
@@ -66,7 +66,7 @@ type APIEvent struct {
 	Time                     strfmt.DateTime   `json:"time" gorm:"column:time" faker:"-"`
 	Method                   models.HTTPMethod `json:"method,omitempty" gorm:"column:method" faker:"oneof: GET, PUT, POST, DELETE"`
 	Path                     string            `json:"path,omitempty" gorm:"column:path" faker:"oneof: /news, /customers, /jokes"`
-	PathID          string            `json:"pathId,omitempty" gorm:"column:pathId" faker:"-"`
+	PathID                   string            `json:"pathId,omitempty" gorm:"column:pathId" faker:"-"`
 	Query                    string            `json:"query,omitempty" gorm:"column:query" faker:"oneof: name=ferret&color=purple, foo=bar, -"`
 	StatusCode               int64             `json:"statusCode,omitempty" gorm:"column:statusCode" faker:"oneof: 200, 401, 404, 500"`
 	SourceIP                 string            `json:"sourceIP,omitempty" gorm:"column:sourceIP" faker:"sourceIP"`

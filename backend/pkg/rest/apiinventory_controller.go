@@ -16,11 +16,11 @@
 package rest
 
 import (
-	middleware "github.com/go-openapi/runtime/middleware"
-	log "github.com/sirupsen/logrus"
 	"github.com/apiclarity/apiclarity/api/server/models"
 	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
 	_database "github.com/apiclarity/apiclarity/backend/pkg/database"
+	middleware "github.com/go-openapi/runtime/middleware"
+	log "github.com/sirupsen/logrus"
 )
 
 func (s *RESTServer) GetAPIInventory(params operations.GetAPIInventoryParams) middleware.Responder {

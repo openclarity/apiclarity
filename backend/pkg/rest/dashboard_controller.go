@@ -80,6 +80,7 @@ func (s *RESTServer) GetDashboardAPIUsage(params operations.GetDashboardAPIUsage
 }
 
 const latestDiffsNum = 5
+
 func (s *RESTServer) GetDashboardAPIUsageLatestDiffs(params operations.GetDashboardAPIUsageLatestDiffsParams) middleware.Responder {
 	var diffs []*models.SpecDiffTime
 
@@ -95,9 +96,9 @@ func (s *RESTServer) GetDashboardAPIUsageLatestDiffs(params operations.GetDashbo
 
 	for _, diff := range latestDiffs {
 		diffs = append(diffs, &models.SpecDiffTime{
-			APIHostName:  diff.HostSpecName,
-			APIEventID:   uint32(diff.ID),
-			Time: diff.Time,
+			APIHostName: diff.HostSpecName,
+			APIEventID:  uint32(diff.ID),
+			Time:        diff.Time,
 		})
 	}
 

@@ -16,11 +16,11 @@
 package rest
 
 import (
-	"github.com/go-openapi/runtime/middleware"
-	log "github.com/sirupsen/logrus"
 	"github.com/apiclarity/apiclarity/api/server/models"
 	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
 	_database "github.com/apiclarity/apiclarity/backend/pkg/database"
+	"github.com/go-openapi/runtime/middleware"
+	log "github.com/sirupsen/logrus"
 )
 
 func (s *RESTServer) GetAPIEvents(params operations.GetAPIEventsParams) middleware.Responder {
@@ -104,7 +104,6 @@ func (s *RESTServer) GetAPIEventsEventIDProvidedSpecDiff(params operations.GetAP
 			Message: "Oops",
 		})
 	}
-
 
 	return operations.NewGetAPIEventsEventIDProvidedSpecDiffOK().WithPayload(
 		&models.APIEventSpecDiff{
