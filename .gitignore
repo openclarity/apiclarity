@@ -1,4 +1,5 @@
 .idea
 db.db
 backend/bin/*
+/bin/*
 *.gob

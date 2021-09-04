@@ -17,17 +17,17 @@ package rest
 
 import (
 	"fmt"
-	"github.com/go-openapi/loads"
-	"github.com/go-openapi/runtime/middleware"
-	log "github.com/sirupsen/logrus"
 	"github.com/apiclarity/apiclarity/api/server/restapi"
 	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
 	"github.com/apiclarity/apiclarity/backend/pkg/common"
 	_speculator "github.com/apiclarity/speculator/pkg/speculator"
+	"github.com/go-openapi/loads"
+	"github.com/go-openapi/runtime/middleware"
+	log "github.com/sirupsen/logrus"
 )
 
 type RESTServer struct {
-	server *restapi.Server
+	server     *restapi.Server
 	speculator *_speculator.Speculator
 }
 
@@ -63,15 +63,15 @@ func CreateRESTServer(port int, speculator *_speculator.Speculator) (*RESTServer
 		return s.GetAPIInventory(params)
 	})
 
-	api.GetAPIInventoryAPIIDSpecsHandler = operations.GetAPIInventoryAPIIDSpecsHandlerFunc(func(params operations.GetAPIInventoryAPIIDSpecsParams) middleware.Responder  {
+	api.GetAPIInventoryAPIIDSpecsHandler = operations.GetAPIInventoryAPIIDSpecsHandlerFunc(func(params operations.GetAPIInventoryAPIIDSpecsParams) middleware.Responder {
 		return s.GetAPIInventoryAPIIDSpecs(params)
 	})
 
-	api.GetAPIInventoryAPIIDSpecsHandler = operations.GetAPIInventoryAPIIDSpecsHandlerFunc(func(params operations.GetAPIInventoryAPIIDSpecsParams) middleware.Responder  {
+	api.GetAPIInventoryAPIIDSpecsHandler = operations.GetAPIInventoryAPIIDSpecsHandlerFunc(func(params operations.GetAPIInventoryAPIIDSpecsParams) middleware.Responder {
 		return s.GetAPIInventoryAPIIDSpecs(params)
 	})
 
-	api.PutAPIInventoryAPIIDSpecsProvidedSpecHandler = operations.PutAPIInventoryAPIIDSpecsProvidedSpecHandlerFunc(func(params operations.PutAPIInventoryAPIIDSpecsProvidedSpecParams) middleware.Responder  {
+	api.PutAPIInventoryAPIIDSpecsProvidedSpecHandler = operations.PutAPIInventoryAPIIDSpecsProvidedSpecHandlerFunc(func(params operations.PutAPIInventoryAPIIDSpecsProvidedSpecParams) middleware.Responder {
 		return s.PutAPIInventoryAPIIDSpecsProvidedSpec(params)
 	})
 
@@ -83,7 +83,7 @@ func CreateRESTServer(port int, speculator *_speculator.Speculator) (*RESTServer
 		return s.GetAPIProvidedSwaggerJSON(params)
 	})
 
-	api.GetAPIUsageHitCountHandler = operations.GetAPIUsageHitCountHandlerFunc(func(params operations.GetAPIUsageHitCountParams) middleware.Responder  {
+	api.GetAPIUsageHitCountHandler = operations.GetAPIUsageHitCountHandlerFunc(func(params operations.GetAPIUsageHitCountParams) middleware.Responder {
 		return s.GetAPIUsageHitCount(params)
 	})
 

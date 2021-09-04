@@ -17,6 +17,7 @@ package utils
 
 import (
 	"reflect"
+	"sort"
 	"testing"
 )
 
@@ -43,7 +44,10 @@ func TestMapToSlice(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := MapToSlice(tt.args.m); !reflect.DeepEqual(got, tt.want) {
+			got := MapToSlice(tt.args.m)
+			sort.Strings(got)
+			sort.Strings(tt.want)
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("MapToSlice() = %v, want %v", got, tt.want)
 			}
 		})

@@ -1,0 +1,29 @@
+run:
+  skip-dirs:
+    - api
+    - ui
+    - dist
+  timeout: 5m
+
+linters-settings:
+  golint:
+    min-confidence: 0.1
+  goimports:
+    local-prefixes: github.com/apiclarity/apiclarity
+
+linters:
+  # TODO: fixme
+  disable-all: true
+  enable:
+    - gofmt
+#  enable-all: true
+#  disable:
+#    - maligned
+#    - funlen
+#    - dupl
+#    - nestif
+#    - wsl
+#    - lll
+#    - interfacer
+#    - exhaustivestruct
+#    - nlreturn

@@ -21,6 +21,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/urfave/cli"
+
 	"github.com/apiclarity/apiclarity/backend/pkg/backend"
 	"github.com/apiclarity/apiclarity/backend/pkg/config"
 	log_utils "github.com/apiclarity/speculator/pkg/utils/log"

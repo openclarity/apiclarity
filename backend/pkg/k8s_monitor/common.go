@@ -26,12 +26,10 @@ import (
 
 const ResyncPeriod = 1 * time.Minute
 
-
 func CreateK8sClientset() (kubernetes.Interface, error) {
 	// Create Kubernetes go-client clientset
 	var config *rest.Config
 	var err error
-
 
 	config, err = rest.InClusterConfig()
 	if err != nil {

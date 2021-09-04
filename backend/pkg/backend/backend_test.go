@@ -16,8 +16,8 @@
 package backend
 
 import (
-	"testing"
 	_spec "github.com/apiclarity/speculator/pkg/spec"
+	"testing"
 )
 
 func Test_isNonApi(t *testing.T) {
@@ -35,7 +35,7 @@ func Test_isNonApi(t *testing.T) {
 				trace: &_spec.SCNTelemetry{
 					SCNTResponse: _spec.SCNTResponse{
 						SCNTCommon: _spec.SCNTCommon{
-							Headers:       [][2]string{{contentTypeHeaderName, "non-api"}},
+							Headers: [][2]string{{contentTypeHeaderName, "non-api"}},
 						},
 					},
 				},
@@ -48,7 +48,7 @@ func Test_isNonApi(t *testing.T) {
 				trace: &_spec.SCNTelemetry{
 					SCNTResponse: _spec.SCNTResponse{
 						SCNTCommon: _spec.SCNTCommon{
-							Headers:       [][2]string{{contentTypeHeaderName, contentTypeApplicationJson}},
+							Headers: [][2]string{{contentTypeHeaderName, contentTypeApplicationJson}},
 						},
 					},
 				},
@@ -60,8 +60,7 @@ func Test_isNonApi(t *testing.T) {
 			args: args{
 				trace: &_spec.SCNTelemetry{
 					SCNTResponse: _spec.SCNTResponse{
-						SCNTCommon: _spec.SCNTCommon{
-						},
+						SCNTCommon: _spec.SCNTCommon{},
 					},
 				},
 			},
@@ -113,7 +112,7 @@ func Test_getHostname(t *testing.T) {
 			args: args{
 				host: "https://",
 			},
-			want: "",
+			want:    "",
 			wantErr: true,
 		},
 		{
@@ -121,7 +120,7 @@ func Test_getHostname(t *testing.T) {
 			args: args{
 				host: "1 2 3",
 			},
-			want: "",
+			want:    "",
 			wantErr: true,
 		},
 	}

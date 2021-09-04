@@ -57,13 +57,12 @@ func (s *RESTServer) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.Put
 		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecBadRequest().WithPayload("Spec validation failed")
 	}
 
-	if err = database.PutProvidedAPISpec(params); err != nil{
+	if err = database.PutProvidedAPISpec(params); err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
 		log.Errorf("Failed to put provided API spec. %v", err)
 		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(500)
 	}
-
 
 	if err := database.GetAPIInventoryTable().First(&apiInfo, params.APIID).Error; err != nil {
 		log.Errorf("Failed to get APIInventory table with api id: %v. %v", params.APIID, err)
