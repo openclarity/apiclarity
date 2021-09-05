@@ -9,21 +9,55 @@ linters-settings:
   golint:
     min-confidence: 0.1
   goimports:
-    local-prefixes: github.com/apiclarity/apiclarity
+    local-prefixes: github.com/apiclarity
+  errorlint:
+    # Check whether fmt.Errorf uses the %w verb for formatting errors. See the readme for caveats
+    errorf: false
+  gomoddirectives:
+    # Allow local `replace` directives. Default is false.
+    replace-local: true
+  gosec:
+    # To specify a set of rules to explicitly exclude.
+    # Available rules: https://github.com/securego/gosec#available-rules
+    excludes:
+      - G404 # Insecure random number source (rand)
+  gomnd:
+    settings:
+      mnd:
+        ignored-files: fake.go
 
 linters:
-  # TODO: fixme
-  disable-all: true
-  enable:
-    - gofmt
-#  enable-all: true
-#  disable:
-#    - maligned
-#    - funlen
-#    - dupl
-#    - nestif
-#    - wsl
-#    - lll
-#    - interfacer
-#    - exhaustivestruct
-#    - nlreturn
+  enable-all: true
+  disable:
+    - maligned
+    - funlen
+    - dupl
+    - nestif
+    - wsl
+    - lll
+    - interfacer
+    - exhaustivestruct
+    - nlreturn
+    - gocritic
+    - gochecknoglobals
+    - testpackage
+    - scopelint # deprecated
+    - golint # deprecated
+
+    # TODO:(fixme)
+    - gocognit
+    - godox
+    - cyclop
+    - goerr113
+    - tagliatelle
+    - prealloc
+    - paralleltest
+    - gochecknoinits # remove once database will have handler and not use init function
+
+issues:
+  # Excluding configuration per-path, per-linter, per-text and per-source
+  exclude-rules:
+    # Exclude some linters from running on tests files.
+    - path: _test\.go
+      linters:
+        - govet

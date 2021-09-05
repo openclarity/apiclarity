@@ -17,44 +17,45 @@ package database
 
 import (
 	"fmt"
+
 	"gorm.io/gorm"
 )
 
-type ApiUsageType string
+type APIUsageType string
 
 const (
-	ApiWithDiffs ApiUsageType = "ApiWithDiffs"
-	ExistingApi  ApiUsageType = "ExistingApi"
-	NewApi       ApiUsageType = "NewApi"
+	APIWithDiffs APIUsageType = "APIWithDiffs"
+	ExistingAPI  APIUsageType = "ExistingAPI"
+	NewAPI       APIUsageType = "NewAPI"
 )
 
-func GetAPIUsageDBSession(apiType ApiUsageType) (db *gorm.DB, err error) {
+func GetAPIUsageDBSession(apiType APIUsageType) (db *gorm.DB, err error) {
 	switch apiType {
-	case ApiWithDiffs:
+	case APIWithDiffs:
 		db = GetAPIEventsTable().Where(hasSpecDiffColumnName+" = ?", true).Session(&gorm.Session{})
-	case ExistingApi:
+	case ExistingAPI:
 		// REST api (not a non-api)
 		// no spec diff
 		// have reconstructed OR provided spec
 		db = GetAPIEventsTable().
-			Where(FieldInTable(apiEventTableName, isNonApiColumnName)+" = ?", false).
+			Where(FieldInTable(apiEventTableName, isNonAPIColumnName)+" = ?", false).
 			Where(FieldInTable(apiEventTableName, hasSpecDiffColumnName)+" = ?", false).
 			Where(FieldInTable(apiInventoryTableName, hasReconstructedSpecColumnName)+" = ? OR "+
 				FieldInTable(apiInventoryTableName, hasProvidedSpecColumnName)+" = ?", true, true).
 			Joins("left join " + apiInventoryTableName + " on " + FieldInTable(apiInventoryTableName, idColumnName) +
-				" = " + FieldInTable(apiEventTableName, apiInfoIdColumnName)).
+				" = " + FieldInTable(apiEventTableName, apiInfoIDColumnName)).
 			Session(&gorm.Session{})
-	case NewApi:
+	case NewAPI:
 		// REST api (not a non-api)
 		// no spec diff
 		// no reconstructed AND no provided spec
 		db = GetAPIEventsTable().
-			Where(FieldInTable(apiEventTableName, isNonApiColumnName)+" = ?", false).
+			Where(FieldInTable(apiEventTableName, isNonAPIColumnName)+" = ?", false).
 			Where(FieldInTable(apiEventTableName, hasSpecDiffColumnName)+" = ?", false).
 			Where(FieldInTable(apiInventoryTableName, hasReconstructedSpecColumnName)+" = ? AND "+
 				FieldInTable(apiInventoryTableName, hasProvidedSpecColumnName)+" = ?", false, false).
 			Joins("left join " + apiInventoryTableName + " on " + FieldInTable(apiInventoryTableName, idColumnName) +
-				" = " + FieldInTable(apiEventTableName, apiInfoIdColumnName)).
+				" = " + FieldInTable(apiEventTableName, apiInfoIDColumnName)).
 			Session(&gorm.Session{})
 	default:
 		return nil, fmt.Errorf("unknown API type: %v", apiType)

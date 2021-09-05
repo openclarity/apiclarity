@@ -16,30 +16,33 @@
 package rest
 
 import (
+	"net/http"
+
+	"github.com/go-openapi/runtime/middleware"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/apiclarity/apiclarity/api/server/models"
 	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
 	_database "github.com/apiclarity/apiclarity/backend/pkg/database"
-	middleware "github.com/go-openapi/runtime/middleware"
-	log "github.com/sirupsen/logrus"
 )
 
-func (s *RESTServer) GetAPIInventory(params operations.GetAPIInventoryParams) middleware.Responder {
+func (s *Server) GetAPIInventory(params operations.GetAPIInventoryParams) middleware.Responder {
 	var apiInventory []*models.APIInfo
 
-	apiInventoryFromDb, total, err := _database.GetAPIInventoryAndTotal(params)
+	apiInventoryFromDB, total, err := _database.GetAPIInventoryAndTotal(params)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
 		log.Error(err)
-		return operations.NewGetAPIInventoryDefault(500).WithPayload(&models.APIResponse{
+		return operations.NewGetAPIInventoryDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
 			Message: "Oops",
 		})
 	}
 
-	log.Debugf("GetAPIInventory controller was invoked. params=%+v, apiInventoryFromDb=%+v, total=%+v", params, apiInventoryFromDb, total)
+	log.Debugf("GetAPIInventory controller was invoked. params=%+v, apiInventoryFromDB=%+v, total=%+v", params, apiInventoryFromDB, total)
 
-	for i := range apiInventoryFromDb {
-		apiInventory = append(apiInventory, _database.APIInfoFromDB(&apiInventoryFromDb[i]))
+	for i := range apiInventoryFromDB {
+		apiInventory = append(apiInventory, _database.APIInfoFromDB(&apiInventoryFromDB[i]))
 	}
 
 	return operations.NewGetAPIInventoryOK().WithPayload(

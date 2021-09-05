@@ -21,17 +21,20 @@ import (
 	"reflect"
 	"time"
 
-	_database "github.com/apiclarity/apiclarity/backend/pkg/database"
 	"github.com/bxcodec/faker/v3"
 	"github.com/go-openapi/strfmt"
+
+	_database "github.com/apiclarity/apiclarity/backend/pkg/database"
 )
 
 func init() {
 	rand.Seed(time.Now().Unix())
 }
 
-var oldSpec = "{\n  \"swagger\": \"2.0\",\n  \"info\": {\n    \"title\": \"Sample API\",\n    \"description\": \"API description in Markdown.\",\n    \"version\": \"1.0.0\"\n  },\n  \"host\": \"api.example.com\",\n  \"basePath\": \"/v1\",\n  \"schemes\": [\n    \"https\"\n  ],\n  \"paths\": {\n    \"/cats\": {\n      \"get\": {\n        \"summary\": \"Returns a list of cats.\",\n        \"description\": \"Optional extended description in Markdown.\",\n        \"produces\": [\n          \"application/json\"\n        ],\n        \"responses\": {\n          \"200\": {\n            \"description\": \"OK\"\n          }\n        }\n      }\n    }\n  }\n}"
-var newSpec = "{\n  \"swagger\": \"2.0\",\n  \"info\": {\n    \"title\": \"Sample API\",\n    \"description\": \"API description in Markdown.\",\n    \"version\": \"1.0.0\"\n  },\n  \"host\": \"api.example.com\",\n  \"basePath\": \"/v1\",\n  \"schemes\": [\n    \"https\"\n  ],\n  \"paths\": {\n    \"/cats\": {\n      \"get\": {\n        \"summary\": \"Returns a list of cats.\",\n        \"produces\": [\n          \"application/json\"\n        ],\n        \"responses\": {\n          \"200\": {\n            \"description\": \"OK\"\n          }\n        }\n      }\n    },\n    \"/dogs\": {\n      \"get\": {\n        \"summary\": \"Returns a list of dogs.\",\n        \"produces\": [\n          \"application/json\"\n        ],\n        \"responses\": {\n          \"200\": {\n            \"description\": \"OK\"\n          }\n        }\n      }\n    }\n  }\n}"
+var (
+	oldSpec = "{\n  \"swagger\": \"2.0\",\n  \"info\": {\n    \"title\": \"Sample API\",\n    \"description\": \"API description in Markdown.\",\n    \"version\": \"1.0.0\"\n  },\n  \"host\": \"api.example.com\",\n  \"basePath\": \"/v1\",\n  \"schemes\": [\n    \"https\"\n  ],\n  \"paths\": {\n    \"/cats\": {\n      \"get\": {\n        \"summary\": \"Returns a list of cats.\",\n        \"description\": \"Optional extended description in Markdown.\",\n        \"produces\": [\n          \"application/json\"\n        ],\n        \"responses\": {\n          \"200\": {\n            \"description\": \"OK\"\n          }\n        }\n      }\n    }\n  }\n}"
+	newSpec = "{\n  \"swagger\": \"2.0\",\n  \"info\": {\n    \"title\": \"Sample API\",\n    \"description\": \"API description in Markdown.\",\n    \"version\": \"1.0.0\"\n  },\n  \"host\": \"api.example.com\",\n  \"basePath\": \"/v1\",\n  \"schemes\": [\n    \"https\"\n  ],\n  \"paths\": {\n    \"/cats\": {\n      \"get\": {\n        \"summary\": \"Returns a list of cats.\",\n        \"produces\": [\n          \"application/json\"\n        ],\n        \"responses\": {\n          \"200\": {\n            \"description\": \"OK\"\n          }\n        }\n      }\n    },\n    \"/dogs\": {\n      \"get\": {\n        \"summary\": \"Returns a list of dogs.\",\n        \"produces\": [\n          \"application/json\"\n        ],\n        \"responses\": {\n          \"200\": {\n            \"description\": \"OK\"\n          }\n        }\n      }\n    }\n  }\n}"
+)
 
 func genRandIPAddr() string {
 	ip := fmt.Sprintf("%d.%d.%d.%d", rand.Intn(255), rand.Intn(255), rand.Intn(255), rand.Intn(255))
@@ -50,8 +53,7 @@ func customGenerator() {
 func createAPIEvent() *_database.APIEvent {
 	var event _database.APIEvent
 
-	err := faker.FakeData(&event)
-	if err != nil {
+	if err := faker.FakeData(&event); err != nil {
 		panic(err)
 	}
 
@@ -63,8 +65,7 @@ func createAPIEvent() *_database.APIEvent {
 func createAPIInfo() *_database.APIInfo {
 	var event _database.APIInfo
 
-	err := faker.FakeData(&event)
-	if err != nil {
+	if err := faker.FakeData(&event); err != nil {
 		panic(err)
 	}
 
@@ -105,11 +106,10 @@ func CreateFakeData() {
 	for i := 0; i < 50; i++ {
 		apiEvent := createAPIEvent()
 		apiEvent.HasReconstructedSpecDiff = false
-		apiEvent.IsNonApi = true
+		apiEvent.IsNonAPI = true
 		apiEvent.Path = "/images/image.png"
 		apiEvent.Method = "GET"
 
 		_database.CreateAPIEvent(apiEvent)
 	}
-
 }

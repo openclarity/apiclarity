@@ -13,16 +13,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package k8s_monitor
+package k8smonitor
 
 import (
+	"net"
+	"sync"
+
 	log "github.com/sirupsen/logrus"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
-	"net"
-	"sync"
 )
 
 type NodeMonitor struct {
@@ -64,22 +65,38 @@ func (m *NodeMonitor) Stop() {
 }
 
 func (m *NodeMonitor) addNode(obj interface{}) {
-	node := obj.(*v1.Node)
+	node, ok := obj.(*v1.Node)
+	if !ok {
+		log.Warnf("Object in not a node. %v", obj)
+		return
+	}
 	log.Tracef("Node added: %+v", node)
 
 	m.addPodCIDR(node.Name, node.Spec.PodCIDR)
 }
 
 func (m *NodeMonitor) deleteNode(obj interface{}) {
-	node := obj.(*v1.Node)
+	node, ok := obj.(*v1.Node)
+	if !ok {
+		log.Warnf("Object in not a node. %v", obj)
+		return
+	}
 	log.Tracef("Node deleted: %+v", node.Name)
 
 	m.deletePodCIDR(node.Name)
 }
 
 func (m *NodeMonitor) updateNode(oldObj, newObj interface{}) {
-	oldNode := oldObj.(*v1.Node)
-	newNode := newObj.(*v1.Node)
+	oldNode, ok := oldObj.(*v1.Node)
+	if !ok {
+		log.Warnf("Old object in not a node. %v", oldObj)
+		return
+	}
+	newNode, ok := newObj.(*v1.Node)
+	if !ok {
+		log.Warnf("New object in not a node. %v", newObj)
+		return
+	}
 
 	if oldNode.Spec.PodCIDR != newNode.Spec.PodCIDR {
 		m.deletePodCIDR(oldNode.Name)
@@ -109,11 +126,16 @@ func (m *NodeMonitor) deletePodCIDR(key string) {
 // IsPodCIDR returns true if the given pod meeting the following conditions:
 // 1. Included in one of the node's pod CIDRs
 // 2. Not a broadcast IP (the last IP in the CIDR range)
-// 3. Not a network identifier IP (the first IP in the CIDR range)
+// 3. Not a network identifier IP (the first IP in the CIDR range).
 func (m *NodeMonitor) IsPodCIDR(ipStr string) bool {
 	ret := false
 	m.podCIDRsMap.Range(func(key, value interface{}) bool {
-		ipNet := value.(*IPNet)
+		ipNet, ok := value.(*IPNet)
+		if !ok {
+			log.Warnf("value is not *IPNet: %v", value)
+			// stop iteration
+			return false
+		}
 		ip := net.ParseIP(ipStr)
 		if ipNet.Network.Contains(ip) && !ipNet.BroadcastIP.Equal(ip) && !ipNet.NetworkIdentifierIP.Equal(ip) {
 			ret = true

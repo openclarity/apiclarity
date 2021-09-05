@@ -342,7 +342,7 @@ func Test_createApprovedReviewForSpeculator(t *testing.T) {
 
 func Test_createAPIPaths(t *testing.T) {
 	type args struct {
-		apiId  uint
+		apiID  uint
 		review *speculatorspec.ApprovedSpecReview
 	}
 	tests := []struct {
@@ -353,7 +353,7 @@ func Test_createAPIPaths(t *testing.T) {
 		{
 			name: "sanity",
 			args: args{
-				apiId: 1,
+				apiID: 1,
 				review: &speculatorspec.ApprovedSpecReview{
 					PathItemsReview: []*speculatorspec.ApprovedSpecReviewPathItem{
 						{
@@ -375,19 +375,19 @@ func Test_createAPIPaths(t *testing.T) {
 				{
 					ID:    "123",
 					Path:  "/api/{param1}",
-					ApiID: 1,
+					APIID: 1,
 				},
 				{
 					ID:    "456",
 					Path:  "/api/{param1}/test",
-					ApiID: 1,
+					APIID: 1,
 				},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := createAPIPaths(tt.args.apiId, tt.args.review); !reflect.DeepEqual(got, tt.want) {
+			if got := createAPIPaths(tt.args.apiID, tt.args.review); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("createAPIPaths() = %v, want %v", marshal(got), marshal(tt.want))
 			}
 		})

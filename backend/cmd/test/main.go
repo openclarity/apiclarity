@@ -16,14 +16,16 @@
 package main
 
 import (
+	"os"
+
+	"github.com/go-openapi/loads"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+
 	"github.com/apiclarity/apiclarity/api/server/restapi"
 	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
 	_database "github.com/apiclarity/apiclarity/backend/pkg/database"
 	"github.com/apiclarity/apiclarity/backend/pkg/database/fake"
-	"github.com/go-openapi/loads"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
-	"os"
 )
 
 const (

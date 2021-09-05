@@ -17,22 +17,24 @@ package rest
 
 import (
 	"fmt"
+
+	"github.com/go-openapi/loads"
+	"github.com/go-openapi/runtime/middleware"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/apiclarity/apiclarity/api/server/restapi"
 	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
 	"github.com/apiclarity/apiclarity/backend/pkg/common"
 	_speculator "github.com/apiclarity/speculator/pkg/speculator"
-	"github.com/go-openapi/loads"
-	"github.com/go-openapi/runtime/middleware"
-	log "github.com/sirupsen/logrus"
 )
 
-type RESTServer struct {
+type Server struct {
 	server     *restapi.Server
 	speculator *_speculator.Speculator
 }
 
-func CreateRESTServer(port int, speculator *_speculator.Speculator) (*RESTServer, error) {
-	s := &RESTServer{
+func CreateRESTServer(port int, speculator *_speculator.Speculator) (*Server, error) {
+	s := &Server{
 		speculator: speculator,
 	}
 
@@ -118,7 +120,7 @@ func CreateRESTServer(port int, speculator *_speculator.Speculator) (*RESTServer
 	return s, nil
 }
 
-func (s *RESTServer) Start(errChan chan struct{}) {
+func (s *Server) Start(errChan chan struct{}) {
 	log.Infof("Starting REST server")
 	go func() {
 		if err := s.server.Serve(); err != nil {
@@ -129,7 +131,7 @@ func (s *RESTServer) Start(errChan chan struct{}) {
 	log.Infof("REST server is running")
 }
 
-func (s *RESTServer) Stop() {
+func (s *Server) Stop() {
 	log.Infof("Stopping REST server")
 	if s.server != nil {
 		if err := s.server.Shutdown(); err != nil {

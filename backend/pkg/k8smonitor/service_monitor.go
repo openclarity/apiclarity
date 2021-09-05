@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package k8s_monitor
+package k8smonitor
 
 import (
 	"sync"
@@ -26,16 +26,16 @@ import (
 )
 
 type ServiceMonitor struct {
-	serviceIpMap *sync.Map // Hold cluster IPs of services
+	serviceIPMap *sync.Map // Hold cluster IPs of services
 	clientset    kubernetes.Interface
 	stopCh       chan struct{}
 }
 
 func CreateServiceMonitor(clientset kubernetes.Interface) (*ServiceMonitor, error) {
 	stopCh := make(chan struct{})
-	var serviceIpMap sync.Map
+	var serviceIPMap sync.Map
 	return &ServiceMonitor{
-		serviceIpMap: &serviceIpMap,
+		serviceIPMap: &serviceIPMap,
 		clientset:    clientset,
 		stopCh:       stopCh,
 	}, nil
@@ -63,25 +63,41 @@ func (m *ServiceMonitor) Stop() {
 }
 
 func (m *ServiceMonitor) addService(obj interface{}) {
-	service := obj.(*v1.Service)
-	m.serviceIpMap.Store(service.Spec.ClusterIP, true)
+	service, ok := obj.(*v1.Service)
+	if !ok {
+		log.Warnf("Object in not a service. %v", obj)
+		return
+	}
+	m.serviceIPMap.Store(service.Spec.ClusterIP, true)
 
 	log.Tracef("Service added: service=%+v (%v)", service.Name+"."+service.Namespace, service.Spec.ClusterIP)
 }
 
 func (m *ServiceMonitor) deleteService(obj interface{}) {
-	service := obj.(*v1.Service)
-	m.serviceIpMap.Delete(service.Spec.ClusterIP)
+	service, ok := obj.(*v1.Service)
+	if !ok {
+		log.Warnf("Object in not a service. %v", obj)
+		return
+	}
+	m.serviceIPMap.Delete(service.Spec.ClusterIP)
 	log.Tracef("Service deleted: service=%+v (%v)", service.Name+"."+service.Namespace, service.Spec.ClusterIP)
 }
 
 func (m *ServiceMonitor) updateService(oldObj, newObj interface{}) {
-	oldService := oldObj.(*v1.Service)
-	newService := newObj.(*v1.Service)
+	oldService, ok := oldObj.(*v1.Service)
+	if !ok {
+		log.Warnf("Old object in not a service. %v", oldObj)
+		return
+	}
+	newService, ok := newObj.(*v1.Service)
+	if !ok {
+		log.Warnf("New object in not a service. %v", newObj)
+		return
+	}
 
 	if oldService.Spec.ClusterIP != newService.Spec.ClusterIP {
-		m.serviceIpMap.Delete(oldService.Spec.ClusterIP)
-		m.serviceIpMap.Store(newService.Spec.ClusterIP, true)
+		m.serviceIPMap.Delete(oldService.Spec.ClusterIP)
+		m.serviceIPMap.Store(newService.Spec.ClusterIP, true)
 	}
 
 	log.Tracef("Service updated: old service=service=%+v (%v), new service=service=%+v (%v)",
@@ -92,7 +108,7 @@ func (m *ServiceMonitor) updateService(oldObj, newObj interface{}) {
 
 func (m *ServiceMonitor) IsServiceIP(ipStr string) bool {
 	ret := false
-	m.serviceIpMap.Range(func(key, value interface{}) bool {
+	m.serviceIPMap.Range(func(key, value interface{}) bool {
 		if key == ipStr {
 			ret = true
 			// stop iteration
