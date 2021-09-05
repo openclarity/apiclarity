@@ -31,7 +31,7 @@ make ui
 
 ## Building Backend
 ```
-make backend
+export GO111MODULE=on && make backend
 ```
 
 # Installation in a K8s cluster
