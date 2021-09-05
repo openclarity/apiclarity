@@ -158,7 +158,7 @@ type eventDiff struct {
 	PathItem *spec.PathItem
 }
 
-func convertSpecDiffToEventDiff(diff *_spec.ApiDiff) (originalRet, modifiedRet []byte, err error) {
+func convertSpecDiffToEventDiff(diff *_spec.APIDiff) (originalRet, modifiedRet []byte, err error) {
 	original := eventDiff{
 		Path:     diff.Path,
 		PathItem: diff.OriginalPathItem,
@@ -180,8 +180,8 @@ func convertSpecDiffToEventDiff(diff *_spec.ApiDiff) (originalRet, modifiedRet [
 }
 
 func (b *Backend) handleHttpTrace(trace *_spec.SCNTelemetry) error {
-	var reconstructedDiff *_spec.ApiDiff
-	var providedDiff *_spec.ApiDiff
+	var reconstructedDiff *_spec.APIDiff
+	var providedDiff *_spec.APIDiff
 	var err error
 
 	if trace.SCNTRequest.Host == "" {
