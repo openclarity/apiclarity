@@ -35,7 +35,7 @@ make backend
 ```
 
 # Installation in a K8s cluster
-1. Make sure that Istio is installed and running in your cluster:
+1. Make sure that Istio is installed and running in your cluster: 
    
    1.1. Istio that is deployed as part of SecureCN installation.
    
@@ -53,14 +53,13 @@ NAME                        READY   STATUS    RESTARTS   AGE
 apiclarity-5df5fd6d98-h8v7t   1/1     Running   2          15m
 mysql-6ffc46b7f-bggrv       1/1     Running   0          15m
 ```
-4. Build the Envoy WASM filter for capturing the traffic:
+4. Deploy the Envoy WASM filter for capturing the traffic:
 ```
 git submodule init wasm-filters
 git submodule update wasm-filters
 cd wasm-filters
-make docker_build && ls -l bin 
 ```
-5. Run the WASM deployment script for selected namespaces to allow traffic tracing.
+Run the WASM deployment script for selected namespaces to allow traffic tracing.
 The script will automatically:
    
    - Deploy the WASM filter binary as a config map.
