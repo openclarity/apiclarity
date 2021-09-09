@@ -72,7 +72,8 @@ The script will automatically:
 ./deploy.sh <namespace1> <namespace2> ...
 ```
 
-Note: you can also build and deploy your own custom filter. In order to do this, please check out the [wasm-filters](https://github.com/apiclarity/wasm-filters) repo. 
+Note:
+To build the WASM filter instead of using the pre-built binary, please follow the instructions on [wasm-filters](https://github.com/apiclarity/wasm-filters)
 
 5. Port forward to APIClarity UI:
 ```
