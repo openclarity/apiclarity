@@ -35,8 +35,7 @@ make backend
 ```
 
 # Installation in a K8s cluster
-1. Make sure that Istio is installed and running in your cluster:
-   Official installation [instructions](https://istio.io/latest/docs/setup/getting-started/#install).
+1. Make sure that Istio is installed and running in your cluster: ([Official installation instructions](https://istio.io/latest/docs/setup/getting-started/#install)).
    
 
 2. Deploy APIClarity in K8s (will be deployed in a new namespace named apiclarity):
