@@ -49,14 +49,13 @@ NAME                        READY   STATUS    RESTARTS   AGE
 apiclarity-5df5fd6d98-h8v7t   1/1     Running   2          15m
 mysql-6ffc46b7f-bggrv       1/1     Running   0          15m
 ```
-4. Build the Envoy WASM filter for capturing the traffic:
+4. Deploy the Envoy WASM filter for capturing the traffic:
 ```
 git submodule init wasm-filters
 git submodule update wasm-filters
 cd wasm-filters
-make docker_build && ls -l bin 
 ```
-5. Run the WASM deployment script for selected namespaces to allow traffic tracing.
+Run the WASM deployment script for selected namespaces to allow traffic tracing.
 The script will automatically:
    
    - Deploy the WASM filter binary as a config map.
@@ -68,14 +67,18 @@ The script will automatically:
 ```
 ./deploy.sh <namespace1> <namespace2> ...
 ```
-6. Port forward to APIClarity UI:
+
+Note:
+To build the WASM filter instead of using the pre-built binary, please follow the instructions on [wasm-filters](https://github.com/apiclarity/wasm-filters)
+
+5. Port forward to APIClarity UI:
 ```
 kubectl port-forward -n apiclarity svc/apiclarity 9999:8080
 ```
 
-7. Open APIClarity UI in the browser: [http://localhost:9999/](http://localhost:9999/)
+6. Open APIClarity UI in the browser: [http://localhost:9999/](http://localhost:9999/)
 
-8. Generate some traffic in the applications (e.g. [sock-shop demo](https://github.com/microservices-demo/microservices-demo)) in the traced namespaces and check APIClarity UI :)
+7. Generate some traffic in the applications (e.g. [sock-shop demo](https://github.com/microservices-demo/microservices-demo)) in the traced namespaces and check APIClarity UI :)
 
 
 ## Running locally with demo data
