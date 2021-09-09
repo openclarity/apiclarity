@@ -71,14 +71,17 @@ The script will automatically:
 ```
 ./deploy.sh <namespace1> <namespace2> ...
 ```
-6. Port forward to APIClarity UI:
+
+Note: you can also build and deploy your own custom filter. In order to do this, please check out the [wasm-filters](https://github.com/apiclarity/wasm-filters) repo. 
+
+5. Port forward to APIClarity UI:
 ```
 kubectl port-forward -n apiclarity svc/apiclarity 9999:8080
 ```
 
-7. Open APIClarity UI in the browser: [http://localhost:9999/](http://localhost:9999/)
+6. Open APIClarity UI in the browser: [http://localhost:9999/](http://localhost:9999/)
 
-8. Generate some traffic in the applications (e.g. [sock-shop demo](https://github.com/microservices-demo/microservices-demo)) in the traced namespaces and check APIClarity UI :)
+7. Generate some traffic in the applications (e.g. [sock-shop demo](https://github.com/microservices-demo/microservices-demo)) in the traced namespaces and check APIClarity UI :)
 
 
 ## Running locally with demo data
