@@ -36,10 +36,7 @@ make backend
 
 # Installation in a K8s cluster
 1. Make sure that Istio is installed and running in your cluster:
-   
-   1.1. Istio that is deployed as part of SecureCN installation.
-   
-   1.2 Official installation [instructions](https://istio.io/latest/docs/setup/getting-started/#install).
+   Official installation [instructions](https://istio.io/latest/docs/setup/getting-started/#install).
    
 
 2. Deploy APIClarity in K8s (will be deployed in a new namespace named apiclarity):
