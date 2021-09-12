@@ -4,7 +4,7 @@ import Title from 'components/Title';
 import { formatDate } from 'utils/utils';
 import ApisList from './ApisList';
 
-const LatestSpec = () => (
+const LatestSpec = ({refreshTimestamp}) => (
     <PageContainer className="latest-spec-wrapper">
         <Title small>Latest spec diffs</Title>
         <ApisList
@@ -15,6 +15,7 @@ const LatestSpec = () => (
             }}
             getLink={({apiEventId}) => `/events/tableView/${apiEventId}`}
             apiIdKey="apiEventId"
+            refreshTimestamp={refreshTimestamp}
         />
     </PageContainer>
 )

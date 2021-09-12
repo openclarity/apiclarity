@@ -1,14 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import Loader from 'components/Loader';
 import { useFetch } from 'hooks';
 
 import './apis-list.scss';
 
-const ApisList = ({url, subColumn: {title, dataDisplay: DataDisplay}, getLink, apiIdKey}) => {
+const ApisList = ({url, subColumn: {title, dataDisplay: DataDisplay}, getLink, apiIdKey, refreshTimestamp}) => {
     const history = useHistory();
 
-    const [{loading, data, error}] = useFetch(url);
+    const [{loading, data, error}, fetchData] = useFetch(url);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData, refreshTimestamp]);
 
     return (
         <div className="apis-list-wrapper">

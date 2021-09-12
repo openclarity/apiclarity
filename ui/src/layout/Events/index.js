@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Route, Switch, useRouteMatch, Redirect } from 'react-router-dom';
-import Title from 'components/Title';
+import MainTitleWithRefresh from 'components/MainTitleWithRefresh';
 import Icon, { ICON_NAMES } from 'components/Icon';
 import TabbedPageContainer from 'components/TabbedPageContainer';
 import TimeFilter, { TIME_SELECT_ITEMS, getTimeFormat } from 'components/TimeFilter';
@@ -53,10 +53,7 @@ const Events = () => {
 
     return (
         <div className="events-page">
-            <div className="events-page-title">
-                <Title>API Events</Title>
-                <Icon name={ICON_NAMES.REFRESH} onClick={doRefresh} />
-            </div>
+            <MainTitleWithRefresh title="API Events" onRefreshClick={doRefresh} />
             <div className="events-filters-wrapper">
                 <TimeFilter
                     selectedRange={selectedRange}

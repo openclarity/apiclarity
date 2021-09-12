@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Route, Switch, useRouteMatch, Redirect } from 'react-router-dom';
-import Title from 'components/Title';
+import MainTitleWithRefresh from 'components/MainTitleWithRefresh';
 import TabbedPageContainer from 'components/TabbedPageContainer';
-import Icon, { ICON_NAMES } from 'components/Icon';
 import InventoryTable from './InventoryTable';
 import InventoryDetails from './InventoryDetails';
 import GeneralFilter, { formatFiltersToQueryParams } from './GeneralFilter';
@@ -28,10 +27,7 @@ const Inventory = () => {
 
     return (
         <div className="inventory-tables-page">
-            <div className="inventory-tables-title">
-                <Title>API Inventory</Title>
-                <Icon name={ICON_NAMES.REFRESH} onClick={doRefreshTimestamp} />
-            </div>
+            <MainTitleWithRefresh title="API Inventory" onRefreshClick={doRefreshTimestamp} />
             <GeneralFilter
                 filters={filters}
                 onFilterUpdate={filters => setFilters(filters)}
