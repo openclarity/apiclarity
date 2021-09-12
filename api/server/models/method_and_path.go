@@ -11,6 +11,7 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // MethodAndPath method and path
@@ -23,6 +24,10 @@ type MethodAndPath struct {
 
 	// path
 	Path string `json:"path,omitempty"`
+
+	// path Id
+	// Format: uuid
+	PathID strfmt.UUID `json:"pathId,omitempty"`
 }
 
 // Validate validates this method and path
@@ -30,6 +35,10 @@ func (m *MethodAndPath) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateMethod(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validatePathID(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -48,6 +57,18 @@ func (m *MethodAndPath) validateMethod(formats strfmt.Registry) error {
 		if ve, ok := err.(*errors.Validation); ok {
 			return ve.ValidateName("method")
 		}
+		return err
+	}
+
+	return nil
+}
+
+func (m *MethodAndPath) validatePathID(formats strfmt.Registry) error {
+	if swag.IsZero(m.PathID) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("pathId", "body", "uuid", m.PathID.String(), formats); err != nil {
 		return err
 	}
 

@@ -481,6 +481,12 @@ func init() {
             "$ref": "#/parameters/methodIsFilter"
           },
           {
+            "$ref": "#/parameters/providedPathIDIsFilter"
+          },
+          {
+            "$ref": "#/parameters/reconstructedPathIDIsFilter"
+          },
+          {
             "$ref": "#/parameters/pathIsFilter"
           },
           {
@@ -877,6 +883,10 @@ func init() {
         },
         "path": {
           "type": "string"
+        },
+        "pathId": {
+          "type": "string",
+          "format": "uuid"
         }
       }
     },
@@ -1218,6 +1228,22 @@ func init() {
         "type": "string"
       },
       "name": "port[isNot]",
+      "in": "query"
+    },
+    "providedPathIDIsFilter": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "name": "providedPathID[is]",
+      "in": "query"
+    },
+    "reconstructedPathIDIsFilter": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "name": "reconstructedPathID[is]",
       "in": "query"
     },
     "reviewId": {
@@ -2124,6 +2150,22 @@ func init() {
             "items": {
               "type": "string"
             },
+            "name": "providedPathID[is]",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "name": "reconstructedPathID[is]",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
             "name": "path[is]",
             "in": "query"
           },
@@ -2624,6 +2666,10 @@ func init() {
         },
         "path": {
           "type": "string"
+        },
+        "pathId": {
+          "type": "string",
+          "format": "uuid"
         }
       }
     },
@@ -2965,6 +3011,22 @@ func init() {
         "type": "string"
       },
       "name": "port[isNot]",
+      "in": "query"
+    },
+    "providedPathIDIsFilter": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "name": "providedPathID[is]",
+      "in": "query"
+    },
+    "reconstructedPathIDIsFilter": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "name": "reconstructedPathID[is]",
       "in": "query"
     },
     "reviewId": {

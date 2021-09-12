@@ -16,31 +16,33 @@ import (
 
 // GetAPIUsageHitCountURL generates an URL for the get API usage hit count operation
 type GetAPIUsageHitCountURL struct {
-	DestinationIPIsNot   []string
-	DestinationIPIs      []string
-	DestinationPortIsNot []string
-	DestinationPortIs    []string
-	EndTime              strfmt.DateTime
-	HasSpecDiffIs        *bool
-	MethodIs             []string
-	PathContains         []string
-	PathEnd              *string
-	PathIsNot            []string
-	PathIs               []string
-	PathStart            *string
-	ShowNonAPI           bool
-	SourceIPIsNot        []string
-	SourceIPIs           []string
-	SpecContains         []string
-	SpecEnd              *string
-	SpecIsNot            []string
-	SpecIs               []string
-	SpecStart            *string
-	StartTime            strfmt.DateTime
-	StatusCodeGte        *string
-	StatusCodeIsNot      []string
-	StatusCodeIs         []string
-	StatusCodeLte        *string
+	DestinationIPIsNot    []string
+	DestinationIPIs       []string
+	DestinationPortIsNot  []string
+	DestinationPortIs     []string
+	EndTime               strfmt.DateTime
+	HasSpecDiffIs         *bool
+	MethodIs              []string
+	PathContains          []string
+	PathEnd               *string
+	PathIsNot             []string
+	PathIs                []string
+	PathStart             *string
+	ProvidedPathIDIs      []string
+	ReconstructedPathIDIs []string
+	ShowNonAPI            bool
+	SourceIPIsNot         []string
+	SourceIPIs            []string
+	SpecContains          []string
+	SpecEnd               *string
+	SpecIsNot             []string
+	SpecIs                []string
+	SpecStart             *string
+	StartTime             strfmt.DateTime
+	StatusCodeGte         *string
+	StatusCodeIsNot       []string
+	StatusCodeIs          []string
+	StatusCodeLte         *string
 
 	_basePath string
 	// avoid unkeyed usage
@@ -239,6 +241,40 @@ func (o *GetAPIUsageHitCountURL) Build() (*url.URL, error) {
 	}
 	if pathStartQ != "" {
 		qs.Set("path[start]", pathStartQ)
+	}
+
+	var providedPathIDIsIR []string
+	for _, providedPathIDIsI := range o.ProvidedPathIDIs {
+		providedPathIDIsIS := providedPathIDIsI
+		if providedPathIDIsIS != "" {
+			providedPathIDIsIR = append(providedPathIDIsIR, providedPathIDIsIS)
+		}
+	}
+
+	providedPathIDIs := swag.JoinByFormat(providedPathIDIsIR, "")
+
+	if len(providedPathIDIs) > 0 {
+		qsv := providedPathIDIs[0]
+		if qsv != "" {
+			qs.Set("providedPathID[is]", qsv)
+		}
+	}
+
+	var reconstructedPathIDIsIR []string
+	for _, reconstructedPathIDIsI := range o.ReconstructedPathIDIs {
+		reconstructedPathIDIsIS := reconstructedPathIDIsI
+		if reconstructedPathIDIsIS != "" {
+			reconstructedPathIDIsIR = append(reconstructedPathIDIsIR, reconstructedPathIDIsIS)
+		}
+	}
+
+	reconstructedPathIDIs := swag.JoinByFormat(reconstructedPathIDIsIR, "")
+
+	if len(reconstructedPathIDIs) > 0 {
+		qsv := reconstructedPathIDIs[0]
+		if qsv != "" {
+			qs.Set("reconstructedPathID[is]", qsv)
+		}
 	}
 
 	showNonAPIQ := swag.FormatBool(o.ShowNonAPI)
