@@ -25,7 +25,7 @@ const Details = ({data}) => {
             </TitleValueDisplayRow>
             <TitleValueDisplayRow>
                 <TitleValueDisplay title="spec" className="spec-display">
-                    <Button secondary onClick={() => history.push(`/inventory/${apiType}/${apiInfoId}`)}>{hostSpecName}</Button>
+                    {!!apiInfoId ? <Button secondary onClick={() => history.push(`/inventory/${apiType}/${apiInfoId}`)}>{hostSpecName}</Button> : hostSpecName}
                 </TitleValueDisplay>
             </TitleValueDisplayRow>
         </div>
