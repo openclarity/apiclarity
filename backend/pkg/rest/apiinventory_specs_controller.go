@@ -22,6 +22,7 @@ import (
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/spec"
+	"github.com/go-openapi/strfmt"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/apiclarity/apiclarity/api/server/models"
@@ -32,7 +33,7 @@ import (
 const defaultTagName = "default-tag"
 
 func (s *Server) GetAPIInventoryAPIIDSpecs(params operations.GetAPIInventoryAPIIDSpecsParams) middleware.Responder {
-	apiSpecFromDB, err := database.GetAPISpecs(params.APIID)
+	specsInfo, err := database.GetAPISpecsInfo(params.APIID)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
@@ -40,31 +41,16 @@ func (s *Server) GetAPIInventoryAPIIDSpecs(params operations.GetAPIInventoryAPII
 		return operations.NewGetAPIInventoryAPIIDSpecsDefault(http.StatusInternalServerError)
 	}
 
-	log.Debugf("Got GetAPIInventoryAPIIDSpecsParams=%+v, Got apiSpecFromDB=%+v", params, apiSpecFromDB)
+	log.Debugf("Got GetAPIInventoryAPIIDSpecsParams=%+v, Got specsInfo=%+v", params, specsInfo)
 
-	providedSpec, err := createSpecInfo(apiSpecFromDB.ProvidedSpec)
-	if err != nil {
-		log.Errorf("Failed to create spec info from provided spec. %v", err)
-		return operations.NewGetAPIInventoryAPIIDSpecsDefault(http.StatusInternalServerError)
-	}
-	reconstructedSpec, err := createSpecInfo(apiSpecFromDB.ReconstructedSpec)
-	if err != nil {
-		log.Errorf("Failed to create spec info from reconstructed spec. %v", err)
-		return operations.NewGetAPIInventoryAPIIDSpecsDefault(http.StatusInternalServerError)
-	}
-
-	return operations.NewGetAPIInventoryAPIIDSpecsOK().WithPayload(
-		&models.OpenAPISpecs{
-			ProvidedSpec:      providedSpec,
-			ReconstructedSpec: reconstructedSpec,
-		})
+	return operations.NewGetAPIInventoryAPIIDSpecsOK().WithPayload(specsInfo)
 }
 
-func createSpecInfo(rawSpec string) (*models.SpecInfo, error) {
+func createSpecInfo(rawSpec string, pathToPathID map[string]string) (*models.SpecInfo, error) {
 	if rawSpec == "" {
 		return nil, nil
 	}
-	tags, err := createTagsListFromRawSpec(rawSpec)
+	tags, err := createTagsListFromRawSpec(rawSpec, pathToPathID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create tags list from raw spec: %v. %v", rawSpec, err)
 	}
@@ -73,7 +59,7 @@ func createSpecInfo(rawSpec string) (*models.SpecInfo, error) {
 	}, nil
 }
 
-func createTagsListFromRawSpec(rawSpec string) ([]*models.SpecTag, error) {
+func createTagsListFromRawSpec(rawSpec string, pathToPathID map[string]string) ([]*models.SpecTag, error) {
 	var tagList []*models.SpecTag
 
 	tagListMap := map[string][]*models.MethodAndPath{}
@@ -85,13 +71,14 @@ func createTagsListFromRawSpec(rawSpec string) ([]*models.SpecTag, error) {
 	analyzedSpec := analyzed.Spec()
 
 	for path, pathItem := range analyzedSpec.Paths.Paths {
-		addOperationToTagList(pathItem.Get, models.HTTPMethodGET, path, tagListMap)
-		addOperationToTagList(pathItem.Put, models.HTTPMethodPUT, path, tagListMap)
-		addOperationToTagList(pathItem.Post, models.HTTPMethodPOST, path, tagListMap)
-		addOperationToTagList(pathItem.Patch, models.HTTPMethodPATCH, path, tagListMap)
-		addOperationToTagList(pathItem.Options, models.HTTPMethodOPTIONS, path, tagListMap)
-		addOperationToTagList(pathItem.Delete, models.HTTPMethodDELETE, path, tagListMap)
-		addOperationToTagList(pathItem.Head, models.HTTPMethodHEAD, path, tagListMap)
+		pathID := pathToPathID[path]
+		addOperationToTagList(pathItem.Get, models.HTTPMethodGET, path, pathID, tagListMap)
+		addOperationToTagList(pathItem.Put, models.HTTPMethodPUT, path, pathID, tagListMap)
+		addOperationToTagList(pathItem.Post, models.HTTPMethodPOST, path, pathID, tagListMap)
+		addOperationToTagList(pathItem.Patch, models.HTTPMethodPATCH, path, pathID, tagListMap)
+		addOperationToTagList(pathItem.Options, models.HTTPMethodOPTIONS, path, pathID, tagListMap)
+		addOperationToTagList(pathItem.Delete, models.HTTPMethodDELETE, path, pathID, tagListMap)
+		addOperationToTagList(pathItem.Head, models.HTTPMethodHEAD, path, pathID, tagListMap)
 	}
 
 	for tag, methodAndPaths := range tagListMap {
@@ -104,21 +91,23 @@ func createTagsListFromRawSpec(rawSpec string) ([]*models.SpecTag, error) {
 	return tagList, nil
 }
 
-func addOperationToTagList(operation *spec.Operation, method models.HTTPMethod, path string, tagList map[string][]*models.MethodAndPath) {
+func addOperationToTagList(operation *spec.Operation, method models.HTTPMethod, path, pathID string, tagList map[string][]*models.MethodAndPath) {
 	if operation == nil {
 		return
 	}
+
+	methodAndPath := &models.MethodAndPath{
+		Method: method,
+		Path:   path,
+		PathID: strfmt.UUID(pathID),
+	}
+
 	if len(operation.Tags) == 0 {
-		tagList[defaultTagName] = append(tagList[defaultTagName], &models.MethodAndPath{
-			Method: method,
-			Path:   path,
-		})
-		return
+		tagList[defaultTagName] = append(tagList[defaultTagName], methodAndPath)
+	} else {
+		for _, tag := range operation.Tags {
+			tagList[tag] = append(tagList[tag], methodAndPath)
+		}
 	}
-	for _, tag := range operation.Tags {
-		tagList[tag] = append(tagList[tag], &models.MethodAndPath{
-			Method: method,
-			Path:   path,
-		})
-	}
+
 }

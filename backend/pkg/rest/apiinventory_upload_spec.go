@@ -26,6 +26,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/validate"
+	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/apiclarity/apiclarity/api/server/models"
@@ -35,8 +36,6 @@ import (
 )
 
 func (s *Server) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPIInventoryAPIIDSpecsProvidedSpecParams) middleware.Responder {
-	apiInfo := &database.APIInfo{}
-
 	log.Debugf("Got PutAPIInventoryAPIIDSpecsProvidedSpecParams: %+v", params)
 
 	// Convert YAML to JSON. Since JSON is a subset of YAML, passing JSON through
@@ -61,17 +60,24 @@ func (s *Server) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPII
 		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecBadRequest().WithPayload("Spec validation failed")
 	}
 
+	// Create a Path to PathID map for each path in the provided spec
+	pathToPathID := make(map[string]string)
+	for path := range analyzed.Spec().Paths.Paths {
+		pathToPathID[path] = uuid.NewV4().String()
+	}
+
+	specInfo, err := createSpecInfo(params.Body.RawSpec, pathToPathID)
+	if err != nil {
+		log.Errorf("Failed to create spec info. %v", err)
+		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(500)
+	}
+
 	// Save the provided spec in the DB without expanding the ref fields
-	if err = database.PutProvidedAPISpec(params); err != nil {
+	if err = database.PutAPISpec(uint(params.APIID), params.Body.RawSpec, specInfo, database.ProvidedSpecType); err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
 		log.Errorf("Failed to put provided API spec. %v", err)
-		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
-	}
-
-	if err := database.GetAPIInventoryTable().First(&apiInfo, params.APIID).Error; err != nil {
-		log.Errorf("Failed to get APIInventory table with api id: %v. %v", params.APIID, err)
-		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
+		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(500)
 	}
 
 	// Expands the ref fields in the analyzed spec document
@@ -81,15 +87,17 @@ func (s *Server) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPII
 		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
 	}
 
-	if err := s.speculator.LoadProvidedSpec(speculator.GetSpecKey(apiInfo.Name, strconv.Itoa(int(apiInfo.Port))), jsonSpecBytes); err != nil {
-		log.Errorf("Failed to load provided spec. %v", err)
-		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
+	// Load provided spec to Speculator
+	if err := s.loadProvidedSpec(params.APIID, jsonSpecBytes, pathToPathID); err != nil {
+		log.Errorf("Failed to load provided API spec: %v", err)
+		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(500)
 	}
 
-	return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecCreated().WithPayload(
-		&models.RawSpec{
-			RawSpec: params.Body.RawSpec,
-		})
+	// Since we don't have a mapping between events paths to the parametrized path,
+	// We will not set the old events with provided path IDs
+
+	return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecCreated().
+		WithPayload(&models.RawSpec{RawSpec: params.Body.RawSpec})
 }
 
 // getExpandedSpec expands the ref fields in the analyzed spec document.
@@ -105,4 +113,27 @@ func getExpandedSpec(analyzed *loads.Document) ([]byte, error) {
 	}
 
 	return expandedSpecB, nil
+}
+
+func (s *Server) loadProvidedSpec(apiID uint32, jsonSpec []byte, pathToPathID map[string]string) error {
+	specKey, err := getSpecKey(apiID)
+	if err != nil {
+		return fmt.Errorf("failed to get spec key: %v", err)
+	}
+
+	if err := s.speculator.LoadProvidedSpec(specKey, jsonSpec, pathToPathID); err != nil {
+		return fmt.Errorf("failed to load provided spec: %v", err)
+	}
+
+	return nil
+}
+
+func getSpecKey(apiID uint32) (speculator.SpecKey, error) {
+	var apiInfo = &database.APIInfo{}
+
+	if err := database.GetAPIInventoryTable().First(&apiInfo, apiID).Error; err != nil {
+		return "", fmt.Errorf("failed to get API Info from DB. id=%v: %v", apiID, err)
+	}
+
+	return speculator.GetSpecKey(apiInfo.Name, strconv.Itoa(int(apiInfo.Port))), nil
 }

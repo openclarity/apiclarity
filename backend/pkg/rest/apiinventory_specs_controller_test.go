@@ -27,7 +27,8 @@ import (
 
 func Test_createTagsListFromRawSpec(t *testing.T) {
 	type args struct {
-		rawSpec string
+		rawSpec      string
+		pathToPathID map[string]string
 	}
 	tests := []struct {
 		name    string
@@ -41,6 +42,9 @@ func Test_createTagsListFromRawSpec(t *testing.T) {
 				rawSpec: test.NewTestSpec().
 					WithPathItem("/some/path", test.NewTestPathItem().
 						WithOperation(http.MethodGet, test.NewTestOperation().Op).PathItem).String(t),
+				pathToPathID: map[string]string{
+					"/some/path": "1",
+				},
 			},
 			want: []*models.SpecTag{
 				{
@@ -49,6 +53,7 @@ func Test_createTagsListFromRawSpec(t *testing.T) {
 						{
 							Method: http.MethodGet,
 							Path:   "/some/path",
+							PathID: "1",
 						},
 					},
 					Name: defaultTagName,
@@ -64,6 +69,9 @@ func Test_createTagsListFromRawSpec(t *testing.T) {
 						WithOperation(http.MethodGet, test.NewTestOperation().WithTags([]string{"tag1", "tag2"}).Op).
 						WithOperation(http.MethodPut, test.NewTestOperation().WithTags([]string{"tag1", "tag2"}).Op).
 						PathItem).String(t),
+				pathToPathID: map[string]string{
+					"/some/path": "1",
+				},
 			},
 			want: []*models.SpecTag{
 				{
@@ -72,10 +80,12 @@ func Test_createTagsListFromRawSpec(t *testing.T) {
 						{
 							Method: http.MethodGet,
 							Path:   "/some/path",
+							PathID: "1",
 						},
 						{
 							Method: http.MethodPut,
 							Path:   "/some/path",
+							PathID: "1",
 						},
 					},
 					Name: "tag1",
@@ -86,10 +96,12 @@ func Test_createTagsListFromRawSpec(t *testing.T) {
 						{
 							Method: http.MethodGet,
 							Path:   "/some/path",
+							PathID: "1",
 						},
 						{
 							Method: http.MethodPut,
 							Path:   "/some/path",
+							PathID: "1",
 						},
 					},
 					Name: "tag2",
@@ -110,6 +122,10 @@ func Test_createTagsListFromRawSpec(t *testing.T) {
 						WithOperation(http.MethodPut, test.NewTestOperation().WithTags([]string{"tag1"}).Op).
 						PathItem).
 					String(t),
+				pathToPathID: map[string]string{
+					"/some/path":   "1",
+					"/some/path/2": "2",
+				},
 			},
 			want: []*models.SpecTag{
 				{
@@ -118,14 +134,17 @@ func Test_createTagsListFromRawSpec(t *testing.T) {
 						{
 							Method: http.MethodGet,
 							Path:   "/some/path",
+							PathID: "1",
 						},
 						{
 							Method: http.MethodPut,
 							Path:   "/some/path",
+							PathID: "1",
 						},
 						{
 							Method: http.MethodPut,
 							Path:   "/some/path/2",
+							PathID: "2",
 						},
 					},
 					Name: "tag1",
@@ -136,10 +155,12 @@ func Test_createTagsListFromRawSpec(t *testing.T) {
 						{
 							Method: http.MethodGet,
 							Path:   "/some/path",
+							PathID: "1",
 						},
 						{
 							Method: http.MethodPut,
 							Path:   "/some/path",
+							PathID: "1",
 						},
 					},
 					Name: "tag2",
@@ -150,6 +171,7 @@ func Test_createTagsListFromRawSpec(t *testing.T) {
 						{
 							Method: http.MethodPost,
 							Path:   "/some/path/2",
+							PathID: "2",
 						},
 					},
 					Name: defaultTagName,
@@ -160,7 +182,7 @@ func Test_createTagsListFromRawSpec(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := createTagsListFromRawSpec(tt.args.rawSpec)
+			got, err := createTagsListFromRawSpec(tt.args.rawSpec, tt.args.pathToPathID)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("createTagsListFromRawSpec() error = %v, wantErr %v", err, tt.wantErr)
 				return

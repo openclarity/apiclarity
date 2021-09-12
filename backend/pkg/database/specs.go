@@ -16,7 +16,17 @@
 package database
 
 import (
-	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
+	"encoding/json"
+	"fmt"
+
+	"github.com/apiclarity/apiclarity/api/server/models"
+)
+
+type specType string
+
+const (
+	ReconstructedSpecType specType = "ReconstructedSpecType"
+	ProvidedSpecType      specType = "ProvidedSpecType"
 )
 
 func GetAPISpecs(apiID uint32) (*APIInfo, error) {
@@ -29,9 +39,59 @@ func GetAPISpecs(apiID uint32) (*APIInfo, error) {
 	return &apiInfo, nil
 }
 
-func PutProvidedAPISpec(params operations.PutAPIInventoryAPIIDSpecsProvidedSpecParams) error {
-	if err := GetAPIInventoryTable().Model(&APIInfo{}).Where("id = ?", params.APIID).Updates(map[string]interface{}{providedSpecColumnName: params.Body.RawSpec, hasProvidedSpecColumnName: true}).Error; err != nil {
-		return err
+func GetAPISpecsInfo(apiID uint32) (*models.OpenAPISpecs, error) {
+	apiInfo := APIInfo{}
+
+	if err := GetAPIInventoryTable().Select(reconstructedSpecInfoColumnName, providedSpecInfoColumnName).First(&apiInfo, apiID).Error; err != nil {
+		return nil, fmt.Errorf("failed to get API info: %v", err)
+	}
+
+	specsInfo := &models.OpenAPISpecs{}
+
+	if apiInfo.ProvidedSpecInfo != "" {
+		specInfo := models.SpecInfo{}
+		if err := json.Unmarshal([]byte(apiInfo.ProvidedSpecInfo), &specInfo); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal provided spec info. info=%+v: %v", apiInfo.ProvidedSpecInfo, err)
+		}
+		specsInfo.ProvidedSpec = &specInfo
+	}
+
+	if apiInfo.ReconstructedSpecInfo != "" {
+		specInfo := models.SpecInfo{}
+		if err := json.Unmarshal([]byte(apiInfo.ReconstructedSpecInfo), &specInfo); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal recostruced spec info. info=%+v: %v", apiInfo.ReconstructedSpecInfo, err)
+		}
+		specsInfo.ReconstructedSpec = &specInfo
+	}
+
+	return specsInfo, nil
+}
+
+func PutAPISpec(apiID uint, spec string, specInfo *models.SpecInfo, specType specType) error {
+	specInfoB, err := json.Marshal(specInfo)
+	if err != nil {
+		return fmt.Errorf("failed to marshal spec info. info=%+v: %v", specInfo, err)
+	}
+
+	var valuesToUpdate map[string]interface{}
+
+	switch specType {
+	case ReconstructedSpecType:
+		valuesToUpdate = map[string]interface{}{
+			reconstructedSpecColumnName:     spec,
+			reconstructedSpecInfoColumnName: string(specInfoB),
+			hasReconstructedSpecColumnName:  true,
+		}
+	case ProvidedSpecType:
+		valuesToUpdate = map[string]interface{}{
+			providedSpecColumnName:     spec,
+			providedSpecInfoColumnName: string(specInfoB),
+			hasProvidedSpecColumnName:  true,
+		}
+	}
+
+	if err := GetAPIInventoryTable().Model(&APIInfo{}).Where("id = ?", apiID).Updates(valuesToUpdate).Error; err != nil {
+		return fmt.Errorf("failed update API info: %v", err)
 	}
 
 	return nil
