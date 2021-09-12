@@ -4,7 +4,7 @@ import Title from 'components/Title';
 import Tag from 'components/Tag';
 import ApisList from './ApisList';
 
-const MostUsed = () => (
+const MostUsed = ({refreshTimestamp}) => (
     <PageContainer className="most-used-wrapper">
         <Title small>Most used APIs</Title>
         <ApisList
@@ -15,6 +15,7 @@ const MostUsed = () => (
             }}
             getLink={({apiType, apiInfoId}) => `/inventory/${apiType}/${apiInfoId}`}
             apiIdKey="apiInfoId"
+            refreshTimestamp={refreshTimestamp}
         />
     </PageContainer>
 )
