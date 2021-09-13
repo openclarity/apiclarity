@@ -65,7 +65,7 @@ func (m *ServiceMonitor) Stop() {
 func (m *ServiceMonitor) addService(obj interface{}) {
 	service, ok := obj.(*v1.Service)
 	if !ok {
-		log.Warnf("Object in not a service. %v", obj)
+		log.Warnf("Object in not a service. %T", obj)
 		return
 	}
 	m.serviceIPMap.Store(service.Spec.ClusterIP, true)
@@ -76,7 +76,7 @@ func (m *ServiceMonitor) addService(obj interface{}) {
 func (m *ServiceMonitor) deleteService(obj interface{}) {
 	service, ok := obj.(*v1.Service)
 	if !ok {
-		log.Warnf("Object in not a service. %v", obj)
+		log.Warnf("Object in not a service. %T", obj)
 		return
 	}
 	m.serviceIPMap.Delete(service.Spec.ClusterIP)
@@ -86,12 +86,12 @@ func (m *ServiceMonitor) deleteService(obj interface{}) {
 func (m *ServiceMonitor) updateService(oldObj, newObj interface{}) {
 	oldService, ok := oldObj.(*v1.Service)
 	if !ok {
-		log.Warnf("Old object in not a service. %v", oldObj)
+		log.Warnf("Old object in not a service. %T", oldObj)
 		return
 	}
 	newService, ok := newObj.(*v1.Service)
 	if !ok {
-		log.Warnf("New object in not a service. %v", newObj)
+		log.Warnf("New object in not a service. %T", newObj)
 		return
 	}
 

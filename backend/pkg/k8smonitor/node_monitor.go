@@ -67,7 +67,7 @@ func (m *NodeMonitor) Stop() {
 func (m *NodeMonitor) addNode(obj interface{}) {
 	node, ok := obj.(*v1.Node)
 	if !ok {
-		log.Warnf("Object in not a node. %v", obj)
+		log.Warnf("Object in not a node. %T", obj)
 		return
 	}
 	log.Tracef("Node added: %+v", node)
@@ -78,7 +78,7 @@ func (m *NodeMonitor) addNode(obj interface{}) {
 func (m *NodeMonitor) deleteNode(obj interface{}) {
 	node, ok := obj.(*v1.Node)
 	if !ok {
-		log.Warnf("Object in not a node. %v", obj)
+		log.Warnf("Object in not a node. %T", obj)
 		return
 	}
 	log.Tracef("Node deleted: %+v", node.Name)
@@ -89,12 +89,12 @@ func (m *NodeMonitor) deleteNode(obj interface{}) {
 func (m *NodeMonitor) updateNode(oldObj, newObj interface{}) {
 	oldNode, ok := oldObj.(*v1.Node)
 	if !ok {
-		log.Warnf("Old object in not a node. %v", oldObj)
+		log.Warnf("Old object in not a node. %T", oldObj)
 		return
 	}
 	newNode, ok := newObj.(*v1.Node)
 	if !ok {
-		log.Warnf("New object in not a node. %v", newObj)
+		log.Warnf("New object in not a node. %T", newObj)
 		return
 	}
 
@@ -132,7 +132,7 @@ func (m *NodeMonitor) IsPodCIDR(ipStr string) bool {
 	m.podCIDRsMap.Range(func(key, value interface{}) bool {
 		ipNet, ok := value.(*IPNet)
 		if !ok {
-			log.Warnf("value is not *IPNet: %v", value)
+			log.Warnf("value is not *IPNet: %T", value)
 			// stop iteration
 			return false
 		}
