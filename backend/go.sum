@@ -55,12 +55,8 @@ github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdko
 github.com/agnivade/levenshtein v1.0.1/go.mod h1:CURSv5d9Uaml+FovSIICkLbAUZ9S4RqaHDIsdSBg7lM=
 github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883/go.mod h1:rCTlJbsFo29Kk6CurOXKm700vrz8f0KW0JNfpkRJY/8=
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
-github.com/apiclarity/speculator v0.0.2-0.20210905113926-967ee0e9c0dd h1:gsr4JMcmDOcq01yW/OgIW/jdd+njvg+lN+VsEeD/2uQ=
-github.com/apiclarity/speculator v0.0.2-0.20210905113926-967ee0e9c0dd/go.mod h1:nFnYfPjm9EeY24E6GgprKMjnxCqEllL4A3YOMS8jeUQ=
-github.com/apiclarity/speculator v0.0.2-0.20210909150313-19171d452dc0 h1:udRigtZ0T5I/ZyUdBx77eZijonDHeEudJIB8BsJCV7M=
-github.com/apiclarity/speculator v0.0.2-0.20210909150313-19171d452dc0/go.mod h1:nFnYfPjm9EeY24E6GgprKMjnxCqEllL4A3YOMS8jeUQ=
-github.com/apiclarity/speculator v0.0.2-0.20210913095456-1981f50152b9 h1:16KN2Q7hroJSObAUDs3+SiDwaKRmU7rnwtPmpehWYCw=
-github.com/apiclarity/speculator v0.0.2-0.20210913095456-1981f50152b9/go.mod h1:nFnYfPjm9EeY24E6GgprKMjnxCqEllL4A3YOMS8jeUQ=
+github.com/apiclarity/speculator v0.0.2 h1:Iz+yl7qW50J3+aJ4oEzKRx7iQMXbLMnj6K01YwP8pi0=
+github.com/apiclarity/speculator v0.0.2/go.mod h1:nFnYfPjm9EeY24E6GgprKMjnxCqEllL4A3YOMS8jeUQ=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
