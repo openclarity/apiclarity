@@ -1,4 +1,5 @@
-# API Clarity
+![API Clarity](API_clarity.svg "API Clarity")
+
 Reconstruct Open API Specifications from real-time workload traffic seamlessly:
 * Capture all API traffic in an existing environment using a service-mesh framework
 * Construct the OpenAPI specification by observing the API traffic
