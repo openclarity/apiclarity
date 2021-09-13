@@ -17,13 +17,14 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
+
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 const (
 	BackendRestPort            = "BACKEND_REST_PORT"
-	HttpTracesPort             = "HTTP_TRACES_PORT"
+	HTTPTracesPort             = "HTTP_TRACES_PORT"
 	HealthCheckAddress         = "HEALTH_CHECK_ADDRESS"
 	StateBackupIntervalSec     = "STATE_BACKUP_INTERVAL_SEC"
 	DatabaseCleanerIntervalSec = "DATABASE_CLEANER_INTERVAL_SEC"
@@ -32,7 +33,7 @@ const (
 
 type Config struct {
 	BackendRestPort            int
-	HttpTracesPort             int
+	HTTPTracesPort             int
 	HealthCheckAddress         string
 	StateBackupIntervalSec     int
 	DatabaseCleanerIntervalSec int
@@ -43,14 +44,14 @@ func LoadConfig() (*Config, error) {
 	config := &Config{}
 
 	config.BackendRestPort = viper.GetInt(BackendRestPort)
-	config.HttpTracesPort = viper.GetInt(HttpTracesPort)
+	config.HTTPTracesPort = viper.GetInt(HTTPTracesPort)
 	config.HealthCheckAddress = viper.GetString(HealthCheckAddress)
 	config.StateBackupIntervalSec = viper.GetInt(StateBackupIntervalSec)
 	config.DatabaseCleanerIntervalSec = viper.GetInt(DatabaseCleanerIntervalSec)
 	config.StateBackupFileName = viper.GetString(StateBackupFileName)
 
 	configB, _ := json.Marshal(config)
-	fmt.Printf("\n\nconfig=%s\n\n", configB)
+	log.Infof("\n\nconfig=%s\n\n", configB)
 
 	return config, nil
 }

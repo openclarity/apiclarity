@@ -16,6 +16,7 @@
 package rest
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -30,13 +31,13 @@ import (
 
 const hitCountGranularity = 50
 
-func (s *RESTServer) GetAPIUsageHitCount(params operations.GetAPIUsageHitCountParams) middleware.Responder {
+func (s *Server) GetAPIUsageHitCount(params operations.GetAPIUsageHitCountParams) middleware.Responder {
 	hitCounts, err := getAPIUsages(params)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
 		log.Error(err)
-		return operations.NewGetAPIUsageHitCountDefault(500).WithPayload(&models.APIResponse{
+		return operations.NewGetAPIUsageHitCountDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
 			Message: "Oops",
 		})
 	}

@@ -18,6 +18,7 @@ package rest
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/ghodss/yaml"
@@ -34,8 +35,8 @@ import (
 	"github.com/apiclarity/speculator/pkg/speculator"
 )
 
-func (s *RESTServer) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPIInventoryAPIIDSpecsProvidedSpecParams) middleware.Responder {
-	var apiInfo = &database.APIInfo{}
+func (s *Server) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPIInventoryAPIIDSpecsProvidedSpecParams) middleware.Responder {
+	apiInfo := &database.APIInfo{}
 	var jsonSpec []byte
 	var err error
 
@@ -49,10 +50,10 @@ func (s *RESTServer) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.Put
 		if err != nil {
 			// The spec was already validated as a valid yaml, so error here is an internal error, not a validation error
 			log.Errorf("Failed to convert yaml spec to json: %s. %v", params.Body.RawSpec, err)
-			return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(500)
+			return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
 		}
 	}
-	if err := validateJsonSpec(jsonSpec); err != nil {
+	if err := validateJSONSpec(jsonSpec); err != nil {
 		log.Errorf("Spec validation failed. Spec: %s. %v", jsonSpec, err)
 		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecBadRequest().WithPayload("Spec validation failed")
 	}
@@ -61,16 +62,16 @@ func (s *RESTServer) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.Put
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
 		log.Errorf("Failed to put provided API spec. %v", err)
-		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(500)
+		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
 	}
 
 	if err := database.GetAPIInventoryTable().First(&apiInfo, params.APIID).Error; err != nil {
 		log.Errorf("Failed to get APIInventory table with api id: %v. %v", params.APIID, err)
-		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(500)
+		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
 	}
 	if err := s.speculator.LoadProvidedSpec(speculator.GetSpecKey(apiInfo.Name, strconv.Itoa(int(apiInfo.Port))), jsonSpec); err != nil {
 		log.Errorf("Failed to load provided spec. %v", err)
-		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(500)
+		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
 	}
 
 	return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecCreated().WithPayload(
@@ -79,7 +80,7 @@ func (s *RESTServer) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.Put
 		})
 }
 
-func isJsonSpec(rawSpec []byte) bool {
+func isJSONSpec(rawSpec []byte) bool {
 	swagger := spec.Swagger{}
 
 	if err := json.Unmarshal(rawSpec, &swagger); err != nil {
@@ -97,7 +98,7 @@ func isYamlSpec(rawSpec []byte) bool {
 	return true
 }
 
-func validateRawJsonSpec(rawSpec []byte) error {
+func validateRawJSONSpec(rawSpec []byte) error {
 	doc, err := loads.Analyzed(rawSpec, "")
 	if err != nil {
 		return fmt.Errorf("failed to analyze spec: %s. %v", rawSpec, err)
@@ -109,12 +110,12 @@ func validateRawJsonSpec(rawSpec []byte) error {
 	return nil
 }
 
-func validateJsonSpec(rawSpec []byte) error {
-	if !isJsonSpec(rawSpec) {
+func validateJSONSpec(rawSpec []byte) error {
+	if !isJSONSpec(rawSpec) {
 		return fmt.Errorf("not a vaild json spec schema: %s", rawSpec)
 	}
 
-	if err := validateRawJsonSpec(rawSpec); err != nil {
+	if err := validateRawJSONSpec(rawSpec); err != nil {
 		return fmt.Errorf("failed to validate json spec. %v", err)
 	}
 	return nil

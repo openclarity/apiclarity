@@ -30,13 +30,13 @@ import (
 
 type HandleTraceFunc func(trace *spec.SCNTelemetry) error
 
-type HttpTracesServer struct {
+type HTTPTracesServer struct {
 	traceHandleFunc HandleTraceFunc
 	server          *http.Server
 }
 
-func CreateHttpTracesServer(port int, traceHandleFunc HandleTraceFunc) *HttpTracesServer {
-	s := &HttpTracesServer{
+func CreateHTTPTracesServer(port int, traceHandleFunc HandleTraceFunc) *HTTPTracesServer {
+	s := &HTTPTracesServer{
 		server:          &http.Server{Addr: ":" + strconv.Itoa(port)},
 		traceHandleFunc: traceHandleFunc,
 	}
@@ -46,18 +46,18 @@ func CreateHttpTracesServer(port int, traceHandleFunc HandleTraceFunc) *HttpTrac
 	return s
 }
 
-func (o *HttpTracesServer) Start(errChan chan struct{}) {
+func (s *HTTPTracesServer) Start(errChan chan struct{}) {
 	log.Infof("Starting traces server")
 
 	go func() {
-		if err := o.server.ListenAndServe(); err != nil {
+		if err := s.server.ListenAndServe(); err != nil {
 			log.Errorf("Failed to serve traces server: %v", err)
 			errChan <- common.Empty
 		}
 	}()
 }
 
-func (s *HttpTracesServer) Stop() {
+func (s *HTTPTracesServer) Stop() {
 	log.Infof("Stopping traces server")
 	if s.server != nil {
 		if err := s.server.Shutdown(context.Background()); err != nil {
@@ -66,7 +66,7 @@ func (s *HttpTracesServer) Stop() {
 	}
 }
 
-func readHttpTraceBodyData(req *http.Request) (*spec.SCNTelemetry, error) {
+func readHTTPTraceBodyData(req *http.Request) (*spec.SCNTelemetry, error) {
 	decoder := json.NewDecoder(req.Body)
 	var bodyData *spec.SCNTelemetry
 	err := decoder.Decode(&bodyData)
@@ -77,8 +77,8 @@ func readHttpTraceBodyData(req *http.Request) (*spec.SCNTelemetry, error) {
 	return bodyData, nil
 }
 
-func (s *HttpTracesServer) httpTracesHandler(w http.ResponseWriter, r *http.Request) {
-	trace, err := readHttpTraceBodyData(r)
+func (s *HTTPTracesServer) httpTracesHandler(w http.ResponseWriter, r *http.Request) {
+	trace, err := readHTTPTraceBodyData(r)
 	if err != nil || trace == nil {
 		log.Errorf("Invalid trace. err=%v, trace=%+s", err, r.Body)
 		w.WriteHeader(http.StatusBadRequest)

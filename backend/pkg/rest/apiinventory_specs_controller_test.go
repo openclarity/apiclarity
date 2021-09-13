@@ -16,12 +16,13 @@
 package rest
 
 import (
-	"github.com/apiclarity/apiclarity/api/server/models"
-	"github.com/apiclarity/apiclarity/backend/pkg/test"
 	"net/http"
 	"reflect"
 	"sort"
 	"testing"
+
+	"github.com/apiclarity/apiclarity/api/server/models"
+	"github.com/apiclarity/apiclarity/backend/pkg/test"
 )
 
 func Test_createTagsListFromRawSpec(t *testing.T) {

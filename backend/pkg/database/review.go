@@ -23,17 +23,15 @@ import (
 const (
 	reviewTableName = "reviews"
 
-	// NOTE: when changing one of the column names change also the gorm label in APIEvent
-	specKeyColumnName           = "specKey"
-	approvedColumnName          = "approved"
-	pathToPathItemStrColumnName = "pathToPathItemStr"
+	// NOTE: when changing one of the column names change also the gorm label in APIEvent.
+	approvedColumnName = "approved"
 )
 
 type Review struct {
 	// will be populated after inserting to DB
 	ID uint `gorm:"primarykey" faker:"-"`
-	//CreatedAt time.Time
-	//UpdatedAt time.Time
+	// CreatedAt time.Time
+	// UpdatedAt time.Time
 
 	Approved bool   `json:"approved,omitempty" gorm:"column:approved" faker:"-"`
 	SpecKey  string `json:"specKey,omitempty" gorm:"column:specKey" faker:"-"`

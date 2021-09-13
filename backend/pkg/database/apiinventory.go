@@ -26,7 +26,7 @@ import (
 const (
 	apiInventoryTableName = "api_inventory"
 
-	// NOTE: when changing one of the column names change also the gorm label in APIInfo
+	// NOTE: when changing one of the column names change also the gorm label in APIInfo.
 	idColumnName                   = "id"
 	typeColumnName                 = "type"
 	nameColumnName                 = "name"
@@ -133,7 +133,7 @@ func SetReconstructedAPISpec(name, port, spec string) error {
 	return nil
 }
 
-func GetApiID(name, port string) (uint, error) {
+func GetAPIID(name, port string) (uint, error) {
 	apiInfo := APIInfo{}
 	if result := GetAPIInventoryTable().Where(nameColumnName+" = ?", name).Where(portColumnName+" = ?", port).First(&apiInfo); result.Error != nil {
 		return 0, result.Error

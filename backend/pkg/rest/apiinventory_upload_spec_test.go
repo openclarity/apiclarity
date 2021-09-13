@@ -17,13 +17,17 @@ package rest
 
 import "testing"
 
-var jsonSpec = "{\n  \"swagger\": \"2.0\",\n  \"info\": {\n    \"title\": \"Sample API\",\n    \"description\": \"API description in Markdown.\",\n    \"version\": \"1.0.0\"\n  },\n  \"host\": \"api.example.com\",\n  \"basePath\": \"/v1\",\n  \"schemes\": [\n    \"https\"\n  ],\n  \"paths\": {\n    \"/cats\": {\n      \"get\": {\n        \"summary\": \"Returns a list of cats.\",\n        \"description\": \"Optional extended description in Markdown.\",\n        \"produces\": [\n          \"application/json\"\n        ],\n        \"responses\": {\n          \"200\": {\n            \"description\": \"OK\"\n          }\n        }\n      }\n    }\n  }\n}"
-var nonValidJsonSpec = "{\n  \"swagger\": \"2.0\",\n  \"host\": \"api.example.com\",\n  \"basePath\": \"/v1\",\n  \"schemes\": [\n    \"https\"\n  ],\n  \"paths\": {\n    \"/cats\": {\n      \"get\": {\n        \"summary\": \"Returns a list of cats.\",\n        \"description\": \"Optional extended description in Markdown.\",\n        \"produces\": [\n          \"application/json\"\n        ],\n        \"responses\": {\n          \"200\": {\n            \"description\": \"OK\"\n          }\n        }\n      }\n    }\n  }\n}"
-var nonValidJson = "{\n  \"swagger\" \"2.0\",\n  \"info\": {\n    \"title\": \"Sample API\",\n    \"description\": \"API description in Markdown.\",\n    \"version\": \"1.0.0\"\n  },\n  \"host\": \"api.example.com\",\n  \"basePath\": \"/v1\",\n  \"schemes\": [\n    \"https\"\n  ],\n  \"paths\": {\n    \"/cats\": {\n      \"get\": {\n        \"summary\": \"Returns a list of cats.\",\n        \"description\": \"Optional extended description in Markdown.\",\n        \"produces\": [\n          \"application/json\"\n        ],\n        \"responses\": {\n          \"200\": {\n            \"description\": \"OK\"\n          }\n        }\n      }\n    }\n  }\n}"
+var (
+	jsonSpec         = "{\n  \"swagger\": \"2.0\",\n  \"info\": {\n    \"title\": \"Sample API\",\n    \"description\": \"API description in Markdown.\",\n    \"version\": \"1.0.0\"\n  },\n  \"host\": \"api.example.com\",\n  \"basePath\": \"/v1\",\n  \"schemes\": [\n    \"https\"\n  ],\n  \"paths\": {\n    \"/cats\": {\n      \"get\": {\n        \"summary\": \"Returns a list of cats.\",\n        \"description\": \"Optional extended description in Markdown.\",\n        \"produces\": [\n          \"application/json\"\n        ],\n        \"responses\": {\n          \"200\": {\n            \"description\": \"OK\"\n          }\n        }\n      }\n    }\n  }\n}"
+	nonValidJSONSpec = "{\n  \"swagger\": \"2.0\",\n  \"host\": \"api.example.com\",\n  \"basePath\": \"/v1\",\n  \"schemes\": [\n    \"https\"\n  ],\n  \"paths\": {\n    \"/cats\": {\n      \"get\": {\n        \"summary\": \"Returns a list of cats.\",\n        \"description\": \"Optional extended description in Markdown.\",\n        \"produces\": [\n          \"application/json\"\n        ],\n        \"responses\": {\n          \"200\": {\n            \"description\": \"OK\"\n          }\n        }\n      }\n    }\n  }\n}"
+	nonValidJSON     = "{\n  \"swagger\" \"2.0\",\n  \"info\": {\n    \"title\": \"Sample API\",\n    \"description\": \"API description in Markdown.\",\n    \"version\": \"1.0.0\"\n  },\n  \"host\": \"api.example.com\",\n  \"basePath\": \"/v1\",\n  \"schemes\": [\n    \"https\"\n  ],\n  \"paths\": {\n    \"/cats\": {\n      \"get\": {\n        \"summary\": \"Returns a list of cats.\",\n        \"description\": \"Optional extended description in Markdown.\",\n        \"produces\": [\n          \"application/json\"\n        ],\n        \"responses\": {\n          \"200\": {\n            \"description\": \"OK\"\n          }\n        }\n      }\n    }\n  }\n}"
+)
 
-var yamlSpec = "---\nswagger: '2.0'\ninfo:\n  title: Sample API\n  description: API description in Markdown.\n  version: 1.0.0\nhost: api.example.com\nbasePath: \"/v1\"\nschemes:\n- https\npaths:\n  \"/cats\":\n    get:\n      summary: Returns a list of cats.\n      description: Optional extended description in Markdown.\n      produces:\n      - application/json\n      responses:\n        '200':\n          description: OK"
-var nonValidYamlSpec = "---\nswagger: '2.0'\nhost: api.example.com\nbasePath: \"/v1\"\nschemes:\n- https\npaths:\n  \"/cats\":\n    get:\n      summary: Returns a list of cats.\n      description: Optional extended description in Markdown.\n      produces:\n      - application/json\n      responses:\n        '200':\n          description: OK\n"
-var nonValidYaml = "---\nswagger '2.0'\ninfo:\n  title: Sample API\n  description: API description in Markdown.\n  version: 1.0.0\nhost: api.example.com\nbasePath: \"/v1\"\nschemes:\n- https\npaths:\n  \"/cats\":\n    get:\n      summary: Returns a list of cats.\n      description: Optional extended description in Markdown.\n      produces:\n      - application/json\n      responses:\n        '200':\n          description: OK"
+var (
+	yamlSpec         = "---\nswagger: '2.0'\ninfo:\n  title: Sample API\n  description: API description in Markdown.\n  version: 1.0.0\nhost: api.example.com\nbasePath: \"/v1\"\nschemes:\n- https\npaths:\n  \"/cats\":\n    get:\n      summary: Returns a list of cats.\n      description: Optional extended description in Markdown.\n      produces:\n      - application/json\n      responses:\n        '200':\n          description: OK"
+	nonValidYamlSpec = "---\nswagger: '2.0'\nhost: api.example.com\nbasePath: \"/v1\"\nschemes:\n- https\npaths:\n  \"/cats\":\n    get:\n      summary: Returns a list of cats.\n      description: Optional extended description in Markdown.\n      produces:\n      - application/json\n      responses:\n        '200':\n          description: OK\n"
+	nonValidYaml     = "---\nswagger '2.0'\ninfo:\n  title: Sample API\n  description: API description in Markdown.\n  version: 1.0.0\nhost: api.example.com\nbasePath: \"/v1\"\nschemes:\n- https\npaths:\n  \"/cats\":\n    get:\n      summary: Returns a list of cats.\n      description: Optional extended description in Markdown.\n      produces:\n      - application/json\n      responses:\n        '200':\n          description: OK"
+)
 
 func Test_validateJsonSpec(t *testing.T) {
 	type args struct {
@@ -58,22 +62,22 @@ func Test_validateJsonSpec(t *testing.T) {
 		{
 			name: "not a valid json",
 			args: args{
-				rawSpec: []byte(nonValidJson),
+				rawSpec: []byte(nonValidJSON),
 			},
 			wantErr: true,
 		},
 		{
 			name: "not a valid spec - json",
 			args: args{
-				rawSpec: []byte(nonValidJsonSpec),
+				rawSpec: []byte(nonValidJSONSpec),
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := validateJsonSpec(tt.args.rawSpec); (err != nil) != tt.wantErr {
-				t.Errorf("validateJsonSpec() error = %v, wantErr %v", err, tt.wantErr)
+			if err := validateJSONSpec(tt.args.rawSpec); (err != nil) != tt.wantErr {
+				t.Errorf("validateJSONSpec() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

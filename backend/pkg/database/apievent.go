@@ -32,27 +32,23 @@ import (
 const (
 	apiEventTableName = "api_events"
 
-	// NOTE: when changing one of the column names change also the gorm label in APIEvent
-	timeColumnName                     = "time"
-	methodColumnName                   = "method"
-	pathColumnName                     = "path"
-	pathIdColumnName                   = "pathId"
-	queryColumnName                    = "query"
-	statusCodeColumnName               = "statusCode"
-	sourceIPColumnName                 = "sourceIP"
-	destinationIPColumnName            = "destinationIP"
-	destinationPortColumnName          = "destinationPort"
-	hasReconstructedSpecDiffColumnName = "hasReconstructedSpecDiff"
-	hasProvidedSpecDiffColumnName      = "hasProvidedSpecDiff"
-	hasSpecDiffColumnName              = "hasSpecDiff" // hasProvidedSpecDiff || hasReconstructedSpecDiff
-	hostSpecNameColumnName             = "hostSpecName"
-	newReconstructedSpecColumnName     = "newReconstructedSpec"
-	oldReconstructedSpecColumnName     = "oldReconstructedSpec"
-	newProvidedSpecColumnName          = "newProvidedSpec"
-	oldProvidedSpecColumnName          = "oldProvidedSpec"
-	apiInfoIdColumnName                = "apiInfoId"
-	isNonApiColumnName                 = "isNonApi"
-	eventTypeColumnName                = "eventType"
+	// NOTE: when changing one of the column names change also the gorm label in APIEvent.
+	methodColumnName               = "method"
+	pathColumnName                 = "path"
+	pathIDColumnName               = "pathId"
+	statusCodeColumnName           = "statusCode"
+	sourceIPColumnName             = "sourceIP"
+	destinationIPColumnName        = "destinationIP"
+	destinationPortColumnName      = "destinationPort"
+	hasSpecDiffColumnName          = "hasSpecDiff" // hasProvidedSpecDiff || hasReconstructedSpecDiff
+	hostSpecNameColumnName         = "hostSpecName"
+	newReconstructedSpecColumnName = "newReconstructedSpec"
+	oldReconstructedSpecColumnName = "oldReconstructedSpec"
+	newProvidedSpecColumnName      = "newProvidedSpec"
+	oldProvidedSpecColumnName      = "oldProvidedSpec"
+	apiInfoIDColumnName            = "apiInfoId"
+	isNonAPIColumnName             = "isNonApi"
+	eventTypeColumnName            = "eventType"
 )
 
 var specDiffColumns = []string{newReconstructedSpecColumnName, oldReconstructedSpecColumnName, newProvidedSpecColumnName, oldProvidedSpecColumnName}
@@ -60,8 +56,8 @@ var specDiffColumns = []string{newReconstructedSpecColumnName, oldReconstructedS
 type APIEvent struct {
 	// will be populated after inserting to DB
 	ID uint `gorm:"primarykey" faker:"-"`
-	//CreatedAt time.Time
-	//UpdatedAt time.Time
+	// CreatedAt time.Time
+	// UpdatedAt time.Time
 
 	Time                     strfmt.DateTime   `json:"time" gorm:"column:time" faker:"-"`
 	Method                   models.HTTPMethod `json:"method,omitempty" gorm:"column:method" faker:"oneof: GET, PUT, POST, DELETE"`
@@ -76,7 +72,7 @@ type APIEvent struct {
 	HasProvidedSpecDiff      bool              `json:"hasProvidedSpecDiff,omitempty" gorm:"column:hasProvidedSpecDiff"`
 	HasSpecDiff              bool              `json:"hasSpecDiff,omitempty" gorm:"column:hasSpecDiff"`
 	HostSpecName             string            `json:"hostSpecName,omitempty" gorm:"column:hostSpecName" faker:"oneof: test.com, example.com, kaki.org"`
-	IsNonApi                 bool              `json:"isNonApi,omitempty" gorm:"column:isNonApi" faker:"-"`
+	IsNonAPI                 bool              `json:"isNonApi,omitempty" gorm:"column:isNonApi" faker:"-"`
 
 	// Spec diff info
 	// New reconstructed spec json string
@@ -91,32 +87,32 @@ type APIEvent struct {
 	// ID for the relevant APIInfo
 	APIInfoID uint `json:"apiInfoId,omitempty" gorm:"column:apiInfoId" faker:"-"`
 	// We'll not always have a corresponding API info (e.g. non-API resources) so the type is needed also for the event
-	EventType models.APIType `json:"eventType,omitempty" gorm:"column:eventType"faker:"oneof: INTERNAL, EXTERNAL"`
+	EventType models.APIType `json:"eventType,omitempty" gorm:"column:eventType" faker:"oneof: INTERNAL, EXTERNAL"`
 }
 
-type hostGroup struct {
+type HostGroup struct {
 	HostSpecName string
 	Port         int64
-	ApiType      string
-	ApiInfoId    uint32
+	APIType      string
+	APIInfoID    uint32
 	Count        int
 }
 
 const dashboardTopAPIsNum = 5
 
-func GroupByAPIInfo(db *gorm.DB) ([]hostGroup, error) {
-	var results []hostGroup
+func GroupByAPIInfo(db *gorm.DB) ([]HostGroup, error) {
+	var results []HostGroup
 
 	rows, err := db.
 		// filters out non APIs
-		Not(isNonApiColumnName+" = ?", true).
+		Not(isNonAPIColumnName+" = ?", true).
 		Select(
 			FieldInTable(apiEventTableName, hostSpecNameColumnName) +
 				", " + FieldInTable(apiEventTableName, destinationPortColumnName) +
-				", " + FieldInTable(apiEventTableName, apiInfoIdColumnName) +
+				", " + FieldInTable(apiEventTableName, apiInfoIDColumnName) +
 				", " + FieldInTable(apiEventTableName, eventTypeColumnName) +
 				", COUNT(*) AS count").
-		Group(FieldInTable(apiEventTableName, apiInfoIdColumnName)).
+		Group(FieldInTable(apiEventTableName, apiInfoIDColumnName)).
 		Order("count desc").
 		Limit(dashboardTopAPIsNum).Rows()
 	if err != nil {
@@ -129,8 +125,8 @@ func GroupByAPIInfo(db *gorm.DB) ([]hostGroup, error) {
 	}()
 
 	for rows.Next() {
-		group := hostGroup{}
-		if err := rows.Scan(&group.HostSpecName, &group.Port, &group.ApiInfoId, &group.ApiType, &group.Count); err != nil {
+		group := HostGroup{}
+		if err := rows.Scan(&group.HostSpecName, &group.Port, &group.APIInfoID, &group.APIType, &group.Count); err != nil {
 			return nil, fmt.Errorf("failed to get fields: %v", err)
 		}
 		log.Debugf("Fetched fields: %+v", group)
@@ -304,9 +300,9 @@ func SetAPIEventsFilters(tx *gorm.DB, filters *APIEventsFilters, shouldSetTimeFi
 	tx = FilterIs(tx, methodColumnName, filters.MethodIs)
 
 	// path filters
-	pathIdIs, pathIs := extractParametrizedPaths(filters.PathIs)
-	if len(pathIdIs) > 0 {
-		tx = FilterIs(tx, pathIdColumnName, pathIdIs)
+	pathIDIs, pathIs := extractParametrizedPaths(filters.PathIs)
+	if len(pathIDIs) > 0 {
+		tx = FilterIs(tx, pathIDColumnName, pathIDIs)
 	}
 	if len(pathIs) > 0 {
 		tx = FilterIs(tx, pathColumnName, pathIs)
@@ -344,14 +340,14 @@ func SetAPIEventsFilters(tx *gorm.DB, filters *APIEventsFilters, shouldSetTimeFi
 
 	// ignore non APIs
 	if !filters.ShowNonAPI {
-		tx.Where(fmt.Sprintf("%s = ?", isNonApiColumnName), false)
+		tx.Where(fmt.Sprintf("%s = ?", isNonAPIColumnName), false)
 	}
 
 	return tx
 }
 
-// Temporary hack to extract parametrized paths from the paths list into two separated filters (pathIdIs, pathIs)
-func extractParametrizedPaths(paths []string) (pathIdIs, pathIs []string) {
+// Temporary hack to extract parametrized paths from the paths list into two separated filters (pathIdIs, pathIs).
+func extractParametrizedPaths(paths []string) (pathIDIs, pathIs []string) {
 	for _, path := range paths {
 		if strings.Contains(path, "{") {
 			// Parametrized path
@@ -360,25 +356,25 @@ func extractParametrizedPaths(paths []string) (pathIdIs, pathIs []string) {
 				// will keep it as a path
 				pathIs = append(pathIs, path)
 			} else {
-				pathIdIs = append(pathIdIs, ids...)
+				pathIDIs = append(pathIDIs, ids...)
 			}
 		} else {
 			pathIs = append(pathIs, path)
 		}
 	}
 
-	return pathIdIs, pathIs
+	return pathIDIs, pathIs
 }
 
-// SetAPIEventsPathId will set path id for all events with the provided paths, host and port
-func SetAPIEventsPathId(approvedReview []*speculatorspec.ApprovedSpecReviewPathItem, host string, port string) error {
+// SetAPIEventsPathID will set path id for all events with the provided paths, host and port.
+func SetAPIEventsPathID(approvedReview []*speculatorspec.ApprovedSpecReviewPathItem, host string, port string) error {
 	err := GetAPIEventsTable().Transaction(func(tx *gorm.DB) error {
 		for _, item := range approvedReview {
 			tx := FilterIs(tx, pathColumnName, utils.MapToSlice(item.Paths))
 			tx = FilterIs(tx, hostSpecNameColumnName, []string{host})
 			tx = FilterIs(tx, destinationPortColumnName, []string{port})
 
-			if err := tx.Model(&APIEvent{}).Updates(map[string]interface{}{pathIdColumnName: item.PathUUID}).Error; err != nil {
+			if err := tx.Model(&APIEvent{}).Updates(map[string]interface{}{pathIDColumnName: item.PathUUID}).Error; err != nil {
 				// return any error will rollback
 				return err
 			}
@@ -388,7 +384,7 @@ func SetAPIEventsPathId(approvedReview []*speculatorspec.ApprovedSpecReviewPathI
 		return nil
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to set API events path ID: %v", err)
 	}
 
 	return nil
