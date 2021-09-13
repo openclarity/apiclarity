@@ -92,7 +92,7 @@ cp -r ./ui/build ./site
 ```
 3. Run backend and frontend locally using demo data:
 ```
-FAKE_DATA=true ENABLE_DB_INFO_LOGS=true ./backend/bin/backend run
+FAKE_TRACES=true FAKE_TRACES_PATH=./backend/pkg/test/trace_files ENABLE_DB_INFO_LOGS=true ./backend/bin/backend run
 ```
 4. Open APIClarity UI in the browser: [http://localhost:8080/](http://localhost:8080/)
 
