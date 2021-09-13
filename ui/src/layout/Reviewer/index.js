@@ -60,20 +60,20 @@ const Reviewer = () => {
             Cell: ({row, data}) => {
                 const {original: pathData} = row;
                 const {suggestedPath} = pathData;
-                const {value, index, id} = openParamInputPathData || {};
+                const {value, index, id, isParam} = openParamInputPathData || {};
 
                 return (
                     <div className="table-row-path-wrapper">
                         <PathDisplay
                             pathData={pathData}
                             isOpenInput={id === row.id}
-                            openInputData={{value, index}}
-                            onOpenInput={({value, index}) => dispatch({type: REVIEW_ACTIONS.SET_OPEN_PARAM_INPUT_PATH, payload: {id: row.id, value, index}})}
+                            openInputData={{value, index, isParam}}
+                            onOpenInput={({value, index, isParam}) => dispatch({type: REVIEW_ACTIONS.SET_OPEN_PARAM_INPUT_PATH, payload: {id: row.id, value, index, isParam}})}
                             onCloseInput={() => dispatch({type: REVIEW_ACTIONS.SET_OPEN_PARAM_INPUT_PATH, payload: {}})}
                             onReviewMerge={({isMerging, paramName}) => {
                                 let updatedPath = null;
                                 let pathsToReview = [pathData];
-                                
+
                                 if (isMerging) {
                                     updatedPath = getPathWithParamInIndex(suggestedPath, index, paramName);
 
@@ -87,6 +87,11 @@ const Reviewer = () => {
                                     mergeIndex: index,
                                     mergePath: pathData
                                 }});
+                            }}
+                            onRenameParam={({paramName}) => {
+                                const updatedPath = getPathWithParamInIndex(suggestedPath, index, paramName);
+
+                                dispatch({type: REVIEW_ACTIONS.UPDATE_PATH_PARAM_NAME, payload: {updatedPath, pathData}});
                             }}
                         />
                     </div>
