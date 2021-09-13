@@ -68,7 +68,7 @@ func Test_isNonAPI(t *testing.T) {
 			want: false,
 		},
 		{
-			name: "content type is not application/hal+json",
+			name: "content type is application/hal+json - classify as API",
 			args: args{
 				trace: &_spec.SCNTelemetry{
 					SCNTResponse: _spec.SCNTResponse{
