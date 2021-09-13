@@ -40,6 +40,18 @@ type: Opaque
 data:
   DB_PASS: "dGVzdDEyMzQ=" #"test1234"
 ---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: apiclarity-pvc
+  namespace: apiclarity
+spec:
+  accessModes:
+    - "ReadWriteOnce"
+  resources:
+    requests:
+      storage: 100Mi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -71,6 +83,8 @@ spec:
               secretKeyRef:
                 name: apiclarity
                 key: DB_PASS
+          - name: STATE_BACKUP_FILE_NAME
+            value: /apiclarity/state.gob
           readinessProbe:
             httpGet:
               path: /healthz/ready
@@ -103,6 +117,16 @@ spec:
             limits:
               memory: "1000Mi"
               cpu: "1000m"
+          volumeMounts:
+            - name: apiclarity
+              mountPath: /apiclarity
+              subPath:
+      securityContext:
+        fsGroup: 65534
+      volumes:
+        - name: apiclarity
+          persistentVolumeClaim:
+            claimName: apiclarity-pvc
 ---
 apiVersion: v1
 kind: Service
