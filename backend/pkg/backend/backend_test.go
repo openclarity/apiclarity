@@ -67,6 +67,19 @@ func Test_isNonAPI(t *testing.T) {
 			},
 			want: false,
 		},
+		{
+			name: "content type is application/hal+json - classify as API",
+			args: args{
+				trace: &_spec.SCNTelemetry{
+					SCNTResponse: _spec.SCNTResponse{
+						SCNTCommon: _spec.SCNTCommon{
+							Headers: [][2]string{{contentTypeHeaderName, "application/hal+json"}},
+						},
+					},
+				},
+			},
+			want: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

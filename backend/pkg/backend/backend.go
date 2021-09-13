@@ -18,6 +18,7 @@ package backend
 import (
 	"context"
 	"fmt"
+	"mime"
 	"net/url"
 	"os"
 	"os/signal"
@@ -43,6 +44,7 @@ import (
 	"github.com/apiclarity/apiclarity/backend/pkg/traces"
 	_spec "github.com/apiclarity/speculator/pkg/spec"
 	_speculator "github.com/apiclarity/speculator/pkg/speculator"
+	_mimeutils "github.com/apiclarity/speculator/pkg/utils"
 )
 
 type Backend struct {
@@ -336,14 +338,23 @@ const (
 	contentTypeApplicationJSON = "application/json"
 )
 
-// If the response content type is not application/json, need to classify the trace as non-api.
 func isNonAPI(trace *_spec.SCNTelemetry) bool {
 	respHeaders := _spec.ConvertHeadersToMap(trace.SCNTResponse.Headers)
-	// if content-type header is missing, we will classify it as API
-	if _, ok := respHeaders[contentTypeHeaderName]; !ok {
+
+	// If response content-type header is missing, we will classify it as API
+	respContentType, ok := respHeaders[contentTypeHeaderName]
+	if !ok {
 		return false
 	}
-	return _spec.GetContentTypeWithoutParameter(respHeaders[contentTypeHeaderName]) != contentTypeApplicationJSON
+
+	mediaType, _, err := mime.ParseMediaType(respContentType)
+	if err != nil {
+		log.Errorf("Failed to parse response media type - classifying as non-API. Content-Type=%v: %v", respContentType, err)
+		return true
+	}
+
+	// If response content-type is not application/json, need to classify the trace as non-api
+	return !_mimeutils.IsApplicationJSONMediaType(mediaType)
 }
 
 func (b *Backend) startStateBackup(ctx context.Context) {
