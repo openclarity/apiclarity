@@ -122,13 +122,15 @@ func createAPIPaths(apiID uint, review *speculatorspec.ApprovedSpecReview) []*da
 func createApprovedReviewForSpeculator(review *models.ApprovedReview, pathToPathItem map[string]*spec.PathItem) *speculatorspec.ApprovedSpecReview {
 	ret := &speculatorspec.ApprovedSpecReview{}
 	for _, reviewPathItem := range review.ReviewPathItems {
-		ret.PathItemsReview = append(ret.PathItemsReview, &speculatorspec.ApprovedSpecReviewPathItem{
+		approvedSpecReviewPathItem := &speculatorspec.ApprovedSpecReviewPathItem{
 			ReviewPathItem: speculatorspec.ReviewPathItem{
 				ParameterizedPath: reviewPathItem.SuggestedPath,
 				Paths:             createPathMap(reviewPathItem.APIEventsPaths),
 			},
 			PathUUID: uuid.NewV4().String(),
-		})
+		}
+		log.Infof("Approving path item: %+v", approvedSpecReviewPathItem)
+		ret.PathItemsReview = append(ret.PathItemsReview, approvedSpecReviewPathItem)
 	}
 	ret.PathToPathItem = pathToPathItem
 	return ret

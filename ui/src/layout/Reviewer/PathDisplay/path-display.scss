@@ -1,8 +1,9 @@
 @import 'utils/scss_variables.module.scss';
 
 $input-height: 36px;
+$unmerge-icon-size: 18px;
 
-.path-display-wrapper {
+.path-container {
     position: relative;
 
     &.open {
@@ -17,11 +18,28 @@ $input-height: 36px;
             color: $color-main;
         } 
     }
-    .path-item {
-        color: $color-grey-black;
+    .path-display-wrapper {
+        display: flex;
+        align-items: center;
 
-        &.param {
-            font-weight: bold;
+        .path-wrapper {
+            .path-item {
+                color: $color-grey-black;
+        
+                &.param {
+                    font-weight: bold;
+                }
+            }
+        }
+        .umerge-icon-wrapper {
+            height: $unmerge-icon-size;
+            
+            .icon {
+                color: $color-main;
+                margin-left: 5px;
+                height: $unmerge-icon-size;
+                width: $unmerge-icon-size;
+            }
         }
     }
     .param-input-wrapper {
