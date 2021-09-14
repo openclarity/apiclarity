@@ -1,5 +1,6 @@
 import React from 'react';
 import Filter, { OPERATORS, formatFiltersToQueryParams } from 'components/Filter';
+import { SPEC_DIFF_TYPES_MAP } from 'components/SpecDiffIcon';
 
 export {
     formatFiltersToQueryParams
@@ -60,7 +61,10 @@ const FILTERS_MAP = {
     ]},
     hasSpecDiff: {value: "hasSpecDiff", label: "Spec diff", valuesMapItems: SPEC_DIFF_ITEMS, operators: [
         {...OPERATORS.is, valueItems: SPEC_DIFF_ITEMS, creatable: false, isSingleSelect: true},
-    ]}
+    ]},
+    specDiffType: {value: "specDiffType", label: "Spec diff type", operators: [
+        {...OPERATORS.is, valueItems: Object.values(SPEC_DIFF_TYPES_MAP), creatable: false}
+    ]},
 }
 
 const GeneralFilter = props => (<Filter {...props} filtersMap={FILTERS_MAP} />);

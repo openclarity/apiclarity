@@ -91,8 +91,9 @@ func (s *Server) GetAPIEventsEventIDReconstructedSpecDiff(params operations.GetA
 
 	return operations.NewGetAPIEventsEventIDReconstructedSpecDiffOK().WithPayload(
 		&models.APIEventSpecDiff{
-			NewSpec: &specDiffFromDB.NewReconstructedSpec,
-			OldSpec: &specDiffFromDB.OldReconstructedSpec,
+			DiffType: &specDiffFromDB.SpecDiffType,
+			NewSpec:  &specDiffFromDB.NewReconstructedSpec,
+			OldSpec:  &specDiffFromDB.OldReconstructedSpec,
 		})
 }
 
@@ -110,7 +111,8 @@ func (s *Server) GetAPIEventsEventIDProvidedSpecDiff(params operations.GetAPIEve
 
 	return operations.NewGetAPIEventsEventIDProvidedSpecDiffOK().WithPayload(
 		&models.APIEventSpecDiff{
-			NewSpec: &specDiffFromDB.NewProvidedSpec,
-			OldSpec: &specDiffFromDB.OldProvidedSpec,
+			DiffType: &specDiffFromDB.SpecDiffType,
+			NewSpec:  &specDiffFromDB.NewProvidedSpec,
+			OldSpec:  &specDiffFromDB.OldProvidedSpec,
 		})
 }

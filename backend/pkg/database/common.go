@@ -65,8 +65,8 @@ func getSortKeyColumnName(key string) (string, error) {
 		return destinationIPColumnName, nil
 	case models.APIEventSortKeyDestinationPort:
 		return destinationPortColumnName, nil
-	case models.APIEventSortKeyHasSpecDiff:
-		return hasSpecDiffColumnName, nil
+	case models.APIEventSortKeySpecDiffType:
+		return specDiffTypeColumnName, nil
 	case models.APIEventSortKeyHostSpecName:
 		return hostSpecNameColumnName, nil
 	case models.APIEventSortKeyAPIType:

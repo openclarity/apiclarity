@@ -89,11 +89,11 @@ func Test_getSortKeyColumnName(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "models.APIEventSortKeyHasSpecDiff",
+			name: "models.APIEventSortKeySpecDiffType",
 			args: args{
-				key: string(models.APIEventSortKeyHasSpecDiff),
+				key: string(models.APIEventSortKeySpecDiffType),
 			},
-			want:    hasSpecDiffColumnName,
+			want:    specDiffTypeColumnName,
 			wantErr: false,
 		},
 		{

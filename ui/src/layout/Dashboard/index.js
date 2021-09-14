@@ -14,11 +14,11 @@ const Dashboard = () => {
         <React.Fragment>
             <MainTitleWithRefresh title="Dashboard" onRefreshClick={doRefreshTimestamp} />
             <div className="dashboard-content-wrapper">
-                <ApiUsage refreshTimestamp={refreshTimestamp} />
                 <div className="dashboard-counters-wrapper">
                     <MostUsed refreshTimestamp={refreshTimestamp} />
                     <LatestSpec refreshTimestamp={refreshTimestamp} />
                 </div>
+                <ApiUsage refreshTimestamp={refreshTimestamp} />
             </div>
         </React.Fragment>
     )

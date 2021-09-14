@@ -18,5 +18,18 @@
     .spec-diff-wrapper {
         position: relative;
         min-height: 300px;
+
+        .spec-diff-titles-wrapper {
+            display: flex;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            line-height: 19px;
+            color: $color-grey-dark;
+
+            > div {
+                width: 50%;
+            }
+        }
     }
 }

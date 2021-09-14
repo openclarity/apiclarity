@@ -42,6 +42,7 @@ const (
 	destinationIPColumnName        = "destination_ip"
 	destinationPortColumnName      = "destination_port"
 	hasSpecDiffColumnName          = "has_spec_diff" // hasProvidedSpecDiff || hasReconstructedSpecDiff
+	specDiffTypeColumnName         = "spec_diff_type"
 	hostSpecNameColumnName         = "host_spec_name"
 	newReconstructedSpecColumnName = "new_reconstructed_spec"
 	oldReconstructedSpecColumnName = "old_reconstructed_spec"
@@ -73,6 +74,7 @@ type APIEvent struct {
 	HasReconstructedSpecDiff bool              `json:"hasReconstructedSpecDiff,omitempty" gorm:"column:has_reconstructed_spec_diff"`
 	HasProvidedSpecDiff      bool              `json:"hasProvidedSpecDiff,omitempty" gorm:"column:has_provided_spec_diff"`
 	HasSpecDiff              bool              `json:"hasSpecDiff,omitempty" gorm:"column:has_spec_diff"`
+	SpecDiffType             models.DiffType   `json:"specDiffType,omitempty" gorm:"column:spec_diff_type" faker:"oneof: ZOMBIE_DIFF, SHADOW_DIFF, GENERAL_DIFF, NO_DIFF"`
 	HostSpecName             string            `json:"hostSpecName,omitempty" gorm:"column:host_spec_name" faker:"oneof: test.com, example.com, kaki.org"`
 	IsNonAPI                 bool              `json:"isNonApi,omitempty" gorm:"column:is_non_api" faker:"-"`
 
@@ -159,6 +161,7 @@ func APIEventFromDB(event *APIEvent) *models.APIEvent {
 		Path:                     event.Path,
 		Query:                    event.Query,
 		SourceIP:                 event.SourceIP,
+		SpecDiffType:             &event.SpecDiffType,
 		StatusCode:               event.StatusCode,
 		Time:                     event.Time,
 	}
@@ -211,6 +214,7 @@ func getAPIEventsParamsToFilters(params operations.GetAPIEventsParams) *APIEvent
 		EndTime:              params.EndTime,
 		ShowNonAPI:           params.ShowNonAPI,
 		HasSpecDiffIs:        params.HasSpecDiffIs,
+		SpecDiffTypeIs:       params.SpecDiffTypeIs,
 		MethodIs:             params.MethodIs,
 		PathContains:         params.PathContains,
 		PathEnd:              params.PathEnd,
@@ -245,7 +249,7 @@ func GetAPIEvent(eventID uint32) (*APIEvent, error) {
 func GetAPIEventReconstructedSpecDiff(eventID uint32) (*APIEvent, error) {
 	var apiEvent APIEvent
 
-	if err := GetAPIEventsTable().Select(newReconstructedSpecColumnName, oldReconstructedSpecColumnName).First(&apiEvent, eventID).Error; err != nil {
+	if err := GetAPIEventsTable().Select(newReconstructedSpecColumnName, oldReconstructedSpecColumnName, specDiffTypeColumnName).First(&apiEvent, eventID).Error; err != nil {
 		return nil, err
 	}
 
@@ -255,7 +259,7 @@ func GetAPIEventReconstructedSpecDiff(eventID uint32) (*APIEvent, error) {
 func GetAPIEventProvidedSpecDiff(eventID uint32) (*APIEvent, error) {
 	var apiEvent APIEvent
 
-	if err := GetAPIEventsTable().Select(newProvidedSpecColumnName, oldProvidedSpecColumnName).First(&apiEvent, eventID).Error; err != nil {
+	if err := GetAPIEventsTable().Select(newProvidedSpecColumnName, oldProvidedSpecColumnName, specDiffTypeColumnName).First(&apiEvent, eventID).Error; err != nil {
 		return nil, err
 	}
 
@@ -280,6 +284,7 @@ type APIEventsFilters struct {
 	EndTime               strfmt.DateTime
 	ShowNonAPI            bool
 	HasSpecDiffIs         *bool
+	SpecDiffTypeIs        []string
 	MethodIs              []string
 	ReconstructedPathIDIs []string
 	ProvidedPathIDIs      []string
@@ -340,6 +345,9 @@ func SetAPIEventsFilters(tx *gorm.DB, filters *APIEventsFilters, shouldSetTimeFi
 
 	// has spec diff filter
 	tx = FilterIsBool(tx, hasSpecDiffColumnName, filters.HasSpecDiffIs)
+
+	// spec diff type filter
+	tx = FilterIs(tx, specDiffTypeColumnName, filters.SpecDiffTypeIs)
 
 	// host spec name filters
 	tx = FilterIs(tx, hostSpecNameColumnName, filters.SpecIs)

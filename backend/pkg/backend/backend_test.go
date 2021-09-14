@@ -18,6 +18,7 @@ package backend
 import (
 	"testing"
 
+	"github.com/apiclarity/apiclarity/api/server/models"
 	_spec "github.com/apiclarity/speculator/pkg/spec"
 )
 
@@ -147,6 +148,112 @@ func Test_getHostname(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("getHostname() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_getAPIDiffType(t *testing.T) {
+	type args struct {
+		diffType _spec.DiffType
+	}
+	tests := []struct {
+		name string
+		args args
+		want models.DiffType
+	}{
+		{
+			name: "unknown type - default DiffTypeNODIFF",
+			args: args{
+				diffType: "unknown type",
+			},
+			want: models.DiffTypeNODIFF,
+		},
+		{
+			name: "DiffTypeNoDiff",
+			args: args{
+				diffType: _spec.DiffTypeNoDiff,
+			},
+			want: models.DiffTypeNODIFF,
+		},
+		{
+			name: "DiffTypeZombieDiff",
+			args: args{
+				diffType: _spec.DiffTypeZombieDiff,
+			},
+			want: models.DiffTypeZOMBIEDIFF,
+		},
+		{
+			name: "DiffTypeShadowDiff",
+			args: args{
+				diffType: _spec.DiffTypeShadowDiff,
+			},
+			want: models.DiffTypeSHADOWDIFF,
+		},
+		{
+			name: "DiffTypeGeneralDiff",
+			args: args{
+				diffType: _spec.DiffTypeGeneralDiff,
+			},
+			want: models.DiffTypeGENERALDIFF,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getAPIDiffType(tt.args.diffType); got != tt.want {
+				t.Errorf("getAPIDiffType() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_getSpecDiffType(t *testing.T) {
+	type args struct {
+		providedDiff      models.DiffType
+		reconstructedDiff models.DiffType
+	}
+	tests := []struct {
+		name string
+		args args
+		want models.DiffType
+	}{
+		{
+			name: "Zombie over Shadow",
+			args: args{
+				providedDiff:      models.DiffTypeZOMBIEDIFF,
+				reconstructedDiff: models.DiffTypeSHADOWDIFF,
+			},
+			want: models.DiffTypeZOMBIEDIFF,
+		},
+		{
+			name: "Same type",
+			args: args{
+				providedDiff:      models.DiffTypeGENERALDIFF,
+				reconstructedDiff: models.DiffTypeGENERALDIFF,
+			},
+			want: models.DiffTypeGENERALDIFF,
+		},
+		{
+			name: "reconstructed unknown type",
+			args: args{
+				providedDiff:      models.DiffTypeNODIFF,
+				reconstructedDiff: "unknown type",
+			},
+			want: models.DiffTypeNODIFF,
+		},
+		{
+			name: "provided unknown type",
+			args: args{
+				providedDiff:      "unknown type",
+				reconstructedDiff: models.DiffTypeNODIFF,
+			},
+			want: models.DiffTypeNODIFF,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getSpecDiffType(tt.args.providedDiff, tt.args.reconstructedDiff); got != tt.want {
+				t.Errorf("getSpecDiffType() = %v, want %v", got, tt.want)
 			}
 		})
 	}

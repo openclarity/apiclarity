@@ -111,6 +111,9 @@ func init() {
             "$ref": "#/parameters/hasSpecDiffFilter"
           },
           {
+            "$ref": "#/parameters/specDiffTypeIsFilter"
+          },
+          {
             "$ref": "#/parameters/specIsFilter"
           },
           {
@@ -535,6 +538,9 @@ func init() {
             "$ref": "#/parameters/hasSpecDiffFilter"
           },
           {
+            "$ref": "#/parameters/specDiffTypeIsFilter"
+          },
+          {
             "$ref": "#/parameters/specIsFilter"
           },
           {
@@ -696,6 +702,9 @@ func init() {
         "sourceIP": {
           "type": "string"
         },
+        "specDiffType": {
+          "$ref": "#/definitions/DiffType"
+        },
         "statusCode": {
           "type": "integer"
         },
@@ -729,7 +738,7 @@ func init() {
         "sourceIP",
         "destinationIP",
         "destinationPort",
-        "hasSpecDiff",
+        "specDiffType",
         "hostSpecName",
         "apiType"
       ]
@@ -741,6 +750,9 @@ func init() {
         "newSpec"
       ],
       "properties": {
+        "diffType": {
+          "$ref": "#/definitions/DiffType"
+        },
         "newSpec": {
           "description": "New spec json string",
           "type": "string"
@@ -847,6 +859,16 @@ func init() {
         }
       }
     },
+    "DiffType": {
+      "type": "string",
+      "default": "NO_DIFF",
+      "enum": [
+        "ZOMBIE_DIFF",
+        "SHADOW_DIFF",
+        "GENERAL_DIFF",
+        "NO_DIFF"
+      ]
+    },
     "HitCount": {
       "type": "object",
       "properties": {
@@ -927,6 +949,9 @@ func init() {
         },
         "apiHostName": {
           "type": "string"
+        },
+        "diffType": {
+          "$ref": "#/definitions/DiffType"
         },
         "time": {
           "type": "string",
@@ -1009,7 +1034,7 @@ func init() {
         "sourceIP",
         "destinationIP",
         "destinationPort",
-        "hasSpecDiff",
+        "specDiffType",
         "hostSpecName",
         "apiType"
       ],
@@ -1294,6 +1319,20 @@ func init() {
       "name": "spec[contains]",
       "in": "query"
     },
+    "specDiffTypeIsFilter": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "ZOMBIE_DIFF",
+          "SHADOW_DIFF",
+          "GENERAL_DIFF",
+          "NO_DIFF"
+        ],
+        "type": "string"
+      },
+      "name": "specDiffType[is]",
+      "in": "query"
+    },
     "specEndsWithFilter": {
       "type": "string",
       "name": "spec[end]",
@@ -1434,7 +1473,7 @@ func init() {
               "sourceIP",
               "destinationIP",
               "destinationPort",
-              "hasSpecDiff",
+              "specDiffType",
               "hostSpecName",
               "apiType"
             ],
@@ -1593,6 +1632,20 @@ func init() {
           {
             "type": "boolean",
             "name": "hasSpecDiff[is]",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "enum": [
+                "ZOMBIE_DIFF",
+                "SHADOW_DIFF",
+                "GENERAL_DIFF",
+                "NO_DIFF"
+              ],
+              "type": "string"
+            },
+            "name": "specDiffType[is]",
             "in": "query"
           },
           {
@@ -2279,6 +2332,20 @@ func init() {
           {
             "type": "array",
             "items": {
+              "enum": [
+                "ZOMBIE_DIFF",
+                "SHADOW_DIFF",
+                "GENERAL_DIFF",
+                "NO_DIFF"
+              ],
+              "type": "string"
+            },
+            "name": "specDiffType[is]",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
               "type": "string"
             },
             "name": "spec[is]",
@@ -2479,6 +2546,9 @@ func init() {
         "sourceIP": {
           "type": "string"
         },
+        "specDiffType": {
+          "$ref": "#/definitions/DiffType"
+        },
         "statusCode": {
           "type": "integer"
         },
@@ -2512,7 +2582,7 @@ func init() {
         "sourceIP",
         "destinationIP",
         "destinationPort",
-        "hasSpecDiff",
+        "specDiffType",
         "hostSpecName",
         "apiType"
       ]
@@ -2524,6 +2594,9 @@ func init() {
         "newSpec"
       ],
       "properties": {
+        "diffType": {
+          "$ref": "#/definitions/DiffType"
+        },
         "newSpec": {
           "description": "New spec json string",
           "type": "string"
@@ -2630,6 +2703,16 @@ func init() {
         }
       }
     },
+    "DiffType": {
+      "type": "string",
+      "default": "NO_DIFF",
+      "enum": [
+        "ZOMBIE_DIFF",
+        "SHADOW_DIFF",
+        "GENERAL_DIFF",
+        "NO_DIFF"
+      ]
+    },
     "HitCount": {
       "type": "object",
       "properties": {
@@ -2710,6 +2793,9 @@ func init() {
         },
         "apiHostName": {
           "type": "string"
+        },
+        "diffType": {
+          "$ref": "#/definitions/DiffType"
         },
         "time": {
           "type": "string",
@@ -2792,7 +2878,7 @@ func init() {
         "sourceIP",
         "destinationIP",
         "destinationPort",
-        "hasSpecDiff",
+        "specDiffType",
         "hostSpecName",
         "apiType"
       ],
@@ -3075,6 +3161,20 @@ func init() {
         "type": "string"
       },
       "name": "spec[contains]",
+      "in": "query"
+    },
+    "specDiffTypeIsFilter": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "ZOMBIE_DIFF",
+          "SHADOW_DIFF",
+          "GENERAL_DIFF",
+          "NO_DIFF"
+        ],
+        "type": "string"
+      },
+      "name": "specDiffType[is]",
       "in": "query"
     },
     "specEndsWithFilter": {

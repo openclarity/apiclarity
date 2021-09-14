@@ -41,6 +41,8 @@ definitions:
       hasProvidedSpecDiff:
         type: 'boolean'
         default: false
+      specDiffType:
+        $ref: '#/definitions/DiffType'
       hostSpecName:
         type: 'string'
       apiInfoId:
@@ -56,6 +58,8 @@ definitions:
       - oldSpec
       - newSpec
     properties:
+      diffType:
+        $ref: '#/definitions/DiffType'
       oldSpec:
         description: 'Old spec json string'
         type: 'string'
@@ -134,6 +138,8 @@ definitions:
         format: date-time
       apiHostName:
         type: 'string'
+      diffType:
+        $ref: '#/definitions/DiffType'
 
   HttpMethod:
     type: string
@@ -154,6 +160,15 @@ definitions:
       - INTERNAL
       - EXTERNAL
 
+  DiffType:
+    type: string
+    default: NO_DIFF
+    enum: &DiffType
+      - ZOMBIE_DIFF
+      - SHADOW_DIFF
+      - GENERAL_DIFF
+      - NO_DIFF
+
   ApiInventorySortKey:
     type: string
     enum: &ApiInventorySortKey
@@ -172,7 +187,7 @@ definitions:
       - sourceIP
       - destinationIP
       - destinationPort
-      - hasSpecDiff
+      - specDiffType
       - hostSpecName
       - apiType
 
@@ -321,6 +336,7 @@ paths:
         - $ref: '#/parameters/destinationPortIsFilter'
         - $ref: '#/parameters/destinationPortIsNotFilter'
         - $ref: '#/parameters/hasSpecDiffFilter'
+        - $ref: '#/parameters/specDiffTypeIsFilter'
         - $ref: '#/parameters/specIsFilter'
         - $ref: '#/parameters/specIsNotFilter'
         - $ref: '#/parameters/specStartsWithFilter'
@@ -567,6 +583,7 @@ paths:
         - $ref: '#/parameters/destinationPortIsFilter'
         - $ref: '#/parameters/destinationPortIsNotFilter'
         - $ref: '#/parameters/hasSpecDiffFilter'
+        - $ref: '#/parameters/specDiffTypeIsFilter'
         - $ref: '#/parameters/specIsFilter'
         - $ref: '#/parameters/specIsNotFilter'
         - $ref: '#/parameters/specStartsWithFilter'
@@ -838,6 +855,15 @@ parameters:
     name: 'hasSpecDiff[is]'
     in: 'query'
     type: 'boolean'
+    required: false
+
+  specDiffTypeIsFilter:
+    name: 'specDiffType[is]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+      enum: *DiffType
     required: false
 
   specIsFilter:
