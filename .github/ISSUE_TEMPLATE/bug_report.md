@@ -23,7 +23,7 @@ assignees: ''
 #### Anything else we need to know?:
 
 #### Environment:
-- Kubernetes version (use `kubectl version`):
+- Kubernetes version (use `kubectl version --short`):
 - Istio version (use `istioctl version`):
 - Cloud provider or hardware configuration:
 - Others:
