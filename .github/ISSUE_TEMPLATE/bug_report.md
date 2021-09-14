@@ -17,6 +17,9 @@ assignees: ''
 
 #### How to reproduce it (as minimally and precisely as possible):
 
+#### Are there any error messages in API Clarity logs?
+(e.g. `kubectl logs -n apiclarity --selector=app=apiclarity`)
+
 #### Anything else we need to know?:
 
 #### Environment:
