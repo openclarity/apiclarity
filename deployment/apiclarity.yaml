@@ -64,6 +64,8 @@ spec:
   selector:
     matchLabels:
       app: apiclarity
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
@@ -120,9 +122,8 @@ spec:
           volumeMounts:
             - name: apiclarity
               mountPath: /apiclarity
-              subPath:
       securityContext:
-        fsGroup: 65534
+        fsGroup: 1000
       volumes:
         - name: apiclarity
           persistentVolumeClaim:
