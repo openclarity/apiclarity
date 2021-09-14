@@ -1,5 +1,11 @@
-# API Clarity
-Open source for API traffic visibility in K8s clusters
+![API Clarity](API_clarity.svg "API Clarity")
+
+Reconstruct Open API Specifications from real-time workload traffic seamlessly:
+* Capture all API traffic in an existing environment using a service-mesh framework
+* Construct the OpenAPI specification by observing the API traffic
+* Upload OpenAPI spec, review, modify and approve generated OpenAPI specs
+* Alert on any difference between the approved API specification and the one that is observed in runtime, detects shadow & zombie APIs
+* Use a specific UI dashboard to audit and monitor the API findings
 
 # Microservices API challenges
 * Not all applications have their Open API specification available.​
