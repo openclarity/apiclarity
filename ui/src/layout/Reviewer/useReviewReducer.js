@@ -15,7 +15,8 @@ export const REVIEW_ACTIONS = {
     ERROR_LOADIND_DATA: "ERROR_LOADIND_DATA",
     UPDATE_REVIEW_DATA: "UPDATE_REVIEW_DATA",
     SET_OPEN_PARAM_INPUT_PATH: "SET_OPEN_PARAM_INPUT_PATH",
-    SET_MERGING_PATHS_DATA: "SET_MERGING_PATHS_DATA"
+    SET_MERGING_PATHS_DATA: "SET_MERGING_PATHS_DATA",
+    UPDATE_PATH_PARAM_NAME: "UPDATE_PATH_PARAM_NAME"
 }
 
 const getFormatDataWithIds = data => data.map((item, index) => ({...item, id: String(index)}));
@@ -57,6 +58,22 @@ const reducer = (state, action) => {
                 ...state,
                 mergingPathsData: action.payload
             };
+        }
+        case REVIEW_ACTIONS.UPDATE_PATH_PARAM_NAME: {
+            const {dataToReview} = state;
+            const {updatedPath, pathData} = action.payload;
+
+            const updatingPathIndex = dataToReview.findIndex(({suggestedPath}) => suggestedPath === pathData.suggestedPath);
+            
+            return {
+                ...state,
+                dataToReview: [
+                    ...dataToReview.slice(0, updatingPathIndex),
+                    {...pathData, suggestedPath: updatedPath},
+                    ...dataToReview.slice(updatingPathIndex + 1)
+                ],
+                openParamInputPathData: null
+            }
         }
         default:
             return state;

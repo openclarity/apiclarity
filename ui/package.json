@@ -16,6 +16,7 @@
     "react-select": "^4.3.1",
     "react-table": "^7.7.0",
     "react-toggle-button": "^2.2.0",
+    "react-tooltip": "^4.2.21",
     "recharts": "^2.0.10",
     "sass": "^1.35.2",
     "spinners-react": "^1.0.4"
