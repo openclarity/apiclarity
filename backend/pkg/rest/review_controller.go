@@ -17,6 +17,7 @@ package rest
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -50,7 +51,13 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 
 	approvedReview := createApprovedReviewForSpeculator(params.Body, pathToPathItem)
 	// apply approved review to the speculator
-	s.speculator.ApplyApprovedReview(speculator.SpecKey(review.SpecKey), approvedReview)
+	if err := s.speculator.ApplyApprovedReview(speculator.SpecKey(review.SpecKey), approvedReview); err != nil {
+		errMsg := fmt.Sprintf("failed to apply approved review. %v", err)
+		log.Error(errMsg)
+		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
+			Message: errMsg,
+		})
+	}
 
 	// mark review as approved for later deletion
 	if err := database.UpdateApprovedReview(true, params.ReviewID); err != nil {
