@@ -3,3 +3,4 @@ db.db
 backend/bin/*
 /bin/*
 *.gob
+goreleaser_artifacts/

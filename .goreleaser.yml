@@ -1,0 +1,46 @@
+before:
+  hooks:
+    - git submodule init wasm-filters
+    - git submodule update wasm-filters
+
+builds:
+  -
+    dir: backend
+    main: ./cmd/backend
+    binary: backend
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+
+archives:
+  -
+    name_template: "{{ .ProjectName }}_{{ .Version }}"
+
+    # Additional files/template/globs we want to add to the archive.
+    files:
+      - LICENSE
+      - README.md
+      - wasm-filters/deploy.sh
+      - wasm-filters/envoyFilter.yaml
+      - wasm-filters/bin/release/http-trace-filter.wasm
+      - deployment/apiclarity.yaml
+
+checksum:
+  name_template: 'checksums.txt'
+
+# Change the default artifacts folder
+dist: goreleaser_artifacts
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^workflow:'
