@@ -76,7 +76,7 @@ spec:
       serviceAccountName: apiclarity
       containers:
         - name: apiclarity
-          image: ghcr.io/apiclarity/apiclarity
+          image: ghcr.io/apiclarity/apiclarity:latest
           args:
             - run
           env:
