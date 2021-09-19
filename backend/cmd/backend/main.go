@@ -16,6 +16,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	log "github.com/sirupsen/logrus"
@@ -24,13 +25,18 @@ import (
 
 	"github.com/apiclarity/apiclarity/backend/pkg/backend"
 	"github.com/apiclarity/apiclarity/backend/pkg/config"
+	"github.com/apiclarity/apiclarity/backend/pkg/version"
 	log_utils "github.com/apiclarity/speculator/pkg/utils/log"
-	"github.com/apiclarity/speculator/pkg/version"
 )
 
 func run(c *cli.Context) {
 	log_utils.InitLogs(c, os.Stdout)
 	backend.Run()
+}
+
+func versionCommand(_ *cli.Context) {
+	fmt.Printf("Version: %s \nCommit: %s\nBuild Time: %s",
+		version.Version, version.CommitHash, version.BuildTimestamp)
 }
 
 func main() {
@@ -60,8 +66,16 @@ func main() {
 	}
 	runCommand.UsageText = runCommand.Name
 
+	versionCommand := cli.Command{
+		Name:   "version",
+		Usage:  "APIClarity Version Details",
+		Action: versionCommand,
+	}
+	versionCommand.UsageText = versionCommand.Name
+
 	app.Commands = []cli.Command{
 		runCommand,
+		versionCommand,
 	}
 
 	if err := app.Run(os.Args); err != nil {

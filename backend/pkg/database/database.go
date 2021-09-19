@@ -55,7 +55,7 @@ func init() {
 
 func cleanFakeDataBase(databasePath string) {
 	if _, err := os.Stat(databasePath); !os.IsNotExist(err) {
-		log.Infof("deleting db...")
+		log.Debug("deleting db...")
 		if err := os.Remove(databasePath); err != nil {
 			log.Warnf("failed to delete db file (%v): %v", databasePath, err)
 		}

@@ -15,4 +15,9 @@
 
 package version
 
-const Version = "0.0.1"
+// overridden using ldflags
+var (
+	Version        string
+	CommitHash     string
+	BuildTimestamp string
+)
