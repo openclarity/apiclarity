@@ -94,8 +94,15 @@ func FileServerMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		} else if strings.HasPrefix(r.URL.Path, "/swagger") {
 			http.FileServer(http.Dir("./dist")).ServeHTTP(w, r)
+		} else if isKnownUIRoute(r.URL.Path) {
+			http.ServeFile(w, r, "./site/index.html")
 		} else {
 			http.FileServer(http.Dir("./site")).ServeHTTP(w, r)
 		}
 	})
+}
+
+func isKnownUIRoute(path string) bool {
+	return strings.HasPrefix(path, "/events") ||
+		strings.HasPrefix(path, "/inventory")
 }
