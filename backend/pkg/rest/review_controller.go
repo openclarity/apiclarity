@@ -52,7 +52,7 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 	approvedReview := createApprovedReviewForSpeculator(params.Body, pathToPathItem)
 	// apply approved review to the speculator
 	if err := s.speculator.ApplyApprovedReview(speculator.SpecKey(review.SpecKey), approvedReview); err != nil {
-		errMsg := fmt.Sprintf("failed to apply approved review. %v", err)
+		errMsg := fmt.Sprintf("Failed to apply the approved review. %v", err)
 		log.Error(errMsg)
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
 			Message: errMsg,
