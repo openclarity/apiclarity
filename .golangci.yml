@@ -25,6 +25,10 @@ linters-settings:
     settings:
       mnd:
         ignored-files: fake.go
+  forbidigo:
+    # Forbid the following identifiers (identifiers are written using regexp):
+    forbid:
+      - ^print.*$
 
 linters:
   enable-all: true

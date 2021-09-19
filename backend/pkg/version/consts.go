@@ -15,7 +15,7 @@
 
 package version
 
-// overridden using ldflags
+// overridden using ldflags.
 var (
 	Version        string
 	CommitHash     string
