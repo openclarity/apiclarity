@@ -61,7 +61,7 @@ git submodule init wasm-filters
 git submodule update wasm-filters
 cd wasm-filters
 ```
-Run the WASM deployment script for selected namespaces to allow traffic tracing.
+Run the WASM deployment script for selected namespaces (with [Istio sidecar injection](https://istio.io/latest/docs/setup/additional-setup/sidecar-injection/) enabled) to allow traffic tracing.
 The script will automatically:
    
    - Deploy the WASM filter binary as a config map.
