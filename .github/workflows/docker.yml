@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - build-version
 
 jobs:
   docker:
