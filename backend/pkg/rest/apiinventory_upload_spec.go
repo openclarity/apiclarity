@@ -24,7 +24,6 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/spec"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/validate"
 	log "github.com/sirupsen/logrus"
@@ -37,27 +36,32 @@ import (
 
 func (s *Server) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPIInventoryAPIIDSpecsProvidedSpecParams) middleware.Responder {
 	apiInfo := &database.APIInfo{}
-	var jsonSpec []byte
-	var err error
 
 	log.Debugf("Got PutAPIInventoryAPIIDSpecsProvidedSpecParams: %+v", params)
 
-	jsonSpec = []byte(params.Body.RawSpec)
-
-	// if spec is a yaml spec, convert it to json format for saving in db
-	if isYamlSpec([]byte(params.Body.RawSpec)) {
-		jsonSpec, err = yaml.YAMLToJSON([]byte(params.Body.RawSpec))
-		if err != nil {
-			// The spec was already validated as a valid yaml, so error here is an internal error, not a validation error
-			log.Errorf("Failed to convert yaml spec to json: %s. %v", params.Body.RawSpec, err)
-			return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
-		}
+	// Convert YAML to JSON. Since JSON is a subset of YAML, passing JSON through
+	// this method should be a no-op.
+	jsonSpecBytes, err := yaml.YAMLToJSON([]byte(params.Body.RawSpec))
+	if err != nil {
+		log.Errorf("Failed to convert yaml spec to json: %s. %v", params.Body.RawSpec, err)
+		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
 	}
-	if err := validateJSONSpec(jsonSpec); err != nil {
-		log.Errorf("Spec validation failed. Spec: %s. %v", jsonSpec, err)
+
+	// Creates a new analyzed spec document for the provided spec
+	analyzed, err := loads.Analyzed(jsonSpecBytes, "")
+	if err != nil {
+		log.Errorf("failed to analyze spec. Spec: %s. %v", jsonSpecBytes, err)
 		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecBadRequest().WithPayload("Spec validation failed")
 	}
 
+	// Validates an OpenAPI 2.0 specification document.
+	err = validate.Spec(analyzed, strfmt.Default)
+	if err != nil {
+		log.Errorf("spec validation failed. %v", err)
+		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecBadRequest().WithPayload("Spec validation failed")
+	}
+
+	// Save the provided spec in the DB without expanding the ref fields
 	if err = database.PutProvidedAPISpec(params); err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
@@ -69,7 +73,15 @@ func (s *Server) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPII
 		log.Errorf("Failed to get APIInventory table with api id: %v. %v", params.APIID, err)
 		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
 	}
-	if err := s.speculator.LoadProvidedSpec(speculator.GetSpecKey(apiInfo.Name, strconv.Itoa(int(apiInfo.Port))), jsonSpec); err != nil {
+
+	// Expands the ref fields in the analyzed spec document
+	jsonSpecBytes, err = getExpandedSpec(analyzed)
+	if err != nil {
+		log.Errorf("Failed to get expanded spec: %v", err)
+		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
+	}
+
+	if err := s.speculator.LoadProvidedSpec(speculator.GetSpecKey(apiInfo.Name, strconv.Itoa(int(apiInfo.Port))), jsonSpecBytes); err != nil {
 		log.Errorf("Failed to load provided spec. %v", err)
 		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
 	}
@@ -80,43 +92,17 @@ func (s *Server) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPII
 		})
 }
 
-func isJSONSpec(rawSpec []byte) bool {
-	swagger := spec.Swagger{}
-
-	if err := json.Unmarshal(rawSpec, &swagger); err != nil {
-		return false
-	}
-	return true
-}
-
-func isYamlSpec(rawSpec []byte) bool {
-	swagger := spec.Swagger{}
-
-	if err := yaml.Unmarshal(rawSpec, &swagger); err != nil {
-		return false
-	}
-	return true
-}
-
-func validateRawJSONSpec(rawSpec []byte) error {
-	doc, err := loads.Analyzed(rawSpec, "")
+// getExpandedSpec expands the ref fields in the analyzed spec document.
+func getExpandedSpec(analyzed *loads.Document) ([]byte, error) {
+	expandedSpec, err := analyzed.Expanded()
 	if err != nil {
-		return fmt.Errorf("failed to analyze spec: %s. %v", rawSpec, err)
+		return nil, fmt.Errorf("failed to expanded spec. %v", err)
 	}
-	err = validate.Spec(doc, strfmt.Default)
+
+	expandedSpecB, err := json.Marshal(expandedSpec.Spec())
 	if err != nil {
-		return fmt.Errorf("spec validation failed. %v", err)
-	}
-	return nil
-}
-
-func validateJSONSpec(rawSpec []byte) error {
-	if !isJSONSpec(rawSpec) {
-		return fmt.Errorf("not a vaild json spec schema: %s", rawSpec)
+		return nil, fmt.Errorf("failed to marshal expanded spec. %v", err)
 	}
 
-	if err := validateRawJSONSpec(rawSpec); err != nil {
-		return fmt.Errorf("failed to validate json spec. %v", err)
-	}
-	return nil
+	return expandedSpecB, nil
 }
