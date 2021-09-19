@@ -50,6 +50,14 @@ func Test_getExpandedSpec(t *testing.T) {
 			want:    []byte(marshal(analyzedUserExpandedSpec.Spec())),
 			wantErr: false,
 		},
+		{
+			name: "already expanded - no change to spec",
+			args: args{
+				analyzed: analyzedUserExpandedSpec,
+			},
+			want:    []byte(marshal(analyzedUserExpandedSpec.Spec())),
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
