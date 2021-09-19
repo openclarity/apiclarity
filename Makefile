@@ -54,7 +54,10 @@ api: ## Generating API code
 .PHONY: docker
 docker: ## Build Docker image 
 	@(echo "Building docker image ..." )
-	docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+	docker build --build-arg VERSION=${VERSION} \
+		--build-arg BUILD_TIMESTAMP=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") \
+		--build-arg COMMIT_HASH=$(shell git rev-parse HEAD) \
+		-t ${DOCKER_IMAGE}:${DOCKER_TAG} .
 
 .PHONY: push-docker
 push-docker: docker ## Build and Push Docker image

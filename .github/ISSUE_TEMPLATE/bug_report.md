@@ -25,5 +25,6 @@ assignees: ''
 #### Environment:
 - Kubernetes version (use `kubectl version --short`):
 - Istio version (use `istioctl version`):
+- APIClarity version (use `kubectl -n apiclarity exec deploy/apiclarity -- ./backend version`)
 - Cloud provider or hardware configuration:
 - Others:

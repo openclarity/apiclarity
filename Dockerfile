@@ -18,10 +18,16 @@ WORKDIR /build/backend
 COPY backend/go.* ./
 RUN go mod download
 
+ARG VERSION
+ARG BUILD_TIMESTAMP
+ARG COMMIT_HASH
+
 # Copy and build backend code
 COPY backend .
-RUN go build -o backend ./cmd/backend/main.go
-
+RUN go build -ldflags="-s -w \
+     -X 'github.com/apiclarity/apiclarity/backend/pkg/version.Version=${VERSION}' \
+     -X 'github.com/apiclarity/apiclarity/backend/pkg/version.CommitHash=${COMMIT_HASH}' \
+     -X 'github.com/apiclarity/apiclarity/backend/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}'" -o backend ./cmd/backend/main.go
 
 FROM alpine:3.14.0
 
