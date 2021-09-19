@@ -13,7 +13,7 @@ DOCKER_IMAGE ?= $(DOCKER_REGISTRY)/$(BINARY_NAME)
 DOCKER_TAG ?= ${VERSION}
 
 # Dependency versions
-GOLANGCI_VERSION = 1.38.0
+GOLANGCI_VERSION = 1.42.0
 LICENSEI_VERSION = 0.3.1
 
 # HELP
@@ -100,8 +100,8 @@ bin/licensei-${LICENSEI_VERSION}:
 
 .PHONY: license-check
 license-check: bin/licensei ## Run license check
-	bin/licensei check
 	bin/licensei header
+	cd backend && ../bin/licensei check --config=../.licensei.toml
 
 .PHONY: license-cache
 license-cache: bin/licensei ## Generate license cache

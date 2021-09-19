@@ -6,7 +6,6 @@ import Chart from 'components/Chart';
 import Loader from 'components/Loader';
 import PageContainer from 'components/PageContainer';
 import Title from 'components/Title';
-import Icon, { ICON_NAMES } from 'components/Icon';
 import COLORS from 'utils/scss_variables.module.scss';
 
 import './api-usage.scss';
@@ -71,27 +70,12 @@ const UsageChart = ({data, timeFormat}) => {
     )
 };
 
-const ApiUsage = () => {
+const ApiUsage = ({refreshTimestamp}) => {
     const defaultTimeRange = TIME_SELECT_ITEMS.DAY;
     const [timeFilter, setTimeFilter] = useState({selectedRange: defaultTimeRange.value, ...defaultTimeRange.calc()});
     const {selectedRange, startTime, endTime} = timeFilter;
 
     const [{loading, data}, fetchData] = useFetch("dashboard/apiUsage", {loadOnMount: false});
-
-    const [refreshTimestamp, setRefreshTimestamp] = useState(Date());
-    const doRefreshTimestamp = () => setRefreshTimestamp(Date());
-
-    const doRefresh = () => {
-        const selectedRangeItem = TIME_SELECT_ITEMS[selectedRange];
-
-        if (!selectedRangeItem.calc) {
-            doRefreshTimestamp();
-
-            return;
-        }
-
-        setTimeFilter({selectedRange, ...selectedRangeItem.calc()})
-    }
 
     useEffect(() => {
         fetchData({queryParams: {startTime, endTime}});
@@ -99,10 +83,7 @@ const ApiUsage = () => {
 
     return (
         <PageContainer className="api-usage-container">
-            <div className="api-usage-title">
-                <Title>API usage</Title>
-                <Icon name={ICON_NAMES.REFRESH} onClick={doRefresh} />
-            </div>
+            <Title>API usage</Title>
             <TimeFilter
                 selectedRange={selectedRange}
                 startTime={startTime}

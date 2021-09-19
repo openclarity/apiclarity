@@ -17,6 +17,7 @@ package backend
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -50,7 +51,7 @@ func (b *Backend) startSendingFakeTraces() {
 			continue
 		}
 
-		if err := b.handleHttpTraceFromFile(file); err != nil {
+		if err := b.handleHTTPTraceFromFile(file); err != nil {
 			log.Errorf("Failed to handle http trace from file: %v. %v", file, err)
 		}
 	}
@@ -59,19 +60,19 @@ func (b *Backend) startSendingFakeTraces() {
 	time.Sleep(2 * time.Second)
 	// send telemetry to diff against provided spec
 	providedDiffTelemetryFile := root + "/../provided_spec/provided_spec_diff_telemetry.json"
-	if err := b.handleHttpTraceFromFile(providedDiffTelemetryFile); err != nil {
+	if err := b.handleHTTPTraceFromFile(providedDiffTelemetryFile); err != nil {
 		log.Errorf("Failed to handle http trace from file: %v. %v", providedDiffTelemetryFile, err)
 	}
 	// sleep one minute to let the user approve the suggested spec (so we will have a reconstructed spec)
 	time.Sleep(1 * time.Minute)
 	// send telemetry to diff against reconstructed spec
 	reconstructedDiffTelemetryFile := root + "/../diff_trace_files/httpbin_put_anything.json"
-	if err := b.handleHttpTraceFromFile(reconstructedDiffTelemetryFile); err != nil {
+	if err := b.handleHTTPTraceFromFile(reconstructedDiffTelemetryFile); err != nil {
 		log.Errorf("Failed to handle http trace from file: %v. %v", reconstructedDiffTelemetryFile, err)
 	}
 }
 
-func (b *Backend) handleHttpTraceFromFile(fileName string) error {
+func (b *Backend) handleHTTPTraceFromFile(fileName string) error {
 	byteValue, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		return fmt.Errorf("failed to read file: %v. %v", fileName, err)
@@ -81,7 +82,7 @@ func (b *Backend) handleHttpTraceFromFile(fileName string) error {
 	if err := json.Unmarshal(byteValue, &trace); err != nil {
 		return fmt.Errorf("failed to unmarshal. %v", err)
 	}
-	if err := b.handleHttpTrace(&trace); err != nil {
+	if err := b.handleHTTPTrace(&trace); err != nil {
 		return fmt.Errorf("failed to handle trace for file: %v. %v", fileName, err)
 	}
 	return nil
@@ -109,19 +110,22 @@ func putProvidedSpecLocally(root string) {
 	}
 
 	// set the HTTP method, url, and request body
-	req, err := http.NewRequest(http.MethodPut, "http://localhost:8080/api/apiInventory/1/specs/providedSpec", bytes.NewBuffer(jsonBody))
+	req, err := http.NewRequestWithContext(context.TODO(), http.MethodPut, "http://localhost:8080/api/apiInventory/1/specs/providedSpec", bytes.NewBuffer(jsonBody))
 	if err != nil {
-		log.Errorf("Failed to create new request. %v", err)
+		panic(fmt.Sprintf("Failed to create new request. %v", err))
 	}
 
 	// set the request header Content-Type for json
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Errorf("Request failed. %v", err)
+		panic(fmt.Sprintf("Request failed. %v", err))
 	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
-	if resp.StatusCode != 201 {
+	if resp.StatusCode != http.StatusCreated {
 		log.Errorf("Failed to put provided spec locally, response status code is not 201. status code: %v", resp.StatusCode)
 	}
 }

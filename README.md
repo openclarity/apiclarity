@@ -1,5 +1,11 @@
-# API Clarity
-Open source for API traffic visibility in K8s clusters
+![API Clarity](API_clarity.svg "API Clarity")
+
+Reconstruct Open API Specifications from real-time workload traffic seamlessly:
+* Capture all API traffic in an existing environment using a service-mesh framework
+* Construct the OpenAPI specification by observing the API traffic
+* Upload OpenAPI spec, review, modify and approve generated OpenAPI specs
+* Alert on any difference between the approved API specification and the one that is observed in runtime, detects shadow & zombie APIs
+* Use a specific UI dashboard to audit and monitor the API findings
 
 # Microservices API challenges
 * Not all applications have their Open API specification available.​
@@ -49,14 +55,13 @@ NAME                        READY   STATUS    RESTARTS   AGE
 apiclarity-5df5fd6d98-h8v7t   1/1     Running   2          15m
 mysql-6ffc46b7f-bggrv       1/1     Running   0          15m
 ```
-4. Build the Envoy WASM filter for capturing the traffic:
+4. Deploy the Envoy WASM filter for capturing the traffic:
 ```
 git submodule init wasm-filters
 git submodule update wasm-filters
 cd wasm-filters
-make docker_build && ls -l bin 
 ```
-5. Run the WASM deployment script for selected namespaces to allow traffic tracing.
+Run the WASM deployment script for selected namespaces to allow traffic tracing.
 The script will automatically:
    
    - Deploy the WASM filter binary as a config map.
@@ -68,14 +73,18 @@ The script will automatically:
 ```
 ./deploy.sh <namespace1> <namespace2> ...
 ```
-6. Port forward to APIClarity UI:
+
+Note:
+To build the WASM filter instead of using the pre-built binary, please follow the instructions on [wasm-filters](https://github.com/apiclarity/wasm-filters)
+
+5. Port forward to APIClarity UI:
 ```
 kubectl port-forward -n apiclarity svc/apiclarity 9999:8080
 ```
 
-7. Open APIClarity UI in the browser: [http://localhost:9999/](http://localhost:9999/)
+6. Open APIClarity UI in the browser: [http://localhost:9999/](http://localhost:9999/)
 
-8. Generate some traffic in the applications (e.g. [sock-shop demo](https://github.com/microservices-demo/microservices-demo)) in the traced namespaces and check APIClarity UI :)
+7. Generate some traffic in the applications (e.g. [sock-shop demo](https://github.com/microservices-demo/microservices-demo)) in the traced namespaces and check APIClarity UI :)
 
 
 ## Running locally with demo data
@@ -89,7 +98,7 @@ cp -r ./ui/build ./site
 ```
 3. Run backend and frontend locally using demo data:
 ```
-FAKE_DATA=true ENABLE_DB_INFO_LOGS=true ./backend/bin/backend run
+FAKE_TRACES=true FAKE_TRACES_PATH=./backend/pkg/test/trace_files ENABLE_DB_INFO_LOGS=true ./backend/bin/backend run
 ```
 4. Open APIClarity UI in the browser: [http://localhost:8080/](http://localhost:8080/)
 

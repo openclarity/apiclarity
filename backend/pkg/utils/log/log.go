@@ -16,9 +16,10 @@
 package log
 
 import (
+	"io"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
-	"io"
 )
 
 const (
@@ -35,7 +36,7 @@ func InitLogs(c *cli.Context, output io.Writer) {
 		DisableLevelTruncation: true,
 		QuoteEmptyFields:       true,
 	}
-	//log.SetFormatter(&log.JSONFormatter{})
+	// log.SetFormatter(&log.JSONFormatter{})
 	log.SetFormatter(&formatter)
 
 	log.SetReportCaller(true)

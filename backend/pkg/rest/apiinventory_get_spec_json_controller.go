@@ -17,13 +17,16 @@ package rest
 
 import (
 	"fmt"
-	"github.com/apiclarity/apiclarity/api/server/models"
-	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
-	"github.com/apiclarity/apiclarity/backend/pkg/database"
+	"net/http"
+
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/spec"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/apiclarity/apiclarity/api/server/models"
+	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
+	"github.com/apiclarity/apiclarity/backend/pkg/database"
 )
 
 type swaggerType string
@@ -33,13 +36,13 @@ const (
 	swaggerTypeReconstructed swaggerType = "Reconstructed"
 )
 
-func (s *RESTServer) GetAPIReconstructedSwaggerJSON(params operations.GetAPIInventoryAPIIDReconstructedSwaggerJSONParams) middleware.Responder {
+func (s *Server) GetAPIReconstructedSwaggerJSON(params operations.GetAPIInventoryAPIIDReconstructedSwaggerJSONParams) middleware.Responder {
 	swaggerJSON, err := getAPISwaggerJSON(params.APIID, swaggerTypeReconstructed)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
 		log.Error(err)
-		return operations.NewGetAPIInventoryAPIIDReconstructedSwaggerJSONDefault(500).WithPayload(&models.APIResponse{
+		return operations.NewGetAPIInventoryAPIIDReconstructedSwaggerJSONDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
 			Message: "Oops",
 		})
 	}
@@ -47,13 +50,13 @@ func (s *RESTServer) GetAPIReconstructedSwaggerJSON(params operations.GetAPIInve
 	return operations.NewGetAPIInventoryAPIIDReconstructedSwaggerJSONOK().WithPayload(swaggerJSON)
 }
 
-func (s *RESTServer) GetAPIProvidedSwaggerJSON(params operations.GetAPIInventoryAPIIDProvidedSwaggerJSONParams) middleware.Responder {
+func (s *Server) GetAPIProvidedSwaggerJSON(params operations.GetAPIInventoryAPIIDProvidedSwaggerJSONParams) middleware.Responder {
 	swaggerJSON, err := getAPISwaggerJSON(params.APIID, swaggerTypeProvided)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
 		log.Error(err)
-		return operations.NewGetAPIInventoryAPIIDProvidedSwaggerJSONDefault(500).WithPayload(&models.APIResponse{
+		return operations.NewGetAPIInventoryAPIIDProvidedSwaggerJSONDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
 			Message: "Oops",
 		})
 	}
@@ -62,7 +65,7 @@ func (s *RESTServer) GetAPIProvidedSwaggerJSON(params operations.GetAPIInventory
 }
 
 func getAPISwaggerJSON(apiID uint32, typ swaggerType) (*spec.Swagger, error) {
-	apiSpecFromDb, err := database.GetAPISpecs(apiID)
+	apiSpecFromDB, err := database.GetAPISpecs(apiID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get api specs from DB: %v", err)
 	}
@@ -70,9 +73,9 @@ func getAPISwaggerJSON(apiID uint32, typ swaggerType) (*spec.Swagger, error) {
 	var specToReturn string
 	switch typ {
 	case swaggerTypeProvided:
-		specToReturn = apiSpecFromDb.ProvidedSpec
+		specToReturn = apiSpecFromDB.ProvidedSpec
 	case swaggerTypeReconstructed:
-		specToReturn = apiSpecFromDb.ReconstructedSpec
+		specToReturn = apiSpecFromDB.ReconstructedSpec
 	}
 
 	if specToReturn == "" {

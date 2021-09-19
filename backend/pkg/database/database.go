@@ -38,12 +38,10 @@ const (
 	FakeDataEnvVar   = "FAKE_DATA"
 	FakeTracesEnvVar = "FAKE_TRACES"
 	FakeDBPath       = "./db.db"
-	enableDbInfoLogs = "ENABLE_DB_INFO_LOGS"
+	enableDBInfoLogs = "ENABLE_DB_INFO_LOGS"
 )
 
-var (
-	DB *gorm.DB
-)
+var DB *gorm.DB
 
 func init() {
 	viper.AutomaticEnv()
@@ -85,7 +83,7 @@ func initDataBase() *gorm.DB {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", DBUser, pass, DBHost, DBPort, dbName)
 
 	dbLogger := logger.Default
-	if viper.GetBool(enableDbInfoLogs) {
+	if viper.GetBool(enableDBInfoLogs) {
 		dbLogger = dbLogger.LogMode(logger.Info)
 	}
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
@@ -104,7 +102,7 @@ func initDataBase() *gorm.DB {
 
 func initFakeDataBase(databasePath string) *gorm.DB {
 	dbLogger := logger.Default
-	if viper.GetBool(enableDbInfoLogs) {
+	if viper.GetBool(enableDBInfoLogs) {
 		dbLogger = dbLogger.LogMode(logger.Info)
 	}
 

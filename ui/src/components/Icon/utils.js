@@ -18,5 +18,6 @@ export const ICON_NAMES = {
     DOWNLOAD_JSON: "download-json",
     REFRESH: "refresh",
     TABLE: "table",
-    GRAPH: "graph"
+    GRAPH: "graph",
+    UNMERGE: "unmerge"
 }

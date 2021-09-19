@@ -17,19 +17,19 @@ package test
 
 import (
 	"encoding/json"
-	"gotest.tools/v3/assert"
 	"net/http"
 	"testing"
 
 	oapi_spec "github.com/go-openapi/spec"
+	"gotest.tools/v3/assert"
 )
 
-type TestSpec struct {
+type Spec struct {
 	Spec *oapi_spec.Swagger
 }
 
-func NewTestSpec() *TestSpec {
-	return &TestSpec{
+func NewTestSpec() *Spec {
+	return &Spec{
 		Spec: &oapi_spec.Swagger{
 			SwaggerProps: oapi_spec.SwaggerProps{
 				Paths: &oapi_spec.Paths{
@@ -40,30 +40,31 @@ func NewTestSpec() *TestSpec {
 	}
 }
 
-func (t *TestSpec) WithPathItem(path string, pathItem oapi_spec.PathItem) *TestSpec {
-	t.Spec.Paths.Paths[path] = pathItem
-	return t
+func (ts *Spec) WithPathItem(path string, pathItem oapi_spec.PathItem) *Spec {
+	ts.Spec.Paths.Paths[path] = pathItem
+	return ts
 }
 
-func (ts *TestSpec) String(t *testing.T) string {
+func (ts *Spec) String(t *testing.T) string {
+	t.Helper()
 	B, err := json.Marshal(ts.Spec)
 	assert.NilError(t, err)
 	return string(B)
 }
 
-type TestPathItem struct {
+type PathItem struct {
 	PathItem oapi_spec.PathItem
 }
 
-func NewTestPathItem() *TestPathItem {
-	return &TestPathItem{
+func NewTestPathItem() *PathItem {
+	return &PathItem{
 		PathItem: oapi_spec.PathItem{
 			PathItemProps: oapi_spec.PathItemProps{},
 		},
 	}
 }
 
-func (t *TestPathItem) WithOperation(method string, op *oapi_spec.Operation) *TestPathItem {
+func (t *PathItem) WithOperation(method string, op *oapi_spec.Operation) *PathItem {
 	switch method {
 	case http.MethodGet:
 		t.PathItem.Get = op
@@ -83,19 +84,19 @@ func (t *TestPathItem) WithOperation(method string, op *oapi_spec.Operation) *Te
 	return t
 }
 
-type TestOperation struct {
+type Operation struct {
 	Op *oapi_spec.Operation
 }
 
-func NewTestOperation() *TestOperation {
-	return &TestOperation{
+func NewTestOperation() *Operation {
+	return &Operation{
 		Op: &oapi_spec.Operation{
 			OperationProps: oapi_spec.OperationProps{},
 		},
 	}
 }
 
-func (o *TestOperation) WithTags(tags []string) *TestOperation {
+func (o *Operation) WithTags(tags []string) *Operation {
 	o.Op.Tags = tags
 	return o
 }

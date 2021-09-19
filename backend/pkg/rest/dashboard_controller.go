@@ -16,6 +16,8 @@
 package rest
 
 import (
+	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -27,61 +29,47 @@ import (
 	"github.com/apiclarity/apiclarity/backend/pkg/database"
 )
 
-func (s *RESTServer) GetDashboardAPIUsage(params operations.GetDashboardAPIUsageParams) middleware.Responder {
-	var apisWithDiff []*models.APIUsage
-	var existingApis []*models.APIUsage
-	var newApis []*models.APIUsage
-
-	apisWithDiffUsage, err := getDashboardAPIUsages(time.Time(params.StartTime), time.Time(params.EndTime), database.ApiWithDiffs)
+func (s *Server) GetDashboardAPIUsage(params operations.GetDashboardAPIUsageParams) middleware.Responder {
+	apisWithDiffUsage, err := getDashboardAPIUsages(time.Time(params.StartTime), time.Time(params.EndTime), database.APIWithDiffs)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
 		log.Error(err)
-		return operations.NewGetDashboardAPIUsageDefault(500).WithPayload(&models.APIResponse{
+		return operations.NewGetDashboardAPIUsageDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
 			Message: "Oops",
 		})
 	}
-	for _, usage := range apisWithDiffUsage {
-		apisWithDiff = append(apisWithDiff, usage)
-	}
 
-	existingApisUsage, err := getDashboardAPIUsages(time.Time(params.StartTime), time.Time(params.EndTime), database.ExistingApi)
+	existingApisUsage, err := getDashboardAPIUsages(time.Time(params.StartTime), time.Time(params.EndTime), database.ExistingAPI)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
 		log.Error(err)
-		return operations.NewGetDashboardAPIUsageDefault(500).WithPayload(&models.APIResponse{
+		return operations.NewGetDashboardAPIUsageDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
 			Message: "Oops",
 		})
 	}
-	for _, usage := range existingApisUsage {
-		existingApis = append(existingApis, usage)
-	}
 
-	newApisUsage, err := getDashboardAPIUsages(time.Time(params.StartTime), time.Time(params.EndTime), database.NewApi)
+	newApisUsage, err := getDashboardAPIUsages(time.Time(params.StartTime), time.Time(params.EndTime), database.NewAPI)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
 		log.Error(err)
-		return operations.NewGetDashboardAPIUsageDefault(500).WithPayload(&models.APIResponse{
+		return operations.NewGetDashboardAPIUsageDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
 			Message: "Oops",
 		})
-	}
-
-	for _, usage := range newApisUsage {
-		newApis = append(newApis, usage)
 	}
 
 	return operations.NewGetDashboardAPIUsageOK().WithPayload(&models.APIUsages{
-		ApisWithDiff: apisWithDiff,
-		ExistingApis: existingApis,
-		NewApis:      newApis,
+		ApisWithDiff: apisWithDiffUsage,
+		ExistingApis: existingApisUsage,
+		NewApis:      newApisUsage,
 	})
 }
 
 const latestDiffsNum = 5
 
-func (s *RESTServer) GetDashboardAPIUsageLatestDiffs(params operations.GetDashboardAPIUsageLatestDiffsParams) middleware.Responder {
+func (s *Server) GetDashboardAPIUsageLatestDiffs(params operations.GetDashboardAPIUsageLatestDiffsParams) middleware.Responder {
 	var diffs []*models.SpecDiffTime
 
 	latestDiffs, err := database.GetAPIEventsLatestDiffs(latestDiffsNum)
@@ -89,7 +77,7 @@ func (s *RESTServer) GetDashboardAPIUsageLatestDiffs(params operations.GetDashbo
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
 		log.Error(err)
-		return operations.NewGetDashboardAPIUsageLatestDiffsDefault(500).WithPayload(&models.APIResponse{
+		return operations.NewGetDashboardAPIUsageLatestDiffsDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
 			Message: "Oops",
 		})
 	}
@@ -105,8 +93,7 @@ func (s *RESTServer) GetDashboardAPIUsageLatestDiffs(params operations.GetDashbo
 	return operations.NewGetDashboardAPIUsageLatestDiffsOK().WithPayload(diffs)
 }
 
-func (s *RESTServer) GetDashboardAPIUsageMostUsed(_ operations.GetDashboardAPIUsageMostUsedParams) middleware.Responder {
-
+func (s *Server) GetDashboardAPIUsageMostUsed(_ operations.GetDashboardAPIUsageMostUsedParams) middleware.Responder {
 	var ret []*models.APICount
 
 	groups, err := database.GroupByAPIInfo(database.GetAPIEventsTable())
@@ -114,7 +101,7 @@ func (s *RESTServer) GetDashboardAPIUsageMostUsed(_ operations.GetDashboardAPIUs
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
 		log.Error(err)
-		return operations.NewGetDashboardAPIUsageMostUsedDefault(500).WithPayload(&models.APIResponse{
+		return operations.NewGetDashboardAPIUsageMostUsedDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
 			Message: "Oops",
 		})
 	}
@@ -122,8 +109,8 @@ func (s *RESTServer) GetDashboardAPIUsageMostUsed(_ operations.GetDashboardAPIUs
 		ret = append(ret, &models.APICount{
 			APIHostName: group.HostSpecName,
 			APIPort:     group.Port,
-			APIType:     models.APIType(group.ApiType),
-			APIInfoID:   group.ApiInfoId,
+			APIType:     models.APIType(group.APIType),
+			APIInfoID:   group.APIInfoID,
 			NumCalls:    int64(group.Count),
 		})
 	}
@@ -131,7 +118,7 @@ func (s *RESTServer) GetDashboardAPIUsageMostUsed(_ operations.GetDashboardAPIUs
 	return operations.NewGetDashboardAPIUsageMostUsedOK().WithPayload(ret)
 }
 
-func getDashboardAPIUsages(startTime, endTime time.Time, apiType database.ApiUsageType) ([]*models.APIUsage, error) {
+func getDashboardAPIUsages(startTime, endTime time.Time, apiType database.APIUsageType) ([]*models.APIUsage, error) {
 	var apiUsages []*models.APIUsage
 	var count int64
 
@@ -141,7 +128,7 @@ func getDashboardAPIUsages(startTime, endTime time.Time, apiType database.ApiUsa
 
 	db, err := database.GetAPIUsageDBSession(apiType)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get DB session: %v", err)
 	}
 
 	for i := 0; i < hitCountGranularity; i++ {
@@ -150,7 +137,7 @@ func getDashboardAPIUsages(startTime, endTime time.Time, apiType database.ApiUsa
 		et := strfmt.DateTime(endTime)
 
 		if err := db.Where(database.CreateTimeFilter(st, et)).Count(&count).Error; err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to query DB: %v", err)
 		}
 
 		apiUsages = append(apiUsages, &models.APIUsage{

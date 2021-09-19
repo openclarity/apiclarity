@@ -18,6 +18,7 @@ package backend
 import (
 	"context"
 	"fmt"
+	"mime"
 	"net/url"
 	"os"
 	"os/signal"
@@ -38,22 +39,23 @@ import (
 	_database "github.com/apiclarity/apiclarity/backend/pkg/database"
 	"github.com/apiclarity/apiclarity/backend/pkg/database/fake"
 	"github.com/apiclarity/apiclarity/backend/pkg/healthz"
-	"github.com/apiclarity/apiclarity/backend/pkg/k8s_monitor"
+	"github.com/apiclarity/apiclarity/backend/pkg/k8smonitor"
 	"github.com/apiclarity/apiclarity/backend/pkg/rest"
 	"github.com/apiclarity/apiclarity/backend/pkg/traces"
 	_spec "github.com/apiclarity/speculator/pkg/spec"
 	_speculator "github.com/apiclarity/speculator/pkg/speculator"
+	_mimeutils "github.com/apiclarity/speculator/pkg/utils"
 )
 
 type Backend struct {
 	speculator          *_speculator.Speculator
 	stateBackupInterval time.Duration
 	stateBackupFileName string
-	monitor             *k8s_monitor.Monitor
+	monitor             *k8smonitor.Monitor
 	apiInventoryLock    sync.RWMutex
 }
 
-func CreateBackend(config *_config.Config, monitor *k8s_monitor.Monitor) *Backend {
+func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor) *Backend {
 	speculator, err := _speculator.DecodeState(config.StateBackupFileName)
 	if err != nil {
 		log.Infof("No speculator state to decode, creating new: %v", err)
@@ -89,9 +91,9 @@ func Run() {
 
 	log.Info("APIClarity backend is running")
 
-	var monitor *k8s_monitor.Monitor
+	var monitor *k8smonitor.Monitor
 	if !viper.GetBool(_database.FakeTracesEnvVar) && !viper.GetBool(_database.FakeDataEnvVar) {
-		monitor, err = k8s_monitor.CreateMonitor()
+		monitor, err = k8smonitor.CreateMonitor()
 		if err != nil {
 			log.Errorf("Failed to create a monitor: %v", err)
 			return
@@ -104,7 +106,7 @@ func Run() {
 
 	backend := CreateBackend(config, monitor)
 
-	tracesServer := traces.CreateHttpTracesServer(config.HttpTracesPort, backend.handleHttpTrace)
+	tracesServer := traces.CreateHTTPTracesServer(config.HTTPTracesPort, backend.handleHTTPTrace)
 	tracesServer.Start(errChan)
 	defer tracesServer.Stop()
 
@@ -179,7 +181,7 @@ func convertSpecDiffToEventDiff(diff *_spec.APIDiff) (originalRet, modifiedRet [
 	return originalRet, modifiedRet, nil
 }
 
-func (b *Backend) handleHttpTrace(trace *_spec.SCNTelemetry) error {
+func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 	var reconstructedDiff *_spec.APIDiff
 	var providedDiff *_spec.APIDiff
 	var err error
@@ -200,7 +202,7 @@ func (b *Backend) handleHttpTrace(trace *_spec.SCNTelemetry) error {
 	if err != nil {
 		return fmt.Errorf("failed to get destination info: %v", err)
 	}
-	destPort, err := strconv.ParseInt(destInfo.Port, 10, 64)
+	destPort, err := strconv.Atoi(destInfo.Port)
 	if err != nil {
 		return fmt.Errorf("failed to convert destination port: %v", err)
 	}
@@ -212,7 +214,7 @@ func (b *Backend) handleHttpTrace(trace *_spec.SCNTelemetry) error {
 	// Initialize API info
 	apiInfo := _database.APIInfo{
 		Name: trace.SCNTRequest.Host,
-		Port: destPort,
+		Port: int64(destPort),
 	}
 
 	// Set API Info type
@@ -222,9 +224,9 @@ func (b *Backend) handleHttpTrace(trace *_spec.SCNTelemetry) error {
 		apiInfo.Type = models.APITypeEXTERNAL
 	}
 
-	isNonApi := isNonApi(trace)
+	isNonAPI := isNonAPI(trace)
 	// Don't link non APIs to an API in the inventory
-	if !isNonApi {
+	if !isNonAPI {
 		// lock the API inventory to avoid creating API entries twice on trace handling races
 		b.apiInventoryLock.Lock()
 		// TODO: Access the database via a database handler instance
@@ -257,7 +259,7 @@ func (b *Backend) handleHttpTrace(trace *_spec.SCNTelemetry) error {
 	}
 
 	// Update API event in DB
-	statusCode, err := strconv.ParseInt(trace.SCNTResponse.StatusCode, 10, 64)
+	statusCode, err := strconv.Atoi(trace.SCNTResponse.StatusCode)
 	if err != nil {
 		return fmt.Errorf("failed to convert status code: %v", err)
 	}
@@ -270,12 +272,12 @@ func (b *Backend) handleHttpTrace(trace *_spec.SCNTelemetry) error {
 		Method:          models.HTTPMethod(trace.SCNTRequest.Method),
 		Path:            path,
 		Query:           query,
-		StatusCode:      statusCode,
+		StatusCode:      int64(statusCode),
 		SourceIP:        srcInfo.IP,
 		DestinationIP:   destInfo.IP,
-		DestinationPort: destPort,
+		DestinationPort: int64(destPort),
 		HostSpecName:    trace.SCNTRequest.Host,
-		IsNonApi:        isNonApi,
+		IsNonAPI:        isNonAPI,
 		EventType:       apiInfo.Type,
 	}
 
@@ -312,7 +314,7 @@ func (b *Backend) handleHttpTrace(trace *_spec.SCNTelemetry) error {
 }
 
 // getHostname will return only hostname without scheme and port
-// ex. https://example.org:8000 --> example.org
+// ex. https://example.org:8000 --> example.org.
 func getHostname(host string) (string, error) {
 	if !strings.Contains(host, "://") {
 		// need to add scheme to host in order for url.Parse to parse properly
@@ -333,17 +335,26 @@ func getHostname(host string) (string, error) {
 
 const (
 	contentTypeHeaderName      = "content-type"
-	contentTypeApplicationJson = "application/json"
+	contentTypeApplicationJSON = "application/json"
 )
 
-// If the response content type is not application/json, need to classify the trace as non-api
-func isNonApi(trace *_spec.SCNTelemetry) bool {
+func isNonAPI(trace *_spec.SCNTelemetry) bool {
 	respHeaders := _spec.ConvertHeadersToMap(trace.SCNTResponse.Headers)
-	// if content-type header is missing, we will classify it as API
-	if _, ok := respHeaders[contentTypeHeaderName]; !ok {
+
+	// If response content-type header is missing, we will classify it as API
+	respContentType, ok := respHeaders[contentTypeHeaderName]
+	if !ok {
 		return false
 	}
-	return _spec.GetContentTypeWithoutParameter(respHeaders[contentTypeHeaderName]) != contentTypeApplicationJson
+
+	mediaType, _, err := mime.ParseMediaType(respContentType)
+	if err != nil {
+		log.Errorf("Failed to parse response media type - classifying as non-API. Content-Type=%v: %v", respContentType, err)
+		return true
+	}
+
+	// If response content-type is not application/json, need to classify the trace as non-api
+	return !_mimeutils.IsApplicationJSONMediaType(mediaType)
 }
 
 func (b *Backend) startStateBackup(ctx context.Context) {

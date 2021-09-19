@@ -17,37 +17,40 @@ package rest
 
 import (
 	"fmt"
-	"github.com/apiclarity/apiclarity/api/server/models"
-	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
-	"github.com/apiclarity/apiclarity/backend/pkg/database"
+	"net/http"
+
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/spec"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/apiclarity/apiclarity/api/server/models"
+	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
+	"github.com/apiclarity/apiclarity/backend/pkg/database"
 )
 
 const defaultTagName = "default-tag"
 
-func (s *RESTServer) GetAPIInventoryAPIIDSpecs(params operations.GetAPIInventoryAPIIDSpecsParams) middleware.Responder {
-	apiSpecFromDb, err := database.GetAPISpecs(params.APIID)
+func (s *Server) GetAPIInventoryAPIIDSpecs(params operations.GetAPIInventoryAPIIDSpecsParams) middleware.Responder {
+	apiSpecFromDB, err := database.GetAPISpecs(params.APIID)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
 		log.Errorf("Failed to get api specs from DB. %v", err)
-		return operations.NewGetAPIInventoryAPIIDSpecsDefault(500)
+		return operations.NewGetAPIInventoryAPIIDSpecsDefault(http.StatusInternalServerError)
 	}
 
-	log.Debugf("Got GetAPIInventoryAPIIDSpecsParams=%+v, Got apiSpecFromDb=%+v", params, apiSpecFromDb)
+	log.Debugf("Got GetAPIInventoryAPIIDSpecsParams=%+v, Got apiSpecFromDB=%+v", params, apiSpecFromDB)
 
-	providedSpec, err := createSpecInfo(apiSpecFromDb.ProvidedSpec)
+	providedSpec, err := createSpecInfo(apiSpecFromDB.ProvidedSpec)
 	if err != nil {
 		log.Errorf("Failed to create spec info from provided spec. %v", err)
-		return operations.NewGetAPIInventoryAPIIDSpecsDefault(500)
+		return operations.NewGetAPIInventoryAPIIDSpecsDefault(http.StatusInternalServerError)
 	}
-	reconstructedSpec, err := createSpecInfo(apiSpecFromDb.ReconstructedSpec)
+	reconstructedSpec, err := createSpecInfo(apiSpecFromDB.ReconstructedSpec)
 	if err != nil {
 		log.Errorf("Failed to create spec info from reconstructed spec. %v", err)
-		return operations.NewGetAPIInventoryAPIIDSpecsDefault(500)
+		return operations.NewGetAPIInventoryAPIIDSpecsDefault(http.StatusInternalServerError)
 	}
 
 	return operations.NewGetAPIInventoryAPIIDSpecsOK().WithPayload(

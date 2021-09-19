@@ -17,6 +17,7 @@ package database
 
 import (
 	"fmt"
+
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -24,10 +25,9 @@ import (
 const (
 	apiPathTableName = "api_paths"
 
-	// NOTE: when changing one of the column names change also the gorm label in APIPath
-	apiPathPathIdColumnName = "id"
+	// NOTE: when changing one of the column names change also the gorm label in APIPath.
+	apiPathPathIDColumnName = "id"
 	apiPathPathColumnName   = "path"
-	apiPathApiIdColumnName  = "apiId"
 )
 
 type APIPath struct {
@@ -35,8 +35,8 @@ type APIPath struct {
 
 	// Path as shown in specs, might be parametrized
 	Path string `json:"path,omitempty" gorm:"column:path" faker:"-"`
-	// ApiID
-	ApiID uint `json:"apiId,omitempty" gorm:"column:apiId" faker:"-"`
+	// APIID
+	APIID uint `json:"apiId,omitempty" gorm:"column:apiId" faker:"-"`
 }
 
 func (APIPath) TableName() string {
@@ -67,7 +67,7 @@ func StorePaths(paths []*APIPath) {
 
 func GetPathIDs(path string) ([]string, error) {
 	var pathIds []string
-	if result := GetAPIPathsTable().Select(apiPathPathIdColumnName).Where(apiPathPathColumnName+" = ?", path).Find(&pathIds); result.Error != nil {
+	if result := GetAPIPathsTable().Select(apiPathPathIDColumnName).Where(apiPathPathColumnName+" = ?", path).Find(&pathIds); result.Error != nil {
 		return nil, result.Error
 	}
 

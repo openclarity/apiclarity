@@ -16,9 +16,11 @@
 package healthz
 
 import (
-	"github.com/apiclarity/apiclarity/backend/pkg/common"
-	log "github.com/sirupsen/logrus"
 	"net/http"
+
+	log "github.com/sirupsen/logrus"
+
+	"github.com/apiclarity/apiclarity/backend/pkg/common"
 )
 
 type Server struct {
@@ -30,7 +32,7 @@ func (s *Server) SetIsReady(isReady bool) {
 	s.isReady = isReady
 }
 
-// Start starts the server run
+// Start starts the server run.
 func (s *Server) Start(errChan chan struct{}) {
 	log.Infof("Starting healthz server. listenAddr=%v", s.listenAddress)
 

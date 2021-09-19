@@ -34,9 +34,8 @@ func run(c *cli.Context) {
 }
 
 func main() {
-
 	viper.SetDefault(config.HealthCheckAddress, ":8081")
-	viper.SetDefault(config.HttpTracesPort, "9000")
+	viper.SetDefault(config.HTTPTracesPort, "9000")
 	viper.SetDefault(config.BackendRestPort, "8080")
 	viper.SetDefault(config.StateBackupIntervalSec, "30")
 	viper.SetDefault(config.DatabaseCleanerIntervalSec, "30")
@@ -65,8 +64,7 @@ func main() {
 		runCommand,
 	}
 
-	err := app.Run(os.Args)
-	if err != nil {
+	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}
 }

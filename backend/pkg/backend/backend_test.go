@@ -16,11 +16,12 @@
 package backend
 
 import (
-	_spec "github.com/apiclarity/speculator/pkg/spec"
 	"testing"
+
+	_spec "github.com/apiclarity/speculator/pkg/spec"
 )
 
-func Test_isNonApi(t *testing.T) {
+func Test_isNonAPI(t *testing.T) {
 	type args struct {
 		trace *_spec.SCNTelemetry
 	}
@@ -48,7 +49,7 @@ func Test_isNonApi(t *testing.T) {
 				trace: &_spec.SCNTelemetry{
 					SCNTResponse: _spec.SCNTResponse{
 						SCNTCommon: _spec.SCNTCommon{
-							Headers: [][2]string{{contentTypeHeaderName, contentTypeApplicationJson}},
+							Headers: [][2]string{{contentTypeHeaderName, contentTypeApplicationJSON}},
 						},
 					},
 				},
@@ -66,11 +67,24 @@ func Test_isNonApi(t *testing.T) {
 			},
 			want: false,
 		},
+		{
+			name: "content type is application/hal+json - classify as API",
+			args: args{
+				trace: &_spec.SCNTelemetry{
+					SCNTResponse: _spec.SCNTResponse{
+						SCNTCommon: _spec.SCNTCommon{
+							Headers: [][2]string{{contentTypeHeaderName, "application/hal+json"}},
+						},
+					},
+				},
+			},
+			want: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := isNonApi(tt.args.trace); got != tt.want {
-				t.Errorf("isNonApi() = %v, want %v", got, tt.want)
+			if got := isNonAPI(tt.args.trace); got != tt.want {
+				t.Errorf("isNonAPI() = %v, want %v", got, tt.want)
 			}
 		})
 	}
