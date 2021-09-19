@@ -92,7 +92,7 @@ func (s *Server) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPII
 		})
 }
 
-// getExpandedSpec expands the ref fields in the analyzed spec document
+// getExpandedSpec expands the ref fields in the analyzed spec document.
 func getExpandedSpec(analyzed *loads.Document) ([]byte, error) {
 	expandedSpec, err := analyzed.Expanded()
 	if err != nil {
