@@ -34,9 +34,9 @@ type Review struct {
 	// UpdatedAt time.Time
 
 	Approved bool   `json:"approved,omitempty" gorm:"column:approved" faker:"-"`
-	SpecKey  string `json:"specKey,omitempty" gorm:"column:specKey" faker:"-"`
+	SpecKey  string `json:"specKey,omitempty" gorm:"column:speckey" faker:"-"`
 	// serialized PathToPathItem from Speculator
-	PathToPathItemStr string `json:"pathToPathItemStr,omitempty" gorm:"column:pathToPathItemStr" faker:"-"`
+	PathToPathItemStr string `json:"pathToPathItemStr,omitempty" gorm:"column:pathtopathitemstr" faker:"-"`
 }
 
 func (Review) TableName() string {

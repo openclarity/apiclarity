@@ -31,15 +31,6 @@ metadata:
   name: apiclarity
   namespace: apiclarity
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: apiclarity
-  namespace: apiclarity
-type: Opaque
-data:
-  DB_PASS: "dGVzdDEyMzQ=" #"test1234"
----
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
@@ -74,19 +65,35 @@ spec:
         sidecar.istio.io/inject: "false"
     spec:
       serviceAccountName: apiclarity
+      initContainers:
+        - name: wait-for-db
+          image: docker.io/bitnami/postgresql:11.13.0-debian-10-r33
+          command: ['sh', '-c',
+                    'until pg_isready -U "postgres" -d "dbname=apiclarity" -h apiclarity-postgresql -p 5432;
+                     do echo waiting for database; sleep 2; done;']
+          securityContext:
+            runAsUser: 1001
       containers:
         - name: apiclarity
           image: ghcr.io/apiclarity/apiclarity:latest
           args:
             - run
           env:
-          - name: DB_PASS
-            valueFrom:
-              secretKeyRef:
-                name: apiclarity
-                key: DB_PASS
-          - name: STATE_BACKUP_FILE_NAME
-            value: /apiclarity/state.gob
+            - name: DB_NAME
+              value: "apiclarity"
+            - name: DB_HOST
+              value: "apiclarity-postgresql"
+            - name: DB_PORT_NUMBER
+              value: "5432"
+            - name: DB_USER
+              value: "postgres"
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: apiclarity-postgresql
+                  key: postgresql-password
+            - name: STATE_BACKUP_FILE_NAME
+              value: /apiclarity/state.gob
           readinessProbe:
             httpGet:
               path: /healthz/ready
@@ -129,85 +136,6 @@ spec:
           persistentVolumeClaim:
             claimName: apiclarity-pvc
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: mysql
-  namespace: apiclarity
-spec:
-  ports:
-    - port: 3306
-  selector:
-    app: mysql
-  clusterIP: None
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mysql
-  namespace: apiclarity
-spec:
-  selector:
-    matchLabels:
-      app: mysql
-  strategy:
-    type: Recreate
-  template:
-    metadata:
-      labels:
-        app: mysql
-      annotations:
-        sidecar.istio.io/inject: "false"
-    spec:
-      containers:
-        - image: mysql:5.6
-          name: mysql
-          env:
-            - name: MYSQL_ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: apiclarity
-                  key: DB_PASS
-          ports:
-            - containerPort: 3306
-              name: mysql
-          volumeMounts:
-            - name: mysql-persistent-storage
-              mountPath: /var/lib/mysql
-      volumes:
-        - name: mysql-persistent-storage
-          persistentVolumeClaim:
-            claimName: mysql-pv-claim
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: mysql-pv-volume
-  namespace: apiclarity
-  labels:
-    type: local
-spec:
-  storageClassName: manual
-  capacity:
-    storage: 10Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: "/var/lib/data"
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: mysql-pv-claim
-  namespace: apiclarity
-spec:
-  storageClassName: manual
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -232,3 +160,218 @@ subjects:
     name: apiclarity
     namespace: apiclarity
 ---
+# helm template apiclarity --set postgresqlPassword=apiclarity,postgresqlDatabase=apiclarity bitnami/postgresql -n apiclarity
+# Source: postgresql/templates/secrets.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: apiclarity-postgresql
+  labels:
+    app.kubernetes.io/name: postgresql
+    helm.sh/chart: postgresql-10.10.1
+    app.kubernetes.io/instance: apiclarity
+    app.kubernetes.io/managed-by: Helm
+  namespace: apiclarity
+type: Opaque
+data:
+  postgresql-password: "YXBpY2xhcml0eQ=="
+---
+# Source: postgresql/templates/svc-headless.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: apiclarity-postgresql-headless
+  labels:
+    app.kubernetes.io/name: postgresql
+    helm.sh/chart: postgresql-10.10.1
+    app.kubernetes.io/instance: apiclarity
+    app.kubernetes.io/managed-by: Helm
+    # Use this annotation in addition to the actual publishNotReadyAddresses
+    # field below because the annotation will stop being respected soon but the
+    # field is broken in some versions of Kubernetes:
+    # https://github.com/kubernetes/kubernetes/issues/58662
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+  namespace: apiclarity
+spec:
+  type: ClusterIP
+  clusterIP: None
+  # We want all pods in the StatefulSet to have their addresses published for
+  # the sake of the other Postgresql pods even before they're ready, since they
+  # have to be able to talk to each other in order to become ready.
+  publishNotReadyAddresses: true
+  ports:
+    - name: tcp-postgresql
+      port: 5432
+      targetPort: tcp-postgresql
+  selector:
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/instance: apiclarity
+---
+# Source: postgresql/templates/svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: apiclarity-postgresql
+  labels:
+    app.kubernetes.io/name: postgresql
+    helm.sh/chart: postgresql-10.10.1
+    app.kubernetes.io/instance: apiclarity
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+  namespace: apiclarity
+spec:
+  type: ClusterIP
+  ports:
+    - name: tcp-postgresql
+      port: 5432
+      targetPort: tcp-postgresql
+  selector:
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/instance: apiclarity
+    role: primary
+---
+# Source: postgresql/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: apiclarity-postgresql
+  labels:
+    app.kubernetes.io/name: postgresql
+    helm.sh/chart: postgresql-10.10.1
+    app.kubernetes.io/instance: apiclarity
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: primary
+  annotations:
+  namespace: apiclarity
+spec:
+  serviceName: apiclarity-postgresql-headless
+  replicas: 1
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgresql
+      app.kubernetes.io/instance: apiclarity
+      role: primary
+  template:
+    metadata:
+      name: apiclarity-postgresql
+      labels:
+        app.kubernetes.io/name: postgresql
+        helm.sh/chart: postgresql-10.10.1
+        app.kubernetes.io/instance: apiclarity
+        app.kubernetes.io/managed-by: Helm
+        role: primary
+        app.kubernetes.io/component: primary
+    spec:
+      affinity:
+        podAffinity:
+
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: postgresql
+                    app.kubernetes.io/instance: apiclarity
+                    app.kubernetes.io/component: primary
+                namespaces:
+                  - "apiclarity"
+                topologyKey: kubernetes.io/hostname
+              weight: 1
+        nodeAffinity:
+
+      securityContext:
+        fsGroup: 1001
+      automountServiceAccountToken: false
+      containers:
+        - name: apiclarity-postgresql
+          image: docker.io/bitnami/postgresql:11.13.0-debian-10-r33
+          imagePullPolicy: "IfNotPresent"
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          securityContext:
+            runAsUser: 1001
+          env:
+            - name: BITNAMI_DEBUG
+              value: "false"
+            - name: POSTGRESQL_PORT_NUMBER
+              value: "5432"
+            - name: POSTGRESQL_VOLUME_DIR
+              value: "/bitnami/postgresql"
+            - name: PGDATA
+              value: "/bitnami/postgresql/data"
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: apiclarity-postgresql
+                  key: postgresql-password
+            - name: POSTGRES_DB
+              value: "apiclarity"
+            - name: POSTGRESQL_ENABLE_LDAP
+              value: "no"
+            - name: POSTGRESQL_ENABLE_TLS
+              value: "no"
+            - name: POSTGRESQL_LOG_HOSTNAME
+              value: "false"
+            - name: POSTGRESQL_LOG_CONNECTIONS
+              value: "false"
+            - name: POSTGRESQL_LOG_DISCONNECTIONS
+              value: "false"
+            - name: POSTGRESQL_PGAUDIT_LOG_CATALOG
+              value: "off"
+            - name: POSTGRESQL_CLIENT_MIN_MESSAGES
+              value: "error"
+            - name: POSTGRESQL_SHARED_PRELOAD_LIBRARIES
+              value: "pgaudit"
+          ports:
+            - name: tcp-postgresql
+              containerPort: 5432
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready -U "postgres" -d "dbname=apiclarity" -h 127.0.0.1 -p 5432
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 6
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - -e
+                - |
+                  exec pg_isready -U "postgres" -d "dbname=apiclarity" -h 127.0.0.1 -p 5432
+                  [ -f /opt/bitnami/postgresql/tmp/.initialized ] || [ -f /bitnami/postgresql/.initialized ]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 6
+          volumeMounts:
+            - name: dshm
+              mountPath: /dev/shm
+            - name: data
+              mountPath: /bitnami/postgresql
+              subPath:
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "8Gi"

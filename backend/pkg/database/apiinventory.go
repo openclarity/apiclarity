@@ -31,10 +31,10 @@ const (
 	typeColumnName                 = "type"
 	nameColumnName                 = "name"
 	portColumnName                 = "port"
-	hasProvidedSpecColumnName      = "hasProvidedSpec"
-	hasReconstructedSpecColumnName = "hasReconstructedSpec"
-	reconstructedSpecColumnName    = "reconstructedSpec"
-	providedSpecColumnName         = "providedSpec"
+	hasProvidedSpecColumnName      = "hasprovidedspec"
+	hasReconstructedSpecColumnName = "hasreconstructedspec"
+	reconstructedSpecColumnName    = "reconstructedspec"
+	providedSpecColumnName         = "providedspec"
 )
 
 type APIInfo struct {
@@ -44,10 +44,10 @@ type APIInfo struct {
 	Type                 models.APIType `json:"type,omitempty" gorm:"column:type" faker:"oneof: INTERNAL, EXTERNAL"`
 	Name                 string         `json:"name,omitempty" gorm:"column:name" faker:"oneof: test.com, example.com, kaki.org"`
 	Port                 int64          `json:"port,omitempty" gorm:"column:port" faker:"oneof: 80, 443"`
-	HasProvidedSpec      bool           `json:"hasProvidedSpec,omitempty" gorm:"column:hasProvidedSpec"`
-	HasReconstructedSpec bool           `json:"hasReconstructedSpec,omitempty" gorm:"column:hasReconstructedSpec"`
-	ReconstructedSpec    string         `json:"reconstructedSpec,omitempty" gorm:"column:reconstructedSpec" faker:"-"`
-	ProvidedSpec         string         `json:"providedSpec,omitempty" gorm:"column:providedSpec" faker:"-"`
+	HasProvidedSpec      bool           `json:"hasProvidedSpec,omitempty" gorm:"column:hasprovidedspec"`
+	HasReconstructedSpec bool           `json:"hasReconstructedSpec,omitempty" gorm:"column:hasreconstructedspec"`
+	ReconstructedSpec    string         `json:"reconstructedSpec,omitempty" gorm:"column:reconstructedspec" faker:"-"`
+	ProvidedSpec         string         `json:"providedSpec,omitempty" gorm:"column:providedspec" faker:"-"`
 }
 
 func (APIInfo) TableName() string {
