@@ -16,9 +16,10 @@
 package database
 
 import (
-	"github.com/apiclarity/apiclarity/api/server/models"
 	"strings"
 	"testing"
+
+	"github.com/apiclarity/apiclarity/api/server/models"
 )
 
 func Test_getSortKeyColumnName(t *testing.T) {
