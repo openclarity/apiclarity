@@ -75,7 +75,8 @@ spec:
             runAsUser: 1001
       containers:
         - name: apiclarity
-          image: ghcr.io/apiclarity/apiclarity:latest
+          image: idanfrim/apiclarity:postgresql
+          imagePullPolicy: "Always"
           args:
             - run
           env:

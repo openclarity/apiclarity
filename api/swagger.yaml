@@ -11,6 +11,284 @@ schemes:
 consumes: [ "application/json" ]
 produces: [ "application/json" ]
 
+definitions:
+  ApiEvent:
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+        format: 'uint32'
+      time:
+        type: 'string'
+        format: 'date-time'
+      method:
+        $ref: '#/definitions/HttpMethod'
+      path:
+        type: 'string'
+      query:
+        type: 'string'
+      statusCode:
+        type: 'integer'
+      sourceIP:
+        type: 'string'
+      destinationIP:
+        type: 'string'
+      destinationPort:
+        type: 'integer'
+      hasReconstructedSpecDiff:
+        type: 'boolean'
+        default: false
+      hasProvidedSpecDiff:
+        type: 'boolean'
+        default: false
+      hostSpecName:
+        type: 'string'
+      apiInfoId:
+        type: 'integer'
+        description: 'hold the relevant api spec info id'
+        format: 'uint32'
+      apiType:
+        $ref: '#/definitions/ApiType'
+
+  ApiEventSpecDiff:
+    type: 'object'
+    required:
+      - oldSpec
+      - newSpec
+    properties:
+      oldSpec:
+        description: 'Old spec json string'
+        type: 'string'
+      newSpec:
+        description: 'New spec json string'
+        type: 'string'
+
+  ApiInfo:
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+        format: 'uint32'
+      name:
+        description: 'API name'
+        type: 'string'
+      port:
+        type: 'integer'
+      hasReconstructedSpec:
+        type: 'boolean'
+        default: false
+      hasProvidedSpec:
+        type: 'boolean'
+        default: false
+
+  ApiUsages:
+    type: 'object'
+    properties:
+      existingApis:
+        type: 'array'
+        items:
+          $ref: '#/definitions/ApiUsage'
+      newApis:
+        type: 'array'
+        items:
+          $ref: '#/definitions/ApiUsage'
+      apisWithDiff:
+        type: 'array'
+        items:
+          $ref: '#/definitions/ApiUsage'
+
+  ApiUsage:
+    type: 'object'
+    properties:
+      numOfCalls:
+        type: 'integer'
+        x-omitempty: false
+      time:
+        type: 'string'
+        format: date-time
+
+  ApiCount:
+    type: 'object'
+    properties:
+      apiInfoId:
+        type: 'integer'
+        description: 'hold the relevant api info id'
+        format: 'uint32'
+      apiType:
+        $ref: '#/definitions/ApiType'
+      numCalls:
+        type: 'integer'
+      apiHostName:
+        type: 'string'
+      apiPort:
+        type: 'integer'
+
+  SpecDiffTime:
+    type: 'object'
+    properties:
+      apiEventId:
+        type: 'integer'
+        format: 'uint32'
+      time:
+        type: 'string'
+        format: date-time
+      apiHostName:
+        type: 'string'
+
+  HttpMethod:
+    type: string
+    enum: &HttpMethod
+      - GET
+      - HEAD
+      - POST
+      - PUT
+      - DELETE
+      - CONNECT
+      - OPTIONS
+      - TRACE
+      - PATCH
+
+  ApiType:
+    type: string
+    enum: &ApiType
+      - INTERNAL
+      - EXTERNAL
+
+  ApiInventorySortKey:
+    type: string
+    enum: &ApiInventorySortKey
+      - name
+      - port
+      - hasReconstructedSpec
+      - hasProvidedSpec
+
+  ApiEventSortKey:
+    type: string
+    enum: &ApiEventSortKey
+      - time
+      - method
+      - path
+      - statusCode
+      - sourceIP
+      - destinationIP
+      - destinationPort
+      - hasSpecDiff
+      - hostSpecName
+      - apiType
+
+  ApiResponse:
+    description: 'An object that is return in all cases of failures.'
+    type: 'object'
+    properties:
+      message:
+        type: 'string'
+
+  SuccessResponse:
+    description: 'An object that is return in cases of success that return nothing.'
+    type: 'object'
+    properties:
+      message:
+        type: 'string'
+
+  OpenApiSpecs:
+    description: 'An object representing the provided and reconstructed API specs'
+    type: 'object'
+    properties:
+      providedSpec:
+        $ref: '#/definitions/SpecInfo'
+      reconstructedSpec:
+        $ref: '#/definitions/SpecInfo'
+
+  SpecInfo:
+    description: 'An object containing info about a spec'
+    type: 'object'
+    properties:
+      tags:
+        type: array
+        items:
+          $ref: '#/definitions/SpecTag'
+
+  rawSpec:
+    description: 'spec in json or yaml format'
+    type: 'object'
+    properties:
+      rawSpec:
+        type: 'string'
+        description: 'spec in json or yaml format'
+
+  SpecTag:
+    type: 'object'
+    properties:
+      description:
+        type: 'string'
+      name:
+        type: 'string'
+      methodAndPathList:
+        type: array
+        items:
+          $ref: '#/definitions/MethodAndPath'
+
+  MethodAndPath:
+    type: 'object'
+    properties:
+      path:
+        type: 'string'
+      method:
+        $ref: '#/definitions/HttpMethod'
+
+  HitCount:
+    type: 'object'
+    properties:
+      count:
+        type: 'integer'
+        format: int64
+        x-omitempty: false
+      time:
+        type: 'string'
+        format: 'date-time'
+
+  SuggestedReview:
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+        format: 'uint32'
+      reviewPathItems:
+        type: 'array'
+        items:
+          description: 'The suggested path items'
+          $ref: '#/definitions/ReviewPathItem'
+
+  ReviewPathItem:
+    type: 'object'
+    properties:
+      suggestedPath:
+        description: 'Represents the parameterized path suggested by the engine'
+        type: 'string'
+      apiEventsPaths:
+        description: 'Group of api event paths (original) that suggestedPath is representing'
+        type: 'array'
+        items:
+          $ref: '#/definitions/ApiEventPathAndMethods'
+
+  ApiEventPathAndMethods:
+    type: 'object'
+    properties:
+      path:
+        type: 'string'
+      methods:
+        type: 'array'
+        items:
+          $ref: '#/definitions/HttpMethod'
+
+  ApprovedReview:
+    type: 'object'
+    properties:
+      reviewPathItems:
+        type: 'array'
+        items:
+          $ref: '#/definitions/ReviewPathItem'
+
 paths:
   /apiEvents:
     get:
@@ -387,16 +665,7 @@ parameters:
     description: 'Sort key'
     in: 'query'
     type: 'string'
-    enum:
-      - time
-      - method
-      - path
-      - statusCode
-      - sourceIP
-      - destinationIP
-      - destinationPort
-      - hasSpecDiff
-      - hostSpecName
+    enum: *ApiEventSortKey
     required: true
 
   apiInventorySortKey:
@@ -404,11 +673,7 @@ parameters:
     description: 'Sort key'
     in: 'query'
     type: 'string'
-    enum:
-      - name
-      - port
-      - hasReconstructedSpec
-      - hasProvidedSpec
+    enum: *ApiInventorySortKey
     required: true
 
   apiType:
@@ -416,9 +681,7 @@ parameters:
     description: 'API type [INTERNAL or EXTERNAL]'
     in: 'query'
     type: 'string'
-    enum: # if you edit this you need to edit ApiType in 'definitions' too
-      - INTERNAL
-      - EXTERNAL
+    enum: *ApiType
     required: true
 
   showNonApi:
@@ -433,16 +696,7 @@ parameters:
     type: 'array'
     items:
       type: 'string'
-      enum: # if you edit this you need to edit HttpMethod in 'definitions' too
-        - GET
-        - HEAD
-        - POST
-        - PUT
-        - DELETE
-        - CONNECT
-        - OPTIONS
-        - TRACE
-        - PATCH
+      enum: *HttpMethod
     required: false
 
   pathIsFilter:
@@ -678,262 +932,6 @@ parameters:
     type: 'integer'
     format: 'uint32'
     required: true
-
-definitions:
-  ApiEvent:
-    type: 'object'
-    properties:
-      id:
-        type: 'integer'
-        format: 'uint32'
-      time:
-        type: 'string'
-        format: 'date-time'
-      method:
-        $ref: '#/definitions/HttpMethod'
-      path:
-        type: 'string'
-      query:
-        type: 'string'
-      statusCode:
-        type: 'integer'
-      sourceIP:
-        type: 'string'
-      destinationIP:
-        type: 'string'
-      destinationPort:
-        type: 'integer'
-      hasReconstructedSpecDiff:
-        type: 'boolean'
-        default: false
-      hasProvidedSpecDiff:
-        type: 'boolean'
-        default: false
-      hostSpecName:
-        type: 'string'
-      apiInfoId:
-        type: 'integer'
-        description: 'hold the relevant api spec info id'
-        format: 'uint32'
-      apiType:
-        $ref: '#/definitions/ApiType'
-
-  ApiEventSpecDiff:
-    type: 'object'
-    required:
-      - oldSpec
-      - newSpec
-    properties:
-      oldSpec:
-        description: 'Old spec json string'
-        type: 'string'
-      newSpec:
-        description: 'New spec json string'
-        type: 'string'
-
-  ApiInfo:
-    type: 'object'
-    properties:
-      id:
-        type: 'integer'
-        format: 'uint32'
-      name:
-        description: 'API name'
-        type: 'string'
-      port:
-        type: 'integer'
-      hasReconstructedSpec:
-        type: 'boolean'
-        default: false
-      hasProvidedSpec:
-        type: 'boolean'
-        default: false
-
-  ApiUsages:
-    type: 'object'
-    properties:
-      existingApis:
-        type: 'array'
-        items:
-          $ref: '#/definitions/ApiUsage'
-      newApis:
-        type: 'array'
-        items:
-          $ref: '#/definitions/ApiUsage'
-      apisWithDiff:
-        type: 'array'
-        items:
-          $ref: '#/definitions/ApiUsage'
-
-  ApiUsage:
-    type: 'object'
-    properties:
-      numOfCalls:
-        type: 'integer'
-        x-omitempty: false
-      time:
-        type: 'string'
-        format: date-time
-
-  ApiCount:
-    type: 'object'
-    properties:
-      apiInfoId:
-        type: 'integer'
-        description: 'hold the relevant api info id'
-        format: 'uint32'
-      apiType:
-        $ref: '#/definitions/ApiType'
-      numCalls:
-        type: 'integer'
-      apiHostName:
-        type: 'string'
-      apiPort:
-        type: 'integer'
-
-  SpecDiffTime:
-    type: 'object'
-    properties:
-      apiEventId:
-        type: 'integer'
-        format: 'uint32'
-      time:
-        type: 'string'
-        format: date-time
-      apiHostName:
-        type: 'string'
-
-  HttpMethod:
-    type: string
-    enum:
-      - GET
-      - HEAD
-      - POST
-      - PUT
-      - DELETE
-      - CONNECT
-      - OPTIONS
-      - TRACE
-      - PATCH
-
-  ApiType:
-    type: string
-    enum:
-      - INTERNAL
-      - EXTERNAL
-
-  ApiResponse:
-    description: 'An object that is return in all cases of failures.'
-    type: 'object'
-    properties:
-      message:
-        type: 'string'
-
-  SuccessResponse:
-    description: 'An object that is return in cases of success that return nothing.'
-    type: 'object'
-    properties:
-      message:
-        type: 'string'
-
-  OpenApiSpecs:
-    description: 'An object representing the provided and reconstructed API specs'
-    type: 'object'
-    properties:
-      providedSpec:
-        $ref: '#/definitions/SpecInfo'
-      reconstructedSpec:
-        $ref: '#/definitions/SpecInfo'
-
-  SpecInfo:
-    description: 'An object containing info about a spec'
-    type: 'object'
-    properties:
-      tags:
-        type: array
-        items:
-          $ref: '#/definitions/SpecTag'
-
-  rawSpec:
-    description: 'spec in json or yaml format'
-    type: 'object'
-    properties:
-      rawSpec:
-        type: 'string'
-        description: 'spec in json or yaml format'
-
-  SpecTag:
-    type: 'object'
-    properties:
-      description:
-        type: 'string'
-      name:
-        type: 'string'
-      methodAndPathList:
-        type: array
-        items:
-          $ref: '#/definitions/MethodAndPath'
-
-  MethodAndPath:
-    type: 'object'
-    properties:
-      path:
-        type: 'string'
-      method:
-        $ref: '#/definitions/HttpMethod'
-
-  HitCount:
-    type: 'object'
-    properties:
-      count:
-        type: 'integer'
-        format: int64
-        x-omitempty: false
-      time:
-        type: 'string'
-        format: 'date-time'
-
-  SuggestedReview:
-    type: 'object'
-    properties:
-      id:
-        type: 'integer'
-        format: 'uint32'
-      reviewPathItems:
-        type: 'array'
-        items:
-          description: 'The suggested path items'
-          $ref: '#/definitions/ReviewPathItem'
-
-  ReviewPathItem:
-    type: 'object'
-    properties:
-      suggestedPath:
-        description: 'Represents the parameterized path suggested by the engine'
-        type: 'string'
-      apiEventsPaths:
-        description: 'Group of api event paths (original) that suggestedPath is representing'
-        type: 'array'
-        items:
-          $ref: '#/definitions/ApiEventPathAndMethods'
-
-  ApiEventPathAndMethods:
-    type: 'object'
-    properties:
-      path:
-        type: 'string'
-      methods:
-        type: 'array'
-        items:
-          $ref: '#/definitions/HttpMethod'
-
-  ApprovedReview:
-    type: 'object'
-    properties:
-      reviewPathItems:
-        type: 'array'
-        items:
-          $ref: '#/definitions/ReviewPathItem'
 
 responses:
   UnknownError:

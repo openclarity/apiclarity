@@ -713,6 +713,21 @@ func init() {
         }
       }
     },
+    "ApiEventSortKey": {
+      "type": "string",
+      "enum": [
+        "time",
+        "method",
+        "path",
+        "statusCode",
+        "sourceIP",
+        "destinationIP",
+        "destinationPort",
+        "hasSpecDiff",
+        "hostSpecName",
+        "apiType"
+      ]
+    },
     "ApiEventSpecDiff": {
       "type": "object",
       "required": [
@@ -753,6 +768,15 @@ func init() {
           "type": "integer"
         }
       }
+    },
+    "ApiInventorySortKey": {
+      "type": "string",
+      "enum": [
+        "name",
+        "port",
+        "hasReconstructedSpec",
+        "hasProvidedSpec"
+      ]
     },
     "ApiResponse": {
       "description": "An object that is return in all cases of failures.",
@@ -976,7 +1000,8 @@ func init() {
         "destinationIP",
         "destinationPort",
         "hasSpecDiff",
-        "hostSpecName"
+        "hostSpecName",
+        "apiType"
       ],
       "type": "string",
       "description": "Sort key",
@@ -1384,7 +1409,8 @@ func init() {
               "destinationIP",
               "destinationPort",
               "hasSpecDiff",
-              "hostSpecName"
+              "hostSpecName",
+              "apiType"
             ],
             "type": "string",
             "description": "Sort key",
@@ -2434,6 +2460,21 @@ func init() {
         }
       }
     },
+    "ApiEventSortKey": {
+      "type": "string",
+      "enum": [
+        "time",
+        "method",
+        "path",
+        "statusCode",
+        "sourceIP",
+        "destinationIP",
+        "destinationPort",
+        "hasSpecDiff",
+        "hostSpecName",
+        "apiType"
+      ]
+    },
     "ApiEventSpecDiff": {
       "type": "object",
       "required": [
@@ -2474,6 +2515,15 @@ func init() {
           "type": "integer"
         }
       }
+    },
+    "ApiInventorySortKey": {
+      "type": "string",
+      "enum": [
+        "name",
+        "port",
+        "hasReconstructedSpec",
+        "hasProvidedSpec"
+      ]
     },
     "ApiResponse": {
       "description": "An object that is return in all cases of failures.",
@@ -2697,7 +2747,8 @@ func init() {
         "destinationIP",
         "destinationPort",
         "hasSpecDiff",
-        "hostSpecName"
+        "hostSpecName",
+        "apiType"
       ],
       "type": "string",
       "description": "Sort key",

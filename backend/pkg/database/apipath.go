@@ -36,7 +36,7 @@ type APIPath struct {
 	// Path as shown in specs, might be parametrized
 	Path string `json:"path,omitempty" gorm:"column:path" faker:"-"`
 	// APIID
-	APIID uint `json:"apiId,omitempty" gorm:"column:apiid" faker:"-"`
+	APIID uint `json:"apiId,omitempty" gorm:"column:api_id" faker:"-"`
 }
 
 func (APIPath) TableName() string {

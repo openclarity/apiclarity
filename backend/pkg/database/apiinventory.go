@@ -16,6 +16,7 @@
 package database
 
 import (
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
@@ -31,10 +32,10 @@ const (
 	typeColumnName                 = "type"
 	nameColumnName                 = "name"
 	portColumnName                 = "port"
-	hasProvidedSpecColumnName      = "hasprovidedspec"
-	hasReconstructedSpecColumnName = "hasreconstructedspec"
-	reconstructedSpecColumnName    = "reconstructedspec"
-	providedSpecColumnName         = "providedspec"
+	hasProvidedSpecColumnName      = "has_provided_spec"
+	hasReconstructedSpecColumnName = "has_reconstructed_spec"
+	reconstructedSpecColumnName    = "reconstructed_spec"
+	providedSpecColumnName         = "provided_spec"
 )
 
 type APIInfo struct {
@@ -44,10 +45,10 @@ type APIInfo struct {
 	Type                 models.APIType `json:"type,omitempty" gorm:"column:type" faker:"oneof: INTERNAL, EXTERNAL"`
 	Name                 string         `json:"name,omitempty" gorm:"column:name" faker:"oneof: test.com, example.com, kaki.org"`
 	Port                 int64          `json:"port,omitempty" gorm:"column:port" faker:"oneof: 80, 443"`
-	HasProvidedSpec      bool           `json:"hasProvidedSpec,omitempty" gorm:"column:hasprovidedspec"`
-	HasReconstructedSpec bool           `json:"hasReconstructedSpec,omitempty" gorm:"column:hasreconstructedspec"`
-	ReconstructedSpec    string         `json:"reconstructedSpec,omitempty" gorm:"column:reconstructedspec" faker:"-"`
-	ProvidedSpec         string         `json:"providedSpec,omitempty" gorm:"column:providedspec" faker:"-"`
+	HasProvidedSpec      bool           `json:"hasProvidedSpec,omitempty" gorm:"column:has_provided_spec"`
+	HasReconstructedSpec bool           `json:"hasReconstructedSpec,omitempty" gorm:"column:has_reconstructed_spec"`
+	ReconstructedSpec    string         `json:"reconstructedSpec,omitempty" gorm:"column:reconstructed_spec" faker:"-"`
+	ProvidedSpec         string         `json:"providedSpec,omitempty" gorm:"column:provided_spec" faker:"-"`
 }
 
 func (APIInfo) TableName() string {
@@ -86,9 +87,14 @@ func GetAPIInventoryAndTotal(params operations.GetAPIInventoryParams) ([]APIInfo
 		return nil, 0, err
 	}
 
+	sortOrder, err := CreateSortOrder(params.SortKey, params.SortDir)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to create sort order: %v", err)
+	}
+
 	// get specific page ordered items with the current filters
 	if err := tx.Scopes(Paginate(params.Page, params.PageSize)).
-		Order(CreateSortOrder(params.SortKey, params.SortDir)).
+		Order(sortOrder).
 		Find(&apiInventory).Error; err != nil {
 		return nil, 0, err
 	}
