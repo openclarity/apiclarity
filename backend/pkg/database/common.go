@@ -39,7 +39,7 @@ func CreateTimeFilter(startTime, endTime strfmt.DateTime) string {
 }
 
 func CreateSortOrder(sortKey string, sortDir *string) string {
-	return fmt.Sprintf("%v %v", sortKey, strings.ToLower(*sortDir))
+	return fmt.Sprintf("%v %v", strings.ToLower(sortKey), strings.ToLower(*sortDir))
 }
 
 func FilterIsBool(db *gorm.DB, column string, value *bool) *gorm.DB {
