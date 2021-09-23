@@ -34,8 +34,7 @@ from real-time workload traffic seamlessly.
 ### Building UI and backend in docker
 
 ```shell
-docker build -t <your repo>/apiclarity .
-docker push <your repo>/apiclarity
+DOCKER_IMAGE=<your repo>/apiclarity DOCKER_TAG=<your tag> make push-docker
 # Modify the image name of the APIClarity deployment in ./deployment/apiclarity.yaml
 ```
 
