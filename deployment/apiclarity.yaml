@@ -75,7 +75,7 @@ spec:
             runAsUser: 1001
       containers:
         - name: apiclarity
-          image: ghcr.io/apiclarity/apiclarity:latest
+          image: ghcr.io/apiclarity/apiclarity:v0.2.0
           args:
             - run
           env:
