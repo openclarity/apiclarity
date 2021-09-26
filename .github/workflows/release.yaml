@@ -7,7 +7,7 @@ on:
         description: Previous Version
         required: true
       version:
-        description: Version
+        description: Release Version
         required: true
 
 env:
