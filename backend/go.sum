@@ -65,6 +65,8 @@ github.com/apiclarity/speculator v0.0.3-0.20210919073855-e59008c796c3 h1:YdZum9l
 github.com/apiclarity/speculator v0.0.3-0.20210919073855-e59008c796c3/go.mod h1:nFnYfPjm9EeY24E6GgprKMjnxCqEllL4A3YOMS8jeUQ=
 github.com/apiclarity/speculator v0.0.3-0.20210919121459-13a96f7c0ae5 h1:wHaPUy4a0oEqCsr2RuGsiEyPCoADJ8ghdxnYrr5XB4Y=
 github.com/apiclarity/speculator v0.0.3-0.20210919121459-13a96f7c0ae5/go.mod h1:nFnYfPjm9EeY24E6GgprKMjnxCqEllL4A3YOMS8jeUQ=
+github.com/apiclarity/speculator v0.0.3-0.20210926135109-f7f7361f3c41 h1:iMRQTdApTiot4OD9wM7YxNtwDC3y8Tg0YPKFt+khMr8=
+github.com/apiclarity/speculator v0.0.3-0.20210926135109-f7f7361f3c41/go.mod h1:nFnYfPjm9EeY24E6GgprKMjnxCqEllL4A3YOMS8jeUQ=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
