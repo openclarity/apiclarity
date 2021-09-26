@@ -55,13 +55,21 @@ make backend
 1. Make sure that Istio is installed and running in your cluster.
    See the [Official installation instructions](https://istio.io/latest/docs/setup/getting-started/#install)
    for more information.
-2. Deploy APIClarity in K8s. It will be deployed in a new namespace `apiclarity`:
+
+2. Clone the apiclarity repository to your local system
+
+   ```shell
+   git clone https://github.com/apiclarity/apiclarity
+   cd apiclarity
+   ```
+
+3. Deploy APIClarity in K8s. It will be deployed in a new namespace `apiclarity`:
 
    ```shell
    kubectl apply -f deployment/apiclarity.yaml
    ```
 
-3. Verify that APIClarity is running:
+4. Verify that APIClarity is running:
 
    ```shell
    $ kubectl get pods -n apiclarity
@@ -70,7 +78,7 @@ make backend
    mysql-6ffc46b7f-bggrv       1/1     Running   0          15m
    ```
 
-4. Initialize and pull the `wasm-filters` submodule:
+5. Initialize and pull the `wasm-filters` submodule:
 
    ```shell
    git submodule init wasm-filters
@@ -78,7 +86,7 @@ make backend
    cd wasm-filters
    ```
 
-5. Deploy the Envoy Wasm filter for capturing the traffic:
+6. Deploy the Envoy Wasm filter for capturing the traffic:
 
    Run the Wasm deployment script for selected namespaces to allow traffic
    tracing.
@@ -102,14 +110,14 @@ make backend
    To build the Wasm filter from source instead of using the pre-built binary,
    please follow the instructions in the [wasm-filters](https://github.com/apiclarity/wasm-filters)
    repository.
-6. Port forward to APIClarity UI:
+7. Port forward to APIClarity UI:
 
    ```shell
    kubectl port-forward -n apiclarity svc/apiclarity 9999:8080
    ```
 
-7. Open APIClarity UI in the browser: <http://localhost:9999/>
-8. Generate some traffic in the applications in the traced namespaces and check
+8. Open APIClarity UI in the browser: <http://localhost:9999/>
+9. Generate some traffic in the applications in the traced namespaces and check
    the APIClarity UI :)
 
 ## Testing with a demo application
