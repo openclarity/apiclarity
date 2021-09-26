@@ -56,10 +56,10 @@ type Backend struct {
 }
 
 func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor) *Backend {
-	speculator, err := _speculator.DecodeState(config.StateBackupFileName)
+	speculator, err := _speculator.DecodeState(config.StateBackupFileName, config.SpeculatorConfig)
 	if err != nil {
 		log.Infof("No speculator state to decode, creating new: %v", err)
-		speculator = _speculator.CreateSpeculator()
+		speculator = _speculator.CreateSpeculator(config.SpeculatorConfig)
 	} else {
 		log.Infof("Using encoded speculator state")
 	}

@@ -20,6 +20,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+
+	_spec "github.com/apiclarity/speculator/pkg/spec"
+	_speculator "github.com/apiclarity/speculator/pkg/speculator"
 )
 
 const (
@@ -29,6 +32,10 @@ const (
 	StateBackupIntervalSec     = "STATE_BACKUP_INTERVAL_SEC"
 	DatabaseCleanerIntervalSec = "DATABASE_CLEANER_INTERVAL_SEC"
 	StateBackupFileName        = "STATE_BACKUP_FILE_NAME"
+
+	// SpeculatorConfig
+	ResponseHeadersToIgnore = "RESPONSE_HEADERS_TO_IGNORE"
+	RequestHeadersToIgnore  = "REQUEST_HEADERS_TO_IGNORE"
 )
 
 type Config struct {
@@ -38,6 +45,7 @@ type Config struct {
 	StateBackupIntervalSec     int
 	DatabaseCleanerIntervalSec int
 	StateBackupFileName        string
+	SpeculatorConfig           _speculator.Config
 }
 
 func LoadConfig() (*Config, error) {
@@ -49,9 +57,19 @@ func LoadConfig() (*Config, error) {
 	config.StateBackupIntervalSec = viper.GetInt(StateBackupIntervalSec)
 	config.DatabaseCleanerIntervalSec = viper.GetInt(DatabaseCleanerIntervalSec)
 	config.StateBackupFileName = viper.GetString(StateBackupFileName)
+	config.SpeculatorConfig = createSpeculatorConfig()
 
 	configB, _ := json.Marshal(config)
 	log.Infof("\n\nconfig=%s\n\n", configB)
 
 	return config, nil
+}
+
+func createSpeculatorConfig() _speculator.Config {
+	return _speculator.Config{
+		OperationGeneratorConfig: _spec.OperationGeneratorConfig{
+			ResponseHeadersToIgnore: viper.GetStringSlice(ResponseHeadersToIgnore),
+			RequestHeadersToIgnore:  viper.GetStringSlice(RequestHeadersToIgnore),
+		},
+	}
 }
