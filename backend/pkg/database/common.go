@@ -21,6 +21,8 @@ import (
 
 	"github.com/go-openapi/strfmt"
 	"gorm.io/gorm"
+
+	"github.com/apiclarity/apiclarity/api/server/models"
 )
 
 func FieldInTable(table, field string) string {
@@ -38,8 +40,51 @@ func CreateTimeFilter(startTime, endTime strfmt.DateTime) string {
 	return fmt.Sprintf("time BETWEEN '%v' AND '%v'", startTime, endTime)
 }
 
-func CreateSortOrder(sortKey string, sortDir *string) string {
-	return fmt.Sprintf("%v %v", sortKey, strings.ToLower(*sortDir))
+func CreateSortOrder(sortKey string, sortDir *string) (string, error) {
+	sortKeyColumnName, err := getSortKeyColumnName(sortKey)
+	if err != nil {
+		return "", fmt.Errorf("failed to get sort key column name: %v", err)
+	}
+
+	return fmt.Sprintf("%v %v", sortKeyColumnName, strings.ToLower(*sortDir)), nil
+}
+
+func getSortKeyColumnName(key string) (string, error) {
+	switch models.APIEventSortKey(key) {
+	case models.APIEventSortKeyTime:
+		return timeColumnName, nil
+	case models.APIEventSortKeyMethod:
+		return methodColumnName, nil
+	case models.APIEventSortKeyPath:
+		return pathColumnName, nil
+	case models.APIEventSortKeyStatusCode:
+		return statusCodeColumnName, nil
+	case models.APIEventSortKeySourceIP:
+		return sourceIPColumnName, nil
+	case models.APIEventSortKeyDestinationIP:
+		return destinationIPColumnName, nil
+	case models.APIEventSortKeyDestinationPort:
+		return destinationPortColumnName, nil
+	case models.APIEventSortKeyHasSpecDiff:
+		return hasSpecDiffColumnName, nil
+	case models.APIEventSortKeyHostSpecName:
+		return hostSpecNameColumnName, nil
+	case models.APIEventSortKeyAPIType:
+		return eventTypeColumnName, nil
+	}
+
+	switch models.APIInventorySortKey(key) {
+	case models.APIInventorySortKeyName:
+		return nameColumnName, nil
+	case models.APIInventorySortKeyPort:
+		return portColumnName, nil
+	case models.APIInventorySortKeyHasReconstructedSpec:
+		return hasReconstructedSpecColumnName, nil
+	case models.APIInventorySortKeyHasProvidedSpec:
+		return hasProvidedSpecColumnName, nil
+	}
+
+	return "", fmt.Errorf("unknown sort key (%v)", key)
 }
 
 func FilterIsBool(db *gorm.DB, column string, value *bool) *gorm.DB {

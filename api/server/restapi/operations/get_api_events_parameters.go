@@ -805,7 +805,7 @@ func (o *GetAPIEventsParams) bindSortKey(rawData []string, hasKey bool, formats 
 // validateSortKey carries on validations for parameter SortKey
 func (o *GetAPIEventsParams) validateSortKey(formats strfmt.Registry) error {
 
-	if err := validate.EnumCase("sortKey", "query", o.SortKey, []interface{}{"time", "method", "path", "statusCode", "sourceIP", "destinationIP", "destinationPort", "hasSpecDiff", "hostSpecName"}, true); err != nil {
+	if err := validate.EnumCase("sortKey", "query", o.SortKey, []interface{}{"time", "method", "path", "statusCode", "sourceIP", "destinationIP", "destinationPort", "hasSpecDiff", "hostSpecName", "apiType"}, true); err != nil {
 		return err
 	}
 

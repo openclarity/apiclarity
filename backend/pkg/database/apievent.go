@@ -33,22 +33,23 @@ const (
 	apiEventTableName = "api_events"
 
 	// NOTE: when changing one of the column names change also the gorm label in APIEvent.
+	timeColumnName                 = "time"
 	methodColumnName               = "method"
 	pathColumnName                 = "path"
-	pathIDColumnName               = "pathId"
-	statusCodeColumnName           = "statusCode"
-	sourceIPColumnName             = "sourceIP"
-	destinationIPColumnName        = "destinationIP"
-	destinationPortColumnName      = "destinationPort"
-	hasSpecDiffColumnName          = "hasSpecDiff" // hasProvidedSpecDiff || hasReconstructedSpecDiff
-	hostSpecNameColumnName         = "hostSpecName"
-	newReconstructedSpecColumnName = "newReconstructedSpec"
-	oldReconstructedSpecColumnName = "oldReconstructedSpec"
-	newProvidedSpecColumnName      = "newProvidedSpec"
-	oldProvidedSpecColumnName      = "oldProvidedSpec"
-	apiInfoIDColumnName            = "apiInfoId"
-	isNonAPIColumnName             = "isNonApi"
-	eventTypeColumnName            = "eventType"
+	pathIDColumnName               = "path_id"
+	statusCodeColumnName           = "status_code"
+	sourceIPColumnName             = "source_ip"
+	destinationIPColumnName        = "destination_ip"
+	destinationPortColumnName      = "destination_port"
+	hasSpecDiffColumnName          = "has_spec_diff" // hasProvidedSpecDiff || hasReconstructedSpecDiff
+	hostSpecNameColumnName         = "host_spec_name"
+	newReconstructedSpecColumnName = "new_reconstructed_spec"
+	oldReconstructedSpecColumnName = "old_reconstructed_spec"
+	newProvidedSpecColumnName      = "new_provided_spec"
+	oldProvidedSpecColumnName      = "old_provided_spec"
+	apiInfoIDColumnName            = "api_info_id"
+	isNonAPIColumnName             = "is_non_api"
+	eventTypeColumnName            = "event_type"
 )
 
 var specDiffColumns = []string{newReconstructedSpecColumnName, oldReconstructedSpecColumnName, newProvidedSpecColumnName, oldProvidedSpecColumnName}
@@ -62,32 +63,32 @@ type APIEvent struct {
 	Time                     strfmt.DateTime   `json:"time" gorm:"column:time" faker:"-"`
 	Method                   models.HTTPMethod `json:"method,omitempty" gorm:"column:method" faker:"oneof: GET, PUT, POST, DELETE"`
 	Path                     string            `json:"path,omitempty" gorm:"column:path" faker:"oneof: /news, /customers, /jokes"`
-	PathID                   string            `json:"pathId,omitempty" gorm:"column:pathId" faker:"-"`
+	PathID                   string            `json:"pathId,omitempty" gorm:"column:path_id" faker:"-"`
 	Query                    string            `json:"query,omitempty" gorm:"column:query" faker:"oneof: name=ferret&color=purple, foo=bar, -"`
-	StatusCode               int64             `json:"statusCode,omitempty" gorm:"column:statusCode" faker:"oneof: 200, 401, 404, 500"`
-	SourceIP                 string            `json:"sourceIP,omitempty" gorm:"column:sourceIP" faker:"sourceIP"`
-	DestinationIP            string            `json:"destinationIP,omitempty" gorm:"column:destinationIP" faker:"destinationIP"`
-	DestinationPort          int64             `json:"destinationPort,omitempty" gorm:"column:destinationPort" faker:"oneof: 80, 443"`
-	HasReconstructedSpecDiff bool              `json:"hasReconstructedSpecDiff,omitempty" gorm:"column:hasReconstructedSpecDiff"`
-	HasProvidedSpecDiff      bool              `json:"hasProvidedSpecDiff,omitempty" gorm:"column:hasProvidedSpecDiff"`
-	HasSpecDiff              bool              `json:"hasSpecDiff,omitempty" gorm:"column:hasSpecDiff"`
-	HostSpecName             string            `json:"hostSpecName,omitempty" gorm:"column:hostSpecName" faker:"oneof: test.com, example.com, kaki.org"`
-	IsNonAPI                 bool              `json:"isNonApi,omitempty" gorm:"column:isNonApi" faker:"-"`
+	StatusCode               int64             `json:"statusCode,omitempty" gorm:"column:status_code" faker:"oneof: 200, 401, 404, 500"`
+	SourceIP                 string            `json:"sourceIP,omitempty" gorm:"column:source_ip" faker:"sourceIP"`
+	DestinationIP            string            `json:"destinationIP,omitempty" gorm:"column:destination_ip" faker:"destinationIP"`
+	DestinationPort          int64             `json:"destinationPort,omitempty" gorm:"column:destination_port" faker:"oneof: 80, 443"`
+	HasReconstructedSpecDiff bool              `json:"hasReconstructedSpecDiff,omitempty" gorm:"column:has_reconstructed_spec_diff"`
+	HasProvidedSpecDiff      bool              `json:"hasProvidedSpecDiff,omitempty" gorm:"column:has_provided_spec_diff"`
+	HasSpecDiff              bool              `json:"hasSpecDiff,omitempty" gorm:"column:has_spec_diff"`
+	HostSpecName             string            `json:"hostSpecName,omitempty" gorm:"column:host_spec_name" faker:"oneof: test.com, example.com, kaki.org"`
+	IsNonAPI                 bool              `json:"isNonApi,omitempty" gorm:"column:is_non_api" faker:"-"`
 
 	// Spec diff info
 	// New reconstructed spec json string
-	NewReconstructedSpec string `json:"newReconstructedSpec,omitempty" gorm:"column:newReconstructedSpec" faker:"-"`
+	NewReconstructedSpec string `json:"newReconstructedSpec,omitempty" gorm:"column:new_reconstructed_spec" faker:"-"`
 	// Old reconstructed spec json string
-	OldReconstructedSpec string `json:"oldReconstructedSpec,omitempty" gorm:"column:oldReconstructedSpec" faker:"-"`
+	OldReconstructedSpec string `json:"oldReconstructedSpec,omitempty" gorm:"column:old_reconstructed_spec" faker:"-"`
 	// New provided spec json string
-	NewProvidedSpec string `json:"newProvidedSpec,omitempty" gorm:"column:newProvidedSpec" faker:"-"`
+	NewProvidedSpec string `json:"newProvidedSpec,omitempty" gorm:"column:new_provided_spec" faker:"-"`
 	// Old provided spec json string
-	OldProvidedSpec string `json:"oldProvidedSpec,omitempty" gorm:"column:oldProvidedSpec" faker:"-"`
+	OldProvidedSpec string `json:"oldProvidedSpec,omitempty" gorm:"column:old_provided_spec" faker:"-"`
 
 	// ID for the relevant APIInfo
-	APIInfoID uint `json:"apiInfoId,omitempty" gorm:"column:apiInfoId" faker:"-"`
+	APIInfoID uint `json:"apiInfoId,omitempty" gorm:"column:api_info_id" faker:"-"`
 	// We'll not always have a corresponding API info (e.g. non-API resources) so the type is needed also for the event
-	EventType models.APIType `json:"eventType,omitempty" gorm:"column:eventType" faker:"oneof: INTERNAL, EXTERNAL"`
+	EventType models.APIType `json:"eventType,omitempty" gorm:"column:event_type" faker:"oneof: INTERNAL, EXTERNAL"`
 }
 
 type HostGroup struct {
@@ -112,7 +113,10 @@ func GroupByAPIInfo(db *gorm.DB) ([]HostGroup, error) {
 				", " + FieldInTable(apiEventTableName, apiInfoIDColumnName) +
 				", " + FieldInTable(apiEventTableName, eventTypeColumnName) +
 				", COUNT(*) AS count").
+		Group(FieldInTable(apiEventTableName, hostSpecNameColumnName)).
+		Group(FieldInTable(apiEventTableName, destinationPortColumnName)).
 		Group(FieldInTable(apiEventTableName, apiInfoIDColumnName)).
+		Group(FieldInTable(apiEventTableName, eventTypeColumnName)).
 		Order("count desc").
 		Limit(dashboardTopAPIsNum).Rows()
 	if err != nil {
@@ -181,9 +185,14 @@ func GetAPIEventsAndTotal(params operations.GetAPIEventsParams) ([]APIEvent, int
 		return nil, 0, err
 	}
 
+	sortOrder, err := CreateSortOrder(params.SortKey, params.SortDir)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to create sort order: %v", err)
+	}
+
 	// get specific page ordered items with the current filters
 	if err := tx.Scopes(Paginate(params.Page, params.PageSize)).
-		Order(CreateSortOrder(params.SortKey, params.SortDir)).
+		Order(sortOrder).
 		Omit(specDiffColumns...).
 		Find(&apiEvents).Error; err != nil {
 		return nil, 0, err

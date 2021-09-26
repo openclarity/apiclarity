@@ -75,7 +75,7 @@ make backend
    $ kubectl get pods -n apiclarity
    NAME                        READY   STATUS    RESTARTS   AGE
    apiclarity-5df5fd6d98-h8v7t   1/1     Running   2          15m
-   mysql-6ffc46b7f-bggrv       1/1     Running   0          15m
+   apiclarity-postgresql-0       1/1     Running   0          15m
    ```
 
 5. Initialize and pull the `wasm-filters` submodule:

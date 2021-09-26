@@ -16,25 +16,23 @@
 package database
 
 import (
-	"database/sql"
 	"fmt"
 	"os"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
 const (
-	dbName           = "apiclarity"
-	DBUser           = "root" // TODO: We shouldn't use the root user
+	dbNameEnvVar     = "DB_NAME"
+	DBUserEnvVar     = "DB_USER"
 	DBPasswordEnvVar = "DB_PASS"
-	DBHost           = "mysql"
-	DBPort           = "3306"
+	DBHostEnvVar     = "DB_HOST"
+	DBPortEnvVar     = "DB_PORT_NUMBER"
 	FakeDataEnvVar   = "FAKE_DATA"
 	FakeTracesEnvVar = "FAKE_TRACES"
 	FakeDBPath       = "./db.db"
@@ -63,38 +61,30 @@ func cleanFakeDataBase(databasePath string) {
 }
 
 func initDataBase() *gorm.DB {
-	pass := viper.GetString(DBPasswordEnvVar)
-	// The env var for some reason has new line at the end
-	pass = strings.TrimRight(pass, "\n")
-
-	sqldb, err := sql.Open("mysql", DBUser+":"+pass+"@tcp("+DBHost+":"+DBPort+")/")
-	if err != nil {
-		panic(err)
-	}
-	_, err = sqldb.Exec("CREATE DATABASE IF NOT EXISTS " + dbName)
-	if err != nil {
-		panic(err)
-	}
-
-	if err := sqldb.Close(); err != nil {
-		log.Errorf("Failed to close the initial mysql connection")
-	}
-
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", DBUser, pass, DBHost, DBPort, dbName)
+	dbPass := viper.GetString(DBPasswordEnvVar)
+	dbUser := viper.GetString(DBUserEnvVar)
+	dbHost := viper.GetString(DBHostEnvVar)
+	dbPort := viper.GetString(DBPortEnvVar)
+	dbName := viper.GetString(dbNameEnvVar)
 
 	dbLogger := logger.Default
 	if viper.GetBool(enableDBInfoLogs) {
 		dbLogger = dbLogger.LogMode(logger.Info)
 	}
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
+		dbHost, dbUser, dbPass, dbName, dbPort)
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: dbLogger,
 	})
 	if err != nil {
-		panic(err.Error())
+		log.Fatalf("Failed to open %s db: %v", dbName, err)
 	}
+
 	// this will ensure table is created
 	if err := db.AutoMigrate(&APIEvent{}, &APIInfo{}, &Review{}, &APIPath{}); err != nil {
-		panic(err)
+		log.Fatalf("Failed to run auto migration: %v", err)
 	}
 
 	return db
