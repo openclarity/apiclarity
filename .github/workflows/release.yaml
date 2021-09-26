@@ -36,6 +36,11 @@ jobs:
       - name: Run verification
         run: make check
 
+      - name: Previous tag validation
+        run: |
+          tag='${{ github.event.inputs.pre_version }}'
+          [[ $tag =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+
       - name: Tag validation
         run: |
           tag='${{ github.event.inputs.version }}'
