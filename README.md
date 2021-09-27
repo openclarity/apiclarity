@@ -69,12 +69,16 @@ make backend
    kubectl apply -f deployment/apiclarity.yaml
    ```
 
+   Note: The manifest uses `PersistentVolumeClaim`s to request two persistent
+   volumes. Make sure you have a default `StorageClass` available in your
+   cluster or, if deploying on a cluster that does not have this, edit the
+   manifest to provide your own local storage configuration.
 4. Verify that APIClarity is running:
 
    ```shell
    $ kubectl get pods -n apiclarity
    NAME                        READY   STATUS    RESTARTS   AGE
-   apiclarity-5df5fd6d98-h8v7t   1/1     Running   2          15m
+   apiclarity-5df5fd6d98-h8v7t   1/1     Running   0          15m
    apiclarity-postgresql-0       1/1     Running   0          15m
    ```
 
