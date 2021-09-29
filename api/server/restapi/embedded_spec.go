@@ -414,6 +414,46 @@ func init() {
             "$ref": "#/responses/UnknownError"
           }
         }
+      },
+      "delete": {
+        "summary": "Unset a provided spec for a specific API",
+        "parameters": [
+          {
+            "$ref": "#/parameters/apiId"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/responses/Success"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/apiInventory/{apiId}/specs/reconstructedSpec": {
+      "delete": {
+        "summary": "Unset a reconstructed spec for a specific API",
+        "parameters": [
+          {
+            "$ref": "#/parameters/apiId"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/responses/Success"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
       }
     },
     "/apiInventory/{apiId}/suggestedReview": {
@@ -2074,6 +2114,66 @@ func init() {
             "description": "Spec validation failure",
             "schema": {
               "type": "string"
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unset a provided spec for a specific API",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "uint32",
+            "name": "apiId",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "description": "success message",
+              "schema": {
+                "$ref": "#/definitions/SuccessResponse"
+              }
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/apiInventory/{apiId}/specs/reconstructedSpec": {
+      "delete": {
+        "summary": "Unset a reconstructed spec for a specific API",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "uint32",
+            "name": "apiId",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "description": "success message",
+              "schema": {
+                "$ref": "#/definitions/SuccessResponse"
+              }
             }
           },
           "default": {
