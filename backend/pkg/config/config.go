@@ -33,7 +33,6 @@ const (
 	DatabaseCleanerIntervalSec = "DATABASE_CLEANER_INTERVAL_SEC"
 	StateBackupFileName        = "STATE_BACKUP_FILE_NAME"
 
-	// SpeculatorConfig
 	ResponseHeadersToIgnore = "RESPONSE_HEADERS_TO_IGNORE"
 	RequestHeadersToIgnore  = "REQUEST_HEADERS_TO_IGNORE"
 )
