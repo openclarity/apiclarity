@@ -69,7 +69,7 @@ func (s *Server) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPII
 	specInfo, err := createSpecInfo(params.Body.RawSpec, pathToPathID)
 	if err != nil {
 		log.Errorf("Failed to create spec info. %v", err)
-		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(500)
+		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
 	}
 
 	// Save the provided spec in the DB without expanding the ref fields
@@ -77,7 +77,7 @@ func (s *Server) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPII
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
 		log.Errorf("Failed to put provided API spec. %v", err)
-		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(500)
+		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
 	}
 
 	// Expands the ref fields in the analyzed spec document
@@ -90,7 +90,7 @@ func (s *Server) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPII
 	// Load provided spec to Speculator
 	if err := s.loadProvidedSpec(params.APIID, jsonSpecBytes, pathToPathID); err != nil {
 		log.Errorf("Failed to load provided API spec: %v", err)
-		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(500)
+		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
 	}
 
 	// Since we don't have a mapping between events paths to the parametrized path,
@@ -129,7 +129,7 @@ func (s *Server) loadProvidedSpec(apiID uint32, jsonSpec []byte, pathToPathID ma
 }
 
 func getSpecKey(apiID uint32) (speculator.SpecKey, error) {
-	var apiInfo = &database.APIInfo{}
+	apiInfo := &database.APIInfo{}
 
 	if err := database.GetAPIInventoryTable().First(&apiInfo, apiID).Error; err != nil {
 		return "", fmt.Errorf("failed to get API Info from DB. id=%v: %v", apiID, err)

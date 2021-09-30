@@ -109,5 +109,4 @@ func addOperationToTagList(operation *spec.Operation, method models.HTTPMethod, 
 			tagList[tag] = append(tagList[tag], methodAndPath)
 		}
 	}
-
 }

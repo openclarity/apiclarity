@@ -35,8 +35,8 @@ const (
 	timeColumnName                 = "time"
 	methodColumnName               = "method"
 	pathColumnName                 = "path"
-	providedPathIdColumnName       = "provided_path_id"
-	reconstructedPathIdColumnName  = "reconstructed_path_id"
+	providedPathIDColumnName       = "provided_path_id"
+	reconstructedPathIDColumnName  = "reconstructed_path_id"
 	statusCodeColumnName           = "status_code"
 	sourceIPColumnName             = "source_ip"
 	destinationIPColumnName        = "destination_ip"
@@ -312,8 +312,8 @@ func SetAPIEventsFilters(tx *gorm.DB, filters *APIEventsFilters, shouldSetTimeFi
 	tx = FilterIs(tx, methodColumnName, filters.MethodIs)
 
 	// path ID filters
-	tx = FilterIs(tx, providedPathIdColumnName, filters.ProvidedPathIDIs)
-	tx = FilterIs(tx, reconstructedPathIdColumnName, filters.ReconstructedPathIDIs)
+	tx = FilterIs(tx, providedPathIDColumnName, filters.ProvidedPathIDIs)
+	tx = FilterIs(tx, reconstructedPathIDColumnName, filters.ReconstructedPathIDIs)
 
 	// path filters
 	tx = FilterIs(tx, pathColumnName, filters.PathIs)
@@ -356,7 +356,7 @@ func SetAPIEventsFilters(tx *gorm.DB, filters *APIEventsFilters, shouldSetTimeFi
 	return tx
 }
 
-// SetAPIEventsReconstructedPathID will set reconstructed path ID for all events with the provided paths, host and port
+// SetAPIEventsReconstructedPathID will set reconstructed path ID for all events with the provided paths, host and port.
 func SetAPIEventsReconstructedPathID(approvedReview []*speculatorspec.ApprovedSpecReviewPathItem, host string, port string) error {
 	err := GetAPIEventsTable().Transaction(func(tx *gorm.DB) error {
 		for _, item := range approvedReview {
@@ -364,7 +364,7 @@ func SetAPIEventsReconstructedPathID(approvedReview []*speculatorspec.ApprovedSp
 			tx = FilterIs(tx, hostSpecNameColumnName, []string{host})
 			tx = FilterIs(tx, destinationPortColumnName, []string{port})
 
-			if err := tx.Model(&APIEvent{}).Updates(map[string]interface{}{reconstructedPathIdColumnName: item.PathUUID}).Error; err != nil {
+			if err := tx.Model(&APIEvent{}).Updates(map[string]interface{}{reconstructedPathIDColumnName: item.PathUUID}).Error; err != nil {
 				// return any error will rollback
 				return err
 			}
