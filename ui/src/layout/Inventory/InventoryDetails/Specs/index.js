@@ -10,6 +10,8 @@ import Tag from 'components/Tag';
 import Loader from 'components/Loader';
 import UploadSpec from './UploadSpec';
 import MethodHitCount from './MethodHitCount';
+import { SPEC_TYPES } from './utils';
+
 import emptySelectImage from 'utils/images/select.svg';
 
 import './specs.scss';
@@ -32,21 +34,21 @@ const MethodTitle = ({method, path}) => (
     <div className="method-item-title"><Tag>{method}</Tag><span>{path}</span></div>
 );
 
-const SelectedMethodDisplay = ({method, path, inventoryName, onBack}) => (
+const SelectedMethodDisplay = ({method, path, pathId, specType, inventoryName, onBack}) => (
     <div className="selected-method-wrapper">
         <BackHeader title={<MethodTitle method={method} path={path} />} onBack={onBack} />
-        <MethodHitCount method={method} path={path} spec={inventoryName} />
+        <MethodHitCount method={method} pathId={pathId} spec={inventoryName} specType={specType} />
     </div>
 )
 
-const SelectedTagDisplay = ({onBack, data, inventoryName}) => {
+const SelectedTagDisplay = ({onBack, data, inventoryName, specType}) => {
     const {name, methodAndPathList} = data;
 
     const [selectedMethodData, setSelectedMethodData] = useState(null);
 
     if (!!selectedMethodData) {
         return (
-            <SelectedMethodDisplay {...selectedMethodData} inventoryName={inventoryName} onBack={() => setSelectedMethodData(null)} />
+            <SelectedMethodDisplay {...selectedMethodData} specType={specType} inventoryName={inventoryName} onBack={() => setSelectedMethodData(null)} />
         )
     }
 
@@ -66,7 +68,7 @@ const SelectedTagDisplay = ({onBack, data, inventoryName}) => {
     );
 }
 
-const SpecDisplay = ({tags, notSelectedTitle, inventoryName}) => {
+const SpecDisplay = ({tags, notSelectedTitle, inventoryName, specType}) => {
     const [selectedTagData, setSelectedTagData] = useState(null);
 
     const tagItems = tags.map(tag => ({id: tag.name, ...tag}));
@@ -83,7 +85,7 @@ const SpecDisplay = ({tags, notSelectedTitle, inventoryName}) => {
             </div>
             <div className="display-pane">
                 {isEmpty(selectedTagData) ? <NotSelected title={notSelectedTitle} /> :
-                    <SelectedTagDisplay data={selectedTagData} onBack={() => setSelectedTagData(null)} inventoryName={inventoryName} />}
+                    <SelectedTagDisplay data={selectedTagData} onBack={() => setSelectedTagData(null)} inventoryName={inventoryName} specType={specType} />}
             </div>
         </div>
     )
@@ -95,7 +97,7 @@ const ViewInSwaggerLink = ({inventoryId, specType}) => (
     </a>
 );
 
-const ProvidedSpecDisplay = ({specData, inventoryId, inventoryName, refreshData}) => {
+const ProvidedSpecDisplay = ({specData, inventoryId, inventoryName, refreshData, specType}) => {
     const [showUploadSpec, setShowUploadSpec] = useState(!specData);
 
     if (showUploadSpec) {
@@ -109,11 +111,12 @@ const ProvidedSpecDisplay = ({specData, inventoryId, inventoryName, refreshData}
             inventoryName={inventoryName}
             tags={specData.tags || []}
             notSelectedTitle={<span>Select a tag to see details, <ViewInSwaggerLink inventoryId={inventoryId} specType="provided" /> or <Button secondary onClick={() => setShowUploadSpec(true)}>replace spec</Button></span>}
+            specType={specType}
         />
     )
 }
 
-const ReconstructedSpecDisplay = ({specData, inventoryId, inventoryName}) => {
+const ReconstructedSpecDisplay = ({specData, inventoryId, inventoryName, specType}) => {
     const history = useHistory();
     const {url} = useRouteMatch();
 
@@ -130,13 +133,14 @@ const ReconstructedSpecDisplay = ({specData, inventoryId, inventoryName}) => {
             inventoryName={inventoryName}
             tags={specData.tags || []}
             notSelectedTitle={<span>Select a tag to see details or <ViewInSwaggerLink inventoryId={inventoryId} specType="reconstructed" /></span>}
+            specType={specType}
         />
     )
 }
 
 export const SPEC_TAB_ITEMS = {
-    PROVIDED: {value: "PROVIDED", label: "Provided", dataKey: "providedSpec", component: ProvidedSpecDisplay},
-    RECONSTRUCTED: {value: "RECONSTRUCTED", label: "Reconstructed", dataKey: "reconstructedSpec", component: ReconstructedSpecDisplay}
+    PROVIDED: {value: SPEC_TYPES.PROVIDED, label: "Provided", dataKey: "providedSpec", component: ProvidedSpecDisplay},
+    RECONSTRUCTED: {value: SPEC_TYPES.RECONSTRUCTED, label: "Reconstructed", dataKey: "reconstructedSpec", component: ReconstructedSpecDisplay}
 }
 
 const InnerTabs = ({selected, items, onSelect}) => (
@@ -154,7 +158,7 @@ const Specs = ({inventoryId, inventoryName}) => {
     const {inititalSelectedTab=SPEC_TAB_ITEMS.PROVIDED.value} = query || {};
     
     const [selectedTab, setSelectedTab] = useState(inititalSelectedTab);
-    const {component: TabContentComponent, dataKey: specDataKey} = SPEC_TAB_ITEMS[selectedTab];
+    const {component: TabContentComponent, dataKey: specDataKey, value: type} = SPEC_TAB_ITEMS[selectedTab];
 
     const [{loading, data, error}, fetchSpecsData] = useFetch(`apiInventory/${inventoryId}/specs`);
 
@@ -167,7 +171,7 @@ const Specs = ({inventoryId, inventoryName}) => {
             {loading ? <Loader /> : 
                 <React.Fragment>
                     <InnerTabs selected={selectedTab} items={Object.values(SPEC_TAB_ITEMS)} onSelect={selected => setSelectedTab(selected)} />
-                    <TabContentComponent specData={data[specDataKey]} inventoryId={inventoryId} inventoryName={inventoryName} refreshData={fetchSpecsData} />
+                    <TabContentComponent specData={data[specDataKey]} inventoryId={inventoryId} inventoryName={inventoryName} refreshData={fetchSpecsData} specType={type} />
                 </React.Fragment>
             }
         </div>

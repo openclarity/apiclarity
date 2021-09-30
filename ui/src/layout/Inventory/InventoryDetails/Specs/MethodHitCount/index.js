@@ -3,18 +3,26 @@ import { useFetch } from 'hooks';
 import TimeFilter, { TIME_SELECT_ITEMS, getTimeFormat } from 'components/TimeFilter';
 import Chart from 'components/Chart';
 import Loader from 'components/Loader';
+import { SPEC_TYPES } from '../utils';
+
 import COLORS from 'utils/scss_variables.module.scss';
 
 import './method-hit-count.scss';
 
-const MethodHitCount = ({method, path, spec}) => {
+const SPEC_TYPE_TO_PATH_FILTER= {
+    [SPEC_TYPES.PROVIDED]: "providedPathID[is]",
+    [SPEC_TYPES.RECONSTRUCTED]: "reconstructedPathID[is]"
+};
+
+const MethodHitCount = ({method, pathId, specType, spec}) => {
     const defaultTimeRange = TIME_SELECT_ITEMS.DAY;
     const [timeFilter, setTimeFilter] = useState({selectedRange: defaultTimeRange.value, ...defaultTimeRange.calc()});
     const {selectedRange, startTime, endTime} = timeFilter;
 
     const [{loading, data}, fetchData] = useFetch("apiUsage/hitCount", {loadOnMount: false});
     const doFetchHitCount = useCallback(({queryParams}) =>
-        fetchData({queryParams: {...queryParams, "method[is]": [method], "path[is]": [path], "spec[is]": spec, "showNonApi": false}}), [fetchData, method, path, spec]);
+        fetchData({queryParams: {...queryParams, "method[is]": [method], [SPEC_TYPE_TO_PATH_FILTER[specType]]: pathId, "spec[is]": spec, "showNonApi": false}}),
+        [fetchData, method, pathId, specType, spec]);
 
     useEffect(() => {
         doFetchHitCount({queryParams: {startTime, endTime}});

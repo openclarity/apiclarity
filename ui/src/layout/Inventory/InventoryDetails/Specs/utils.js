@@ -1,0 +1,4 @@
+export const SPEC_TYPES = {
+    PROVIDED: "PROVIDED",
+    RECONSTRUCTED: "RECONSTRUCTED"
+}
