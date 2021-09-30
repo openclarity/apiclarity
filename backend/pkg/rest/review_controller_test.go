@@ -24,7 +24,6 @@ import (
 	oapispec "github.com/go-openapi/spec"
 
 	"github.com/apiclarity/apiclarity/api/server/models"
-	"github.com/apiclarity/apiclarity/backend/pkg/database"
 	speculatorspec "github.com/apiclarity/speculator/pkg/spec"
 )
 
@@ -335,60 +334,6 @@ func Test_createApprovedReviewForSpeculator(t *testing.T) {
 
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("createApprovedReviewForSpeculator() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_createAPIPaths(t *testing.T) {
-	type args struct {
-		apiID  uint
-		review *speculatorspec.ApprovedSpecReview
-	}
-	tests := []struct {
-		name string
-		args args
-		want []*database.APIPath
-	}{
-		{
-			name: "sanity",
-			args: args{
-				apiID: 1,
-				review: &speculatorspec.ApprovedSpecReview{
-					PathItemsReview: []*speculatorspec.ApprovedSpecReviewPathItem{
-						{
-							ReviewPathItem: speculatorspec.ReviewPathItem{
-								ParameterizedPath: "/api/{param1}",
-							},
-							PathUUID: "123",
-						},
-						{
-							ReviewPathItem: speculatorspec.ReviewPathItem{
-								ParameterizedPath: "/api/{param1}/test",
-							},
-							PathUUID: "456",
-						},
-					},
-				},
-			},
-			want: []*database.APIPath{
-				{
-					ID:    "123",
-					Path:  "/api/{param1}",
-					APIID: 1,
-				},
-				{
-					ID:    "456",
-					Path:  "/api/{param1}/test",
-					APIID: 1,
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := createAPIPaths(tt.args.apiID, tt.args.review); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("createAPIPaths() = %v, want %v", marshal(got), marshal(tt.want))
 			}
 		})
 	}

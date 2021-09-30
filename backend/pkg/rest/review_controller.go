@@ -100,10 +100,6 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
 	}
 
-	// TODO: Do we need path-id map?
-	// populate API Path table
-	database.StorePaths(createAPIPaths(apiID, approvedReview))
-
 	// update all the API events corresponding to the APIEventsPaths in the approved review
 	go func() {
 		if err := database.SetAPIEventsReconstructedPathID(approvedReview.PathItemsReview, host, port); err != nil {
@@ -124,20 +120,6 @@ func getPathToPathIDMap(review *speculatorspec.ApprovedSpecReview) map[string]st
 	}
 
 	return pathToPathID
-}
-
-func createAPIPaths(apiID uint, review *speculatorspec.ApprovedSpecReview) []*database.APIPath {
-	var ret []*database.APIPath
-
-	for _, item := range review.PathItemsReview {
-		ret = append(ret, &database.APIPath{
-			ID:    item.PathUUID,
-			Path:  item.ParameterizedPath,
-			APIID: apiID,
-		})
-	}
-
-	return ret
 }
 
 func createApprovedReviewForSpeculator(review *models.ApprovedReview, pathToPathItem map[string]*spec.PathItem) *speculatorspec.ApprovedSpecReview {
