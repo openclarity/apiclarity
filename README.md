@@ -124,6 +124,14 @@ make backend
 9. Generate some traffic in the applications in the traced namespaces and check
    the APIClarity UI :)
 
+## Configurations
+
+The file `deployment/apiclarity.yaml` is used to deploy and configure APIClarity on your cluster.
+
+1. Set `RESPONSE_HEADERS_TO_IGNORE` and `REQUEST_HEADERS_TO_IGNORE` with a space separated list of headers to ignore when reconstructing the spec.
+
+    Note: Current values defined in `headers-to-ignore-config` ConfigMap
+
 ## Testing with a demo application
 
 A good demo application to try APIClarity with is the [Sock Shop Demo](https://microservices-demo.github.io/).
