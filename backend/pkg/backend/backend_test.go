@@ -153,7 +153,7 @@ func Test_getHostname(t *testing.T) {
 	}
 }
 
-func Test_getAPIDiffType(t *testing.T) {
+func Test_convertAPIDiffType(t *testing.T) {
 	type args struct {
 		diffType _spec.DiffType
 	}
@@ -200,14 +200,14 @@ func Test_getAPIDiffType(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getAPIDiffType(tt.args.diffType); got != tt.want {
-				t.Errorf("getAPIDiffType() = %v, want %v", got, tt.want)
+			if got := convertAPIDiffType(tt.args.diffType); got != tt.want {
+				t.Errorf("convertAPIDiffType() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_getSpecDiffType(t *testing.T) {
+func Test_getHighestPrioritySpecDiffType(t *testing.T) {
 	type args struct {
 		providedDiff      models.DiffType
 		reconstructedDiff models.DiffType
@@ -252,8 +252,8 @@ func Test_getSpecDiffType(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getSpecDiffType(tt.args.providedDiff, tt.args.reconstructedDiff); got != tt.want {
-				t.Errorf("getSpecDiffType() = %v, want %v", got, tt.want)
+			if got := getHighestPrioritySpecDiffType(tt.args.providedDiff, tt.args.reconstructedDiff); got != tt.want {
+				t.Errorf("getHighestPrioritySpecDiffType() = %v, want %v", got, tt.want)
 			}
 		})
 	}

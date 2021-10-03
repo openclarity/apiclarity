@@ -294,7 +294,7 @@ func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 			event.NewReconstructedSpec = string(modified)
 		}
 		event.ReconstructedPathID = reconstructedDiff.PathID
-		reconstructedDiffType = getAPIDiffType(reconstructedDiff.Type)
+		reconstructedDiffType = convertAPIDiffType(reconstructedDiff.Type)
 	}
 
 	providedDiffType := models.DiffTypeNODIFF
@@ -310,17 +310,17 @@ func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 			event.NewProvidedSpec = string(modified)
 		}
 		event.ProvidedPathID = providedDiff.PathID
-		providedDiffType = getAPIDiffType(providedDiff.Type)
+		providedDiffType = convertAPIDiffType(providedDiff.Type)
 	}
 
-	event.SpecDiffType = getSpecDiffType(providedDiffType, reconstructedDiffType)
+	event.SpecDiffType = getHighestPrioritySpecDiffType(providedDiffType, reconstructedDiffType)
 
 	_database.CreateAPIEvent(event)
 
 	return nil
 }
 
-func getAPIDiffType(diffType _spec.DiffType) models.DiffType {
+func convertAPIDiffType(diffType _spec.DiffType) models.DiffType {
 	switch diffType {
 	case _spec.DiffTypeNoDiff:
 		return models.DiffTypeNODIFF
@@ -346,13 +346,13 @@ var diffTypePriority = map[models.DiffType]int{
 	models.DiffTypeZOMBIEDIFF:  4,
 }
 
-// getSpecDiffType will return the type with the highest priority.
-func getSpecDiffType(providedDiff, reconstructedDiff models.DiffType) models.DiffType {
-	if diffTypePriority[providedDiff] > diffTypePriority[reconstructedDiff] {
-		return providedDiff
+// getHighestPrioritySpecDiffType will return the type with the highest priority.
+func getHighestPrioritySpecDiffType(providedDiffType, reconstructedDiffType models.DiffType) models.DiffType {
+	if diffTypePriority[providedDiffType] > diffTypePriority[reconstructedDiffType] {
+		return providedDiffType
 	}
 
-	return reconstructedDiff
+	return reconstructedDiffType
 }
 
 // getHostname will return only hostname without scheme and port
