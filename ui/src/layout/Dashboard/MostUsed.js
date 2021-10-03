@@ -9,13 +9,12 @@ const MostUsed = ({refreshTimestamp}) => (
         <Title small>Most used APIs</Title>
         <ApisList
             url="dashboard/apiUsage/mostUsed"
-            subColumn={{
-                title: "Calls (No.)",
-                dataDisplay: ({numCalls}) => <Tag rounded>{numCalls}</Tag>
-            }}
             getLink={({apiType, apiInfoId}) => `/inventory/${apiType}/${apiInfoId}`}
             apiIdKey="apiInfoId"
             refreshTimestamp={refreshTimestamp}
+            columnItems={[
+                {title: "Calls (No.)", content: ({numCalls}) => <Tag rounded>{numCalls}</Tag>}
+            ]}
         />
     </PageContainer>
 )

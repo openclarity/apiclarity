@@ -70,8 +70,6 @@ func (s *Server) GetDashboardAPIUsage(params operations.GetDashboardAPIUsagePara
 const latestDiffsNum = 5
 
 func (s *Server) GetDashboardAPIUsageLatestDiffs(params operations.GetDashboardAPIUsageLatestDiffsParams) middleware.Responder {
-	var diffs []*models.SpecDiffTime
-
 	latestDiffs, err := database.GetAPIEventsLatestDiffs(latestDiffsNum)
 	if err != nil {
 		// TODO: need to handle errors
@@ -82,15 +80,23 @@ func (s *Server) GetDashboardAPIUsageLatestDiffs(params operations.GetDashboardA
 		})
 	}
 
-	for _, diff := range latestDiffs {
+	return operations.NewGetDashboardAPIUsageLatestDiffsOK().WithPayload(getModelsSpecDiffTime(latestDiffs))
+}
+
+func getModelsSpecDiffTime(latestDiffs []database.APIEvent) []*models.SpecDiffTime {
+	var diffs []*models.SpecDiffTime
+
+	for i := range latestDiffs {
+		diff := latestDiffs[i]
 		diffs = append(diffs, &models.SpecDiffTime{
-			APIHostName: diff.HostSpecName,
 			APIEventID:  uint32(diff.ID),
+			APIHostName: diff.HostSpecName,
+			DiffType:    &diff.SpecDiffType,
 			Time:        diff.Time,
 		})
 	}
 
-	return operations.NewGetDashboardAPIUsageLatestDiffsOK().WithPayload(diffs)
+	return diffs
 }
 
 func (s *Server) GetDashboardAPIUsageMostUsed(_ operations.GetDashboardAPIUsageMostUsedParams) middleware.Responder {

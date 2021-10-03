@@ -25,6 +25,9 @@ type SpecDiffTime struct {
 	// api host name
 	APIHostName string `json:"apiHostName,omitempty"`
 
+	// diff type
+	DiffType *DiffType `json:"diffType,omitempty"`
+
 	// time
 	// Format: date-time
 	Time strfmt.DateTime `json:"time,omitempty"`
@@ -34,6 +37,10 @@ type SpecDiffTime struct {
 func (m *SpecDiffTime) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateDiffType(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateTime(formats); err != nil {
 		res = append(res, err)
 	}
@@ -41,6 +48,23 @@ func (m *SpecDiffTime) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *SpecDiffTime) validateDiffType(formats strfmt.Registry) error {
+	if swag.IsZero(m.DiffType) { // not required
+		return nil
+	}
+
+	if m.DiffType != nil {
+		if err := m.DiffType.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("diffType")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -56,8 +80,31 @@ func (m *SpecDiffTime) validateTime(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this spec diff time based on context it is used
+// ContextValidate validate this spec diff time based on the context it is used
 func (m *SpecDiffTime) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateDiffType(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *SpecDiffTime) contextValidateDiffType(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.DiffType != nil {
+		if err := m.DiffType.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("diffType")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 

@@ -281,6 +281,7 @@ func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 		EventType:       apiInfo.Type,
 	}
 
+	reconstructedDiffType := models.DiffTypeNODIFF
 	if reconstructedDiff != nil {
 		if reconstructedDiff.Type != _spec.DiffTypeNoDiff {
 			original, modified, err := convertSpecDiffToEventDiff(reconstructedDiff)
@@ -293,7 +294,10 @@ func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 			event.NewReconstructedSpec = string(modified)
 		}
 		event.ReconstructedPathID = reconstructedDiff.PathID
+		reconstructedDiffType = convertAPIDiffType(reconstructedDiff.Type)
 	}
+
+	providedDiffType := models.DiffTypeNODIFF
 	if providedDiff != nil {
 		if providedDiff.Type != _spec.DiffTypeNoDiff {
 			original, modified, err := convertSpecDiffToEventDiff(providedDiff)
@@ -306,11 +310,49 @@ func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 			event.NewProvidedSpec = string(modified)
 		}
 		event.ProvidedPathID = providedDiff.PathID
+		providedDiffType = convertAPIDiffType(providedDiff.Type)
 	}
+
+	event.SpecDiffType = getHighestPrioritySpecDiffType(providedDiffType, reconstructedDiffType)
 
 	_database.CreateAPIEvent(event)
 
 	return nil
+}
+
+func convertAPIDiffType(diffType _spec.DiffType) models.DiffType {
+	switch diffType {
+	case _spec.DiffTypeNoDiff:
+		return models.DiffTypeNODIFF
+	case _spec.DiffTypeShadowDiff:
+		return models.DiffTypeSHADOWDIFF
+	case _spec.DiffTypeZombieDiff:
+		return models.DiffTypeZOMBIEDIFF
+	case _spec.DiffTypeGeneralDiff:
+		return models.DiffTypeGENERALDIFF
+	default:
+		log.Warnf("Unknown diff type: %v", diffType)
+	}
+
+	return models.DiffTypeNODIFF
+}
+
+//nolint:gomnd
+var diffTypePriority = map[models.DiffType]int{
+	// starting from 1 since unknown type will return 0
+	models.DiffTypeNODIFF:      1,
+	models.DiffTypeGENERALDIFF: 2,
+	models.DiffTypeSHADOWDIFF:  3,
+	models.DiffTypeZOMBIEDIFF:  4,
+}
+
+// getHighestPrioritySpecDiffType will return the type with the highest priority.
+func getHighestPrioritySpecDiffType(providedDiffType, reconstructedDiffType models.DiffType) models.DiffType {
+	if diffTypePriority[providedDiffType] > diffTypePriority[reconstructedDiffType] {
+		return providedDiffType
+	}
+
+	return reconstructedDiffType
 }
 
 // getHostname will return only hostname without scheme and port

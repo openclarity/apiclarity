@@ -55,6 +55,9 @@ type APIEvent struct {
 	// source IP
 	SourceIP string `json:"sourceIP,omitempty"`
 
+	// spec diff type
+	SpecDiffType *DiffType `json:"specDiffType,omitempty"`
+
 	// status code
 	StatusCode int64 `json:"statusCode,omitempty"`
 
@@ -72,6 +75,10 @@ func (m *APIEvent) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateMethod(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateSpecDiffType(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -115,6 +122,23 @@ func (m *APIEvent) validateMethod(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *APIEvent) validateSpecDiffType(formats strfmt.Registry) error {
+	if swag.IsZero(m.SpecDiffType) { // not required
+		return nil
+	}
+
+	if m.SpecDiffType != nil {
+		if err := m.SpecDiffType.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("specDiffType")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (m *APIEvent) validateTime(formats strfmt.Registry) error {
 	if swag.IsZero(m.Time) { // not required
 		return nil
@@ -136,6 +160,10 @@ func (m *APIEvent) ContextValidate(ctx context.Context, formats strfmt.Registry)
 	}
 
 	if err := m.contextValidateMethod(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateSpecDiffType(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -164,6 +192,20 @@ func (m *APIEvent) contextValidateMethod(ctx context.Context, formats strfmt.Reg
 			return ve.ValidateName("method")
 		}
 		return err
+	}
+
+	return nil
+}
+
+func (m *APIEvent) contextValidateSpecDiffType(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.SpecDiffType != nil {
+		if err := m.SpecDiffType.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("specDiffType")
+			}
+			return err
+		}
 	}
 
 	return nil

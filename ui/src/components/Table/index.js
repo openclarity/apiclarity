@@ -5,10 +5,10 @@ import { useTable, usePagination, useSortBy, useResizeColumns, useFlexLayout, us
 import Icon, { ICON_NAMES } from 'components/Icon';
 import Loader from 'components/Loader';
 import Checkbox from 'components/Checkbox';
+import NoResultsDisplay from 'components/NoResultsDisplay';
 import { useFetch, usePrevious } from 'hooks';
 import Pagination from './Pagination';
 import * as utils from './utils';
-import noResultsImage from 'utils/images/empty.svg';
 
 import './table.scss';
 
@@ -239,12 +239,7 @@ const Table = props => {
                     }
                 </div>
                 <div className="table-body" {...getTableBodyProps()}>
-                    {isEmpty(page) && !loading &&
-                        <div className="table-empty-results">
-                            <div className="no-results-title">{`No results available for ${noResultsTitle}`}</div>
-                            <img src={noResultsImage} alt="no results" />
-                        </div>
-                    }
+                    {isEmpty(page) && !loading && <NoResultsDisplay title={`No results available for ${noResultsTitle}`} />}
                     {loading && <div className="table-loading"><Loader /></div>}
                     {
                         page.map((row) => {

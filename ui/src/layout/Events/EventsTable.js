@@ -2,8 +2,8 @@ import React, { useMemo } from 'react';
 import { useHistory, useRouteMatch } from 'react-router-dom';
 import Table, { utils } from 'components/Table';
 import Tag from 'components/Tag';
-import Icon, { ICON_NAMES } from 'components/Icon';
 import StatusIndicator from 'components/StatusIndicator';
+import SpecDiffIcon, { SPEC_DIFF_TYPES_MAP } from 'components/SpecDiffIcon';
 import { formatDate } from 'utils/utils';
 import { API_TYPE_ITEMS } from 'layout/Inventory';
 
@@ -66,12 +66,19 @@ const EventsTable = ({filters, refreshTimestamp}) => {
         },
         {
             Header: 'Spec Diff',
-            id: "hasSpecDiff",
+            id: "specDiffType",
             Cell: ({row}) => {
-                const {hasProvidedSpecDiff, hasReconstructedSpecDiff} = row.original;
+                const {id, specDiffType} = row.original;
+
+                const {value} = SPEC_DIFF_TYPES_MAP[specDiffType] || {};
                 
-                return hasProvidedSpecDiff || hasReconstructedSpecDiff ?
-                    <Icon name={ICON_NAMES.ALERT} className="specs-diff-alert-icon" /> : <utils.EmptyValue />;
+                if (!value || value === SPEC_DIFF_TYPES_MAP.NO_DIFF.value) {
+                    return <utils.EmptyValue />;
+                }
+                
+                return (
+                    <SpecDiffIcon id={id} specDiffType={specDiffType} />
+                )
             },
             canSort: true,
             width: 40

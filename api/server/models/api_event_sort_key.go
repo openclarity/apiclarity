@@ -47,8 +47,8 @@ const (
 	// APIEventSortKeyDestinationPort captures enum value "destinationPort"
 	APIEventSortKeyDestinationPort APIEventSortKey = "destinationPort"
 
-	// APIEventSortKeyHasSpecDiff captures enum value "hasSpecDiff"
-	APIEventSortKeyHasSpecDiff APIEventSortKey = "hasSpecDiff"
+	// APIEventSortKeySpecDiffType captures enum value "specDiffType"
+	APIEventSortKeySpecDiffType APIEventSortKey = "specDiffType"
 
 	// APIEventSortKeyHostSpecName captures enum value "hostSpecName"
 	APIEventSortKeyHostSpecName APIEventSortKey = "hostSpecName"
@@ -62,7 +62,7 @@ var apiEventSortKeyEnum []interface{}
 
 func init() {
 	var res []APIEventSortKey
-	if err := json.Unmarshal([]byte(`["time","method","path","statusCode","sourceIP","destinationIP","destinationPort","hasSpecDiff","hostSpecName","apiType"]`), &res); err != nil {
+	if err := json.Unmarshal([]byte(`["time","method","path","statusCode","sourceIP","destinationIP","destinationPort","specDiffType","hostSpecName","apiType"]`), &res); err != nil {
 		panic(err)
 	}
 	for _, v := range res {

@@ -1,19 +1,20 @@
 @import 'utils/scss_variables.module.scss';
 
+$margin-between: 20px;
+
 .dashboard-content-wrapper {
     display: flex;
     height: 602px;
     
-    .api-usage-container {
-        min-width: 876px;
-        flex-grow: 1;
-    }
     .page-container {
         padding: 30px;
     }
+    .api-usage-container {
+        width: calc(2 * (100% - #{$margin-between}) / 3);
+    }
     .dashboard-counters-wrapper {
-        margin-left: 20px;
-        width: 427px;
+        margin-right: $margin-between;
+        width: calc((100% - #{$margin-between}) / 3);
 
         .page-container {
             height: calc(50% - 10px);

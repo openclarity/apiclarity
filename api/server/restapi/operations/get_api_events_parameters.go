@@ -128,6 +128,10 @@ type GetAPIEventsParams struct {
 	/*
 	  In: query
 	*/
+	SpecDiffTypeIs []string
+	/*
+	  In: query
+	*/
 	SpecContains []string
 	/*
 	  In: query
@@ -271,6 +275,11 @@ func (o *GetAPIEventsParams) BindRequest(r *http.Request, route *middleware.Matc
 
 	qSourceIPIs, qhkSourceIPIs, _ := qs.GetOK("sourceIP[is]")
 	if err := o.bindSourceIPIs(qSourceIPIs, qhkSourceIPIs, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qSpecDiffTypeIs, qhkSpecDiffTypeIs, _ := qs.GetOK("specDiffType[is]")
+	if err := o.bindSpecDiffTypeIs(qSpecDiffTypeIs, qhkSpecDiffTypeIs, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -805,7 +814,7 @@ func (o *GetAPIEventsParams) bindSortKey(rawData []string, hasKey bool, formats 
 // validateSortKey carries on validations for parameter SortKey
 func (o *GetAPIEventsParams) validateSortKey(formats strfmt.Registry) error {
 
-	if err := validate.EnumCase("sortKey", "query", o.SortKey, []interface{}{"time", "method", "path", "statusCode", "sourceIP", "destinationIP", "destinationPort", "hasSpecDiff", "hostSpecName", "apiType"}, true); err != nil {
+	if err := validate.EnumCase("sortKey", "query", o.SortKey, []interface{}{"time", "method", "path", "statusCode", "sourceIP", "destinationIP", "destinationPort", "specDiffType", "hostSpecName", "apiType"}, true); err != nil {
 		return err
 	}
 
@@ -862,6 +871,37 @@ func (o *GetAPIEventsParams) bindSourceIPIs(rawData []string, hasKey bool, forma
 	}
 
 	o.SourceIPIs = sourceIPIsIR
+
+	return nil
+}
+
+// bindSpecDiffTypeIs binds and validates array parameter SpecDiffTypeIs from query.
+//
+// Arrays are parsed according to CollectionFormat: "" (defaults to "csv" when empty).
+func (o *GetAPIEventsParams) bindSpecDiffTypeIs(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var qvSpecDiffTypeIs string
+	if len(rawData) > 0 {
+		qvSpecDiffTypeIs = rawData[len(rawData)-1]
+	}
+
+	// CollectionFormat:
+	specDiffTypeIsIC := swag.SplitByFormat(qvSpecDiffTypeIs, "")
+	if len(specDiffTypeIsIC) == 0 {
+		return nil
+	}
+
+	var specDiffTypeIsIR []string
+	for i, specDiffTypeIsIV := range specDiffTypeIsIC {
+		specDiffTypeIsI := specDiffTypeIsIV
+
+		if err := validate.EnumCase(fmt.Sprintf("%s.%v", "specDiffType[is]", i), "query", specDiffTypeIsI, []interface{}{"ZOMBIE_DIFF", "SHADOW_DIFF", "GENERAL_DIFF", "NO_DIFF"}, true); err != nil {
+			return err
+		}
+
+		specDiffTypeIsIR = append(specDiffTypeIsIR, specDiffTypeIsI)
+	}
+
+	o.SpecDiffTypeIs = specDiffTypeIsIR
 
 	return nil
 }

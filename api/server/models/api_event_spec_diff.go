@@ -19,6 +19,9 @@ import (
 // swagger:model ApiEventSpecDiff
 type APIEventSpecDiff struct {
 
+	// diff type
+	DiffType *DiffType `json:"diffType,omitempty"`
+
 	// New spec json string
 	// Required: true
 	NewSpec *string `json:"newSpec"`
@@ -32,6 +35,10 @@ type APIEventSpecDiff struct {
 func (m *APIEventSpecDiff) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateDiffType(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateNewSpec(formats); err != nil {
 		res = append(res, err)
 	}
@@ -43,6 +50,23 @@ func (m *APIEventSpecDiff) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *APIEventSpecDiff) validateDiffType(formats strfmt.Registry) error {
+	if swag.IsZero(m.DiffType) { // not required
+		return nil
+	}
+
+	if m.DiffType != nil {
+		if err := m.DiffType.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("diffType")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -64,8 +88,31 @@ func (m *APIEventSpecDiff) validateOldSpec(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validates this Api event spec diff based on context it is used
+// ContextValidate validate this Api event spec diff based on the context it is used
 func (m *APIEventSpecDiff) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateDiffType(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *APIEventSpecDiff) contextValidateDiffType(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.DiffType != nil {
+		if err := m.DiffType.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("diffType")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 

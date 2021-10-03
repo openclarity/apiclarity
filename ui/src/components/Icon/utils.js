@@ -19,5 +19,7 @@ export const ICON_NAMES = {
     REFRESH: "refresh",
     TABLE: "table",
     GRAPH: "graph",
-    UNMERGE: "unmerge"
+    UNMERGE: "unmerge",
+    ZOMBIE: "zombie",
+    SHADOW: "shadow"
 }
