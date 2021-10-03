@@ -59,7 +59,7 @@ func GetAPISpecsInfo(apiID uint32) (*models.OpenAPISpecs, error) {
 	if apiInfo.ReconstructedSpecInfo != "" {
 		specInfo := models.SpecInfo{}
 		if err := json.Unmarshal([]byte(apiInfo.ReconstructedSpecInfo), &specInfo); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal recostruced spec info. info=%+v: %v", apiInfo.ReconstructedSpecInfo, err)
+			return nil, fmt.Errorf("failed to unmarshal reconstructed spec info. info=%+v: %v", apiInfo.ReconstructedSpecInfo, err)
 		}
 		specsInfo.ReconstructedSpec = &specInfo
 	}

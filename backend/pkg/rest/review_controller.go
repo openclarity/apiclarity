@@ -91,8 +91,8 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 
 	specInfo, err := createSpecInfo(string(oapSpec), getPathToPathIDMap(approvedReview))
 	if err != nil {
-		log.Errorf("Failed to create spec info. %v", err)
-		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
+		log.Errorf("Failed to create spec info: %v", err)
+		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
 	}
 
 	if err := database.PutAPISpec(apiID, string(oapSpec), specInfo, database.ReconstructedSpecType); err != nil {
