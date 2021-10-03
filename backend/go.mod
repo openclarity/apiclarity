@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/apiclarity/apiclarity/api v0.0.0
-	github.com/apiclarity/speculator v0.0.3
+	github.com/apiclarity/speculator v0.0.4-0.20211003103128-0db9c9086de9
 	github.com/bxcodec/faker/v3 v3.6.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-openapi/loads v0.20.2

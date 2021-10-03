@@ -84,6 +84,14 @@ type GetAPIUsageHitCountParams struct {
 	*/
 	PathStart *string
 	/*
+	  In: query
+	*/
+	ProvidedPathIDIs []string
+	/*
+	  In: query
+	*/
+	ReconstructedPathIDIs []string
+	/*
 	  Required: true
 	  In: query
 	*/
@@ -207,6 +215,16 @@ func (o *GetAPIUsageHitCountParams) BindRequest(r *http.Request, route *middlewa
 
 	qPathStart, qhkPathStart, _ := qs.GetOK("path[start]")
 	if err := o.bindPathStart(qPathStart, qhkPathStart, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qProvidedPathIDIs, qhkProvidedPathIDIs, _ := qs.GetOK("providedPathID[is]")
+	if err := o.bindProvidedPathIDIs(qProvidedPathIDIs, qhkProvidedPathIDIs, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qReconstructedPathIDIs, qhkReconstructedPathIDIs, _ := qs.GetOK("reconstructedPathID[is]")
+	if err := o.bindReconstructedPathIDIs(qReconstructedPathIDIs, qhkReconstructedPathIDIs, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -595,6 +613,60 @@ func (o *GetAPIUsageHitCountParams) bindPathStart(rawData []string, hasKey bool,
 		return nil
 	}
 	o.PathStart = &raw
+
+	return nil
+}
+
+// bindProvidedPathIDIs binds and validates array parameter ProvidedPathIDIs from query.
+//
+// Arrays are parsed according to CollectionFormat: "" (defaults to "csv" when empty).
+func (o *GetAPIUsageHitCountParams) bindProvidedPathIDIs(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var qvProvidedPathIDIs string
+	if len(rawData) > 0 {
+		qvProvidedPathIDIs = rawData[len(rawData)-1]
+	}
+
+	// CollectionFormat:
+	providedPathIDIsIC := swag.SplitByFormat(qvProvidedPathIDIs, "")
+	if len(providedPathIDIsIC) == 0 {
+		return nil
+	}
+
+	var providedPathIDIsIR []string
+	for _, providedPathIDIsIV := range providedPathIDIsIC {
+		providedPathIDIsI := providedPathIDIsIV
+
+		providedPathIDIsIR = append(providedPathIDIsIR, providedPathIDIsI)
+	}
+
+	o.ProvidedPathIDIs = providedPathIDIsIR
+
+	return nil
+}
+
+// bindReconstructedPathIDIs binds and validates array parameter ReconstructedPathIDIs from query.
+//
+// Arrays are parsed according to CollectionFormat: "" (defaults to "csv" when empty).
+func (o *GetAPIUsageHitCountParams) bindReconstructedPathIDIs(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var qvReconstructedPathIDIs string
+	if len(rawData) > 0 {
+		qvReconstructedPathIDIs = rawData[len(rawData)-1]
+	}
+
+	// CollectionFormat:
+	reconstructedPathIDIsIC := swag.SplitByFormat(qvReconstructedPathIDIs, "")
+	if len(reconstructedPathIDIsIC) == 0 {
+		return nil
+	}
+
+	var reconstructedPathIDIsIR []string
+	for _, reconstructedPathIDIsIV := range reconstructedPathIDIsIC {
+		reconstructedPathIDIsI := reconstructedPathIDIsIV
+
+		reconstructedPathIDIsIR = append(reconstructedPathIDIsIR, reconstructedPathIDIsI)
+	}
+
+	o.ReconstructedPathIDIs = reconstructedPathIDIsIR
 
 	return nil
 }

@@ -83,7 +83,7 @@ func initDataBase() *gorm.DB {
 	}
 
 	// this will ensure table is created
-	if err := db.AutoMigrate(&APIEvent{}, &APIInfo{}, &Review{}, &APIPath{}); err != nil {
+	if err := db.AutoMigrate(&APIEvent{}, &APIInfo{}, &Review{}); err != nil {
 		log.Fatalf("Failed to run auto migration: %v", err)
 	}
 
@@ -100,7 +100,7 @@ func initFakeDataBase(databasePath string) *gorm.DB {
 		Logger: dbLogger,
 	})
 	// this will ensure table is created
-	if err := temp.AutoMigrate(&APIEvent{}, &APIInfo{}, &Review{}, &APIPath{}); err != nil {
+	if err := temp.AutoMigrate(&APIEvent{}, &APIInfo{}, &Review{}); err != nil {
 		panic(err)
 	}
 

@@ -17,7 +17,6 @@ package database
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/go-openapi/strfmt"
 	log "github.com/sirupsen/logrus"
@@ -36,7 +35,8 @@ const (
 	timeColumnName                 = "time"
 	methodColumnName               = "method"
 	pathColumnName                 = "path"
-	pathIDColumnName               = "path_id"
+	providedPathIDColumnName       = "provided_path_id"
+	reconstructedPathIDColumnName  = "reconstructed_path_id"
 	statusCodeColumnName           = "status_code"
 	sourceIPColumnName             = "source_ip"
 	destinationIPColumnName        = "destination_ip"
@@ -63,7 +63,8 @@ type APIEvent struct {
 	Time                     strfmt.DateTime   `json:"time" gorm:"column:time" faker:"-"`
 	Method                   models.HTTPMethod `json:"method,omitempty" gorm:"column:method" faker:"oneof: GET, PUT, POST, DELETE"`
 	Path                     string            `json:"path,omitempty" gorm:"column:path" faker:"oneof: /news, /customers, /jokes"`
-	PathID                   string            `json:"pathId,omitempty" gorm:"column:path_id" faker:"-"`
+	ProvidedPathID           string            `json:"providedPathId,omitempty" gorm:"column:provided_path_id" faker:"-"`
+	ReconstructedPathID      string            `json:"reconstructedPathId,omitempty" gorm:"column:reconstructed_path_id" faker:"-"`
 	Query                    string            `json:"query,omitempty" gorm:"column:query" faker:"oneof: name=ferret&color=purple, foo=bar, -"`
 	StatusCode               int64             `json:"statusCode,omitempty" gorm:"column:status_code" faker:"oneof: 200, 401, 404, 500"`
 	SourceIP                 string            `json:"sourceIP,omitempty" gorm:"column:source_ip" faker:"sourceIP"`
@@ -272,31 +273,33 @@ func GetAPIEventsLatestDiffs(latestDiffsNum int) ([]APIEvent, error) {
 }
 
 type APIEventsFilters struct {
-	DestinationIPIsNot   []string
-	DestinationIPIs      []string
-	DestinationPortIsNot []string
-	DestinationPortIs    []string
-	EndTime              strfmt.DateTime
-	ShowNonAPI           bool
-	HasSpecDiffIs        *bool
-	MethodIs             []string
-	PathContains         []string
-	PathEnd              *string
-	PathIsNot            []string
-	PathIs               []string
-	PathStart            *string
-	SourceIPIsNot        []string
-	SourceIPIs           []string
-	SpecContains         []string
-	SpecEnd              *string
-	SpecIsNot            []string
-	SpecIs               []string
-	SpecStart            *string
-	StartTime            strfmt.DateTime
-	StatusCodeGte        *string
-	StatusCodeIsNot      []string
-	StatusCodeIs         []string
-	StatusCodeLte        *string
+	DestinationIPIsNot    []string
+	DestinationIPIs       []string
+	DestinationPortIsNot  []string
+	DestinationPortIs     []string
+	EndTime               strfmt.DateTime
+	ShowNonAPI            bool
+	HasSpecDiffIs         *bool
+	MethodIs              []string
+	ReconstructedPathIDIs []string
+	ProvidedPathIDIs      []string
+	PathContains          []string
+	PathEnd               *string
+	PathIsNot             []string
+	PathIs                []string
+	PathStart             *string
+	SourceIPIsNot         []string
+	SourceIPIs            []string
+	SpecContains          []string
+	SpecEnd               *string
+	SpecIsNot             []string
+	SpecIs                []string
+	SpecStart             *string
+	StartTime             strfmt.DateTime
+	StatusCodeGte         *string
+	StatusCodeIsNot       []string
+	StatusCodeIs          []string
+	StatusCodeLte         *string
 }
 
 func SetAPIEventsFilters(tx *gorm.DB, filters *APIEventsFilters, shouldSetTimeFilters bool) *gorm.DB {
@@ -308,14 +311,12 @@ func SetAPIEventsFilters(tx *gorm.DB, filters *APIEventsFilters, shouldSetTimeFi
 	// methods filter
 	tx = FilterIs(tx, methodColumnName, filters.MethodIs)
 
+	// path ID filters
+	tx = FilterIs(tx, providedPathIDColumnName, filters.ProvidedPathIDIs)
+	tx = FilterIs(tx, reconstructedPathIDColumnName, filters.ReconstructedPathIDIs)
+
 	// path filters
-	pathIDIs, pathIs := extractParametrizedPaths(filters.PathIs)
-	if len(pathIDIs) > 0 {
-		tx = FilterIs(tx, pathIDColumnName, pathIDIs)
-	}
-	if len(pathIs) > 0 {
-		tx = FilterIs(tx, pathColumnName, pathIs)
-	}
+	tx = FilterIs(tx, pathColumnName, filters.PathIs)
 	tx = FilterIsNot(tx, pathColumnName, filters.PathIsNot)
 	tx = FilterContains(tx, pathColumnName, filters.PathContains)
 	tx = FilterStartsWith(tx, pathColumnName, filters.PathStart)
@@ -355,35 +356,15 @@ func SetAPIEventsFilters(tx *gorm.DB, filters *APIEventsFilters, shouldSetTimeFi
 	return tx
 }
 
-// Temporary hack to extract parametrized paths from the paths list into two separated filters (pathIdIs, pathIs).
-func extractParametrizedPaths(paths []string) (pathIDIs, pathIs []string) {
-	for _, path := range paths {
-		if strings.Contains(path, "{") {
-			// Parametrized path
-			if ids, err := GetPathIDs(path); err != nil || len(ids) == 0 {
-				log.Warnf("failed to get path ids for path (%v): %v", path, err)
-				// will keep it as a path
-				pathIs = append(pathIs, path)
-			} else {
-				pathIDIs = append(pathIDIs, ids...)
-			}
-		} else {
-			pathIs = append(pathIs, path)
-		}
-	}
-
-	return pathIDIs, pathIs
-}
-
-// SetAPIEventsPathID will set path id for all events with the provided paths, host and port.
-func SetAPIEventsPathID(approvedReview []*speculatorspec.ApprovedSpecReviewPathItem, host string, port string) error {
+// SetAPIEventsReconstructedPathID will set reconstructed path ID for all events with the provided paths, host and port.
+func SetAPIEventsReconstructedPathID(approvedReview []*speculatorspec.ApprovedSpecReviewPathItem, host string, port string) error {
 	err := GetAPIEventsTable().Transaction(func(tx *gorm.DB) error {
 		for _, item := range approvedReview {
 			tx := FilterIs(tx, pathColumnName, utils.MapToSlice(item.Paths))
 			tx = FilterIs(tx, hostSpecNameColumnName, []string{host})
 			tx = FilterIs(tx, destinationPortColumnName, []string{port})
 
-			if err := tx.Model(&APIEvent{}).Updates(map[string]interface{}{pathIDColumnName: item.PathUUID}).Error; err != nil {
+			if err := tx.Model(&APIEvent{}).Updates(map[string]interface{}{reconstructedPathIDColumnName: item.PathUUID}).Error; err != nil {
 				// return any error will rollback
 				return err
 			}

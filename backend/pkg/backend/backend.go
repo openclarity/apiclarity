@@ -292,7 +292,7 @@ func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 			event.OldReconstructedSpec = string(original)
 			event.NewReconstructedSpec = string(modified)
 		}
-		event.PathID = reconstructedDiff.PathID
+		event.ReconstructedPathID = reconstructedDiff.PathID
 	}
 	if providedDiff != nil {
 		if providedDiff.Type != _spec.DiffTypeNoDiff {
@@ -305,7 +305,7 @@ func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 			event.OldProvidedSpec = string(original)
 			event.NewProvidedSpec = string(modified)
 		}
-		event.PathID = providedDiff.PathID
+		event.ProvidedPathID = providedDiff.PathID
 	}
 
 	_database.CreateAPIEvent(event)
