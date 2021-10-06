@@ -423,7 +423,7 @@ func init() {
           }
         ],
         "responses": {
-          "201": {
+          "200": {
             "description": "Success",
             "schema": {
               "$ref": "#/responses/Success"
@@ -444,7 +444,7 @@ func init() {
           }
         ],
         "responses": {
-          "201": {
+          "200": {
             "description": "Success",
             "schema": {
               "$ref": "#/responses/Success"
@@ -2136,7 +2136,7 @@ func init() {
           }
         ],
         "responses": {
-          "201": {
+          "200": {
             "description": "Success",
             "schema": {
               "description": "success message",
@@ -2167,7 +2167,7 @@ func init() {
           }
         ],
         "responses": {
-          "201": {
+          "200": {
             "description": "Success",
             "schema": {
               "description": "success message",

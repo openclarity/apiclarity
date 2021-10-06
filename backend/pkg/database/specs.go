@@ -98,7 +98,7 @@ func PutAPISpec(apiID uint, spec string, specInfo *models.SpecInfo, specType spe
 }
 
 func DeleteProvidedAPISpec(apiId uint32) error {
-	if err := GetAPIInventoryTable().Model(&APIInfo{}).Where("id = ?", apiId).Updates(map[string]interface{}{providedSpecColumnName: "", hasProvidedSpecColumnName: false}).Error; err != nil {
+	if err := GetAPIInventoryTable().Model(&APIInfo{}).Where("id = ?", apiId).Updates(map[string]interface{}{providedSpecColumnName: "", providedSpecInfoColumnName: "", hasProvidedSpecColumnName: false}).Error; err != nil {
 		return err
 	}
 
@@ -106,7 +106,7 @@ func DeleteProvidedAPISpec(apiId uint32) error {
 }
 
 func DeleteApprovedAPISpec(apiId uint32) error {
-	if err := GetAPIInventoryTable().Model(&APIInfo{}).Where("id = ?", apiId).Updates(map[string]interface{}{reconstructedSpecColumnName: "", hasReconstructedSpecColumnName: false}).Error; err != nil {
+	if err := GetAPIInventoryTable().Model(&APIInfo{}).Where("id = ?", apiId).Updates(map[string]interface{}{reconstructedSpecColumnName: "", reconstructedSpecInfoColumnName: "", hasReconstructedSpecColumnName: false}).Error; err != nil {
 		return err
 	}
 

@@ -13,14 +13,14 @@ import (
 	"github.com/apiclarity/apiclarity/api/server/models"
 )
 
-// DeleteAPIInventoryAPIIDSpecsReconstructedSpecCreatedCode is the HTTP code returned for type DeleteAPIInventoryAPIIDSpecsReconstructedSpecCreated
-const DeleteAPIInventoryAPIIDSpecsReconstructedSpecCreatedCode int = 201
+// DeleteAPIInventoryAPIIDSpecsReconstructedSpecOKCode is the HTTP code returned for type DeleteAPIInventoryAPIIDSpecsReconstructedSpecOK
+const DeleteAPIInventoryAPIIDSpecsReconstructedSpecOKCode int = 200
 
-/*DeleteAPIInventoryAPIIDSpecsReconstructedSpecCreated Success
+/*DeleteAPIInventoryAPIIDSpecsReconstructedSpecOK Success
 
-swagger:response deleteApiInventoryApiIdSpecsReconstructedSpecCreated
+swagger:response deleteApiInventoryApiIdSpecsReconstructedSpecOK
 */
-type DeleteAPIInventoryAPIIDSpecsReconstructedSpecCreated struct {
+type DeleteAPIInventoryAPIIDSpecsReconstructedSpecOK struct {
 
 	/*
 	  In: Body
@@ -28,27 +28,27 @@ type DeleteAPIInventoryAPIIDSpecsReconstructedSpecCreated struct {
 	Payload interface{} `json:"body,omitempty"`
 }
 
-// NewDeleteAPIInventoryAPIIDSpecsReconstructedSpecCreated creates DeleteAPIInventoryAPIIDSpecsReconstructedSpecCreated with default headers values
-func NewDeleteAPIInventoryAPIIDSpecsReconstructedSpecCreated() *DeleteAPIInventoryAPIIDSpecsReconstructedSpecCreated {
+// NewDeleteAPIInventoryAPIIDSpecsReconstructedSpecOK creates DeleteAPIInventoryAPIIDSpecsReconstructedSpecOK with default headers values
+func NewDeleteAPIInventoryAPIIDSpecsReconstructedSpecOK() *DeleteAPIInventoryAPIIDSpecsReconstructedSpecOK {
 
-	return &DeleteAPIInventoryAPIIDSpecsReconstructedSpecCreated{}
+	return &DeleteAPIInventoryAPIIDSpecsReconstructedSpecOK{}
 }
 
-// WithPayload adds the payload to the delete Api inventory Api Id specs reconstructed spec created response
-func (o *DeleteAPIInventoryAPIIDSpecsReconstructedSpecCreated) WithPayload(payload interface{}) *DeleteAPIInventoryAPIIDSpecsReconstructedSpecCreated {
+// WithPayload adds the payload to the delete Api inventory Api Id specs reconstructed spec o k response
+func (o *DeleteAPIInventoryAPIIDSpecsReconstructedSpecOK) WithPayload(payload interface{}) *DeleteAPIInventoryAPIIDSpecsReconstructedSpecOK {
 	o.Payload = payload
 	return o
 }
 
-// SetPayload sets the payload to the delete Api inventory Api Id specs reconstructed spec created response
-func (o *DeleteAPIInventoryAPIIDSpecsReconstructedSpecCreated) SetPayload(payload interface{}) {
+// SetPayload sets the payload to the delete Api inventory Api Id specs reconstructed spec o k response
+func (o *DeleteAPIInventoryAPIIDSpecsReconstructedSpecOK) SetPayload(payload interface{}) {
 	o.Payload = payload
 }
 
 // WriteResponse to the client
-func (o *DeleteAPIInventoryAPIIDSpecsReconstructedSpecCreated) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+func (o *DeleteAPIInventoryAPIIDSpecsReconstructedSpecOK) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
-	rw.WriteHeader(201)
+	rw.WriteHeader(200)
 	payload := o.Payload
 	if err := producer.Produce(rw, payload); err != nil {
 		panic(err) // let the recovery middleware deal with this

@@ -28,7 +28,7 @@ func (s *Server) DeleteAPIInventoryAPIIDSpecsProvidedSpec(params operations.Dele
 		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
 	}
 
-	return operations.NewDeleteAPIInventoryAPIIDSpecsProvidedSpecCreated().WithPayload(&models.SuccessResponse{
+	return operations.NewDeleteAPIInventoryAPIIDSpecsProvidedSpecOK().WithPayload(&models.SuccessResponse{
 		Message: "Success",
 	})
 }
@@ -51,7 +51,7 @@ func (s *Server) DeleteAPIInventoryAPIIDSpecsReconstructedSpec(params operations
 		return operations.NewDeleteAPIInventoryAPIIDSpecsReconstructedSpecDefault(http.StatusInternalServerError)
 	}
 
-	return operations.NewDeleteAPIInventoryAPIIDSpecsReconstructedSpecCreated().WithPayload(&models.SuccessResponse{
+	return operations.NewDeleteAPIInventoryAPIIDSpecsReconstructedSpecOK().WithPayload(&models.SuccessResponse{
 		Message: "Success",
 	})
 }

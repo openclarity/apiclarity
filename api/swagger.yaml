@@ -533,7 +533,7 @@ paths:
       parameters:
         - $ref: '#/parameters/apiId'
       responses:
-        '201':
+        '200':
           description: 'Success'
           schema:
             $ref: '#/responses/Success'
@@ -546,7 +546,7 @@ paths:
       parameters:
         - $ref: '#/parameters/apiId'
       responses:
-        '201':
+        '200':
           description: 'Success'
           schema:
             $ref: '#/responses/Success'
