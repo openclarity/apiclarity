@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useHistory, useRouteMatch, useLocation } from 'react-router-dom';
 import classnames from 'classnames';
-import { isEmpty } from 'lodash';
-import { useFetch } from 'hooks';
+import { isEmpty, isNull } from 'lodash';
+import { useFetch, FETCH_METHODS, usePrevious } from 'hooks';
 import ListDisplay from 'components/ListDisplay';
 import Button from 'components/Button';
 import Arrow, { ARROW_NAMES } from 'components/Arrow';
 import Tag from 'components/Tag';
 import Loader from 'components/Loader';
+import Modal from 'components/Modal';
 import UploadSpec from './UploadSpec';
 import MethodHitCount from './MethodHitCount';
 import { SPEC_TYPES } from './utils';
@@ -93,11 +94,11 @@ const SpecDisplay = ({tags, notSelectedTitle, inventoryName, specType}) => {
 
 const ViewInSwaggerLink = ({inventoryId, specType}) => (
     <a href={`${window.location.origin}/swagger?apiId=${inventoryId}&specType=${specType}`} target="_blank" rel="noopener noreferrer">
-        view in swagger
+        see on Swagger
     </a>
 );
 
-const ProvidedSpecDisplay = ({specData, inventoryId, inventoryName, refreshData, specType}) => {
+const ProvidedSpecDisplay = ({specData, inventoryId, inventoryName, refreshData, specType, onReset}) => {
     const [showUploadSpec, setShowUploadSpec] = useState(!specData);
 
     if (showUploadSpec) {
@@ -110,13 +111,13 @@ const ProvidedSpecDisplay = ({specData, inventoryId, inventoryName, refreshData,
         <SpecDisplay
             inventoryName={inventoryName}
             tags={specData.tags || []}
-            notSelectedTitle={<span>Select a tag to see details, <ViewInSwaggerLink inventoryId={inventoryId} specType="provided" /> or <Button secondary onClick={() => setShowUploadSpec(true)}>replace spec</Button></span>}
+            notSelectedTitle={<span>Select a tag to see details, <ViewInSwaggerLink inventoryId={inventoryId} specType="provided" />,<br /><Button secondary onClick={() => setShowUploadSpec(true)}>replace</Button> or <Button secondary onClick={onReset}>reset spec</Button></span>}
             specType={specType}
         />
     )
 }
 
-const ReconstructedSpecDisplay = ({specData, inventoryId, inventoryName, specType}) => {
+const ReconstructedSpecDisplay = ({specData, inventoryId, inventoryName, specType, onReset}) => {
     const history = useHistory();
     const {url} = useRouteMatch();
 
@@ -132,15 +133,29 @@ const ReconstructedSpecDisplay = ({specData, inventoryId, inventoryName, specTyp
         <SpecDisplay
             inventoryName={inventoryName}
             tags={specData.tags || []}
-            notSelectedTitle={<span>Select a tag to see details or <ViewInSwaggerLink inventoryId={inventoryId} specType="reconstructed" /></span>}
+            notSelectedTitle={<span>Select a tag to see details,<br /><ViewInSwaggerLink inventoryId={inventoryId} specType="reconstructed" /> or <Button secondary onClick={onReset}>reset</Button></span>}
             specType={specType}
         />
     )
 }
 
 export const SPEC_TAB_ITEMS = {
-    PROVIDED: {value: SPEC_TYPES.PROVIDED, label: "Provided", dataKey: "providedSpec", component: ProvidedSpecDisplay},
-    RECONSTRUCTED: {value: SPEC_TYPES.RECONSTRUCTED, label: "Reconstructed", dataKey: "reconstructedSpec", component: ReconstructedSpecDisplay}
+    PROVIDED: {
+        value: SPEC_TYPES.PROVIDED,
+        label: "Provided",
+        dataKey: "providedSpec",
+        component: ProvidedSpecDisplay,
+        resetUrlSuffix: "providedSpec",
+        resetConfirmationText: "Resetting the provided spec will result in loss of the uploaded spec."
+    },
+    RECONSTRUCTED: {
+        value: SPEC_TYPES.RECONSTRUCTED,
+        label: "Reconstructed",
+        dataKey: "reconstructedSpec",
+        component: ReconstructedSpecDisplay,
+        resetUrlSuffix: "reconstructedSpec",
+        resetConfirmationText: "Resetting the reconstructed spec will result in loss of spec and the information that was used to reconstruct it. If reset, to reconstruct again generate the relevant API traffic and review."
+    }
 }
 
 const InnerTabs = ({selected, items, onSelect}) => (
@@ -160,21 +175,67 @@ const Specs = ({inventoryId, inventoryName}) => {
     const [selectedTab, setSelectedTab] = useState(inititalSelectedTab);
     const {component: TabContentComponent, dataKey: specDataKey, value: type} = SPEC_TAB_ITEMS[selectedTab];
 
-    const [{loading, data, error}, fetchSpecsData] = useFetch(`apiInventory/${inventoryId}/specs`);
+    const specUrl = `apiInventory/${inventoryId}/specs`;
+
+    const [{loading, data, error}, fetchSpecsData] = useFetch(specUrl);
+
+    const [resetSpecType, setResetSpecType] = useState(null);
+    const closeResetConfimrationodal = () => setResetSpecType(null);
+    const {resetUrlSuffix, resetConfirmationText, label: resetTitle} = SPEC_TAB_ITEMS[resetSpecType] || {};
+
+    const [{loading: resetting, error: resetError}, resetSpecData] = useFetch(specUrl, {loadOnMount: false});
+    const prevResetting = usePrevious(resetting);
+    const doSpecReset = () => resetSpecData({
+        formatUrl: url => `${url}/${resetUrlSuffix}`,
+        method: FETCH_METHODS.DELETE
+    })
+
+    useEffect(() => {
+        if (prevResetting && !resetting && !resetError) {
+            fetchSpecsData();
+        }
+    }, [prevResetting, resetting, resetError, fetchSpecsData]);
 
     if (!!error) {
         return null;
     }
 
     return (
-        <div className="inventory-details-spec-wrapper">
-            {loading ? <Loader /> : 
-                <React.Fragment>
-                    <InnerTabs selected={selectedTab} items={Object.values(SPEC_TAB_ITEMS)} onSelect={selected => setSelectedTab(selected)} />
-                    <TabContentComponent specData={data[specDataKey]} inventoryId={inventoryId} inventoryName={inventoryName} refreshData={fetchSpecsData} specType={type} />
-                </React.Fragment>
+        <React.Fragment>
+            <div className="inventory-details-spec-wrapper">
+                {(loading || resetting) ? <Loader /> : 
+                    <React.Fragment>
+                        <InnerTabs selected={selectedTab} items={Object.values(SPEC_TAB_ITEMS)} onSelect={selected => setSelectedTab(selected)} />
+                        <TabContentComponent
+                            specData={data[specDataKey]}
+                            inventoryId={inventoryId}
+                            inventoryName={inventoryName}
+                            refreshData={fetchSpecsData}
+                            specType={type}
+                            onReset={() => setResetSpecType(selectedTab)}
+                        />
+                    </React.Fragment>
+                }
+            </div>
+            {!isNull(resetSpecType) &&
+                <Modal
+                    title={`Reset ${resetTitle.toLowerCase()} spec`}
+                    onClose={closeResetConfimrationodal}
+                    className="spec-reset-confirmation-modal"
+                    height={230}
+                    onDone={() => {
+                        doSpecReset();
+                        closeResetConfimrationodal();
+                    }} 
+                    doneTitle="Reset"
+                >
+                    <div>{resetConfirmationText}</div>
+                    <br />
+                    <div>Are you sure you want to reset?</div>
+                </Modal>
+
             }
-        </div>
+        </React.Fragment>
     )
 }
 
