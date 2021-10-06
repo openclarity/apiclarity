@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useHistory, useRouteMatch, useLocation } from 'react-router-dom';
 import classnames from 'classnames';
 import { isEmpty, isNull } from 'lodash';
+import { useNotificationDispatch, showNotification } from 'context/NotificationProvider'; 
 import { useFetch, FETCH_METHODS, usePrevious } from 'hooks';
 import ListDisplay from 'components/ListDisplay';
 import Button from 'components/Button';
@@ -9,6 +10,7 @@ import Arrow, { ARROW_NAMES } from 'components/Arrow';
 import Tag from 'components/Tag';
 import Loader from 'components/Loader';
 import Modal from 'components/Modal';
+import BoldText from 'components/BoldText';
 import UploadSpec from './UploadSpec';
 import MethodHitCount from './MethodHitCount';
 import { SPEC_TYPES } from './utils';
@@ -183,6 +185,12 @@ const Specs = ({inventoryId, inventoryName}) => {
     const closeResetConfimrationodal = () => setResetSpecType(null);
     const {resetUrlSuffix, resetConfirmationText, label: resetTitle} = SPEC_TAB_ITEMS[resetSpecType] || {};
 
+    const notificationDispatch = useNotificationDispatch();
+    const showResetNotification = useCallback(() => showNotification(notificationDispatch, {
+        message: <span>The <BoldText>{`${resetTitle.toLowerCase()} spec`}</BoldText> was <BoldText>reset</BoldText>.</span>
+    }), [resetTitle, notificationDispatch]);
+
+
     const [{loading: resetting, error: resetError}, resetSpecData] = useFetch(specUrl, {loadOnMount: false});
     const prevResetting = usePrevious(resetting);
     const doSpecReset = () => resetSpecData({
@@ -192,9 +200,11 @@ const Specs = ({inventoryId, inventoryName}) => {
 
     useEffect(() => {
         if (prevResetting && !resetting && !resetError) {
+            showResetNotification();
+            closeResetConfimrationodal();
             fetchSpecsData();
         }
-    }, [prevResetting, resetting, resetError, fetchSpecsData]);
+    }, [prevResetting, resetting, resetError, fetchSpecsData, showResetNotification]);
 
     if (!!error) {
         return null;
@@ -225,7 +235,6 @@ const Specs = ({inventoryId, inventoryName}) => {
                     height={230}
                     onDone={() => {
                         doSpecReset();
-                        closeResetConfimrationodal();
                     }} 
                     doneTitle="Reset"
                 >
