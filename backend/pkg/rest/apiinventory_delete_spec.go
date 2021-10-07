@@ -16,14 +16,16 @@
 package rest
 
 import (
+	"net/http"
+	"strconv"
+
+	"github.com/go-openapi/runtime/middleware"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/apiclarity/apiclarity/api/server/models"
 	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
 	"github.com/apiclarity/apiclarity/backend/pkg/database"
 	"github.com/apiclarity/speculator/pkg/speculator"
-	"github.com/go-openapi/runtime/middleware"
-	log "github.com/sirupsen/logrus"
-	"net/http"
-	"strconv"
 )
 
 func (s *Server) DeleteAPIInventoryAPIIDSpecsProvidedSpec(params operations.DeleteAPIInventoryAPIIDSpecsProvidedSpecParams) middleware.Responder {
