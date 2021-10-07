@@ -5,12 +5,51 @@ import Icon, { ICON_NAMES } from 'components/Icon';
 import TabbedPageContainer from 'components/TabbedPageContainer';
 import TimeFilter, { TIME_SELECT_ITEMS, getTimeFormat } from 'components/TimeFilter';
 import ToggleButton from 'components/ToggleButton';
+import { create } from 'context/utils';
 import EventsTable from './EventsTable';
 import EventsGraph from './EventsGraph';
 import EventDetails from './EventDetails';
 import GeneralFilter, { formatFiltersToQueryParams } from './GeneralFilter';
 
 import './events.scss';
+
+const FILTER_ACTIONS = {
+    SET_GENERAL: "SET_GENERAL",
+    SET_TIME: "SET_TIME",
+    SET_SHOW_NON_API: "SET_SHOW_NON_API"
+};
+
+const reducer = (state, action) => {
+    switch (action.type) {
+        case FILTER_ACTIONS.SET_GENERAL: {
+            return {
+                ...state,
+                generalFilters: action.payload
+            };
+        }
+        case FILTER_ACTIONS.SET_TIME: {
+            return {
+                ...state,
+                timeFilter: action.payload
+            };
+        }
+        case FILTER_ACTIONS.SET_SHOW_NON_API: {
+            return {
+                ...state,
+                showNonApi: action.payload
+            };
+        }
+        default:
+            return state;
+    }
+}
+
+const defaultTimeRange = TIME_SELECT_ITEMS.DAY;
+const [FilterProvider, useFilterState, useFilterDispatch] = create(reducer, {
+    generalFilters: [],
+    timeFilter: {selectedRange: defaultTimeRange.value, ...defaultTimeRange.calc()},
+    showNonApi: false
+});
 
 const getTableViewPath = path => `${path}/tableView`;
 const getGraphViewPath = path => `${path}/graphView`;
@@ -25,16 +64,18 @@ const TabTitle = ({icon, title}) => (
 const Events = () => {
     const {path} = useRouteMatch();
 
-    const defaultTimeRange = TIME_SELECT_ITEMS.DAY;
-    const [timeFilter, setTimeFilter] = useState({selectedRange: defaultTimeRange.value, ...defaultTimeRange.calc()});
+    const {generalFilters: filters, timeFilter, showNonApi} = useFilterState();
+    
+    const filterDispatch = useFilterDispatch();
+    const setTimeFilter = (timeFilter) => filterDispatch({type: FILTER_ACTIONS.SET_TIME, payload: timeFilter});
+    const setFilters = (filters) => filterDispatch({type: FILTER_ACTIONS.SET_GENERAL, payload: filters});
+    const setShowNonApi = (showNonApi) => filterDispatch({type: FILTER_ACTIONS.SET_SHOW_NON_API, payload: showNonApi});
+
     const {selectedRange, startTime, endTime} = timeFilter;
 
-    const [filters, setFilters] = useState([]);
     const paramsFilters = formatFiltersToQueryParams(filters);
 
-    const [showNonApi, setShowNonApi] = useState(false);
-
-    const reuqestFilters = {startTime, endTime, ...paramsFilters, "showNonApi": showNonApi};
+    const reuqestFilters = {startTime, endTime, ...paramsFilters, showNonApi};
 
     const [refreshTimestamp, setRefreshTimestamp] = useState(Date());
     const doRefreshTimestamp = () => setRefreshTimestamp(Date());
@@ -90,11 +131,13 @@ const EventsRouter = () => {
     const tablePath = getTableViewPath(path);
 
     return (
-        <Switch>
-            <Redirect exact from="/events" to={tablePath} />
-            <Route path={`${tablePath}/:eventId`} component={EventDetails} />
-            <Route path={path} component={Events} />
-        </Switch>
+        <FilterProvider>
+            <Switch>
+                <Redirect exact from="/events" to={tablePath} />
+                <Route path={`${tablePath}/:eventId`} component={EventDetails} />
+                <Route path={path} component={Events} />
+            </Switch>
+        </FilterProvider>
     )
 }
 
