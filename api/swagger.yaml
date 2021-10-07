@@ -528,6 +528,30 @@ paths:
             type: 'string'
         default:
           $ref: '#/responses/UnknownError'
+    delete:
+      summary: 'Unset a provided spec for a specific API'
+      parameters:
+        - $ref: '#/parameters/apiId'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/responses/Success'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /apiInventory/{apiId}/specs/reconstructedSpec:
+    delete:
+      summary: 'Unset a reconstructed spec for a specific API'
+      parameters:
+        - $ref: '#/parameters/apiId'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/responses/Success'
+        default:
+          $ref: '#/responses/UnknownError'
 
   /apiInventory/{apiId}/reconstructed_swagger.json:
     get:

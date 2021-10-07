@@ -30,10 +30,10 @@ type GetAPIUsageHitCountURL struct {
 	PathStart             *string
 	ProvidedPathIDIs      []string
 	ReconstructedPathIDIs []string
-	SpecDiffTypeIs        []string
 	ShowNonAPI            bool
 	SourceIPIsNot         []string
 	SourceIPIs            []string
+	SpecDiffTypeIs        []string
 	SpecContains          []string
 	SpecEnd               *string
 	SpecIsNot             []string

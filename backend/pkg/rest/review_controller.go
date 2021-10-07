@@ -181,7 +181,7 @@ func (s *Server) GetAPIInventoryAPIIDSuggestedReview(params operations.GetAPIInv
 	}
 
 	// convert suggested review to models review
-	var reviewPathItems []*models.ReviewPathItem
+	reviewPathItems := []*models.ReviewPathItem{}
 	for _, reviewPathItem := range suggestedSpecReview.PathItemsReview {
 		reviewPathItems = append(reviewPathItems, createModelsReviewPathItem(&reviewPathItem.ReviewPathItem, suggestedSpecReview.PathToPathItem))
 	}
