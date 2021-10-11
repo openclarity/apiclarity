@@ -10,6 +10,18 @@ export const OPERATORS = {
     lte: {value: "lte", label: "less than or equal to"}
 }
 
+export const METHOD_ITEMS = [
+    {value: "GET", label: "GET"},
+    {value: "HEAD", label: "HEAD"},
+    {value: "POST", label: "POST"},
+    {value: "PUT", label: "PUT"},
+    {value: "DELETE", label: "DELETE"},
+    {value: "CONNECT", label: "CONNECT"},
+    {value: "OPTIONS", label: "OPTIONS"},
+    {value: "TRACE", label: "TRACE"},
+    {value: "PATCH", label: "PATCH"}
+];
+
 export const formatFiltersToQueryParams = (filters) => {
     const filtersList = filters.map(({scope, operator, value} )=> ({key: `${scope}[${operator}]`, value}));
 

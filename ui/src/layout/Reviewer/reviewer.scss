@@ -1,29 +1,36 @@
 @import 'utils/scss_variables.module.scss';
 
-.reviewer-page {  
-    .review-actions-wrapper {
-        display: flex;
-        justify-content: flex-end;
-        margin-bottom: 20px;
+.reviewer-page { 
+    .review-table-wrapper {
+        position: relative;
 
-        button {
-            margin-left: 10px;
-        }
-    }
-    .table .table-body .table-tr .table-td {
-        justify-content: flex-start;
-
-        .table-row-checkbox-wrapper,
-        .table-row-path-wrapper{
-            min-height: 28px;
+        .review-actions-wrapper {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .methods-wrapper {
-            .tag-wrapper {
-                margin: 0 5px 5px 0;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+            position: absolute;
+            top: 0;
+            right: 0;
+    
+            button {
+                margin-left: 10px;
             }
         }
-    }
+        .table .table-body .table-tr .table-td {
+            justify-content: flex-start;
+    
+            .table-row-checkbox-wrapper,
+            .table-row-path-wrapper{
+                min-height: 28px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            .methods-wrapper {
+                .tag-wrapper {
+                    margin: 0 5px 5px 0;
+                }
+            }
+        }
+    } 
 }
