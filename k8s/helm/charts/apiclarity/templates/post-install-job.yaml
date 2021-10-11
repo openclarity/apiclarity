@@ -84,6 +84,6 @@ spec:
           - "cd /tmp &&
             git clone -b {{ .Chart.AppVersion }} https://github.com/apiclarity/apiclarity.git --recurse-submodules &&
             cd apiclarity/wasm-filters &&
-            ./deploy.sh {{ join " " .Values.global.namespaces }}"
+            WASM_FILTER_TRACE_BACKEND_ADDRESS={{ include "apiclarity.name" . }}.{{ .Release.Namespace }}.svc.cluster.local ./deploy.sh {{ join " " .Values.global.namespaces }}"
       restartPolicy: Never
 {{- end }}
