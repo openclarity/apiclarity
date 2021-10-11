@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { Route, Switch, useRouteMatch, Redirect } from 'react-router-dom';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Route, Switch, useRouteMatch, Redirect, useLocation } from 'react-router-dom';
 import MainTitleWithRefresh from 'components/MainTitleWithRefresh';
 import Icon, { ICON_NAMES } from 'components/Icon';
 import TabbedPageContainer from 'components/TabbedPageContainer';
 import TimeFilter, { TIME_SELECT_ITEMS, getTimeFormat } from 'components/TimeFilter';
 import ToggleButton from 'components/ToggleButton';
+import { usePrevious } from 'hooks';
 import { create } from 'context/utils';
 import EventsTable from './EventsTable';
 import EventsGraph from './EventsGraph';
@@ -64,14 +65,24 @@ const TabTitle = ({icon, title}) => (
 const Events = () => {
     const {path} = useRouteMatch();
 
+    const {pathname} = useLocation();
+    const prevPathname = usePrevious(pathname);
+    
     const {generalFilters: filters, timeFilter, showNonApi} = useFilterState();
     
     const filterDispatch = useFilterDispatch();
-    const setTimeFilter = (timeFilter) => filterDispatch({type: FILTER_ACTIONS.SET_TIME, payload: timeFilter});
+    const setTimeFilter = useCallback((timeFilter) => filterDispatch({type: FILTER_ACTIONS.SET_TIME, payload: timeFilter}), [filterDispatch]);
     const setFilters = (filters) => filterDispatch({type: FILTER_ACTIONS.SET_GENERAL, payload: filters});
     const setShowNonApi = (showNonApi) => filterDispatch({type: FILTER_ACTIONS.SET_SHOW_NON_API, payload: showNonApi});
 
     const {selectedRange, startTime, endTime} = timeFilter;
+    const refreshTimeFilter = useCallback(() => {
+        const selectedRangeItem = TIME_SELECT_ITEMS[selectedRange];
+
+        if (!!selectedRangeItem.calc) {
+            setTimeFilter({selectedRange, ...selectedRangeItem.calc()});
+        }
+    }, [setTimeFilter, selectedRange]);
 
     const paramsFilters = formatFiltersToQueryParams(filters);
 
@@ -89,8 +100,14 @@ const Events = () => {
             return;
         }
 
-        setTimeFilter({selectedRange, ...selectedRangeItem.calc()})
+        refreshTimeFilter();
     }
+
+    useEffect(() => {
+        if (prevPathname !== pathname) {
+            refreshTimeFilter();
+        }
+    }, [prevPathname, pathname, refreshTimeFilter]);
 
     return (
         <div className="events-page">
