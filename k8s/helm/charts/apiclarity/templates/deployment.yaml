@@ -23,7 +23,7 @@ spec:
       initContainers:
         - name: '{{ include "apiclarity.name" . }}-wait-for-db'
           image: docker.io/bitnami/postgresql:11.13.0-debian-10-r33
-          command: ['sh', '-c', 'until pg_isready -h {{ include "apiclarity.name" . }}-postgresql -p 5432 -U "postgres" -d "dbname=apiclarity";
+          command: ['sh', '-c', 'until pg_isready -h {{ include "apiclarity.name" . }}-postgresql -p 5432 -U "postgres" -d "dbname={{ index .Values "apiclarity-postgresql" "postgresqlDatabase" }}";
             do echo waiting for database; sleep 2; done;']
           securityContext:
             runAsUser: 1001
