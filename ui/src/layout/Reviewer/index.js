@@ -10,6 +10,7 @@ import PageContainer from 'components/PageContainer';
 import Button from 'components/Button';
 import Tag from 'components/Tag';
 import Loader from 'components/Loader';
+import BoldText from 'components/BoldText';
 import { SPEC_TAB_ITEMS } from 'layout/Inventory/InventoryDetails/Specs'
 import PathDisplay from './PathDisplay';
 import MergeModal from './MergeModal';
@@ -19,8 +20,6 @@ import GeneralFilter from './GeneralFilter';
 import { getPathWithParamInIndex, getMethodsFromPaths } from './utils';
 
 import './reviewer.scss';
-
-const Bold = ({children}) => <span style={{fontWeight: "bold"}}>{children}</span>
 
 const Reviewer = () => {
     const {query} = useLocation();
@@ -40,7 +39,7 @@ const Reviewer = () => {
 
     const notificationDispatch = useNotificationDispatch();
     const showReviewCompletedNotification = useCallback(() => showNotification(notificationDispatch, {
-        message: <span><Bold>{`${selectedRowsCount} ${selectedRowsCount > 1 ? "entries" : "entry"} `}</Bold>{`${selectedRowsCount > 1 ? "have" : "has"} been added to the reconstructed spec of`} <Bold>{inventoryName}</Bold></span>
+        message: <span><BoldText>{`${selectedRowsCount} ${selectedRowsCount > 1 ? "entries" : "entry"} `}</BoldText>{`${selectedRowsCount > 1 ? "have" : "has"} been added to the reconstructed spec of`} <BoldText>{inventoryName}</BoldText></span>
     }), [selectedRowsCount, inventoryName, notificationDispatch]);
 
     const [{loading: submitting, error: submitError}, submitApprovedReview] = useFetch(`apiInventory`, {loadOnMount: false});

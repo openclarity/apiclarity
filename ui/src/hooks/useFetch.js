@@ -6,7 +6,8 @@ import { NOTIFICATION_TYPES } from 'components/Notification';
 export const FETCH_METHODS = {
     GET: "GET",
     POST: "POST",
-    PUT: "PUT"
+    PUT: "PUT",
+    DELETE: "DELETE"
 }
 
 const queryString = (params) => Object.keys(params).map((key) => {

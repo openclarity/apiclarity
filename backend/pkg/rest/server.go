@@ -109,6 +109,14 @@ func CreateRESTServer(port int, speculator *_speculator.Speculator) (*Server, er
 		return s.PostAPIInventoryReviewIDApprovedReview(params)
 	})
 
+	api.DeleteAPIInventoryAPIIDSpecsProvidedSpecHandler = operations.DeleteAPIInventoryAPIIDSpecsProvidedSpecHandlerFunc(func(params operations.DeleteAPIInventoryAPIIDSpecsProvidedSpecParams) middleware.Responder {
+		return s.DeleteAPIInventoryAPIIDSpecsProvidedSpec(params)
+	})
+
+	api.DeleteAPIInventoryAPIIDSpecsReconstructedSpecHandler = operations.DeleteAPIInventoryAPIIDSpecsReconstructedSpecHandlerFunc(func(params operations.DeleteAPIInventoryAPIIDSpecsReconstructedSpecParams) middleware.Responder {
+		return s.DeleteAPIInventoryAPIIDSpecsReconstructedSpec(params)
+	})
+
 	server := restapi.NewServer(api)
 
 	server.ConfigureFlags()
