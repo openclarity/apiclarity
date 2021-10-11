@@ -1,4 +1,3 @@
-{{- if .Values.global.persistentVolume.enabled }}
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
@@ -14,5 +13,4 @@ spec:
       storage: '{{ .Values.global.persistentVolume.size }}'
 {{- if .Values.global.persistentVolume.storageClass }}
   storageClassName: '{{ .Values.global.persistentVolume.storageClass }}'
-{{- end }}
 {{- end }}

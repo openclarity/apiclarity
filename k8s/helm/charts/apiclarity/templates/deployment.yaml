@@ -6,7 +6,7 @@ metadata:
   labels:
     {{ include "apiclarity.labels" . }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: 1
   selector:
     matchLabels:
       app: {{ include "apiclarity.name" . }}
@@ -47,7 +47,7 @@ spec:
                   name: '{{ include "apiclarity.name" . }}-headers-to-ignore-configmap'
                   key: request.headers
             - name: DB_NAME
-              value: "apiclarity"
+              value: {{ index .Values "apiclarity-postgresql" "postgresqlDatabase" }}
             - name: DB_HOST
               value: "{{ include "apiclarity.name" . }}-postgresql"
             - name: DB_PORT_NUMBER
@@ -57,7 +57,7 @@ spec:
             - name: DB_PASS
               valueFrom:
                 secretKeyRef:
-                  name: apiclarity-postgresql-secret
+                  name: {{ index .Values "apiclarity-postgresql" "existingSecret" }}
                   key: postgresql-password
             - name: STATE_BACKUP_FILE_NAME
               value: /apiclarity/state.gob
@@ -93,14 +93,12 @@ spec:
             limits:
               memory: "1000Mi"
               cpu: "1000m"
-{{- if .Values.global.persistentVolume.enabled }}
           volumeMounts:
             - name: {{ include "apiclarity.name" . }}
-              mountPath: '{{ .Values.global.persistentVolume.mountPath }}'
+              mountPath: '/apiclarity'
       volumes:
       - name: {{ include "apiclarity.name" . }}
         persistentVolumeClaim:
           claimName: {{ include "apiclarity.name" . }}-pvc
-{{- end }}
       securityContext:
         fsGroup: 1000

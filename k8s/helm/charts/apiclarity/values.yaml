@@ -21,12 +21,6 @@ global:
   ## Whether or not persistence is enabled
   ##
   persistentVolume:
-    enabled: true
-
-    ## Persistent Volume mount root path
-    ##
-    mountPath: /apiclarity
-
     ## Persistent Volume size
     ##
     size: 100Mi
@@ -46,9 +40,6 @@ global:
 ## APIClarity Values
 
 apiclarity:
-  ## Coordinator instance count.
-  replicaCount: 1
-
   ## Docker Image values.
   docker:
     imageTag: "latest"
