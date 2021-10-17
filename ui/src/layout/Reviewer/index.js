@@ -16,6 +16,7 @@ import PathDisplay from './PathDisplay';
 import MergeModal from './MergeModal';
 import ConfirmationModal from './ConfirmationModal';
 import useReviewReducer, { REVIEW_ACTIONS } from './useReviewReducer';
+import GeneralFilter from './GeneralFilter';
 import { getPathWithParamInIndex, getMethodsFromPaths } from './utils';
 
 import './reviewer.scss';
@@ -28,7 +29,7 @@ const Reviewer = () => {
     const backQuery = useMemo(() => ({inititalSelectedTab: SPEC_TAB_ITEMS.RECONSTRUCTED.value}), []);
     const returnToInventory = useCallback(() => history.push({pathname: backUrl, query: backQuery}), [history, backUrl, backQuery]);
 
-    const [{loading, isLoadingError, reviewId, dataToReview, openParamInputPathData, mergingPathsData}, dispatch] = useReviewReducer({inventoryId});
+    const [{loading, isLoadingError, reviewId, dataToReview, openParamInputPathData, mergingPathsData, filters, filteredData}, dispatch] = useReviewReducer({inventoryId});
 
     const [selectedRowIds, setSelectedRowIds] = useState([]);
     const selectedRowsCount = selectedRowIds.length;
@@ -131,20 +132,26 @@ const Reviewer = () => {
         <div className="reviewer-page">
             <BackRouteButton title={inventoryName} path={backUrl} query={backQuery} />
             <Title>Spec reviewer</Title>
-            <div className="review-actions-wrapper">
-                <Button secondary onClick={returnToInventory}>Cancel</Button>
-                <Button onClick={() => setShowConfirmationModal(true)} disabled={isEmpty(selectedRowIds)}>Approve review</Button>
-            </div>
-            <PageContainer>
-                <Table
-                    columns={columns}
-                    withPagination={false}
-                    data={{items: dataToReview, total: dataToReview.length}}
-                    withMultiSelect={true}
-                    onRowSelect={setSelectedRowIds}
-                    markedRowIds={!!openParamInputPathData ? [openParamInputPathData.id] : []}
+            <div className="review-table-wrapper">
+                <div className="review-actions-wrapper">
+                    <Button secondary onClick={returnToInventory}>Cancel</Button>
+                    <Button onClick={() => setShowConfirmationModal(true)} disabled={isEmpty(selectedRowIds)}>Approve review</Button>
+                </div>
+                <GeneralFilter
+                    filters={filters}
+                    onFilterUpdate={filters => dispatch({type: REVIEW_ACTIONS.SET_FILTERS, payload: filters})}
                 />
-            </PageContainer>
+                <PageContainer>
+                    <Table
+                        columns={columns}
+                        withPagination={false}
+                        data={{items: filteredData, total: filteredData.length}}
+                        withMultiSelect={true}
+                        onRowSelect={setSelectedRowIds}
+                        markedRowIds={!!openParamInputPathData ? [openParamInputPathData.id] : []}
+                    />
+                </PageContainer>
+            </div>
             {!isNull(mergingPathsData) &&
                 <MergeModal
                     isMerging={isMerging}

@@ -1,22 +1,10 @@
 import React from 'react';
-import Filter, { OPERATORS, formatFiltersToQueryParams } from 'components/Filter';
+import Filter, { OPERATORS, METHOD_ITEMS, formatFiltersToQueryParams } from 'components/Filter';
 import { SPEC_DIFF_TYPES_MAP } from 'components/SpecDiffIcon';
 
 export {
     formatFiltersToQueryParams
 }
-
-const METHOD_ITEMS = [
-    {value: "GET", label: "GET"},
-    {value: "HEAD", label: "HEAD"},
-    {value: "POST", label: "POST"},
-    {value: "PUT", label: "PUT"},
-    {value: "DELETE", label: "DELETE"},
-    {value: "CONNECT", label: "CONNECT"},
-    {value: "OPTIONS", label: "OPTIONS"},
-    {value: "TRACE", label: "TRACE"},
-    {value: "PATCH", label: "PATCH"}
-];
 
 const SPEC_DIFF_ITEMS = [
     {value: "true", label: "present"},
