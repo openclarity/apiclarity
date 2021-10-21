@@ -70,23 +70,23 @@ func APIInfoFromDB(event *APIInfo) *models.APIInfo {
 	}
 }
 
-func GetAPIInventoryTable() *gorm.DB {
-	return DB.Table(apiInventoryTableName)
+func (dbHandler *DatabaseHandler) GetAPIInventoryTable() *gorm.DB {
+	return dbHandler.DB.Table(apiInventoryTableName)
 }
 
-func CreateAPIInfo(event *APIInfo) {
-	if result := GetAPIInventoryTable().Create(event); result.Error != nil {
+func (dbHandler *DatabaseHandler) CreateAPIInfo(event *APIInfo) {
+	if result := dbHandler.GetAPIInventoryTable().Create(event); result.Error != nil {
 		log.Errorf("Failed to create api: %v", result.Error)
 	} else {
 		log.Infof("API created %+v", event)
 	}
 }
 
-func GetAPIInventoryAndTotal(params operations.GetAPIInventoryParams) ([]APIInfo, int64, error) {
+func (dbHandler *DatabaseHandler) GetAPIInventoryAndTotal(params operations.GetAPIInventoryParams) ([]APIInfo, int64, error) {
 	var apiInventory []APIInfo
 	var count int64
 
-	tx := setAPIInventoryFilters(GetAPIInventoryTable(), params)
+	tx := setAPIInventoryFilters(dbHandler.GetAPIInventoryTable(), params)
 	// get total count item with the current filters
 	if err := tx.Count(&count).Error; err != nil {
 		return nil, 0, err
@@ -136,11 +136,15 @@ func setAPIInventoryFilters(table *gorm.DB, params operations.GetAPIInventoryPar
 	return table
 }
 
-func GetAPIID(name, port string) (uint, error) {
+func (dbHandler *DatabaseHandler) GetAPIID(name, port string) (uint, error) {
 	apiInfo := APIInfo{}
-	if result := GetAPIInventoryTable().Where(nameColumnName+" = ?", name).Where(portColumnName+" = ?", port).First(&apiInfo); result.Error != nil {
+	if result := dbHandler.GetAPIInventoryTable().Where(nameColumnName+" = ?", name).Where(portColumnName+" = ?", port).First(&apiInfo); result.Error != nil {
 		return 0, result.Error
 	}
 
 	return apiInfo.ID, nil
+}
+
+func (dbHandler *DatabaseHandler) GetAPIInventoryTableFirst(dest *APIInfo, conds ...interface{}) error {
+	return dbHandler.GetAPIInventoryTable().First(dest, conds).Error
 }

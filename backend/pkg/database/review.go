@@ -43,22 +43,27 @@ func (Review) TableName() string {
 	return reviewTableName
 }
 
-func GetReviewTable() *gorm.DB {
-	return DB.Table(reviewTableName)
+func (dbHandler *DatabaseHandler) GetReviewTable() *gorm.DB {
+	return dbHandler.DB.Table(reviewTableName)
 }
 
-func CreateReview(review *Review) error {
-	if err := GetReviewTable().Create(&review).Error; err != nil {
+func (dbHandler *DatabaseHandler) CreateReview(review *Review) error {
+	if err := dbHandler.GetReviewTable().Create(&review).Error; err != nil {
 		log.Error(err)
 		return err
 	}
 	return nil
 }
 
-func UpdateApprovedReview(approved bool, id uint32) error {
-	if err := GetReviewTable().Model(&Review{}).Where("id = ?", id).Updates(map[string]interface{}{approvedColumnName: approved}).Error; err != nil {
+func (dbHandler *DatabaseHandler) UpdateApprovedReview(approved bool, id uint32) error {
+	if err := dbHandler.GetReviewTable().Model(&Review{}).Where("id = ?", id).Updates(map[string]interface{}{approvedColumnName: approved}).Error; err != nil {
 		return err
 	}
 
 	return nil
+}
+
+
+func (dbHandler *DatabaseHandler) GetReviewTableFirst(dest *Review, conds ...interface{}) error {
+	return dbHandler.GetReviewTable().First(dest, conds).Error
 }

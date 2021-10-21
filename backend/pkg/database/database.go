@@ -17,7 +17,11 @@ package database
 
 import (
 	"fmt"
+	"github.com/apiclarity/apiclarity/api/server/models"
+	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
+	speculatorspec "github.com/apiclarity/speculator/pkg/spec"
 	"os"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -39,16 +43,54 @@ const (
 	enableDBInfoLogs = "ENABLE_DB_INFO_LOGS"
 )
 
-var DB *gorm.DB
+type Database interface {
+	GetDB() *gorm.DB
+	// apiEvent
+	GroupByAPIInfo() ([]HostGroup, error)
+	GetAPIEventsAndTotal(params operations.GetAPIEventsParams) ([]APIEvent, int64, error)
+	GetAPIEvent(eventID uint32) (*APIEvent, error)
+	GetAPIEventReconstructedSpecDiff(eventID uint32) (*APIEvent, error)
+	GetAPIEventProvidedSpecDiff(eventID uint32) (*APIEvent, error)
+	SetAPIEventsReconstructedPathID(approvedReview []*speculatorspec.ApprovedSpecReviewPathItem, host string, port string) error
+	GetAPIEventsLatestDiffs(latestDiffsNum int) ([]APIEvent, error)
+	GetAPIUsages(params operations.GetAPIUsageHitCountParams) ([]*models.HitCount, error)
+	GetDashboardAPIUsages(startTime, endTime time.Time, apiType APIUsageType) ([]*models.APIUsage, error)
 
-func init() {
+	// apiInventory
+	GetAPIInventoryAndTotal(params operations.GetAPIInventoryParams) ([]APIInfo, int64, error)
+	GetAPISpecs(apiID uint32) (*APIInfo, error)
+	GetAPISpecsInfo(apiID uint32) (*models.OpenAPISpecs, error)
+	PutAPISpec(apiID uint, spec string, specInfo *models.SpecInfo, specType specType) error
+	DeleteProvidedAPISpec(apiID uint32) error
+	DeleteApprovedAPISpec(apiID uint32) error
+	GetAPIID(name, port string) (uint, error)
+	GetAPIInventoryTableFirst(dest *APIInfo, conds ...interface{}) error
+
+	// review
+	UpdateApprovedReview(approved bool, id uint32) error
+	CreateReview(review *Review) error
+	GetReviewTableFirst(dest *Review, conds ...interface{}) error
+}
+
+type DatabaseHandler struct {
+	DB *gorm.DB
+}
+
+func (db *DatabaseHandler) GetDB() *gorm.DB {
+	return db.DB
+}
+
+func Init() *DatabaseHandler {
+	databaseHandler := DatabaseHandler{}
+
 	viper.AutomaticEnv()
 	if viper.GetBool(FakeDataEnvVar) || viper.GetBool(FakeTracesEnvVar) {
 		cleanFakeDataBase(FakeDBPath)
-		DB = initFakeDataBase(FakeDBPath)
+		databaseHandler.DB = initFakeDataBase(FakeDBPath)
 	} else {
-		DB = initDataBase()
+		databaseHandler.DB = initDataBase()
 	}
+	return &databaseHandler
 }
 
 func cleanFakeDataBase(databasePath string) {

@@ -17,7 +17,7 @@ package rest
 
 import (
 	"fmt"
-
+	"github.com/apiclarity/apiclarity/backend/pkg/database"
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime/middleware"
 	log "github.com/sirupsen/logrus"
@@ -30,6 +30,7 @@ import (
 
 type Server struct {
 	server     *restapi.Server
+	dbHandler  database.Database
 	speculator *_speculator.Speculator
 }
 
@@ -124,6 +125,7 @@ func CreateRESTServer(port int, speculator *_speculator.Speculator) (*Server, er
 	server.Port = port
 
 	s.server = server
+	s.dbHandler = database.Init()
 
 	return s, nil
 }
