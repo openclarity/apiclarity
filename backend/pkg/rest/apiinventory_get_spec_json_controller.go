@@ -64,7 +64,7 @@ func (s *Server) GetAPIProvidedSwaggerJSON(params operations.GetAPIInventoryAPII
 }
 
 func (s *Server) getAPISwaggerJSON(apiID uint32, typ swaggerType) (*spec.Swagger, error) {
-	apiSpecFromDB, err := s.dbHandler.GetAPISpecs(apiID)
+	apiSpecFromDB, err := s.DbHandler.APIInventoryTable().GetAPISpecs(apiID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get api specs from DB: %v", err)
 	}

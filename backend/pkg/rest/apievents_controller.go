@@ -29,7 +29,7 @@ import (
 func (s *Server) GetAPIEvents(params operations.GetAPIEventsParams) middleware.Responder {
 	var events []*models.APIEvent
 
-	apiEventsFromDB, total, err := s.dbHandler.GetAPIEventsAndTotal(params)
+	apiEventsFromDB, total, err := s.DbHandler.APIEventsTable().GetAPIEventsAndTotal(params)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
@@ -53,7 +53,7 @@ func (s *Server) GetAPIEvents(params operations.GetAPIEventsParams) middleware.R
 }
 
 func (s *Server) GetAPIEvent(params operations.GetAPIEventsEventIDParams) middleware.Responder {
-	apiEventFromDB, err := s.dbHandler.GetAPIEvent(params.EventID)
+	apiEventFromDB, err := s.DbHandler.APIEventsTable().GetAPIEvent(params.EventID)
 	if err != nil {
 		// TODO: need to handle errors (ex. what should we return when record not found - id is missing)
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
@@ -77,7 +77,7 @@ func (s *Server) GetAPIEvent(params operations.GetAPIEventsEventIDParams) middle
 }
 
 func (s *Server) GetAPIEventsEventIDReconstructedSpecDiff(params operations.GetAPIEventsEventIDReconstructedSpecDiffParams) middleware.Responder {
-	specDiffFromDB, err := s.dbHandler.GetAPIEventReconstructedSpecDiff(params.EventID)
+	specDiffFromDB, err := s.DbHandler.APIEventsTable().GetAPIEventReconstructedSpecDiff(params.EventID)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
@@ -99,7 +99,7 @@ func (s *Server) GetAPIEventsEventIDReconstructedSpecDiff(params operations.GetA
 
 func (s *Server) GetAPIEventsEventIDProvidedSpecDiff(params operations.GetAPIEventsEventIDProvidedSpecDiffParams) middleware.Responder {
 	log.Debugf("GetAPIEventsEventIDProvidedSpecDiff controller was invoked. params=%+v", params)
-	specDiffFromDB, err := s.dbHandler.GetAPIEventProvidedSpecDiff(params.EventID)
+	specDiffFromDB, err := s.DbHandler.APIEventsTable().GetAPIEventProvidedSpecDiff(params.EventID)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go

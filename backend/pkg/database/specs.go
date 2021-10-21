@@ -29,20 +29,20 @@ const (
 	ProvidedSpecType      specType = "ProvidedSpecType"
 )
 
-func (dbHandler *DatabaseHandler) GetAPISpecs(apiID uint32) (*APIInfo, error) {
+func (a *APIInventoryTable) GetAPISpecs(apiID uint32) (*APIInfo, error) {
 	apiInfo := APIInfo{}
 
-	if err := dbHandler.GetAPIInventoryTable().Select(reconstructedSpecColumnName, providedSpecColumnName).First(&apiInfo, apiID).Error; err != nil {
+	if err := a.tx.Select(reconstructedSpecColumnName, providedSpecColumnName).First(&apiInfo, apiID).Error; err != nil {
 		return nil, err
 	}
 
 	return &apiInfo, nil
 }
 
-func (dbHandler *DatabaseHandler) GetAPISpecsInfo(apiID uint32) (*models.OpenAPISpecs, error) {
+func (a *APIInventoryTable) GetAPISpecsInfo(apiID uint32) (*models.OpenAPISpecs, error) {
 	apiInfo := APIInfo{}
 
-	if err := dbHandler.GetAPIInventoryTable().Select(reconstructedSpecInfoColumnName, providedSpecInfoColumnName).First(&apiInfo, apiID).Error; err != nil {
+	if err := a.tx.Select(reconstructedSpecInfoColumnName, providedSpecInfoColumnName).First(&apiInfo, apiID).Error; err != nil {
 		return nil, fmt.Errorf("failed to get API info: %v", err)
 	}
 
@@ -67,7 +67,7 @@ func (dbHandler *DatabaseHandler) GetAPISpecsInfo(apiID uint32) (*models.OpenAPI
 	return specsInfo, nil
 }
 
-func (dbHandler *DatabaseHandler) PutAPISpec(apiID uint, spec string, specInfo *models.SpecInfo, specType specType) error {
+func (a *APIInventoryTable) PutAPISpec(apiID uint, spec string, specInfo *models.SpecInfo, specType specType) error {
 	specInfoB, err := json.Marshal(specInfo)
 	if err != nil {
 		return fmt.Errorf("failed to marshal spec info. info=%+v: %v", specInfo, err)
@@ -90,23 +90,23 @@ func (dbHandler *DatabaseHandler) PutAPISpec(apiID uint, spec string, specInfo *
 		}
 	}
 
-	if err := dbHandler.GetAPIInventoryTable().Model(&APIInfo{}).Where("id = ?", apiID).Updates(valuesToUpdate).Error; err != nil {
+	if err := a.tx.Model(&APIInfo{}).Where("id = ?", apiID).Updates(valuesToUpdate).Error; err != nil {
 		return fmt.Errorf("failed update API info: %v", err)
 	}
 
 	return nil
 }
 
-func (dbHandler *DatabaseHandler) DeleteProvidedAPISpec(apiID uint32) error {
-	if err := dbHandler.GetAPIInventoryTable().Model(&APIInfo{}).Where("id = ?", apiID).Updates(map[string]interface{}{providedSpecColumnName: "", providedSpecInfoColumnName: "", hasProvidedSpecColumnName: false}).Error; err != nil {
+func (a *APIInventoryTable) DeleteProvidedAPISpec(apiID uint32) error {
+	if err := a.tx.Model(&APIInfo{}).Where("id = ?", apiID).Updates(map[string]interface{}{providedSpecColumnName: "", providedSpecInfoColumnName: "", hasProvidedSpecColumnName: false}).Error; err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (dbHandler *DatabaseHandler) DeleteApprovedAPISpec(apiID uint32) error {
-	if err := dbHandler.GetAPIInventoryTable().Model(&APIInfo{}).Where("id = ?", apiID).Updates(map[string]interface{}{reconstructedSpecColumnName: "", reconstructedSpecInfoColumnName: "", hasReconstructedSpecColumnName: false}).Error; err != nil {
+func (a *APIInventoryTable) DeleteApprovedAPISpec(apiID uint32) error {
+	if err := a.tx.Model(&APIInfo{}).Where("id = ?", apiID).Updates(map[string]interface{}{reconstructedSpecColumnName: "", reconstructedSpecInfoColumnName: "", hasReconstructedSpecColumnName: false}).Error; err != nil {
 		return err
 	}
 

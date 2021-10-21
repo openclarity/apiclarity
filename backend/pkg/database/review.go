@@ -39,31 +39,47 @@ type Review struct {
 	PathToPathItemStr string `json:"pathToPathItemStr,omitempty" gorm:"column:path_to_path_item_str" faker:"-"`
 }
 
+type ReviewInterface interface {
+	UpdateApprovedReview(approved bool, id uint32) error
+	Create(review *Review) error
+	First(dest *Review, conds ...interface{}) error
+	DeleteApproved() error
+}
+
+type ReviewTable struct {
+	tx *gorm.DB
+}
+
 func (Review) TableName() string {
 	return reviewTableName
 }
 
-func (dbHandler *DatabaseHandler) GetReviewTable() *gorm.DB {
-	return dbHandler.DB.Table(reviewTableName)
+func (dbHandler *DatabaseHandler) ReviewTable() ReviewInterface {
+	return &ReviewTable{
+		tx: dbHandler.DB.Table(reviewTableName),
+	}
 }
 
-func (dbHandler *DatabaseHandler) CreateReview(review *Review) error {
-	if err := dbHandler.GetReviewTable().Create(&review).Error; err != nil {
+func (r *ReviewTable) Create(review *Review) error {
+	if err := r.tx.Create(&review).Error; err != nil {
 		log.Error(err)
 		return err
 	}
 	return nil
 }
 
-func (dbHandler *DatabaseHandler) UpdateApprovedReview(approved bool, id uint32) error {
-	if err := dbHandler.GetReviewTable().Model(&Review{}).Where("id = ?", id).Updates(map[string]interface{}{approvedColumnName: approved}).Error; err != nil {
+func (r *ReviewTable) UpdateApprovedReview(approved bool, id uint32) error {
+	if err := r.tx.Model(&Review{}).Where("id = ?", id).Updates(map[string]interface{}{approvedColumnName: approved}).Error; err != nil {
 		return err
 	}
 
 	return nil
 }
 
+func (r *ReviewTable) DeleteApproved() error {
+	return r.tx.Where("approved =  ?", true).Delete(Review{}).Error
+}
 
-func (dbHandler *DatabaseHandler) GetReviewTableFirst(dest *Review, conds ...interface{}) error {
-	return dbHandler.GetReviewTable().First(dest, conds).Error
+func (r *ReviewTable) First(dest *Review, conds ...interface{}) error {
+	return r.tx.First(dest, conds).Error
 }

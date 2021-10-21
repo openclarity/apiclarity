@@ -16,19 +16,16 @@
 package database
 
 import (
+	"context"
 	"fmt"
-	"github.com/apiclarity/apiclarity/api/server/models"
-	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
-	speculatorspec "github.com/apiclarity/speculator/pkg/spec"
-	"os"
-	"time"
-
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"os"
+	"time"
 )
 
 const (
@@ -44,40 +41,13 @@ const (
 )
 
 type Database interface {
-	GetDB() *gorm.DB
-	// apiEvent
-	GroupByAPIInfo() ([]HostGroup, error)
-	GetAPIEventsAndTotal(params operations.GetAPIEventsParams) ([]APIEvent, int64, error)
-	GetAPIEvent(eventID uint32) (*APIEvent, error)
-	GetAPIEventReconstructedSpecDiff(eventID uint32) (*APIEvent, error)
-	GetAPIEventProvidedSpecDiff(eventID uint32) (*APIEvent, error)
-	SetAPIEventsReconstructedPathID(approvedReview []*speculatorspec.ApprovedSpecReviewPathItem, host string, port string) error
-	GetAPIEventsLatestDiffs(latestDiffsNum int) ([]APIEvent, error)
-	GetAPIUsages(params operations.GetAPIUsageHitCountParams) ([]*models.HitCount, error)
-	GetDashboardAPIUsages(startTime, endTime time.Time, apiType APIUsageType) ([]*models.APIUsage, error)
-
-	// apiInventory
-	GetAPIInventoryAndTotal(params operations.GetAPIInventoryParams) ([]APIInfo, int64, error)
-	GetAPISpecs(apiID uint32) (*APIInfo, error)
-	GetAPISpecsInfo(apiID uint32) (*models.OpenAPISpecs, error)
-	PutAPISpec(apiID uint, spec string, specInfo *models.SpecInfo, specType specType) error
-	DeleteProvidedAPISpec(apiID uint32) error
-	DeleteApprovedAPISpec(apiID uint32) error
-	GetAPIID(name, port string) (uint, error)
-	GetAPIInventoryTableFirst(dest *APIInfo, conds ...interface{}) error
-
-	// review
-	UpdateApprovedReview(approved bool, id uint32) error
-	CreateReview(review *Review) error
-	GetReviewTableFirst(dest *Review, conds ...interface{}) error
+	APIEventsTable() APIEventsInterface
+	APIInventoryTable() APIInventoryInterface
+	ReviewTable() ReviewInterface
 }
 
 type DatabaseHandler struct {
 	DB *gorm.DB
-}
-
-func (db *DatabaseHandler) GetDB() *gorm.DB {
-	return db.DB
 }
 
 func Init() *DatabaseHandler {
@@ -147,4 +117,20 @@ func initFakeDataBase(databasePath string) *gorm.DB {
 	}
 
 	return temp
+}
+
+func (db *DatabaseHandler) StartReviewTableCleaner(ctx context.Context, cleanInterval time.Duration) {
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				log.Debugf("Stopping database cleaner")
+				return
+			case <-time.After(cleanInterval):
+				if err := db.ReviewTable().DeleteApproved(); err != nil {
+					log.Errorf("Failed to delete approved review from database. %v", err)
+				}
+			}
+		}
+	}()
 }

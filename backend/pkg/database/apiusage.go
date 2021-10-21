@@ -17,9 +17,11 @@ package database
 
 import (
 	"fmt"
-	"github.com/apiclarity/apiclarity/api/server/models"
-	"github.com/go-openapi/strfmt"
 	"time"
+
+	"github.com/apiclarity/apiclarity/api/server/models"
+
+	"github.com/go-openapi/strfmt"
 
 	"gorm.io/gorm"
 )
@@ -32,15 +34,15 @@ const (
 	NewAPI       APIUsageType = "NewAPI"
 )
 
-func (dbHandler *DatabaseHandler) getAPIUsageDBSession(apiType APIUsageType) (db *gorm.DB, err error) {
+func (a *APIEventsTable) getAPIUsageDBSession(apiType APIUsageType) (db *gorm.DB, err error) {
 	switch apiType {
 	case APIWithDiffs:
-		db = dbHandler.GetAPIEventsTable().Where(hasSpecDiffColumnName+" = ?", true).Session(&gorm.Session{})
+		db = a.tx.Where(hasSpecDiffColumnName+" = ?", true).Session(&gorm.Session{})
 	case ExistingAPI:
 		// REST api (not a non-api)
 		// no spec diff
 		// have reconstructed OR provided spec
-		db = dbHandler.GetAPIEventsTable().
+		db = a.tx.
 			Where(FieldInTable(apiEventTableName, isNonAPIColumnName)+" = ?", false).
 			Where(FieldInTable(apiEventTableName, hasSpecDiffColumnName)+" = ?", false).
 			Where(FieldInTable(apiInventoryTableName, hasReconstructedSpecColumnName)+" = ? OR "+
@@ -52,7 +54,7 @@ func (dbHandler *DatabaseHandler) getAPIUsageDBSession(apiType APIUsageType) (db
 		// REST api (not a non-api)
 		// no spec diff
 		// no reconstructed AND no provided spec
-		db = dbHandler.GetAPIEventsTable().
+		db = a.tx.
 			Where(FieldInTable(apiEventTableName, isNonAPIColumnName)+" = ?", false).
 			Where(FieldInTable(apiEventTableName, hasSpecDiffColumnName)+" = ?", false).
 			Where(FieldInTable(apiInventoryTableName, hasReconstructedSpecColumnName)+" = ? AND "+
@@ -67,7 +69,7 @@ func (dbHandler *DatabaseHandler) getAPIUsageDBSession(apiType APIUsageType) (db
 	return db, nil
 }
 
-func (dbHandler *DatabaseHandler) GetDashboardAPIUsages(startTime, endTime time.Time, apiType APIUsageType) ([]*models.APIUsage, error) {
+func (a *APIEventsTable) GetDashboardAPIUsages(startTime, endTime time.Time, apiType APIUsageType) ([]*models.APIUsage, error) {
 	var apiUsages []*models.APIUsage
 	var count int64
 
@@ -75,7 +77,7 @@ func (dbHandler *DatabaseHandler) GetDashboardAPIUsages(startTime, endTime time.
 
 	timeInterval := diff / hitCountGranularity
 
-	db, err := dbHandler.getAPIUsageDBSession(apiType)
+	db, err := a.getAPIUsageDBSession(apiType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get DB session: %v", err)
 	}

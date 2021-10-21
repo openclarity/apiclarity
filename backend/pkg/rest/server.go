@@ -30,13 +30,14 @@ import (
 
 type Server struct {
 	server     *restapi.Server
-	dbHandler  database.Database
+	DbHandler  database.Database
 	speculator *_speculator.Speculator
 }
 
-func CreateRESTServer(port int, speculator *_speculator.Speculator) (*Server, error) {
+func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *database.DatabaseHandler) (*Server, error) {
 	s := &Server{
 		speculator: speculator,
+		DbHandler:  dbHandler,
 	}
 
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)
@@ -125,7 +126,6 @@ func CreateRESTServer(port int, speculator *_speculator.Speculator) (*Server, er
 	server.Port = port
 
 	s.server = server
-	s.dbHandler = database.Init()
 
 	return s, nil
 }

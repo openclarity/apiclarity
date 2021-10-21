@@ -28,7 +28,7 @@ import (
 )
 
 func (s *Server) GetDashboardAPIUsage(params operations.GetDashboardAPIUsageParams) middleware.Responder {
-	apisWithDiffUsage, err := s.dbHandler.GetDashboardAPIUsages(time.Time(params.StartTime), time.Time(params.EndTime), database.APIWithDiffs)
+	apisWithDiffUsage, err := s.DbHandler.APIEventsTable().GetDashboardAPIUsages(time.Time(params.StartTime), time.Time(params.EndTime), database.APIWithDiffs)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
@@ -38,7 +38,7 @@ func (s *Server) GetDashboardAPIUsage(params operations.GetDashboardAPIUsagePara
 		})
 	}
 
-	existingApisUsage, err := s.dbHandler.GetDashboardAPIUsages(time.Time(params.StartTime), time.Time(params.EndTime), database.ExistingAPI)
+	existingApisUsage, err := s.DbHandler.APIEventsTable().GetDashboardAPIUsages(time.Time(params.StartTime), time.Time(params.EndTime), database.ExistingAPI)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
@@ -48,7 +48,7 @@ func (s *Server) GetDashboardAPIUsage(params operations.GetDashboardAPIUsagePara
 		})
 	}
 
-	newApisUsage, err := s.dbHandler.GetDashboardAPIUsages(time.Time(params.StartTime), time.Time(params.EndTime), database.NewAPI)
+	newApisUsage, err := s.DbHandler.APIEventsTable().GetDashboardAPIUsages(time.Time(params.StartTime), time.Time(params.EndTime), database.NewAPI)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
@@ -68,7 +68,7 @@ func (s *Server) GetDashboardAPIUsage(params operations.GetDashboardAPIUsagePara
 const latestDiffsNum = 5
 
 func (s *Server) GetDashboardAPIUsageLatestDiffs(params operations.GetDashboardAPIUsageLatestDiffsParams) middleware.Responder {
-	latestDiffs, err := s.dbHandler.GetAPIEventsLatestDiffs(latestDiffsNum)
+	latestDiffs, err := s.DbHandler.APIEventsTable().GetAPIEventsLatestDiffs(latestDiffsNum)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
@@ -100,7 +100,7 @@ func getModelsSpecDiffTime(latestDiffs []database.APIEvent) []*models.SpecDiffTi
 func (s *Server) GetDashboardAPIUsageMostUsed(_ operations.GetDashboardAPIUsageMostUsedParams) middleware.Responder {
 	var ret []*models.APICount
 
-	groups, err := s.dbHandler.GroupByAPIInfo()
+	groups, err := s.DbHandler.APIEventsTable().GroupByAPIInfo()
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go

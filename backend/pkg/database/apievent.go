@@ -95,6 +95,23 @@ type APIEvent struct {
 	EventType models.APIType `json:"eventType,omitempty" gorm:"column:event_type" faker:"oneof: INTERNAL, EXTERNAL"`
 }
 
+type APIEventsInterface interface {
+	GetAPIEventsAndTotal(params operations.GetAPIEventsParams) ([]APIEvent, int64, error)
+	GetAPIEvent(eventID uint32) (*APIEvent, error)
+	GetAPIEventReconstructedSpecDiff(eventID uint32) (*APIEvent, error)
+	GetAPIEventProvidedSpecDiff(eventID uint32) (*APIEvent, error)
+	SetAPIEventsReconstructedPathID(approvedReview []*speculatorspec.ApprovedSpecReviewPathItem, host string, port string) error
+	GetAPIEventsLatestDiffs(latestDiffsNum int) ([]APIEvent, error)
+	GetAPIUsages(params operations.GetAPIUsageHitCountParams) ([]*models.HitCount, error)
+	GetDashboardAPIUsages(startTime, endTime time.Time, apiType APIUsageType) ([]*models.APIUsage, error)
+	CreateAPIEvent(event *APIEvent)
+	GroupByAPIInfo() ([]HostGroup, error)
+}
+
+type APIEventsTable struct {
+	tx *gorm.DB
+}
+
 type HostGroup struct {
 	HostSpecName string
 	Port         int64
@@ -105,10 +122,10 @@ type HostGroup struct {
 
 const dashboardTopAPIsNum = 5
 
-func (dbHandler *DatabaseHandler) GroupByAPIInfo() ([]HostGroup, error) {
+func (a *APIEventsTable) GroupByAPIInfo() ([]HostGroup, error) {
 	var results []HostGroup
 
-	rows, err := dbHandler.DB.
+	rows, err := a.tx.
 		// filters out non APIs
 		Not(isNonAPIColumnName+" = ?", true).
 		Select(
@@ -168,12 +185,14 @@ func APIEventFromDB(event *APIEvent) *models.APIEvent {
 	}
 }
 
-func (dbHandler *DatabaseHandler) GetAPIEventsTable() *gorm.DB {
-	return dbHandler.DB.Table(apiEventTableName)
+func (dbHandler *DatabaseHandler) APIEventsTable() APIEventsInterface {
+	return &APIEventsTable{
+		tx: dbHandler.DB.Table(apiEventTableName),
+	}
 }
 
-func (dbHandler *DatabaseHandler) CreateAPIEvent(event *APIEvent) {
-	if result := dbHandler.GetAPIEventsTable().Create(event); result.Error != nil {
+func (a *APIEventsTable) CreateAPIEvent(event *APIEvent) {
+	if result := a.tx.Create(event); result.Error != nil {
 		log.Errorf("Failed to create event: %v", result.Error)
 	} else {
 		log.Infof("Event created %+v", event)
@@ -181,7 +200,7 @@ func (dbHandler *DatabaseHandler) CreateAPIEvent(event *APIEvent) {
 }
 
 const hitCountGranularity = 50
-func (dbHandler *DatabaseHandler) GetAPIUsages(params operations.GetAPIUsageHitCountParams) ([]*models.HitCount, error) {
+func (a *APIEventsTable) GetAPIUsages(params operations.GetAPIUsageHitCountParams) ([]*models.HitCount, error) {
 	var apiUsages []*models.HitCount
 
 	startTime := time.Time(params.StartTime)
@@ -189,7 +208,7 @@ func (dbHandler *DatabaseHandler) GetAPIUsages(params operations.GetAPIUsageHitC
 	diff := endTime.Sub(startTime)
 	timeInterval := diff / hitCountGranularity
 
-	db := dbHandler.setAPIEventsFilters(getAPIUsageHitCountParamsToFilters(params), false).
+	db := a.setAPIEventsFilters(getAPIUsageHitCountParamsToFilters(params), false).
 		Session(&gorm.Session{})
 
 	for i := 0; i < hitCountGranularity; i++ {
@@ -244,11 +263,11 @@ func getAPIUsageHitCountParamsToFilters(params operations.GetAPIUsageHitCountPar
 	}
 }
 
-func (dbHandler *DatabaseHandler) GetAPIEventsAndTotal(params operations.GetAPIEventsParams) ([]APIEvent, int64, error) {
+func (a *APIEventsTable) GetAPIEventsAndTotal(params operations.GetAPIEventsParams) ([]APIEvent, int64, error) {
 	var apiEvents []APIEvent
 	var count int64
 
-	tx := dbHandler.setAPIEventsFilters(getAPIEventsParamsToFilters(params), true)
+	tx := a.setAPIEventsFilters(getAPIEventsParamsToFilters(params), true)
 	// get total count item with the current filters
 	if err := tx.Count(&count).Error; err != nil {
 		return nil, 0, err
@@ -301,39 +320,39 @@ func getAPIEventsParamsToFilters(params operations.GetAPIEventsParams) *APIEvent
 	}
 }
 
-func (dbHandler *DatabaseHandler) GetAPIEvent(eventID uint32) (*APIEvent, error) {
+func (a *APIEventsTable) GetAPIEvent(eventID uint32) (*APIEvent, error) {
 	var apiEvent APIEvent
 
-	if err := dbHandler.GetAPIEventsTable().Omit(specDiffColumns...).First(&apiEvent, eventID).Error; err != nil {
+	if err := a.tx.Omit(specDiffColumns...).First(&apiEvent, eventID).Error; err != nil {
 		return nil, err
 	}
 
 	return &apiEvent, nil
 }
 
-func (dbHandler *DatabaseHandler) GetAPIEventReconstructedSpecDiff(eventID uint32) (*APIEvent, error) {
+func (a *APIEventsTable) GetAPIEventReconstructedSpecDiff(eventID uint32) (*APIEvent, error) {
 	var apiEvent APIEvent
 
-	if err := dbHandler.GetAPIEventsTable().Select(newReconstructedSpecColumnName, oldReconstructedSpecColumnName, specDiffTypeColumnName).First(&apiEvent, eventID).Error; err != nil {
+	if err := a.tx.Select(newReconstructedSpecColumnName, oldReconstructedSpecColumnName, specDiffTypeColumnName).First(&apiEvent, eventID).Error; err != nil {
 		return nil, err
 	}
 
 	return &apiEvent, nil
 }
 
-func (dbHandler *DatabaseHandler) GetAPIEventProvidedSpecDiff(eventID uint32) (*APIEvent, error) {
+func (a *APIEventsTable) GetAPIEventProvidedSpecDiff(eventID uint32) (*APIEvent, error) {
 	var apiEvent APIEvent
 
-	if err := dbHandler.GetAPIEventsTable().Select(newProvidedSpecColumnName, oldProvidedSpecColumnName, specDiffTypeColumnName).First(&apiEvent, eventID).Error; err != nil {
+	if err := a.tx.Select(newProvidedSpecColumnName, oldProvidedSpecColumnName, specDiffTypeColumnName).First(&apiEvent, eventID).Error; err != nil {
 		return nil, err
 	}
 
 	return &apiEvent, nil
 }
 
-func (dbHandler *DatabaseHandler) GetAPIEventsLatestDiffs(latestDiffsNum int) ([]APIEvent, error) {
+func (a *APIEventsTable) GetAPIEventsLatestDiffs(latestDiffsNum int) ([]APIEvent, error) {
 	var latestDiffs []APIEvent
-	if err := dbHandler.GetAPIEventsTable().Where(hasSpecDiffColumnName + " = true").
+	if err := a.tx.Where(hasSpecDiffColumnName + " = true").
 		Order("time desc").Limit(latestDiffsNum).Scan(&latestDiffs).Error; err != nil {
 		return nil, fmt.Errorf("failed to get latest diffs from events table. %v", err)
 	}
@@ -372,8 +391,8 @@ type APIEventsFilters struct {
 	StatusCodeLte         *string
 }
 
-func (dbHandler *DatabaseHandler) setAPIEventsFilters(filters *APIEventsFilters, shouldSetTimeFilters bool) *gorm.DB {
-	tx := dbHandler.GetAPIEventsTable()
+func (a *APIEventsTable) setAPIEventsFilters(filters *APIEventsFilters, shouldSetTimeFilters bool) *gorm.DB {
+	tx := a.tx
 	if shouldSetTimeFilters {
 		// time filter
 		tx = tx.Where(CreateTimeFilter(filters.StartTime, filters.EndTime))
@@ -431,8 +450,8 @@ func (dbHandler *DatabaseHandler) setAPIEventsFilters(filters *APIEventsFilters,
 }
 
 // SetAPIEventsReconstructedPathID will set reconstructed path ID for all events with the provided paths, host and port.
-func (dbHandler *DatabaseHandler) SetAPIEventsReconstructedPathID(approvedReview []*speculatorspec.ApprovedSpecReviewPathItem, host string, port string) error {
-	err := dbHandler.GetAPIEventsTable().Transaction(func(tx *gorm.DB) error {
+func (a *APIEventsTable) SetAPIEventsReconstructedPathID(approvedReview []*speculatorspec.ApprovedSpecReviewPathItem, host string, port string) error {
+	err := a.tx.Transaction(func(tx *gorm.DB) error {
 		for _, item := range approvedReview {
 			tx := FilterIs(tx, pathColumnName, utils.MapToSlice(item.Paths))
 			tx = FilterIs(tx, hostSpecNameColumnName, []string{host})
