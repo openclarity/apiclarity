@@ -29,7 +29,7 @@ RUN go build -ldflags="-s -w \
      -X 'github.com/apiclarity/apiclarity/backend/pkg/version.CommitHash=${COMMIT_HASH}' \
      -X 'github.com/apiclarity/apiclarity/backend/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}'" -o backend ./cmd/backend/main.go
 
-FROM alpine:3.14.0
+FROM alpine:3.14
 
 WORKDIR /app
 
