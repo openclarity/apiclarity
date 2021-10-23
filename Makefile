@@ -66,7 +66,7 @@ push-docker: docker ## Build and Push Docker image
 
 .PHONY: test
 test: ## Run Unit Tests
-	@(cd backend && FAKE_DATA=true go test ./pkg/...)
+	@(cd backend && go test ./pkg/...)
 
 .PHONY: clean
 clean: clean-ui clean-backend ## Clean all build artifacts

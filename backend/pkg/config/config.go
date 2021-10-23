@@ -32,6 +32,7 @@ const (
 	StateBackupIntervalSec     = "STATE_BACKUP_INTERVAL_SEC"
 	DatabaseCleanerIntervalSec = "DATABASE_CLEANER_INTERVAL_SEC"
 	StateBackupFileName        = "STATE_BACKUP_FILE_NAME"
+	DatabaseDriver             = "DATABASE_DRIVER"
 
 	ResponseHeadersToIgnore = "RESPONSE_HEADERS_TO_IGNORE"
 	RequestHeadersToIgnore  = "REQUEST_HEADERS_TO_IGNORE"
@@ -43,6 +44,7 @@ type Config struct {
 	HealthCheckAddress         string
 	StateBackupIntervalSec     int
 	DatabaseCleanerIntervalSec int
+	DatabaseDriver             string
 	StateBackupFileName        string
 	SpeculatorConfig           _speculator.Config
 }
@@ -56,6 +58,7 @@ func LoadConfig() (*Config, error) {
 	config.StateBackupIntervalSec = viper.GetInt(StateBackupIntervalSec)
 	config.DatabaseCleanerIntervalSec = viper.GetInt(DatabaseCleanerIntervalSec)
 	config.StateBackupFileName = viper.GetString(StateBackupFileName)
+	config.DatabaseDriver = viper.GetString(DatabaseDriver)
 	config.SpeculatorConfig = createSpeculatorConfig()
 
 	configB, _ := json.Marshal(config)

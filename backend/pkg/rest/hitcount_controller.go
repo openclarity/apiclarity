@@ -26,7 +26,7 @@ import (
 )
 
 func (s *Server) GetAPIUsageHitCount(params operations.GetAPIUsageHitCountParams) middleware.Responder {
-	hitCounts, err := s.DbHandler.APIEventsTable().GetAPIUsages(params)
+	hitCounts, err := s.dbHandler.APIEventsTable().GetAPIUsages(params)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go

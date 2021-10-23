@@ -18,14 +18,15 @@ package database
 import (
 	"context"
 	"fmt"
+	"os"
+	"time"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"os"
-	"time"
 )
 
 const (
@@ -36,34 +37,57 @@ const (
 	DBPortEnvVar     = "DB_PORT_NUMBER"
 	FakeDataEnvVar   = "FAKE_DATA"
 	FakeTracesEnvVar = "FAKE_TRACES"
-	FakeDBPath       = "./db.db"
+	LocalDBPath      = "./db.db"
 	enableDBInfoLogs = "ENABLE_DB_INFO_LOGS"
 )
 
+const (
+	DBDriverTypePostgres = "POSTGRES"
+	DBDriverTypeLocal = "LOCAL"
+)
+
 type Database interface {
-	APIEventsTable() APIEventsInterface
-	APIInventoryTable() APIInventoryInterface
-	ReviewTable() ReviewInterface
+	APIEventsTable() APIEventsTable
+	APIInventoryTable() APIInventoryTable
+	ReviewTable() ReviewTable
 }
 
 type DatabaseHandler struct {
 	DB *gorm.DB
 }
 
-func Init() *DatabaseHandler {
+type DBConfig struct {
+	DriverType string
+}
+
+func Init(config *DBConfig) *DatabaseHandler {
 	databaseHandler := DatabaseHandler{}
 
 	viper.AutomaticEnv()
-	if viper.GetBool(FakeDataEnvVar) || viper.GetBool(FakeTracesEnvVar) {
-		cleanFakeDataBase(FakeDBPath)
-		databaseHandler.DB = initFakeDataBase(FakeDBPath)
-	} else {
-		databaseHandler.DB = initDataBase()
-	}
+	databaseHandler.DB = initDataBase(config)
+
 	return &databaseHandler
 }
 
-func cleanFakeDataBase(databasePath string) {
+func (db *DatabaseHandler) APIEventsTable() APIEventsTable {
+	return &APIEventsTableHandler{
+		tx: db.DB.Table(apiEventTableName),
+	}
+}
+
+func (db *DatabaseHandler) APIInventoryTable() APIInventoryTable {
+	return &APIInventoryTableHandler{
+		tx: db.DB.Table(apiInventoryTableName),
+	}
+}
+
+func (db *DatabaseHandler) ReviewTable() ReviewTable {
+	return &ReviewTableHandler{
+		tx: db.DB.Table(reviewTableName),
+	}
+}
+
+func cleanLocalDataBase(databasePath string) {
 	if _, err := os.Stat(databasePath); !os.IsNotExist(err) {
 		log.Debug("deleting db...")
 		if err := os.Remove(databasePath); err != nil {
@@ -72,17 +96,37 @@ func cleanFakeDataBase(databasePath string) {
 	}
 }
 
-func initDataBase() *gorm.DB {
+func initDataBase(config *DBConfig) *gorm.DB {
+	var db *gorm.DB
+	dbDriver := config.DriverType
+	dbLogger := logger.Default
+	if viper.GetBool(enableDBInfoLogs) {
+		dbLogger = dbLogger.LogMode(logger.Info)
+	}
+
+	switch dbDriver {
+	case DBDriverTypePostgres:
+		db = initPostgres(dbLogger)
+	case DBDriverTypeLocal:
+		db = initSqlite(dbLogger)
+	default:
+		log.Fatalf("DB driver is not supported: %v", dbDriver)
+	}
+
+	// this will ensure table is created
+	if err := db.AutoMigrate(&APIEvent{}, &APIInfo{}, &Review{}); err != nil {
+		log.Fatalf("Failed to run auto migration: %v", err)
+	}
+
+	return db
+}
+
+func initPostgres(dbLogger logger.Interface) *gorm.DB {
 	dbPass := viper.GetString(DBPasswordEnvVar)
 	dbUser := viper.GetString(DBUserEnvVar)
 	dbHost := viper.GetString(DBHostEnvVar)
 	dbPort := viper.GetString(DBPortEnvVar)
 	dbName := viper.GetString(dbNameEnvVar)
-
-	dbLogger := logger.Default
-	if viper.GetBool(enableDBInfoLogs) {
-		dbLogger = dbLogger.LogMode(logger.Info)
-	}
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
 		dbHost, dbUser, dbPass, dbName, dbPort)
@@ -94,29 +138,21 @@ func initDataBase() *gorm.DB {
 		log.Fatalf("Failed to open %s db: %v", dbName, err)
 	}
 
-	// this will ensure table is created
-	if err := db.AutoMigrate(&APIEvent{}, &APIInfo{}, &Review{}); err != nil {
-		log.Fatalf("Failed to run auto migration: %v", err)
-	}
-
 	return db
 }
 
-func initFakeDataBase(databasePath string) *gorm.DB {
-	dbLogger := logger.Default
-	if viper.GetBool(enableDBInfoLogs) {
-		dbLogger = dbLogger.LogMode(logger.Info)
-	}
+func initSqlite(dbLogger logger.Interface) *gorm.DB {
+	cleanLocalDataBase(LocalDBPath)
 
-	temp, _ := gorm.Open(sqlite.Open(databasePath), &gorm.Config{
+	db, _ := gorm.Open(sqlite.Open(LocalDBPath), &gorm.Config{
 		Logger: dbLogger,
 	})
 	// this will ensure table is created
-	if err := temp.AutoMigrate(&APIEvent{}, &APIInfo{}, &Review{}); err != nil {
+	if err := db.AutoMigrate(&APIEvent{}, &APIInfo{}, &Review{}); err != nil {
 		panic(err)
 	}
 
-	return temp
+	return db
 }
 
 func (db *DatabaseHandler) StartReviewTableCleaner(ctx context.Context, cleanInterval time.Duration) {

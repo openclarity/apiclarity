@@ -95,7 +95,7 @@ type APIEvent struct {
 	EventType models.APIType `json:"eventType,omitempty" gorm:"column:event_type" faker:"oneof: INTERNAL, EXTERNAL"`
 }
 
-type APIEventsInterface interface {
+type APIEventsTable interface {
 	GetAPIEventsAndTotal(params operations.GetAPIEventsParams) ([]APIEvent, int64, error)
 	GetAPIEvent(eventID uint32) (*APIEvent, error)
 	GetAPIEventReconstructedSpecDiff(eventID uint32) (*APIEvent, error)
@@ -108,7 +108,7 @@ type APIEventsInterface interface {
 	GroupByAPIInfo() ([]HostGroup, error)
 }
 
-type APIEventsTable struct {
+type APIEventsTableHandler struct {
 	tx *gorm.DB
 }
 
@@ -120,9 +120,40 @@ type HostGroup struct {
 	Count        int
 }
 
+type APIEventsFilters struct {
+	DestinationIPIsNot    []string
+	DestinationIPIs       []string
+	DestinationPortIsNot  []string
+	DestinationPortIs     []string
+	EndTime               strfmt.DateTime
+	ShowNonAPI            bool
+	HasSpecDiffIs         *bool
+	SpecDiffTypeIs        []string
+	MethodIs              []string
+	ReconstructedPathIDIs []string
+	ProvidedPathIDIs      []string
+	PathContains          []string
+	PathEnd               *string
+	PathIsNot             []string
+	PathIs                []string
+	PathStart             *string
+	SourceIPIsNot         []string
+	SourceIPIs            []string
+	SpecContains          []string
+	SpecEnd               *string
+	SpecIsNot             []string
+	SpecIs                []string
+	SpecStart             *string
+	StartTime             strfmt.DateTime
+	StatusCodeGte         *string
+	StatusCodeIsNot       []string
+	StatusCodeIs          []string
+	StatusCodeLte         *string
+}
+
 const dashboardTopAPIsNum = 5
 
-func (a *APIEventsTable) GroupByAPIInfo() ([]HostGroup, error) {
+func (a *APIEventsTableHandler) GroupByAPIInfo() ([]HostGroup, error) {
 	var results []HostGroup
 
 	rows, err := a.tx.
@@ -185,13 +216,7 @@ func APIEventFromDB(event *APIEvent) *models.APIEvent {
 	}
 }
 
-func (dbHandler *DatabaseHandler) APIEventsTable() APIEventsInterface {
-	return &APIEventsTable{
-		tx: dbHandler.DB.Table(apiEventTableName),
-	}
-}
-
-func (a *APIEventsTable) CreateAPIEvent(event *APIEvent) {
+func (a *APIEventsTableHandler) CreateAPIEvent(event *APIEvent) {
 	if result := a.tx.Create(event); result.Error != nil {
 		log.Errorf("Failed to create event: %v", result.Error)
 	} else {
@@ -199,71 +224,7 @@ func (a *APIEventsTable) CreateAPIEvent(event *APIEvent) {
 	}
 }
 
-const hitCountGranularity = 50
-func (a *APIEventsTable) GetAPIUsages(params operations.GetAPIUsageHitCountParams) ([]*models.HitCount, error) {
-	var apiUsages []*models.HitCount
-
-	startTime := time.Time(params.StartTime)
-	endTime := time.Time(params.EndTime)
-	diff := endTime.Sub(startTime)
-	timeInterval := diff / hitCountGranularity
-
-	db := a.setAPIEventsFilters(getAPIUsageHitCountParamsToFilters(params), false).
-		Session(&gorm.Session{})
-
-	for i := 0; i < hitCountGranularity; i++ {
-		var count int64
-		st := strfmt.DateTime(startTime)
-		et := strfmt.DateTime(startTime.Add(timeInterval))
-
-		if err := db.Where(CreateTimeFilter(st, et)).Count(&count).Error; err != nil {
-			return nil, err
-		}
-
-		apiUsages = append(apiUsages, &models.HitCount{
-			Count: count,
-			Time:  st,
-		})
-
-		startTime = startTime.Add(timeInterval)
-	}
-	return apiUsages, nil
-}
-
-func getAPIUsageHitCountParamsToFilters(params operations.GetAPIUsageHitCountParams) *APIEventsFilters {
-	return &APIEventsFilters{
-		DestinationIPIsNot:    params.DestinationIPIsNot,
-		DestinationIPIs:       params.DestinationIPIs,
-		DestinationPortIsNot:  params.DestinationPortIsNot,
-		DestinationPortIs:     params.DestinationPortIs,
-		EndTime:               params.EndTime,
-		ShowNonAPI:            params.ShowNonAPI,
-		HasSpecDiffIs:         params.HasSpecDiffIs,
-		SpecDiffTypeIs:        params.SpecDiffTypeIs,
-		MethodIs:              params.MethodIs,
-		ReconstructedPathIDIs: params.ReconstructedPathIDIs,
-		ProvidedPathIDIs:      params.ProvidedPathIDIs,
-		PathContains:          params.PathContains,
-		PathEnd:               params.PathEnd,
-		PathIsNot:             params.PathIsNot,
-		PathIs:                params.PathIs,
-		PathStart:             params.PathStart,
-		SourceIPIsNot:         params.SourceIPIsNot,
-		SourceIPIs:            params.SourceIPIs,
-		SpecContains:          params.SpecContains,
-		SpecEnd:               params.SpecEnd,
-		SpecIsNot:             params.SpecIsNot,
-		SpecIs:                params.SpecIs,
-		SpecStart:             params.SpecStart,
-		StartTime:             params.StartTime,
-		StatusCodeGte:         params.StatusCodeGte,
-		StatusCodeIsNot:       params.StatusCodeIsNot,
-		StatusCodeIs:          params.StatusCodeIs,
-		StatusCodeLte:         params.StatusCodeLte,
-	}
-}
-
-func (a *APIEventsTable) GetAPIEventsAndTotal(params operations.GetAPIEventsParams) ([]APIEvent, int64, error) {
+func (a *APIEventsTableHandler) GetAPIEventsAndTotal(params operations.GetAPIEventsParams) ([]APIEvent, int64, error) {
 	var apiEvents []APIEvent
 	var count int64
 
@@ -289,38 +250,7 @@ func (a *APIEventsTable) GetAPIEventsAndTotal(params operations.GetAPIEventsPara
 	return apiEvents, count, nil
 }
 
-func getAPIEventsParamsToFilters(params operations.GetAPIEventsParams) *APIEventsFilters {
-	return &APIEventsFilters{
-		DestinationIPIsNot:   params.DestinationIPIsNot,
-		DestinationIPIs:      params.DestinationIPIs,
-		DestinationPortIsNot: params.DestinationPortIsNot,
-		DestinationPortIs:    params.DestinationPortIs,
-		EndTime:              params.EndTime,
-		ShowNonAPI:           params.ShowNonAPI,
-		HasSpecDiffIs:        params.HasSpecDiffIs,
-		SpecDiffTypeIs:       params.SpecDiffTypeIs,
-		MethodIs:             params.MethodIs,
-		PathContains:         params.PathContains,
-		PathEnd:              params.PathEnd,
-		PathIsNot:            params.PathIsNot,
-		PathIs:               params.PathIs,
-		PathStart:            params.PathStart,
-		SourceIPIsNot:        params.SourceIPIsNot,
-		SourceIPIs:           params.SourceIPIs,
-		SpecContains:         params.SpecContains,
-		SpecEnd:              params.SpecEnd,
-		SpecIsNot:            params.SpecIsNot,
-		SpecIs:               params.SpecIs,
-		SpecStart:            params.SpecStart,
-		StartTime:            params.StartTime,
-		StatusCodeGte:        params.StatusCodeGte,
-		StatusCodeIsNot:      params.StatusCodeIsNot,
-		StatusCodeIs:         params.StatusCodeIs,
-		StatusCodeLte:        params.StatusCodeLte,
-	}
-}
-
-func (a *APIEventsTable) GetAPIEvent(eventID uint32) (*APIEvent, error) {
+func (a *APIEventsTableHandler) GetAPIEvent(eventID uint32) (*APIEvent, error) {
 	var apiEvent APIEvent
 
 	if err := a.tx.Omit(specDiffColumns...).First(&apiEvent, eventID).Error; err != nil {
@@ -330,7 +260,7 @@ func (a *APIEventsTable) GetAPIEvent(eventID uint32) (*APIEvent, error) {
 	return &apiEvent, nil
 }
 
-func (a *APIEventsTable) GetAPIEventReconstructedSpecDiff(eventID uint32) (*APIEvent, error) {
+func (a *APIEventsTableHandler) GetAPIEventReconstructedSpecDiff(eventID uint32) (*APIEvent, error) {
 	var apiEvent APIEvent
 
 	if err := a.tx.Select(newReconstructedSpecColumnName, oldReconstructedSpecColumnName, specDiffTypeColumnName).First(&apiEvent, eventID).Error; err != nil {
@@ -340,7 +270,7 @@ func (a *APIEventsTable) GetAPIEventReconstructedSpecDiff(eventID uint32) (*APIE
 	return &apiEvent, nil
 }
 
-func (a *APIEventsTable) GetAPIEventProvidedSpecDiff(eventID uint32) (*APIEvent, error) {
+func (a *APIEventsTableHandler) GetAPIEventProvidedSpecDiff(eventID uint32) (*APIEvent, error) {
 	var apiEvent APIEvent
 
 	if err := a.tx.Select(newProvidedSpecColumnName, oldProvidedSpecColumnName, specDiffTypeColumnName).First(&apiEvent, eventID).Error; err != nil {
@@ -350,7 +280,7 @@ func (a *APIEventsTable) GetAPIEventProvidedSpecDiff(eventID uint32) (*APIEvent,
 	return &apiEvent, nil
 }
 
-func (a *APIEventsTable) GetAPIEventsLatestDiffs(latestDiffsNum int) ([]APIEvent, error) {
+func (a *APIEventsTableHandler) GetAPIEventsLatestDiffs(latestDiffsNum int) ([]APIEvent, error) {
 	var latestDiffs []APIEvent
 	if err := a.tx.Where(hasSpecDiffColumnName + " = true").
 		Order("time desc").Limit(latestDiffsNum).Scan(&latestDiffs).Error; err != nil {
@@ -360,38 +290,7 @@ func (a *APIEventsTable) GetAPIEventsLatestDiffs(latestDiffsNum int) ([]APIEvent
 	return latestDiffs, nil
 }
 
-type APIEventsFilters struct {
-	DestinationIPIsNot    []string
-	DestinationIPIs       []string
-	DestinationPortIsNot  []string
-	DestinationPortIs     []string
-	EndTime               strfmt.DateTime
-	ShowNonAPI            bool
-	HasSpecDiffIs         *bool
-	SpecDiffTypeIs        []string
-	MethodIs              []string
-	ReconstructedPathIDIs []string
-	ProvidedPathIDIs      []string
-	PathContains          []string
-	PathEnd               *string
-	PathIsNot             []string
-	PathIs                []string
-	PathStart             *string
-	SourceIPIsNot         []string
-	SourceIPIs            []string
-	SpecContains          []string
-	SpecEnd               *string
-	SpecIsNot             []string
-	SpecIs                []string
-	SpecStart             *string
-	StartTime             strfmt.DateTime
-	StatusCodeGte         *string
-	StatusCodeIsNot       []string
-	StatusCodeIs          []string
-	StatusCodeLte         *string
-}
-
-func (a *APIEventsTable) setAPIEventsFilters(filters *APIEventsFilters, shouldSetTimeFilters bool) *gorm.DB {
+func (a *APIEventsTableHandler) setAPIEventsFilters(filters *APIEventsFilters, shouldSetTimeFilters bool) *gorm.DB {
 	tx := a.tx
 	if shouldSetTimeFilters {
 		// time filter
@@ -450,7 +349,7 @@ func (a *APIEventsTable) setAPIEventsFilters(filters *APIEventsFilters, shouldSe
 }
 
 // SetAPIEventsReconstructedPathID will set reconstructed path ID for all events with the provided paths, host and port.
-func (a *APIEventsTable) SetAPIEventsReconstructedPathID(approvedReview []*speculatorspec.ApprovedSpecReviewPathItem, host string, port string) error {
+func (a *APIEventsTableHandler) SetAPIEventsReconstructedPathID(approvedReview []*speculatorspec.ApprovedSpecReviewPathItem, host string, port string) error {
 	err := a.tx.Transaction(func(tx *gorm.DB) error {
 		for _, item := range approvedReview {
 			tx := FilterIs(tx, pathColumnName, utils.MapToSlice(item.Paths))
@@ -471,4 +370,68 @@ func (a *APIEventsTable) SetAPIEventsReconstructedPathID(approvedReview []*specu
 	}
 
 	return nil
+}
+
+func getAPIUsageHitCountParamsToFilters(params operations.GetAPIUsageHitCountParams) *APIEventsFilters {
+	return &APIEventsFilters{
+		DestinationIPIsNot:    params.DestinationIPIsNot,
+		DestinationIPIs:       params.DestinationIPIs,
+		DestinationPortIsNot:  params.DestinationPortIsNot,
+		DestinationPortIs:     params.DestinationPortIs,
+		EndTime:               params.EndTime,
+		ShowNonAPI:            params.ShowNonAPI,
+		HasSpecDiffIs:         params.HasSpecDiffIs,
+		SpecDiffTypeIs:        params.SpecDiffTypeIs,
+		MethodIs:              params.MethodIs,
+		ReconstructedPathIDIs: params.ReconstructedPathIDIs,
+		ProvidedPathIDIs:      params.ProvidedPathIDIs,
+		PathContains:          params.PathContains,
+		PathEnd:               params.PathEnd,
+		PathIsNot:             params.PathIsNot,
+		PathIs:                params.PathIs,
+		PathStart:             params.PathStart,
+		SourceIPIsNot:         params.SourceIPIsNot,
+		SourceIPIs:            params.SourceIPIs,
+		SpecContains:          params.SpecContains,
+		SpecEnd:               params.SpecEnd,
+		SpecIsNot:             params.SpecIsNot,
+		SpecIs:                params.SpecIs,
+		SpecStart:             params.SpecStart,
+		StartTime:             params.StartTime,
+		StatusCodeGte:         params.StatusCodeGte,
+		StatusCodeIsNot:       params.StatusCodeIsNot,
+		StatusCodeIs:          params.StatusCodeIs,
+		StatusCodeLte:         params.StatusCodeLte,
+	}
+}
+
+func getAPIEventsParamsToFilters(params operations.GetAPIEventsParams) *APIEventsFilters {
+	return &APIEventsFilters{
+		DestinationIPIsNot:   params.DestinationIPIsNot,
+		DestinationIPIs:      params.DestinationIPIs,
+		DestinationPortIsNot: params.DestinationPortIsNot,
+		DestinationPortIs:    params.DestinationPortIs,
+		EndTime:              params.EndTime,
+		ShowNonAPI:           params.ShowNonAPI,
+		HasSpecDiffIs:        params.HasSpecDiffIs,
+		SpecDiffTypeIs:       params.SpecDiffTypeIs,
+		MethodIs:             params.MethodIs,
+		PathContains:         params.PathContains,
+		PathEnd:              params.PathEnd,
+		PathIsNot:            params.PathIsNot,
+		PathIs:               params.PathIs,
+		PathStart:            params.PathStart,
+		SourceIPIsNot:        params.SourceIPIsNot,
+		SourceIPIs:           params.SourceIPIs,
+		SpecContains:         params.SpecContains,
+		SpecEnd:              params.SpecEnd,
+		SpecIsNot:            params.SpecIsNot,
+		SpecIs:               params.SpecIs,
+		SpecStart:            params.SpecStart,
+		StartTime:            params.StartTime,
+		StatusCodeGte:        params.StatusCodeGte,
+		StatusCodeIsNot:      params.StatusCodeIsNot,
+		StatusCodeIs:         params.StatusCodeIs,
+		StatusCodeLte:        params.StatusCodeLte,
+	}
 }

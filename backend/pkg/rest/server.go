@@ -17,7 +17,7 @@ package rest
 
 import (
 	"fmt"
-	"github.com/apiclarity/apiclarity/backend/pkg/database"
+
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime/middleware"
 	log "github.com/sirupsen/logrus"
@@ -25,19 +25,20 @@ import (
 	"github.com/apiclarity/apiclarity/api/server/restapi"
 	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
 	"github.com/apiclarity/apiclarity/backend/pkg/common"
+	"github.com/apiclarity/apiclarity/backend/pkg/database"
 	_speculator "github.com/apiclarity/speculator/pkg/speculator"
 )
 
 type Server struct {
 	server     *restapi.Server
-	DbHandler  database.Database
+	dbHandler  database.Database
 	speculator *_speculator.Speculator
 }
 
 func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *database.DatabaseHandler) (*Server, error) {
 	s := &Server{
 		speculator: speculator,
-		DbHandler:  dbHandler,
+		dbHandler:  dbHandler,
 	}
 
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)

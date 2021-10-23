@@ -67,7 +67,7 @@ func main() {
 
 	api := operations.NewAPIClarityAPIsAPI(swaggerSpec)
 
-	dbHandler := _database.Init()
+	dbHandler := _database.Init(&_database.DBConfig{DriverType: _database.DBDriverTypeLocal})
 
 	server := restapi.NewServer(api)
 	defer func() { _ = server.Shutdown() }()

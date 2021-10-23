@@ -56,7 +56,6 @@ linters:
     - tagliatelle
     - prealloc
     - paralleltest
-    - gochecknoinits # remove once database will have handler and not use init function
 
 issues:
   # Excluding configuration per-path, per-linter, per-text and per-source

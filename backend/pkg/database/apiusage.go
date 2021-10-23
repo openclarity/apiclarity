@@ -17,12 +17,12 @@ package database
 
 import (
 	"fmt"
+	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
 	"time"
 
 	"github.com/apiclarity/apiclarity/api/server/models"
 
 	"github.com/go-openapi/strfmt"
-
 	"gorm.io/gorm"
 )
 
@@ -34,7 +34,7 @@ const (
 	NewAPI       APIUsageType = "NewAPI"
 )
 
-func (a *APIEventsTable) getAPIUsageDBSession(apiType APIUsageType) (db *gorm.DB, err error) {
+func (a *APIEventsTableHandler) getAPIUsageDBSession(apiType APIUsageType) (db *gorm.DB, err error) {
 	switch apiType {
 	case APIWithDiffs:
 		db = a.tx.Where(hasSpecDiffColumnName+" = ?", true).Session(&gorm.Session{})
@@ -69,7 +69,7 @@ func (a *APIEventsTable) getAPIUsageDBSession(apiType APIUsageType) (db *gorm.DB
 	return db, nil
 }
 
-func (a *APIEventsTable) GetDashboardAPIUsages(startTime, endTime time.Time, apiType APIUsageType) ([]*models.APIUsage, error) {
+func (a *APIEventsTableHandler) GetDashboardAPIUsages(startTime, endTime time.Time, apiType APIUsageType) ([]*models.APIUsage, error) {
 	var apiUsages []*models.APIUsage
 	var count int64
 
@@ -101,3 +101,33 @@ func (a *APIEventsTable) GetDashboardAPIUsages(startTime, endTime time.Time, api
 	return apiUsages, nil
 }
 
+const hitCountGranularity = 50
+func (a *APIEventsTableHandler) GetAPIUsages(params operations.GetAPIUsageHitCountParams) ([]*models.HitCount, error) {
+	var apiUsages []*models.HitCount
+
+	startTime := time.Time(params.StartTime)
+	endTime := time.Time(params.EndTime)
+	diff := endTime.Sub(startTime)
+	timeInterval := diff / hitCountGranularity
+
+	db := a.setAPIEventsFilters(getAPIUsageHitCountParamsToFilters(params), false).
+		Session(&gorm.Session{})
+
+	for i := 0; i < hitCountGranularity; i++ {
+		var count int64
+		st := strfmt.DateTime(startTime)
+		et := strfmt.DateTime(startTime.Add(timeInterval))
+
+		if err := db.Where(CreateTimeFilter(st, et)).Count(&count).Error; err != nil {
+			return nil, err
+		}
+
+		apiUsages = append(apiUsages, &models.HitCount{
+			Count: count,
+			Time:  st,
+		})
+
+		startTime = startTime.Add(timeInterval)
+	}
+	return apiUsages, nil
+}

@@ -56,7 +56,7 @@ type APIInfo struct {
 	ProvidedSpecInfo      string         `json:"providedSpecInfo,omitempty" gorm:"column:provided_spec_info" faker:"-"`
 }
 
-type APIInventoryInterface interface {
+type APIInventoryTable interface {
 	GetAPIInventoryAndTotal(params operations.GetAPIInventoryParams) ([]APIInfo, int64, error)
 	GetAPISpecs(apiID uint32) (*APIInfo, error)
 	GetAPISpecsInfo(apiID uint32) (*models.OpenAPISpecs, error)
@@ -69,7 +69,7 @@ type APIInventoryInterface interface {
 	CreateAPIInfo(event *APIInfo)
 }
 
-type APIInventoryTable struct {
+type APIInventoryTableHandler struct {
 	tx *gorm.DB
 }
 
@@ -87,13 +87,7 @@ func APIInfoFromDB(event *APIInfo) *models.APIInfo {
 	}
 }
 
-func (dbHandler *DatabaseHandler) APIInventoryTable() APIInventoryInterface {
-	return &APIInventoryTable{
-		tx: dbHandler.DB.Table(apiInventoryTableName),
-	}
-}
-
-func (a *APIInventoryTable) CreateAPIInfo(event *APIInfo) {
+func (a *APIInventoryTableHandler) CreateAPIInfo(event *APIInfo) {
 	if result := a.tx.Create(event); result.Error != nil {
 		log.Errorf("Failed to create api: %v", result.Error)
 	} else {
@@ -101,11 +95,11 @@ func (a *APIInventoryTable) CreateAPIInfo(event *APIInfo) {
 	}
 }
 
-func (a *APIInventoryTable) GetAPIInventoryAndTotal(params operations.GetAPIInventoryParams) ([]APIInfo, int64, error) {
+func (a *APIInventoryTableHandler) GetAPIInventoryAndTotal(params operations.GetAPIInventoryParams) ([]APIInfo, int64, error) {
 	var apiInventory []APIInfo
 	var count int64
 
-	tx := setAPIInventoryFilters(a.tx, params)
+	tx := a.setAPIInventoryFilters(params)
 	// get total count item with the current filters
 	if err := tx.Count(&count).Error; err != nil {
 		return nil, 0, err
@@ -126,7 +120,8 @@ func (a *APIInventoryTable) GetAPIInventoryAndTotal(params operations.GetAPIInve
 	return apiInventory, count, nil
 }
 
-func setAPIInventoryFilters(table *gorm.DB, params operations.GetAPIInventoryParams) *gorm.DB {
+func (a *APIInventoryTableHandler) setAPIInventoryFilters(params operations.GetAPIInventoryParams) *gorm.DB {
+	table := a.tx
 	// type filter
 	table = FilterIs(table, typeColumnName, []string{params.Type})
 
@@ -155,7 +150,7 @@ func setAPIInventoryFilters(table *gorm.DB, params operations.GetAPIInventoryPar
 	return table
 }
 
-func (a *APIInventoryTable) GetAPIID(name, port string) (uint, error) {
+func (a *APIInventoryTableHandler) GetAPIID(name, port string) (uint, error) {
 	apiInfo := APIInfo{}
 	if result := a.tx.Where(nameColumnName+" = ?", name).Where(portColumnName+" = ?", port).First(&apiInfo); result.Error != nil {
 		return 0, result.Error
@@ -164,10 +159,10 @@ func (a *APIInventoryTable) GetAPIID(name, port string) (uint, error) {
 	return apiInfo.ID, nil
 }
 
-func (a *APIInventoryTable) First(dest *APIInfo, conds ...interface{}) error {
+func (a *APIInventoryTableHandler) First(dest *APIInfo, conds ...interface{}) error {
 	return a.tx.First(dest, conds).Error
 }
 
-func (a *APIInventoryTable) FirstOrCreate(apiInfo APIInfo) error {
+func (a *APIInventoryTableHandler) FirstOrCreate(apiInfo APIInfo) error {
 	return a.tx.Where(apiInfo).FirstOrCreate(&apiInfo).Error
 }

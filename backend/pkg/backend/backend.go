@@ -52,16 +52,16 @@ type Backend struct {
 	stateBackupFileName string
 	monitor             *k8smonitor.Monitor
 	apiInventoryLock    sync.RWMutex
-	restServer         *rest.Server
+	dbHandler           *_database.DatabaseHandler
 }
 
-func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, restServer *rest.Server) *Backend {
+func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, dbHandler *_database.DatabaseHandler) *Backend {
 	return &Backend{
-		speculator:   speculator,
+		speculator:          speculator,
 		stateBackupInterval: time.Second * time.Duration(config.StateBackupIntervalSec),
 		stateBackupFileName: config.StateBackupFileName,
 		monitor:             monitor,
-		restServer: restServer,
+		dbHandler:           dbHandler,
 	}
 }
 
@@ -85,7 +85,10 @@ func Run() {
 
 	log.Info("APIClarity backend is running")
 
-	dbHandler := _database.Init()
+	dbConfig := _database.DBConfig{
+		DriverType: config.DatabaseDriver,
+	}
+	dbHandler := _database.Init(&dbConfig)
 	dbHandler.StartReviewTableCleaner(globalCtx, time.Duration(config.DatabaseCleanerIntervalSec)*time.Second)
 
 	var monitor *k8smonitor.Monitor
@@ -109,14 +112,14 @@ func Run() {
 		log.Infof("Using encoded speculator state")
 	}
 
+	backend := CreateBackend(config, monitor, speculator, dbHandler)
+
 	restServer, err := rest.CreateRESTServer(config.BackendRestPort, speculator, dbHandler)
 	if err != nil {
 		log.Fatalf("Failed to create REST server: %v", err)
 	}
 	restServer.Start(errChan)
 	defer restServer.Stop()
-
-	backend := CreateBackend(config, monitor, speculator, restServer)
 
 	tracesServer := traces.CreateHTTPTracesServer(config.HTTPTracesPort, backend.handleHTTPTrace)
 	tracesServer.Start(errChan)
@@ -217,8 +220,7 @@ func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 	if !isNonAPI {
 		// lock the API inventory to avoid creating API entries twice on trace handling races
 		b.apiInventoryLock.Lock()
-		// TODO: Access the database via a database handler instance
-		if err := b.restServer.DbHandler.APIInventoryTable().FirstOrCreate(apiInfo); err != nil {
+		if err := b.dbHandler.APIInventoryTable().FirstOrCreate(apiInfo); err != nil {
 			b.apiInventoryLock.Unlock()
 			return fmt.Errorf("failed to get or create API info: %v", err)
 		}
@@ -303,7 +305,7 @@ func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 
 	event.SpecDiffType = getHighestPrioritySpecDiffType(providedDiffType, reconstructedDiffType)
 
-	b.restServer.DbHandler.APIEventsTable().CreateAPIEvent(event)
+	b.dbHandler.APIEventsTable().CreateAPIEvent(event)
 
 	return nil
 }

@@ -29,7 +29,7 @@ const (
 	ProvidedSpecType      specType = "ProvidedSpecType"
 )
 
-func (a *APIInventoryTable) GetAPISpecs(apiID uint32) (*APIInfo, error) {
+func (a *APIInventoryTableHandler) GetAPISpecs(apiID uint32) (*APIInfo, error) {
 	apiInfo := APIInfo{}
 
 	if err := a.tx.Select(reconstructedSpecColumnName, providedSpecColumnName).First(&apiInfo, apiID).Error; err != nil {
@@ -39,7 +39,7 @@ func (a *APIInventoryTable) GetAPISpecs(apiID uint32) (*APIInfo, error) {
 	return &apiInfo, nil
 }
 
-func (a *APIInventoryTable) GetAPISpecsInfo(apiID uint32) (*models.OpenAPISpecs, error) {
+func (a *APIInventoryTableHandler) GetAPISpecsInfo(apiID uint32) (*models.OpenAPISpecs, error) {
 	apiInfo := APIInfo{}
 
 	if err := a.tx.Select(reconstructedSpecInfoColumnName, providedSpecInfoColumnName).First(&apiInfo, apiID).Error; err != nil {
@@ -67,7 +67,7 @@ func (a *APIInventoryTable) GetAPISpecsInfo(apiID uint32) (*models.OpenAPISpecs,
 	return specsInfo, nil
 }
 
-func (a *APIInventoryTable) PutAPISpec(apiID uint, spec string, specInfo *models.SpecInfo, specType specType) error {
+func (a *APIInventoryTableHandler) PutAPISpec(apiID uint, spec string, specInfo *models.SpecInfo, specType specType) error {
 	specInfoB, err := json.Marshal(specInfo)
 	if err != nil {
 		return fmt.Errorf("failed to marshal spec info. info=%+v: %v", specInfo, err)
@@ -97,7 +97,7 @@ func (a *APIInventoryTable) PutAPISpec(apiID uint, spec string, specInfo *models
 	return nil
 }
 
-func (a *APIInventoryTable) DeleteProvidedAPISpec(apiID uint32) error {
+func (a *APIInventoryTableHandler) DeleteProvidedAPISpec(apiID uint32) error {
 	if err := a.tx.Model(&APIInfo{}).Where("id = ?", apiID).Updates(map[string]interface{}{providedSpecColumnName: "", providedSpecInfoColumnName: "", hasProvidedSpecColumnName: false}).Error; err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func (a *APIInventoryTable) DeleteProvidedAPISpec(apiID uint32) error {
 	return nil
 }
 
-func (a *APIInventoryTable) DeleteApprovedAPISpec(apiID uint32) error {
+func (a *APIInventoryTableHandler) DeleteApprovedAPISpec(apiID uint32) error {
 	if err := a.tx.Model(&APIInfo{}).Where("id = ?", apiID).Updates(map[string]interface{}{reconstructedSpecColumnName: "", reconstructedSpecInfoColumnName: "", hasReconstructedSpecColumnName: false}).Error; err != nil {
 		return err
 	}
