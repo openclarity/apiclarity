@@ -17,13 +17,13 @@ package database
 
 import (
 	"fmt"
+	"gorm.io/gorm"
 	"time"
 
 	"github.com/apiclarity/apiclarity/api/server/models"
 	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
 
 	"github.com/go-openapi/strfmt"
-	"gorm.io/gorm"
 )
 
 type APIUsageType string
