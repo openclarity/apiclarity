@@ -65,6 +65,18 @@ func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculat
 	}
 }
 
+func createDatabaseConfig(config *_config.Config) *_database.DBConfig {
+	return &_database.DBConfig{
+		DriverType:     config.DatabaseDriver,
+		EnableInfoLogs: config.EnableDBInfoLogs,
+		DBPassword:     config.DBPassword,
+		DBUser:         config.DBUser,
+		DBHost:         config.DBHost,
+		DBPort:         config.DBPort,
+		DBName:         config.DBName,
+	}
+}
+
 const defaultChanSize = 100
 
 func Run() {
@@ -85,10 +97,8 @@ func Run() {
 
 	log.Info("APIClarity backend is running")
 
-	dbConfig := _database.DBConfig{
-		DriverType: config.DatabaseDriver,
-	}
-	dbHandler := _database.Init(&dbConfig)
+	dbConfig := createDatabaseConfig(config)
+	dbHandler := _database.Init(dbConfig)
 	dbHandler.StartReviewTableCleaner(globalCtx, time.Duration(config.DatabaseCleanerIntervalSec)*time.Second)
 
 	var monitor *k8smonitor.Monitor

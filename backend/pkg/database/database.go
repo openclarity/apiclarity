@@ -16,13 +16,10 @@
 package database
 
 import (
-	"context"
 	"fmt"
 	"os"
-	"time"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -30,15 +27,9 @@ import (
 )
 
 const (
-	dbNameEnvVar     = "DB_NAME"
-	DBUserEnvVar     = "DB_USER"
-	DBPasswordEnvVar = "DB_PASS"
-	DBHostEnvVar     = "DB_HOST"
-	DBPortEnvVar     = "DB_PORT_NUMBER"
 	FakeDataEnvVar   = "FAKE_DATA"
 	FakeTracesEnvVar = "FAKE_TRACES"
-	LocalDBPath      = "./db.db"
-	enableDBInfoLogs = "ENABLE_DB_INFO_LOGS"
+	localDBPath      = "./db.db"
 )
 
 const (
@@ -57,7 +48,13 @@ type Handler struct {
 }
 
 type DBConfig struct {
-	DriverType string
+	EnableInfoLogs bool
+	DriverType     string
+	DBPassword     string
+	DBUser         string
+	DBHost         string
+	DBPort         string
+	DBName         string
 }
 
 func Init(config *DBConfig) *Handler {
@@ -99,13 +96,13 @@ func initDataBase(config *DBConfig) *gorm.DB {
 	var db *gorm.DB
 	dbDriver := config.DriverType
 	dbLogger := logger.Default
-	if viper.GetBool(enableDBInfoLogs) {
+	if config.EnableInfoLogs {
 		dbLogger = dbLogger.LogMode(logger.Info)
 	}
 
 	switch dbDriver {
 	case DBDriverTypePostgres:
-		db = initPostgres(dbLogger)
+		db = initPostgres(config, dbLogger)
 	case DBDriverTypeLocal:
 		db = initSqlite(dbLogger)
 	default:
@@ -120,30 +117,24 @@ func initDataBase(config *DBConfig) *gorm.DB {
 	return db
 }
 
-func initPostgres(dbLogger logger.Interface) *gorm.DB {
-	dbPass := viper.GetString(DBPasswordEnvVar)
-	dbUser := viper.GetString(DBUserEnvVar)
-	dbHost := viper.GetString(DBHostEnvVar)
-	dbPort := viper.GetString(DBPortEnvVar)
-	dbName := viper.GetString(dbNameEnvVar)
-
+func initPostgres(config *DBConfig, dbLogger logger.Interface) *gorm.DB {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
-		dbHost, dbUser, dbPass, dbName, dbPort)
+		config.DBHost, config.DBUser, config.DBPassword, config.DBName, config.DBPort)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: dbLogger,
 	})
 	if err != nil {
-		log.Fatalf("Failed to open %s db: %v", dbName, err)
+		log.Fatalf("Failed to open %s db: %v", config.DBName, err)
 	}
 
 	return db
 }
 
 func initSqlite(dbLogger logger.Interface) *gorm.DB {
-	cleanLocalDataBase(LocalDBPath)
+	cleanLocalDataBase(localDBPath)
 
-	db, err := gorm.Open(sqlite.Open(LocalDBPath), &gorm.Config{
+	db, err := gorm.Open(sqlite.Open(localDBPath), &gorm.Config{
 		Logger: dbLogger,
 	})
 	if err != nil {
@@ -151,20 +142,4 @@ func initSqlite(dbLogger logger.Interface) *gorm.DB {
 	}
 
 	return db
-}
-
-func (db *Handler) StartReviewTableCleaner(ctx context.Context, cleanInterval time.Duration) {
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				log.Debugf("Stopping database cleaner")
-				return
-			case <-time.After(cleanInterval):
-				if err := db.ReviewTable().DeleteApproved(); err != nil {
-					log.Errorf("Failed to delete approved review from database. %v", err)
-				}
-			}
-		}
-	}()
 }

@@ -16,6 +16,9 @@
 package database
 
 import (
+	"context"
+	"time"
+
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -76,4 +79,20 @@ func (r *ReviewTableHandler) DeleteApproved() error {
 
 func (r *ReviewTableHandler) First(dest *Review, conds ...interface{}) error {
 	return r.tx.First(dest, conds).Error
+}
+
+func (db *Handler) StartReviewTableCleaner(ctx context.Context, cleanInterval time.Duration) {
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				log.Debugf("Stopping database cleaner")
+				return
+			case <-time.After(cleanInterval):
+				if err := db.ReviewTable().DeleteApproved(); err != nil {
+					log.Errorf("Failed to delete approved review from database. %v", err)
+				}
+			}
+		}
+	}()
 }
