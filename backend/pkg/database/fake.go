@@ -66,7 +66,7 @@ func createAPIInfo() *APIInfo {
 	return &event
 }
 
-func (db *DatabaseHandler) CreateFakeData() {
+func (db *Handler) CreateFakeData() {
 	rand.Seed(time.Now().Unix())
 	time.Sleep(1 * time.Second)
 	customGenerator()

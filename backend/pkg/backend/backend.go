@@ -52,10 +52,10 @@ type Backend struct {
 	stateBackupFileName string
 	monitor             *k8smonitor.Monitor
 	apiInventoryLock    sync.RWMutex
-	dbHandler           *_database.DatabaseHandler
+	dbHandler           *_database.Handler
 }
 
-func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, dbHandler *_database.DatabaseHandler) *Backend {
+func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, dbHandler *_database.Handler) *Backend {
 	return &Backend{
 		speculator:          speculator,
 		stateBackupInterval: time.Second * time.Duration(config.StateBackupIntervalSec),

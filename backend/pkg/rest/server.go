@@ -35,7 +35,7 @@ type Server struct {
 	speculator *_speculator.Speculator
 }
 
-func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *database.DatabaseHandler) (*Server, error) {
+func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *database.Handler) (*Server, error) {
 	s := &Server{
 		speculator: speculator,
 		dbHandler:  dbHandler,
