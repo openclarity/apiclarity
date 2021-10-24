@@ -63,7 +63,6 @@ type DBConfig struct {
 func Init(config *DBConfig) *Handler {
 	databaseHandler := Handler{}
 
-	viper.AutomaticEnv()
 	databaseHandler.DB = initDataBase(config)
 
 	return &databaseHandler
@@ -144,12 +143,11 @@ func initPostgres(dbLogger logger.Interface) *gorm.DB {
 func initSqlite(dbLogger logger.Interface) *gorm.DB {
 	cleanLocalDataBase(LocalDBPath)
 
-	db, _ := gorm.Open(sqlite.Open(LocalDBPath), &gorm.Config{
+	db, err := gorm.Open(sqlite.Open(LocalDBPath), &gorm.Config{
 		Logger: dbLogger,
 	})
-	// this will ensure table is created
-	if err := db.AutoMigrate(&APIEvent{}, &APIInfo{}, &Review{}); err != nil {
-		panic(err)
+	if err != nil {
+		log.Fatalf("Failed to open db: %v", err)
 	}
 
 	return db

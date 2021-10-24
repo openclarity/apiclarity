@@ -220,7 +220,7 @@ func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 	if !isNonAPI {
 		// lock the API inventory to avoid creating API entries twice on trace handling races
 		b.apiInventoryLock.Lock()
-		if err := b.dbHandler.APIInventoryTable().FirstOrCreate(apiInfo); err != nil {
+		if err := b.dbHandler.APIInventoryTable().FirstOrCreate(&apiInfo); err != nil {
 			b.apiInventoryLock.Unlock()
 			return fmt.Errorf("failed to get or create API info: %v", err)
 		}

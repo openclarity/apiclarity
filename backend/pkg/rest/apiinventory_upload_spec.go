@@ -131,10 +131,6 @@ func (s *Server) loadProvidedSpec(apiID uint32, jsonSpec []byte, pathToPathID ma
 func (s *Server) getSpecKey(apiID uint32) (speculator.SpecKey, error) {
 	apiInfo := &database.APIInfo{}
 
-	if s.dbHandler == nil {
-		log.Error("db handler nil")
-	}
-
 	if err := s.dbHandler.APIInventoryTable().First(apiInfo, apiID); err != nil {
 		return "", fmt.Errorf("failed to get API Info from DB. id=%v: %v", apiID, err)
 	}
