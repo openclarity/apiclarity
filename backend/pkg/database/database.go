@@ -43,7 +43,7 @@ const (
 
 const (
 	DBDriverTypePostgres = "POSTGRES"
-	DBDriverTypeLocal = "LOCAL"
+	DBDriverTypeLocal    = "LOCAL"
 )
 
 type Database interface {
@@ -52,7 +52,7 @@ type Database interface {
 	ReviewTable() ReviewTable
 }
 
-type DatabaseHandler struct {
+type Handler struct {
 	DB *gorm.DB
 }
 
@@ -60,8 +60,8 @@ type DBConfig struct {
 	DriverType string
 }
 
-func Init(config *DBConfig) *DatabaseHandler {
-	databaseHandler := DatabaseHandler{}
+func Init(config *DBConfig) *Handler {
+	databaseHandler := Handler{}
 
 	viper.AutomaticEnv()
 	databaseHandler.DB = initDataBase(config)
@@ -69,19 +69,19 @@ func Init(config *DBConfig) *DatabaseHandler {
 	return &databaseHandler
 }
 
-func (db *DatabaseHandler) APIEventsTable() APIEventsTable {
+func (db *Handler) APIEventsTable() APIEventsTable {
 	return &APIEventsTableHandler{
 		tx: db.DB.Table(apiEventTableName),
 	}
 }
 
-func (db *DatabaseHandler) APIInventoryTable() APIInventoryTable {
+func (db *Handler) APIInventoryTable() APIInventoryTable {
 	return &APIInventoryTableHandler{
 		tx: db.DB.Table(apiInventoryTableName),
 	}
 }
 
-func (db *DatabaseHandler) ReviewTable() ReviewTable {
+func (db *Handler) ReviewTable() ReviewTable {
 	return &ReviewTableHandler{
 		tx: db.DB.Table(reviewTableName),
 	}
@@ -155,7 +155,7 @@ func initSqlite(dbLogger logger.Interface) *gorm.DB {
 	return db
 }
 
-func (db *DatabaseHandler) StartReviewTableCleaner(ctx context.Context, cleanInterval time.Duration) {
+func (db *Handler) StartReviewTableCleaner(ctx context.Context, cleanInterval time.Duration) {
 	go func() {
 		for {
 			select {

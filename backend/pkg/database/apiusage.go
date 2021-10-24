@@ -17,10 +17,10 @@ package database
 
 import (
 	"fmt"
-	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
 	"time"
 
 	"github.com/apiclarity/apiclarity/api/server/models"
+	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
 
 	"github.com/go-openapi/strfmt"
 	"gorm.io/gorm"
@@ -102,6 +102,7 @@ func (a *APIEventsTableHandler) GetDashboardAPIUsages(startTime, endTime time.Ti
 }
 
 const hitCountGranularity = 50
+
 func (a *APIEventsTableHandler) GetAPIUsages(params operations.GetAPIUsageHitCountParams) ([]*models.HitCount, error) {
 	var apiUsages []*models.HitCount
 
