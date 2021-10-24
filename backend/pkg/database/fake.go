@@ -25,10 +25,6 @@ import (
 	"github.com/go-openapi/strfmt"
 )
 
-func init() {
-	rand.Seed(time.Now().Unix())
-}
-
 var (
 	oldSpec = "{\n  \"swagger\": \"2.0\",\n  \"info\": {\n    \"title\": \"Sample API\",\n    \"description\": \"API description in Markdown.\",\n    \"version\": \"1.0.0\"\n  },\n  \"host\": \"api.example.com\",\n  \"basePath\": \"/v1\",\n  \"schemes\": [\n    \"https\"\n  ],\n  \"paths\": {\n    \"/cats\": {\n      \"get\": {\n        \"summary\": \"Returns a list of cats.\",\n        \"description\": \"Optional extended description in Markdown.\",\n        \"produces\": [\n          \"application/json\"\n        ],\n        \"responses\": {\n          \"200\": {\n            \"description\": \"OK\"\n          }\n        }\n      }\n    }\n  }\n}"
 	newSpec = "{\n  \"swagger\": \"2.0\",\n  \"info\": {\n    \"title\": \"Sample API\",\n    \"description\": \"API description in Markdown.\",\n    \"version\": \"1.0.0\"\n  },\n  \"host\": \"api.example.com\",\n  \"basePath\": \"/v1\",\n  \"schemes\": [\n    \"https\"\n  ],\n  \"paths\": {\n    \"/cats\": {\n      \"get\": {\n        \"summary\": \"Returns a list of cats.\",\n        \"produces\": [\n          \"application/json\"\n        ],\n        \"responses\": {\n          \"200\": {\n            \"description\": \"OK\"\n          }\n        }\n      }\n    },\n    \"/dogs\": {\n      \"get\": {\n        \"summary\": \"Returns a list of dogs.\",\n        \"produces\": [\n          \"application/json\"\n        ],\n        \"responses\": {\n          \"200\": {\n            \"description\": \"OK\"\n          }\n        }\n      }\n    }\n  }\n}"
@@ -71,6 +67,7 @@ func createAPIInfo() *APIInfo {
 }
 
 func (db *DatabaseHandler) CreateFakeData() {
+	rand.Seed(time.Now().Unix())
 	time.Sleep(1 * time.Second)
 	customGenerator()
 
