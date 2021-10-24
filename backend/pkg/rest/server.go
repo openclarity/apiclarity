@@ -25,17 +25,20 @@ import (
 	"github.com/apiclarity/apiclarity/api/server/restapi"
 	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
 	"github.com/apiclarity/apiclarity/backend/pkg/common"
+	"github.com/apiclarity/apiclarity/backend/pkg/database"
 	_speculator "github.com/apiclarity/speculator/pkg/speculator"
 )
 
 type Server struct {
 	server     *restapi.Server
+	dbHandler  database.Database
 	speculator *_speculator.Speculator
 }
 
-func CreateRESTServer(port int, speculator *_speculator.Speculator) (*Server, error) {
+func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *database.Handler) (*Server, error) {
 	s := &Server{
 		speculator: speculator,
+		dbHandler:  dbHandler,
 	}
 
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)

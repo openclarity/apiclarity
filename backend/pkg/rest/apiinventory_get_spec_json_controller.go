@@ -26,7 +26,6 @@ import (
 
 	"github.com/apiclarity/apiclarity/api/server/models"
 	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
-	"github.com/apiclarity/apiclarity/backend/pkg/database"
 )
 
 type swaggerType string
@@ -37,7 +36,7 @@ const (
 )
 
 func (s *Server) GetAPIReconstructedSwaggerJSON(params operations.GetAPIInventoryAPIIDReconstructedSwaggerJSONParams) middleware.Responder {
-	swaggerJSON, err := getAPISwaggerJSON(params.APIID, swaggerTypeReconstructed)
+	swaggerJSON, err := s.getAPISwaggerJSON(params.APIID, swaggerTypeReconstructed)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
@@ -51,7 +50,7 @@ func (s *Server) GetAPIReconstructedSwaggerJSON(params operations.GetAPIInventor
 }
 
 func (s *Server) GetAPIProvidedSwaggerJSON(params operations.GetAPIInventoryAPIIDProvidedSwaggerJSONParams) middleware.Responder {
-	swaggerJSON, err := getAPISwaggerJSON(params.APIID, swaggerTypeProvided)
+	swaggerJSON, err := s.getAPISwaggerJSON(params.APIID, swaggerTypeProvided)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
@@ -64,8 +63,8 @@ func (s *Server) GetAPIProvidedSwaggerJSON(params operations.GetAPIInventoryAPII
 	return operations.NewGetAPIInventoryAPIIDProvidedSwaggerJSONOK().WithPayload(swaggerJSON)
 }
 
-func getAPISwaggerJSON(apiID uint32, typ swaggerType) (*spec.Swagger, error) {
-	apiSpecFromDB, err := database.GetAPISpecs(apiID)
+func (s *Server) getAPISwaggerJSON(apiID uint32, typ swaggerType) (*spec.Swagger, error) {
+	apiSpecFromDB, err := s.dbHandler.APIInventoryTable().GetAPISpecs(apiID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get api specs from DB: %v", err)
 	}

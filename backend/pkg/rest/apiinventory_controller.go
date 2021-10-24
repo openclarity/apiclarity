@@ -29,7 +29,7 @@ import (
 func (s *Server) GetAPIInventory(params operations.GetAPIInventoryParams) middleware.Responder {
 	var apiInventory []*models.APIInfo
 
-	apiInventoryFromDB, total, err := _database.GetAPIInventoryAndTotal(params)
+	apiInventoryFromDB, total, err := s.dbHandler.APIInventoryTable().GetAPIInventoryAndTotal(params)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go

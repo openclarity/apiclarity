@@ -16,6 +16,9 @@
 package database
 
 import (
+	"context"
+	"time"
+
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -39,26 +42,57 @@ type Review struct {
 	PathToPathItemStr string `json:"pathToPathItemStr,omitempty" gorm:"column:path_to_path_item_str" faker:"-"`
 }
 
+type ReviewTable interface {
+	UpdateApprovedReview(approved bool, id uint32) error
+	Create(review *Review) error
+	First(dest *Review, conds ...interface{}) error
+	DeleteApproved() error
+}
+
+type ReviewTableHandler struct {
+	tx *gorm.DB
+}
+
 func (Review) TableName() string {
 	return reviewTableName
 }
 
-func GetReviewTable() *gorm.DB {
-	return DB.Table(reviewTableName)
-}
-
-func CreateReview(review *Review) error {
-	if err := GetReviewTable().Create(&review).Error; err != nil {
+func (r *ReviewTableHandler) Create(review *Review) error {
+	if err := r.tx.Create(&review).Error; err != nil {
 		log.Error(err)
 		return err
 	}
 	return nil
 }
 
-func UpdateApprovedReview(approved bool, id uint32) error {
-	if err := GetReviewTable().Model(&Review{}).Where("id = ?", id).Updates(map[string]interface{}{approvedColumnName: approved}).Error; err != nil {
+func (r *ReviewTableHandler) UpdateApprovedReview(approved bool, id uint32) error {
+	if err := r.tx.Model(&Review{}).Where("id = ?", id).Updates(map[string]interface{}{approvedColumnName: approved}).Error; err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (r *ReviewTableHandler) DeleteApproved() error {
+	return r.tx.Where("approved =  ?", true).Delete(Review{}).Error
+}
+
+func (r *ReviewTableHandler) First(dest *Review, conds ...interface{}) error {
+	return r.tx.First(dest, conds).Error
+}
+
+func (db *Handler) StartReviewTableCleaner(ctx context.Context, cleanInterval time.Duration) {
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				log.Debugf("Stopping database cleaner")
+				return
+			case <-time.After(cleanInterval):
+				if err := db.ReviewTable().DeleteApproved(); err != nil {
+					log.Errorf("Failed to delete approved review from database. %v", err)
+				}
+			}
+		}
+	}()
 }

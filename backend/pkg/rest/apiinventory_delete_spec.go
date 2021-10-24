@@ -31,7 +31,7 @@ import (
 func (s *Server) DeleteAPIInventoryAPIIDSpecsProvidedSpec(params operations.DeleteAPIInventoryAPIIDSpecsProvidedSpecParams) middleware.Responder {
 	apiInfo := &database.APIInfo{}
 
-	if err := database.GetAPIInventoryTable().First(&apiInfo, params.APIID).Error; err != nil {
+	if err := s.dbHandler.APIInventoryTable().First(apiInfo, params.APIID); err != nil {
 		log.Errorf("Failed to get API info. id=%v: %v", params.APIID, err)
 		return operations.NewDeleteAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
 	}
@@ -40,7 +40,7 @@ func (s *Server) DeleteAPIInventoryAPIIDSpecsProvidedSpec(params operations.Dele
 		log.Errorf("Failed to unset provided spec. %v", err)
 		return operations.NewDeleteAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
 	}
-	if err := database.DeleteProvidedAPISpec(params.APIID); err != nil {
+	if err := s.dbHandler.APIInventoryTable().DeleteProvidedAPISpec(params.APIID); err != nil {
 		log.Errorf("Failed to delete provided spec with api id: %v from DB. %v", params.APIID, err)
 		return operations.NewDeleteAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
 	}
@@ -53,7 +53,7 @@ func (s *Server) DeleteAPIInventoryAPIIDSpecsProvidedSpec(params operations.Dele
 func (s *Server) DeleteAPIInventoryAPIIDSpecsReconstructedSpec(params operations.DeleteAPIInventoryAPIIDSpecsReconstructedSpecParams) middleware.Responder {
 	apiInfo := &database.APIInfo{}
 
-	if err := database.GetAPIInventoryTable().First(&apiInfo, params.APIID).Error; err != nil {
+	if err := s.dbHandler.APIInventoryTable().First(apiInfo, params.APIID); err != nil {
 		log.Errorf("Failed to get API info. id=%v: %v", params.APIID, err)
 		return operations.NewDeleteAPIInventoryAPIIDSpecsReconstructedSpecDefault(http.StatusInternalServerError)
 	}
@@ -63,7 +63,7 @@ func (s *Server) DeleteAPIInventoryAPIIDSpecsReconstructedSpec(params operations
 		return operations.NewDeleteAPIInventoryAPIIDSpecsReconstructedSpecDefault(http.StatusInternalServerError)
 	}
 
-	if err := database.DeleteApprovedAPISpec(params.APIID); err != nil {
+	if err := s.dbHandler.APIInventoryTable().DeleteApprovedAPISpec(params.APIID); err != nil {
 		log.Errorf("Failed to delete reconstructed spec with api id: %v from DB. %v", params.APIID, err)
 		return operations.NewDeleteAPIInventoryAPIIDSpecsReconstructedSpecDefault(http.StatusInternalServerError)
 	}

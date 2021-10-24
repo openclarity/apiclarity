@@ -17,22 +17,16 @@ package rest
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/strfmt"
 	log "github.com/sirupsen/logrus"
-	"gorm.io/gorm"
 
 	"github.com/apiclarity/apiclarity/api/server/models"
 	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
-	"github.com/apiclarity/apiclarity/backend/pkg/database"
 )
 
-const hitCountGranularity = 50
-
 func (s *Server) GetAPIUsageHitCount(params operations.GetAPIUsageHitCountParams) middleware.Responder {
-	hitCounts, err := getAPIUsages(params)
+	hitCounts, err := s.dbHandler.APIEventsTable().GetAPIUsages(params)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
@@ -43,67 +37,4 @@ func (s *Server) GetAPIUsageHitCount(params operations.GetAPIUsageHitCountParams
 	}
 
 	return operations.NewGetAPIUsageHitCountOK().WithPayload(hitCounts)
-}
-
-func getAPIUsages(params operations.GetAPIUsageHitCountParams) ([]*models.HitCount, error) {
-	var apiUsages []*models.HitCount
-
-	startTime := time.Time(params.StartTime)
-	endTime := time.Time(params.EndTime)
-	diff := endTime.Sub(startTime)
-	timeInterval := diff / hitCountGranularity
-
-	db := database.SetAPIEventsFilters(database.GetAPIEventsTable(), getAPIUsageHitCountParamsToFilters(params), false).
-		Session(&gorm.Session{})
-
-	for i := 0; i < hitCountGranularity; i++ {
-		var count int64
-		st := strfmt.DateTime(startTime)
-		et := strfmt.DateTime(startTime.Add(timeInterval))
-
-		if err := db.Where(database.CreateTimeFilter(st, et)).Count(&count).Error; err != nil {
-			return nil, err
-		}
-
-		apiUsages = append(apiUsages, &models.HitCount{
-			Count: count,
-			Time:  st,
-		})
-
-		startTime = startTime.Add(timeInterval)
-	}
-	return apiUsages, nil
-}
-
-func getAPIUsageHitCountParamsToFilters(params operations.GetAPIUsageHitCountParams) *database.APIEventsFilters {
-	return &database.APIEventsFilters{
-		DestinationIPIsNot:    params.DestinationIPIsNot,
-		DestinationIPIs:       params.DestinationIPIs,
-		DestinationPortIsNot:  params.DestinationPortIsNot,
-		DestinationPortIs:     params.DestinationPortIs,
-		EndTime:               params.EndTime,
-		ShowNonAPI:            params.ShowNonAPI,
-		HasSpecDiffIs:         params.HasSpecDiffIs,
-		SpecDiffTypeIs:        params.SpecDiffTypeIs,
-		MethodIs:              params.MethodIs,
-		ReconstructedPathIDIs: params.ReconstructedPathIDIs,
-		ProvidedPathIDIs:      params.ProvidedPathIDIs,
-		PathContains:          params.PathContains,
-		PathEnd:               params.PathEnd,
-		PathIsNot:             params.PathIsNot,
-		PathIs:                params.PathIs,
-		PathStart:             params.PathStart,
-		SourceIPIsNot:         params.SourceIPIsNot,
-		SourceIPIs:            params.SourceIPIs,
-		SpecContains:          params.SpecContains,
-		SpecEnd:               params.SpecEnd,
-		SpecIsNot:             params.SpecIsNot,
-		SpecIs:                params.SpecIs,
-		SpecStart:             params.SpecStart,
-		StartTime:             params.StartTime,
-		StatusCodeGte:         params.StatusCodeGte,
-		StatusCodeIsNot:       params.StatusCodeIsNot,
-		StatusCodeIs:          params.StatusCodeIs,
-		StatusCodeLte:         params.StatusCodeLte,
-	}
 }

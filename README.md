@@ -188,7 +188,7 @@ To deploy the Sock Shop Demo follow these steps:
 3. Run backend and frontend locally using demo data:
 
    ```shell
-   FAKE_TRACES=true FAKE_TRACES_PATH=./backend/pkg/test/trace_files \
+   DATABASE_DRIVER=LOCAL FAKE_TRACES=true FAKE_TRACES_PATH=./backend/pkg/test/trace_files \
    ENABLE_DB_INFO_LOGS=true ./backend/bin/backend run
    ```
 

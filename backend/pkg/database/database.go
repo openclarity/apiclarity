@@ -20,7 +20,6 @@ import (
 	"os"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -28,30 +27,63 @@ import (
 )
 
 const (
-	dbNameEnvVar     = "DB_NAME"
-	DBUserEnvVar     = "DB_USER"
-	DBPasswordEnvVar = "DB_PASS"
-	DBHostEnvVar     = "DB_HOST"
-	DBPortEnvVar     = "DB_PORT_NUMBER"
 	FakeDataEnvVar   = "FAKE_DATA"
 	FakeTracesEnvVar = "FAKE_TRACES"
-	FakeDBPath       = "./db.db"
-	enableDBInfoLogs = "ENABLE_DB_INFO_LOGS"
+	localDBPath      = "./db.db"
 )
 
-var DB *gorm.DB
+const (
+	DBDriverTypePostgres = "POSTGRES"
+	DBDriverTypeLocal    = "LOCAL"
+)
 
-func init() {
-	viper.AutomaticEnv()
-	if viper.GetBool(FakeDataEnvVar) || viper.GetBool(FakeTracesEnvVar) {
-		cleanFakeDataBase(FakeDBPath)
-		DB = initFakeDataBase(FakeDBPath)
-	} else {
-		DB = initDataBase()
+type Database interface {
+	APIEventsTable() APIEventsTable
+	APIInventoryTable() APIInventoryTable
+	ReviewTable() ReviewTable
+}
+
+type Handler struct {
+	DB *gorm.DB
+}
+
+type DBConfig struct {
+	EnableInfoLogs bool
+	DriverType     string
+	DBPassword     string
+	DBUser         string
+	DBHost         string
+	DBPort         string
+	DBName         string
+}
+
+func Init(config *DBConfig) *Handler {
+	databaseHandler := Handler{}
+
+	databaseHandler.DB = initDataBase(config)
+
+	return &databaseHandler
+}
+
+func (db *Handler) APIEventsTable() APIEventsTable {
+	return &APIEventsTableHandler{
+		tx: db.DB.Table(apiEventTableName),
 	}
 }
 
-func cleanFakeDataBase(databasePath string) {
+func (db *Handler) APIInventoryTable() APIInventoryTable {
+	return &APIInventoryTableHandler{
+		tx: db.DB.Table(apiInventoryTableName),
+	}
+}
+
+func (db *Handler) ReviewTable() ReviewTable {
+	return &ReviewTableHandler{
+		tx: db.DB.Table(reviewTableName),
+	}
+}
+
+func cleanLocalDataBase(databasePath string) {
 	if _, err := os.Stat(databasePath); !os.IsNotExist(err) {
 		log.Debug("deleting db...")
 		if err := os.Remove(databasePath); err != nil {
@@ -60,26 +92,21 @@ func cleanFakeDataBase(databasePath string) {
 	}
 }
 
-func initDataBase() *gorm.DB {
-	dbPass := viper.GetString(DBPasswordEnvVar)
-	dbUser := viper.GetString(DBUserEnvVar)
-	dbHost := viper.GetString(DBHostEnvVar)
-	dbPort := viper.GetString(DBPortEnvVar)
-	dbName := viper.GetString(dbNameEnvVar)
-
+func initDataBase(config *DBConfig) *gorm.DB {
+	var db *gorm.DB
+	dbDriver := config.DriverType
 	dbLogger := logger.Default
-	if viper.GetBool(enableDBInfoLogs) {
+	if config.EnableInfoLogs {
 		dbLogger = dbLogger.LogMode(logger.Info)
 	}
 
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
-		dbHost, dbUser, dbPass, dbName, dbPort)
-
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: dbLogger,
-	})
-	if err != nil {
-		log.Fatalf("Failed to open %s db: %v", dbName, err)
+	switch dbDriver {
+	case DBDriverTypePostgres:
+		db = initPostgres(config, dbLogger)
+	case DBDriverTypeLocal:
+		db = initSqlite(dbLogger)
+	default:
+		log.Fatalf("DB driver is not supported: %v", dbDriver)
 	}
 
 	// this will ensure table is created
@@ -90,19 +117,29 @@ func initDataBase() *gorm.DB {
 	return db
 }
 
-func initFakeDataBase(databasePath string) *gorm.DB {
-	dbLogger := logger.Default
-	if viper.GetBool(enableDBInfoLogs) {
-		dbLogger = dbLogger.LogMode(logger.Info)
-	}
+func initPostgres(config *DBConfig, dbLogger logger.Interface) *gorm.DB {
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
+		config.DBHost, config.DBUser, config.DBPassword, config.DBName, config.DBPort)
 
-	temp, _ := gorm.Open(sqlite.Open(databasePath), &gorm.Config{
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: dbLogger,
 	})
-	// this will ensure table is created
-	if err := temp.AutoMigrate(&APIEvent{}, &APIInfo{}, &Review{}); err != nil {
-		panic(err)
+	if err != nil {
+		log.Fatalf("Failed to open %s db: %v", config.DBName, err)
 	}
 
-	return temp
+	return db
+}
+
+func initSqlite(dbLogger logger.Interface) *gorm.DB {
+	cleanLocalDataBase(localDBPath)
+
+	db, err := gorm.Open(sqlite.Open(localDBPath), &gorm.Config{
+		Logger: dbLogger,
+	})
+	if err != nil {
+		log.Fatalf("Failed to open db: %v", err)
+	}
+
+	return db
 }

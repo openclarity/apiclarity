@@ -73,7 +73,7 @@ func (s *Server) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPII
 	}
 
 	// Save the provided spec in the DB without expanding the ref fields
-	if err = database.PutAPISpec(uint(params.APIID), params.Body.RawSpec, specInfo, database.ProvidedSpecType); err != nil {
+	if err = s.dbHandler.APIInventoryTable().PutAPISpec(uint(params.APIID), params.Body.RawSpec, specInfo, database.ProvidedSpecType); err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
 		log.Errorf("Failed to put provided API spec. %v", err)
@@ -116,7 +116,7 @@ func getExpandedSpec(analyzed *loads.Document) ([]byte, error) {
 }
 
 func (s *Server) loadProvidedSpec(apiID uint32, jsonSpec []byte, pathToPathID map[string]string) error {
-	specKey, err := getSpecKey(apiID)
+	specKey, err := s.getSpecKey(apiID)
 	if err != nil {
 		return fmt.Errorf("failed to get spec key: %v", err)
 	}
@@ -128,10 +128,10 @@ func (s *Server) loadProvidedSpec(apiID uint32, jsonSpec []byte, pathToPathID ma
 	return nil
 }
 
-func getSpecKey(apiID uint32) (speculator.SpecKey, error) {
+func (s *Server) getSpecKey(apiID uint32) (speculator.SpecKey, error) {
 	apiInfo := &database.APIInfo{}
 
-	if err := database.GetAPIInventoryTable().First(&apiInfo, apiID).Error; err != nil {
+	if err := s.dbHandler.APIInventoryTable().First(apiInfo, apiID); err != nil {
 		return "", fmt.Errorf("failed to get API Info from DB. id=%v: %v", apiID, err)
 	}
 
