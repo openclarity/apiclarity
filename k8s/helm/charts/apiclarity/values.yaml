@@ -33,6 +33,9 @@ global:
     ##   GKE, AWS & OpenStack)
     #storageClass: ""
 
+  ## Disable Istio Check Pre-Install Job
+  ##
+  disableIstioVerify: false
 ## End of Global Values
 #######################################################################################
 
