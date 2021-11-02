@@ -52,7 +52,7 @@ api: ## Generating API code
 	@(cd api; ./generate.sh)
 
 .PHONY: docker
-docker: ## Build Docker image 
+docker: ## Build Docker image
 	@(echo "Building docker image ..." )
 	docker build --build-arg VERSION=${VERSION} \
 		--build-arg BUILD_TIMESTAMP=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") \
@@ -63,6 +63,14 @@ docker: ## Build Docker image
 push-docker: docker ## Build and Push Docker image
 	@echo "Publishing Docker image ..."
 	docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+
+.PHONY: docker-plugins
+docker-plugins: ## Build plugins Docker image
+	$(MAKE) docker -C plugins
+
+.PHONY: push-docker-plugins
+push-docker-plugins: docker-plugins ## Build and Push Docker image
+	$(MAKE) push-docker -C plugins
 
 .PHONY: test
 test: ## Run Unit Tests

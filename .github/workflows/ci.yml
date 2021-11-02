@@ -30,3 +30,6 @@ jobs:
 
     - name: Build Docker image
       run: make docker
+
+    - name: Build plugins Docker images
+      run: make docker-plugins

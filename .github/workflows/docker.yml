@@ -41,7 +41,7 @@ jobs:
         with:
           context: .
           tags: ghcr.io/apiclarity/apiclarity:latest
-          file: Dockerfile
+          file: Dockerfile.kong
           push: true
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
@@ -49,3 +49,13 @@ jobs:
             VERSION=latest
             BUILD_TIMESTAMP=${{ steps.timestamp.outputs.timestamp }}
             COMMIT_HASH=${{ github.sha }}
+
+      - name: Build Kong Plugin
+        uses: docker/build-push-action@v2
+        with:
+          context: plugins
+          tags: ghcr.io/apiclarity/kong-plugin:test
+          file: plugins/Dockerfile.kong
+          push: true
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache

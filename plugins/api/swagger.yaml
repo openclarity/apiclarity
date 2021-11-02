@@ -1,0 +1,117 @@
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "APIClarity Plugins telemetries API"
+
+basePath: /api
+
+schemes:
+  - http
+
+consumes: [ "application/json" ]
+produces: [ "application/json" ]
+
+paths:
+  /telemetry:
+    post:
+      summary: 'Post an http telemetry'
+      parameters:
+        - in: 'body'
+          name: 'body'
+          required: true
+          schema:
+            description: 'Telemetry'
+            $ref: '#/definitions/Telemetry'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/responses/Success'
+        default:
+          $ref: '#/responses/UnknownError'
+
+definitions:
+  Telemetry:
+    type: 'object'
+    properties:
+      requestID:
+        type: 'string'
+      scheme:
+        type: 'string'
+      destinationAddress:
+        type: 'string'
+      destinationNamespace:
+        type: 'string'
+      sourceAddress:
+        type: 'string'
+      request:
+        $ref: '#/definitions/Request'
+      response:
+        $ref: '#/definitions/Response'
+
+  Request:
+    type: 'object'
+    properties:
+      method:
+        type: 'string'
+      path:
+        type: 'string'
+      host:
+        type: 'string'
+      common:
+        $ref: '#/definitions/Common'
+
+  Response:
+    type: 'object'
+    properties:
+      statusCode:
+        type: 'string'
+      common:
+        $ref: '#/definitions/Common'
+
+  Common:
+    type: 'object'
+    properties:
+      version:
+        type: 'string'
+      headers:
+        type: 'array'
+        items:
+          $ref: '#/definitions/Header'
+      body:
+        type: 'string'
+        format: 'byte'
+      TruncatedBody:
+        type: 'boolean'
+
+  Header:
+    type: 'object'
+    properties:
+      key:
+        type: 'string'
+      value:
+        type: 'string'
+
+  ApiResponse:
+    description: 'An object that is return in all cases of failures.'
+    type: 'object'
+    properties:
+      message:
+        type: 'string'
+
+  SuccessResponse:
+    description: 'An object that is return in cases of success that return nothing.'
+    type: 'object'
+    properties:
+      message:
+        type: 'string'
+
+responses:
+  UnknownError:
+    description: 'unknown error'
+    schema:
+      $ref: '#/definitions/ApiResponse'
+  Success:
+    description: 'success message'
+    schema:
+      $ref: '#/definitions/SuccessResponse'
