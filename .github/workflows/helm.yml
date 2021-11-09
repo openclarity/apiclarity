@@ -37,8 +37,8 @@ jobs:
       - name: Set up chart-testing
         uses: helm/chart-testing-action@v2.1.0
 
-      - name: Run chart-testing (lint)
-        run: ct lint --chart-dirs ${{ env.CHART_DIR }} --target-branch ${{ env.TAG_NAME }}
+      - name: Add Bitnami Repository
+        run: helm repo add bitnami https://charts.bitnami.com/bitnami
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.2.1
