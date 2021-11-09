@@ -9,7 +9,6 @@ jobs:
     name: Publish Helm Chart
     runs-on: ubuntu-latest
     env:
-      CHART_DIR: ./k8s/helm/charts/apiclarity
       RELEASE_VERSION: v0.3.0
     steps:
       - name: Checkout code
@@ -40,7 +39,13 @@ jobs:
       - name: Add Bitnami Repository
         run: helm repo add bitnami https://charts.bitnami.com/bitnami
 
+      - name: Run chart-testing (lint)
+        run: ct lint --target-branch ${{ env.TAG_NAME }}
+
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.2.1
+        with:
+          charts_dir: charts
+          config: charts/cr.yaml
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
