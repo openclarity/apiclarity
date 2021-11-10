@@ -40,7 +40,8 @@ jobs:
         run: helm repo add bitnami https://charts.bitnami.com/bitnami
 
       - name: Run chart-testing (lint)
-        run: ct lint --check-version-increment=false --target-branch ${{ env.TAG_NAME }}
+        run: ct lint --check-version-increment=false --validate-maintainers=false
+          --target-branch ${{ env.TAG_NAME }}
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.2.1
