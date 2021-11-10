@@ -17,12 +17,13 @@ package main
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/Kong/go-pdk"
 	"github.com/Kong/go-pdk/server"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"strconv"
-	"strings"
 
 	"github.com/apiclarity/apiclarity/plugins/api/client/client"
 	"github.com/apiclarity/apiclarity/plugins/api/client/client/operations"
@@ -33,7 +34,7 @@ type Config struct {
 	apiClient *client.APIClarityPluginsTelemetriesAPI
 }
 
-// nolint: deadcode
+
 func New() interface{} {
 	cfg := client.DefaultTransportConfig()
 	transport := httptransport.New("apiclarity.apiclarity:9000", "/api", cfg.Schemes)
@@ -170,10 +171,11 @@ func createHeaders(headers map[string][]string) []*models.Header {
 	return ret
 }
 
-var Version = "0.2"
-var Priority = 1
+var (
+	Version  = "0.2"
+	Priority = 1
+)
 
-func main () {
+func main() {
 	_ = server.StartServer(New, Version, Priority)
 }
-

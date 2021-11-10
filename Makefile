@@ -97,10 +97,12 @@ bin/golangci-lint-${GOLANGCI_VERSION}:
 .PHONY: lint
 lint: bin/golangci-lint ## Run linter
 	cd backend && ../bin/golangci-lint run
+	cd plugins/gateway/kong && ../../../bin/golangci-lint run
 
 .PHONY: fix
 fix: bin/golangci-lint ## Fix lint violations
 	cd backend && ../bin/golangci-lint run --fix
+	cd plugins/gateway/kong && ../../../bin/golangci-lint run --fix
 
 bin/licensei: bin/licensei-${LICENSEI_VERSION}
 	@ln -sf licensei-${LICENSEI_VERSION} bin/licensei
@@ -113,6 +115,7 @@ bin/licensei-${LICENSEI_VERSION}:
 license-check: bin/licensei ## Run license check
 	bin/licensei header
 	cd backend && ../bin/licensei check --config=../.licensei.toml
+	cd plugins/gateway/kong && ../../../bin/licensei check --config=../../../.licensei.toml
 
 .PHONY: license-cache
 license-cache: bin/licensei ## Generate license cache
