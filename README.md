@@ -59,7 +59,7 @@ make backend
 2. Add Helm repo
 
    ```shell
-    helm repo add https://apiclarity.github.io/apiclarity
+    helm repo add apiclarity https://apiclarity.github.io/apiclarity
    ```
 
 3. Deploy APIClarity with Helm
