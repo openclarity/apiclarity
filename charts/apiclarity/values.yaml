@@ -31,7 +31,7 @@ global:
     ## If undefined (the default) or set to null, no storageClassName spec is
     ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
     ##   GKE, AWS & OpenStack)
-    #storageClass: ""
+    # storageClass: ""
 
   ## Disable Istio Check Pre-Install Job
   ##
@@ -59,15 +59,15 @@ apiclarity-postgresql:
 
   ## ConfigMap with scripts to be run at first boot
   ## NOTE: This will override initdbScripts
-  #initdbScriptsConfigMap:
+  # initdbScriptsConfigMap:
 
   ## Secret with scripts to be run at first boot (in case it contains sensitive information)
   ## NOTE: This can work along initdbScripts or initdbScriptsConfigMap
-  #initdbScriptsSecret:
+  # initdbScriptsSecret:
 
   ## Specify the PostgreSQL username and password to execute the initdb scripts
-  #initdbUser:
-  #initdbPassword:
+  # initdbUser:
+  # initdbPassword:
 
   ## Setup database name and password
   existingSecret: apiclarity-postgresql-secret
