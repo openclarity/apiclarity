@@ -34,7 +34,6 @@ type Config struct {
 	apiClient *client.APIClarityPluginsTelemetriesAPI
 }
 
-
 func New() interface{} {
 	cfg := client.DefaultTransportConfig()
 	transport := httptransport.New("apiclarity.apiclarity:9000", "/api", cfg.Schemes)
@@ -151,6 +150,7 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 func parseHost(kongHost string) string {
 	sp := strings.Split(kongHost, ".")
 
+	// nolint:gomnd
 	if len(sp) < 2 {
 		return kongHost
 	}

@@ -16,6 +16,9 @@
 package traces
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime/middleware"
 	log "github.com/sirupsen/logrus"
@@ -39,7 +42,7 @@ func CreateHTTPTracesServer(port int, traceHandleFunc HandleTraceFunc) (*HTTPTra
 
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to load swagger: %v", err)
 	}
 
 	api := operations.NewAPIClarityPluginsTelemetriesAPIAPI(swaggerSpec)
@@ -85,7 +88,7 @@ func (s *HTTPTracesServer) PostTelemetry(params operations.PostTelemetryParams) 
 
 	if err := s.traceHandleFunc(telemetry); err != nil {
 		log.Errorf("Error from trace handling func: %v", err)
-		return operations.NewPostTelemetryDefault(500)
+		return operations.NewPostTelemetryDefault(http.StatusInternalServerError)
 	}
 
 	return operations.NewPostTelemetryOK()
