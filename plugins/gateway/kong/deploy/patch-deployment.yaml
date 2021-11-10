@@ -3,12 +3,12 @@ spec:
     spec:
       volumes:
       - emptyDir: {}
-        name: kong-securecn-trace-plugin
+        name: kong-apiclarity-trace-plugin
       containers:
       - name: {{KONG_PROXY_CONTAINER_NAME}}
         volumeMounts:
         - mountPath: /plugins/
-          name: kong-securecn-trace-plugin
+          name: kong-apiclarity-trace-plugin
         env:
         - name: KONG_PLUGINS
           value: kong-plugin
@@ -28,4 +28,4 @@ spec:
         name: securecn-kong-plugin-injector
         volumeMounts:
         - mountPath: /plugin
-          name: kong-securecn-trace-plugin
+          name: kong-apiclarity-trace-plugin

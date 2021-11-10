@@ -41,7 +41,7 @@ jobs:
         with:
           context: .
           tags: ghcr.io/apiclarity/apiclarity:latest
-          file: Dockerfile.kong
+          file: Dockerfile
           push: true
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
@@ -54,7 +54,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: plugins
-          tags: ghcr.io/apiclarity/kong-plugin:test
+          tags: ghcr.io/apiclarity/kong-plugin:latest
           file: plugins/Dockerfile.kong
           push: true
           cache-from: type=local,src=/tmp/.buildx-cache

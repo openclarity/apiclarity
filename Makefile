@@ -52,16 +52,19 @@ api: ## Generating API code
 	@(cd api; ./generate.sh)
 
 .PHONY: docker
-docker: ## Build Docker image
-	@(echo "Building docker image ..." )
+docker:	docker-backend docker-plugins
+
+.PHONY: docker-backend
+docker-backend: ## Build Docker image
+	@(echo "Building backend docker image ..." )
 	docker build --build-arg VERSION=${VERSION} \
 		--build-arg BUILD_TIMESTAMP=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") \
 		--build-arg COMMIT_HASH=$(shell git rev-parse HEAD) \
 		-t ${DOCKER_IMAGE}:${DOCKER_TAG} .
 
-.PHONY: push-docker
-push-docker: docker ## Build and Push Docker image
-	@echo "Publishing Docker image ..."
+.PHONY: push-docker-backend
+push-docker-backend: docker-backend ## Build and Push Docker image
+	@echo "Publishing backend Docker image ..."
 	docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
 
 .PHONY: docker-plugins
@@ -69,7 +72,7 @@ docker-plugins: ## Build plugins Docker image
 	$(MAKE) docker -C plugins
 
 .PHONY: push-docker-plugins
-push-docker-plugins: docker-plugins ## Build and Push Docker image
+push-docker-plugins: ## Build and Push plugins Docker image
 	$(MAKE) push-docker -C plugins
 
 .PHONY: test

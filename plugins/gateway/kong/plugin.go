@@ -46,7 +46,7 @@ func New() interface{} {
 func (conf Config) Response(kong *pdk.PDK) {
 	telemetry, err := createTelemetry(kong)
 	if err != nil {
-		_ = kong.Log.Err(fmt.Sprintf("Failed to create telemetry. %v", err))
+		_ = kong.Log.Err(fmt.Sprintf("Failed to create telemetry: %v", err))
 		return
 	}
 
@@ -67,15 +67,11 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get client ip. %v", err)
 	}
-	//clientPort, err := kong.Client.GetPort()
-	//if err != nil {
-	//	return nil, fmt.Errorf("failed to get client port. %v", err)
-	//}
 	destPort := routedService.Port
 	host := routedService.Host
 
 	// Will get the actual path that the request was sent to, not the routed one
-	path, err := kong.Request.GetPath()
+	path, err := kong.Request.GetPathWithQuery()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get request path. %v", err)
 	}
@@ -115,10 +111,11 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get response headers. %v", err)
 	}
+	parsedHost, namespace := parseHost(host)
 
 	telemetry := models.Telemetry{
 		DestinationAddress:   ":" + strconv.Itoa(destPort), // No destination ip for now
-		DestinationNamespace: "",
+		DestinationNamespace: namespace,
 		Request: &models.Request{
 			Common: &models.Common{
 				TruncatedBody: false,
@@ -126,7 +123,7 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 				Headers:       createHeaders(reqHeaders),
 				Version:       fmt.Sprintf("%f", version),
 			},
-			Host:   parseHost(host),
+			Host:   parsedHost,
 			Method: method,
 			Path:   path,
 		},
@@ -147,15 +144,19 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	return &telemetry, nil
 }
 
-func parseHost(kongHost string) string {
+// KongHost: <namespace>.<svc-name>.svc.cluster.local.80
+// convert to namespace.name
+func parseHost(kongHost string) (host, namespace string) {
 	sp := strings.Split(kongHost, ".")
 
 	// nolint:gomnd
 	if len(sp) < 2 {
-		return kongHost
+		return kongHost, ""
 	}
+	host = sp[0] + "." + sp[1]
+	namespace = sp[0]
 
-	return sp[0] + "." + sp[1]
+	return
 }
 
 func createHeaders(headers map[string][]string) []*models.Header {
