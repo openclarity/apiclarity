@@ -25,7 +25,7 @@ spec:
         - /plugin/.
         image: ghcr.io/apiclarity/kong-plugin:latest
         imagePullPolicy: Always
-        name: securecn-kong-plugin-injector
+        name: apiclarity-kong-plugin-injector
         volumeMounts:
         - mountPath: /plugin
           name: kong-apiclarity-trace-plugin

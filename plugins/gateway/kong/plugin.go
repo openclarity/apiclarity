@@ -44,6 +44,7 @@ func New() interface{} {
 }
 
 func (conf Config) Response(kong *pdk.PDK) {
+	_ = kong.Log.Info("Handling telemetry")
 	telemetry, err := createTelemetry(kong)
 	if err != nil {
 		_ = kong.Log.Err(fmt.Sprintf("Failed to create telemetry: %v", err))
@@ -56,6 +57,7 @@ func (conf Config) Response(kong *pdk.PDK) {
 	if err != nil {
 		_ = kong.Log.Err(fmt.Sprintf("Failed to post telemetry : %v", err))
 	}
+	_ = kong.Log.Info(fmt.Sprintf("Telemetry has been sent: %v", telemetry))
 }
 
 func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
@@ -111,6 +113,7 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get response headers. %v", err)
 	}
+	_ = kong.Log.Err(fmt.Sprintf("host: %v", host))
 	parsedHost, namespace := parseHost(host)
 
 	telemetry := models.Telemetry{
