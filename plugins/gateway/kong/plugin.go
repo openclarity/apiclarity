@@ -162,7 +162,7 @@ func generateRequestID() string {
 }
 
 // KongHost: <svc-name>.<namespace>.8000.svc
-// convert to name.namespace
+// convert to name.namespace.
 func parseHost(kongHost string) (host, namespace string) {
 	sp := strings.Split(kongHost, ".")
 
