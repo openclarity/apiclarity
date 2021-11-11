@@ -59,14 +59,16 @@ make backend
 2. Add Helm repo
 
    ```shell
-    helm repo add apiclarity https://apiclarity.github.io/apiclarity
+   helm repo add apiclarity https://apiclarity.github.io/apiclarity
    ```
 
 3. Deploy APIClarity with Helm
 
    ```shell
-   helm install apiclarity -n apiclarity
+   helm install --set 'global.namespaces={namespace1,namespace2}' apiclarity apiclarity/apiclarity -n apiclarity
    ```
+  **Note**:
+  namespace1 and namespace2 are the namespaces where the Envoy Wasm filters will be deployed to allow traffic tracing.
 
 4. Port forward to APIClarity UI:
 
