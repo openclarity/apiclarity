@@ -1,0 +1,57 @@
+name: Docker
+on:
+  push:
+    branches:
+      - feature/#40-create-a-helm-chart-for-apiclarity
+
+jobs:
+  helm:
+    name: Publish Helm Chart
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_VERSION: v0.4.1
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Replace release version
+        id: replace_version
+        run: find . -type f -name "values.yaml" -o -name "Chart.yaml" |
+          xargs sed -i -e s/latest/${{ env.RELEASE_VERSION }}/g
+
+      - name: Parse tag name
+        run: echo "TAG_NAME=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v1
+        with:
+          version: v3.4.0
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.1.0
+
+      - name: Add Bitnami Repository
+        run: helm repo add bitnami https://charts.bitnami.com/bitnami
+
+      - name: Run chart-testing (lint)
+        run: ct lint --check-version-increment=false --validate-maintainers=false
+          --target-branch ${{ env.TAG_NAME }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.2.1
+        with:
+          charts_dir: charts
+          config: charts/cr.yaml
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
