@@ -56,6 +56,9 @@ jobs:
           sed -i 's/image: ghcr.io\/apiclarity\/apiclarity:latest/image: ghcr.io\/apiclarity\/apiclarity:'"$tag"'/g' deployment/apiclarity.yaml
           git commit deployment/apiclarity.yaml -m "workflow: update tag in deployment yaml"
 
+          sed -i 's/image: ghcr.io\/apiclarity\/kong-plugin:latest/image: ghcr.io\/apiclarity\/kong-plugin:'"$tag"'/g' plugins/gateway/kong/deploy/deploy.sh
+          git commit plugins/gateway/kong/deploy/deploy.sh -m "workflow: update tag in kong deploy script"
+
           git tag --annotate --message "Tag for release $tag" "$tag"
           git push origin "refs/tags/$tag"
 
@@ -94,6 +97,16 @@ jobs:
             VERSION=${{ github.event.inputs.version }}
             BUILD_TIMESTAMP=${{ steps.timestamp.outputs.timestamp }}
             COMMIT_HASH=${{ github.sha }}
+
+      - name: Build and Push Kong plugin
+        uses: docker/build-push-action@v2
+        with:
+          context: plugins
+          tags: ghcr.io/apiclarity/kong-plugin:${{ github.event.inputs.version }}
+          file: plugins/Dockerfile.kong
+          push: true
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2

@@ -131,7 +131,10 @@ func Run() {
 	restServer.Start(errChan)
 	defer restServer.Stop()
 
-	tracesServer := traces.CreateHTTPTracesServer(config.HTTPTracesPort, backend.handleHTTPTrace)
+	tracesServer, err := traces.CreateHTTPTracesServer(config.HTTPTracesPort, backend.handleHTTPTrace)
+	if err != nil {
+		log.Fatalf("Failed to create trace server: %v", err)
+	}
 	tracesServer.Start(errChan)
 	defer tracesServer.Stop()
 

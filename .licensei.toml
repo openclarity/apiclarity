@@ -20,7 +20,7 @@ ignored = [
 ]
 
 [header]
-ignorePaths = ["api"]
+ignorePaths = ["api", "plugins/api"]
 #ignoreFiles = ["zz_generated.*.go"]
 template = """// Copyright © :YEAR: Cisco Systems, Inc. and its affiliates.
 // All rights reserved.

@@ -1,0 +1,7 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: apiclarity-plugin
+plugin: kong-plugin
+config:
+  host: {{UPSTREAM_TELEMETRY_HOST_NAME}}

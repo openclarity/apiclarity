@@ -13,6 +13,7 @@ RUN apk add --update --no-cache gcc g++
 
 WORKDIR /build
 COPY api ./api
+COPY plugins/api ./plugins/api
 
 WORKDIR /build/backend
 COPY backend/go.* ./

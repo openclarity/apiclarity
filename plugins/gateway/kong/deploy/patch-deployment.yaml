@@ -1,0 +1,31 @@
+spec:
+  template:
+    spec:
+      volumes:
+      - emptyDir: {}
+        name: kong-apiclarity-trace-plugin
+      containers:
+      - name: {{KONG_PROXY_CONTAINER_NAME}}
+        volumeMounts:
+        - mountPath: /plugins/
+          name: kong-apiclarity-trace-plugin
+        env:
+        - name: KONG_PLUGINS
+          value: bundled, kong-plugin
+        - name: KONG_PLUGINSERVER_NAMES
+          value: kong-plugin
+        - name: KONG_PLUGINSERVER_KONG_PLUGIN_START_CMD
+          value: /plugins/kong-plugin
+        - name: KONG_PLUGINSERVER_KONG_PLUGIN_QUERY_CMD
+          value: /plugins/kong-plugin -dump
+      initContainers:
+      - command:
+        - cp
+        - /kong-plugin
+        - /plugin/.
+        image: ghcr.io/apiclarity/kong-plugin:latest
+        imagePullPolicy: Always
+        name: apiclarity-kong-plugin-injector
+        volumeMounts:
+        - mountPath: /plugin
+          name: kong-apiclarity-trace-plugin

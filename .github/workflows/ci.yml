@@ -30,3 +30,4 @@ jobs:
 
     - name: Build Docker image
       run: make docker
+

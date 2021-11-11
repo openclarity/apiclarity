@@ -1,6 +1,7 @@
 .idea
 db.db
 backend/bin/*
+plugins/gateway/kong/bin/*
 /bin/*
 *.gob
 goreleaser_artifacts/
