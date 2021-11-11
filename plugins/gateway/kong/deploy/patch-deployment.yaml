@@ -11,7 +11,7 @@ spec:
           name: kong-apiclarity-trace-plugin
         env:
         - name: KONG_PLUGINS
-          value: kong-plugin
+          value: bundled, kong-plugin
         - name: KONG_PLUGINSERVER_NAMES
           value: kong-plugin
         - name: KONG_PLUGINSERVER_KONG_PLUGIN_START_CMD
