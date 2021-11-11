@@ -41,7 +41,7 @@ func New() interface{} {
 }
 
 func (conf Config) Response(kong *pdk.PDK) {
-	_ = kong.Log.Err("Handling telemetry")
+	_ = kong.Log.Info("Handling telemetry")
 	if conf.apiClient == nil {
 		conf.apiClient = newAPIClient(conf.Host)
 	}
