@@ -4,4 +4,4 @@ metadata:
   name: apiclarity-plugin
 plugin: kong-plugin
 config:
-  host: "apiclarity.apiclarity:9000"
+  host: {{UPSTREAM_TELEMETRY_HOST_NAME}}

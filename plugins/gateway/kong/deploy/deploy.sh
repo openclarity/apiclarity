@@ -4,8 +4,9 @@ KongGatewayDeploymentName="${KONG_GATEWAY_DEPLOYMENT_NAME:-kong}"
 KongGatewayDeploymentNamespace="${KONG_GATEWAY_DEPLOYMENT_NAMESPACE:-default}"
 KongGatewayIngressName="${KONG_GATEWAY_INGRESS_NAME:-demo}"
 KongGatewayIngressNamespace="${KONG_GATEWAY_INGRESS_NAMESPACE:-default}"
+UpstreamTelemetryHostName="${UPSTREAM_TELEMETRY_HOST_NAME:-apiclarity.apiclarity:9000}"
 
-kubectl -n ${KongGatewayIngressNamespace} apply -f kongPlugin.yaml
+cat "kongPlugin.yaml" | sed "s/{{UPSTREAM_TELEMETRY_HOST_NAME}}/$UpstreamTelemetryHostName/g" | kubectl -n ${KongGatewayIngressNamespace} apply -f -
 
 deploymentPatch=`cat "patch-deployment.yaml" | sed "s/{{KONG_PROXY_CONTAINER_NAME}}/$KongProxyContainerName/g"`
 
