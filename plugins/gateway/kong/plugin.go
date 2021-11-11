@@ -22,12 +22,12 @@ import (
 
 	"github.com/Kong/go-pdk"
 	"github.com/Kong/go-pdk/server"
-	httptransport "github.com/go-openapi/runtime/client"
-	"github.com/go-openapi/strfmt"
-
 	"github.com/apiclarity/apiclarity/plugins/api/client/client"
 	"github.com/apiclarity/apiclarity/plugins/api/client/client/operations"
 	"github.com/apiclarity/apiclarity/plugins/api/client/models"
+	httptransport "github.com/go-openapi/runtime/client"
+	"github.com/go-openapi/strfmt"
+	"github.com/gofrs/uuid"
 )
 
 type Config struct {
@@ -40,7 +40,7 @@ func New() interface{} {
 }
 
 func (conf Config) Response(kong *pdk.PDK) {
-	_ = kong.Log.Info("Handling telemetry")
+	_ = kong.Log.Err("Handling telemetry")
 	if conf.apiClient == nil {
 		conf.apiClient = newAPIClient(conf.Host)
 	}
@@ -121,9 +121,6 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	}
 	parsedHost, namespace := parseHost(host)
 
-	_ = kong.Log.Err(fmt.Sprintf("request headers: %v", reqHeaders))
-	_ = kong.Log.Err(fmt.Sprintf("response headers: %v", resHeaders))
-
 	telemetry := models.Telemetry{
 		DestinationAddress:   ":" + strconv.Itoa(destPort), // No destination ip for now
 		DestinationNamespace: namespace,
@@ -138,7 +135,7 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 			Method: method,
 			Path:   path,
 		},
-		RequestID: "", // TODO from where? do we need?
+		RequestID: generateRequestID(),
 		Response: &models.Response{
 			Common: &models.Common{
 				TruncatedBody: false,
@@ -155,14 +152,12 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	return &telemetry, nil
 }
 
-const requestIDHeaderKey = ""
-func getRequestID(headers map[string][]string) string {
-	for key, values := range headers {
-		if key == requestIDHeaderKey {
-			return values[0]
-		}
+func generateRequestID() string {
+	requestID, err := uuid.NewV4()
+	if err != nil {
+		return ""
 	}
-
+	return requestID.String()
 }
 
 // KongHost: <svc-name>.<namespace>.8000.svc

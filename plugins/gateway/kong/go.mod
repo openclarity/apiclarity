@@ -7,6 +7,7 @@ require (
 	github.com/apiclarity/apiclarity/plugins/api v0.0.0
 	github.com/go-openapi/runtime v0.21.0
 	github.com/go-openapi/strfmt v0.21.0
+	github.com/gofrs/uuid v4.1.0+incompatible
 )
 
 replace github.com/apiclarity/apiclarity/plugins/api v0.0.0 => ./../../api
