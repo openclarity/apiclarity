@@ -1,0 +1,16 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ include "apiclarity.name" . }}-pvc
+  namespace: '{{ .Release.Namespace }}'
+  labels:
+    {{ include "apiclarity.labels" . }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: '{{ .Values.global.persistentVolume.size }}'
+{{- if .Values.global.persistentVolume.storageClass }}
+  storageClassName: '{{ .Values.global.persistentVolume.storageClass }}'
+{{- end }}
