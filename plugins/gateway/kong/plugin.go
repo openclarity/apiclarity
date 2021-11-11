@@ -121,8 +121,8 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	}
 	parsedHost, namespace := parseHost(host)
 
-	_ = kong.Log.Err("request headers: %v", reqHeaders)
-	_ = kong.Log.Err("response headers: %v", resHeaders)
+	_ = kong.Log.Err(fmt.Sprintf("request headers: %v", reqHeaders))
+	_ = kong.Log.Err(fmt.Sprintf("response headers: %v", resHeaders))
 
 	telemetry := models.Telemetry{
 		DestinationAddress:   ":" + strconv.Itoa(destPort), // No destination ip for now
@@ -153,6 +153,16 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	}
 
 	return &telemetry, nil
+}
+
+const requestIDHeaderKey = ""
+func getRequestID(headers map[string][]string) string {
+	for key, values := range headers {
+		if key == requestIDHeaderKey {
+			return values[0]
+		}
+	}
+
 }
 
 // KongHost: <svc-name>.<namespace>.8000.svc
