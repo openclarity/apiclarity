@@ -22,12 +22,13 @@ import (
 
 	"github.com/Kong/go-pdk"
 	"github.com/Kong/go-pdk/server"
-	"github.com/apiclarity/apiclarity/plugins/api/client/client"
-	"github.com/apiclarity/apiclarity/plugins/api/client/client/operations"
-	"github.com/apiclarity/apiclarity/plugins/api/client/models"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 	"github.com/gofrs/uuid"
+
+	"github.com/apiclarity/apiclarity/plugins/api/client/client"
+	"github.com/apiclarity/apiclarity/plugins/api/client/client/operations"
+	"github.com/apiclarity/apiclarity/plugins/api/client/models"
 )
 
 type Config struct {
