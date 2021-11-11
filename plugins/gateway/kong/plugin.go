@@ -113,7 +113,6 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get response headers. %v", err)
 	}
-	_ = kong.Log.Err(fmt.Sprintf("host: %v", host))
 	parsedHost, namespace := parseHost(host)
 
 	telemetry := models.Telemetry{
@@ -147,8 +146,8 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	return &telemetry, nil
 }
 
-// KongHost: <namespace>.<svc-name>.svc.cluster.local.80
-// convert to namespace.name
+// KongHost: <svc-name>.<namespace>.8000.svc
+// convert to name.namespace
 func parseHost(kongHost string) (host, namespace string) {
 	sp := strings.Split(kongHost, ".")
 
@@ -157,7 +156,7 @@ func parseHost(kongHost string) (host, namespace string) {
 		return kongHost, ""
 	}
 	host = sp[0] + "." + sp[1]
-	namespace = sp[0]
+	namespace = sp[1]
 
 	return
 }

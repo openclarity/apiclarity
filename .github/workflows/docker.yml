@@ -2,7 +2,7 @@ name: Docker
 on:
   push:
     branches:
-      - kong-plugin
+      - master
 
 jobs:
   docker:
@@ -36,19 +36,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-#      - name: Build APIClarity
-#        uses: docker/build-push-action@v2
-#        with:
-#          context: .
-#          tags: ghcr.io/apiclarity/apiclarity:latest
-#          file: Dockerfile
-#          push: true
-#          cache-from: type=local,src=/tmp/.buildx-cache
-#          cache-to: type=local,dest=/tmp/.buildx-cache
-#          build-args: |
-#            VERSION=latest
-#            BUILD_TIMESTAMP=${{ steps.timestamp.outputs.timestamp }}
-#            COMMIT_HASH=${{ github.sha }}
+      - name: Build APIClarity
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          tags: ghcr.io/apiclarity/apiclarity:latest
+          file: Dockerfile
+          push: true
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          build-args: |
+            VERSION=latest
+            BUILD_TIMESTAMP=${{ steps.timestamp.outputs.timestamp }}
+            COMMIT_HASH=${{ github.sha }}
 
       - name: Build Kong Plugin
         uses: docker/build-push-action@v2
