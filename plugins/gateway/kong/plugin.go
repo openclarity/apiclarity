@@ -31,20 +31,19 @@ import (
 )
 
 type Config struct {
+	Host      string `json:"host"`
 	apiClient *client.APIClarityPluginsTelemetriesAPI
 }
 
 func New() interface{} {
-	cfg := client.DefaultTransportConfig()
-	transport := httptransport.New("apiclarity.apiclarity:9000", "/api", cfg.Schemes)
-	apiClient := client.New(transport, strfmt.Default)
-	return &Config{
-		apiClient: apiClient,
-	}
+	return &Config{}
 }
 
 func (conf Config) Response(kong *pdk.PDK) {
 	_ = kong.Log.Info("Handling telemetry")
+	if conf.apiClient == nil {
+		conf.apiClient = newAPIClient(conf.Host)
+	}
 	telemetry, err := createTelemetry(kong)
 	if err != nil {
 		_ = kong.Log.Err(fmt.Sprintf("Failed to create telemetry: %v", err))
@@ -55,19 +54,26 @@ func (conf Config) Response(kong *pdk.PDK) {
 
 	_, err = conf.apiClient.Operations.PostTelemetry(params)
 	if err != nil {
-		_ = kong.Log.Err(fmt.Sprintf("Failed to post telemetry : %v", err))
+		_ = kong.Log.Err(fmt.Sprintf("Failed to post telemetry: %v", err))
 	}
 	_ = kong.Log.Info(fmt.Sprintf("Telemetry has been sent: %v", telemetry))
+}
+
+func newAPIClient(host string) *client.APIClarityPluginsTelemetriesAPI {
+	cfg := client.DefaultTransportConfig()
+	transport := httptransport.New(host, "/api", cfg.Schemes)
+	apiClient := client.New(transport, strfmt.Default)
+	return apiClient
 }
 
 func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	routedService, err := kong.Router.GetService()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get routed serivce. %v", err)
+		return nil, fmt.Errorf("failed to get routed serivce: %v", err)
 	}
 	clientIP, err := kong.Client.GetIp()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get client ip. %v", err)
+		return nil, fmt.Errorf("failed to get client ip: %v", err)
 	}
 	destPort := routedService.Port
 	host := routedService.Host
@@ -75,43 +81,43 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	// Will get the actual path that the request was sent to, not the routed one
 	path, err := kong.Request.GetPathWithQuery()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get request path. %v", err)
+		return nil, fmt.Errorf("failed to get request path: %v", err)
 	}
 	reqBody, err := kong.Request.GetRawBody()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get request body. %v", err)
+		return nil, fmt.Errorf("failed to get request body: %v", err)
 	}
 	resBody, err := kong.ServiceResponse.GetRawBody()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get response body. %v", err)
+		return nil, fmt.Errorf("failed to get response body: %v", err)
 	}
 	method, err := kong.Request.GetMethod()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get request method. %v", err)
+		return nil, fmt.Errorf("failed to get request method: %v", err)
 	}
 
 	statusCode, err := kong.ServiceResponse.GetStatus()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get response status code. %v", err)
+		return nil, fmt.Errorf("failed to get response status code: %v", err)
 	}
 	scheme, err := kong.Request.GetScheme()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get reuqest scheme. %v", err)
+		return nil, fmt.Errorf("failed to get reuqest scheme: %v", err)
 	}
 	version, err := kong.Request.GetHttpVersion()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get request http version. %v", err)
+		return nil, fmt.Errorf("failed to get request http version: %v", err)
 	}
 	reqHeaders, err := kong.Request.GetHeaders(-1) // default limit of 100 headers
 	if err != nil {
-		return nil, fmt.Errorf("failed to get request headers. %v", err)
+		return nil, fmt.Errorf("failed to get request headers: %v", err)
 	}
 	// Unlike kong.Response.GetHeaders(), this function will only return headers
 	// that were present in the response from the Service (ignoring headers added
 	// by Kong itself)
 	resHeaders, err := kong.ServiceResponse.GetHeaders(-1) // default limit of 100 headers
 	if err != nil {
-		return nil, fmt.Errorf("failed to get response headers. %v", err)
+		return nil, fmt.Errorf("failed to get response headers: %v", err)
 	}
 	parsedHost, namespace := parseHost(host)
 
@@ -140,7 +146,7 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 			StatusCode: strconv.Itoa(statusCode),
 		},
 		Scheme:        scheme,
-		SourceAddress: clientIP + ":80",
+		SourceAddress: clientIP + ":",
 	}
 
 	return &telemetry, nil
