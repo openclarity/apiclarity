@@ -1,0 +1,12 @@
+FROM tykio/tyk-plugin-compiler:v3.2.2 AS builder
+
+WORKDIR /plugin-source/
+
+COPY gateway/tyk/v3.2.2/* ./.
+
+RUN /build.sh plugin.so
+
+FROM busybox
+WORKDIR /plugins
+COPY --from=builder ["/plugin-source/plugin.so", "./tyk-plugin.so"]
+

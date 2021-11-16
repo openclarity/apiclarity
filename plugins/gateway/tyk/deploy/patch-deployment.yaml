@@ -1,0 +1,29 @@
+spec:
+  template:
+    spec:
+      volumes:
+      - emptyDir: {}
+        name: tyk-apiclarity-trace-plugin
+      containers:
+      - name: {{TYK_PROXY_CONTAINER_NAME}}
+        volumeMounts:
+        - mountPath: /plugins/
+          name: tyk-apiclarity-trace-plugin
+        env:
+        - name: TYK_GATEWAY_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: APICLARITY_HOST
+          value: "apiclarity.apiclarity:9000"
+      initContainers:
+      - command:
+        - cp
+        - /plugins/tyk-plugin.so
+        - /plugin/.
+        image: ghcr.io/apiclarity/tyk-plugin-v3.2.2:latest
+        imagePullPolicy: Always
+        name: apiclarity-tyk-plugin-injector
+        volumeMounts:
+        - mountPath: /plugin
+          name: tyk-apiclarity-trace-plugin

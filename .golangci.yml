@@ -14,6 +14,9 @@ linters-settings:
     # Check whether fmt.Errorf uses the %w verb for formatting errors. See the readme for caveats
     errorf: false
   gomoddirectives:
+    # List of allowed `replace` directives. Default is empty.
+    replace-allow-list:
+      - github.com/jensneuse/graphql-go-tools
     # Allow local `replace` directives. Default is false.
     replace-local: true
   gosec:

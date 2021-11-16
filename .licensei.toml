@@ -17,6 +17,11 @@ ignored = [
   "github.com/russross/blackfriday/v2", # Simplified BSD License - https://github.com/russross/blackfriday/blob/master/LICENSE.txt
   "github.com/gogo/protobuf", # BSD-3-Clause - https://pkg.go.dev/github.com/gogo/protobuf?tab=licenses
   "google.golang.org/protobuf", # BSD-3-Clause - https://pkg.go.dev/google.golang.org/protobuf?tab=licenses
+  "github.com/TykTechnologies/gojsonschema", # Apache 2.0 - https://github.com/TykTechnologies/gojsonschema/blob/master/LICENSE-APACHE-2.0.txt
+  "github.com/eclipse/paho.mqtt.golang", # Eclipse Public License - v 2.0 - https://github.com/eclipse/paho.mqtt.golang/blob/master/LICENSE
+  "github.com/jensneuse/abstractlogger", # no license file
+  "github.com/lonelycode/go-uuid", # 3-Clause BSD License - https://github.com/lonelycode/go-uuid/blob/master/uuid/LICENSE
+  "github.com/jensneuse/byte-template", # no license file
 ]
 
 [header]

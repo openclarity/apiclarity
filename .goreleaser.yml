@@ -27,6 +27,7 @@ archives:
       - wasm-filters/envoyFilter.yaml
       - wasm-filters/bin/release/http-trace-filter.wasm
       - plugins/gateway/kong/deploy/*
+      - plugins/gateway/tyk/deploy/*
 
 checksum:
   name_template: 'checksums.txt'
