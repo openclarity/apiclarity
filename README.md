@@ -107,12 +107,10 @@ To deploy the Sock Shop Demo follow these steps:
    kubectl apply -f https://raw.githubusercontent.com/microservices-demo/microservices-demo/master/deploy/kubernetes/complete-demo.yaml
    ```
 
-3. From the APIClarity git repository deploy the Wasm filter in the `sock-shop`
-   namespace:
+3. Deploy APIClarity in the `sock-shop` namespace:
 
    ```shell
-   cd apiclarity/wasm-filters
-   ./deploy.sh sock-shop
+   helm install --set 'global.namespaces={sock-shop}' apiclarity apiclarity/apiclarity -n apiclarity
    ```
 
 4. Find the NodePort to access the Sock Shop Demo App
@@ -144,7 +142,7 @@ To deploy the Sock Shop Demo follow these steps:
 3. Run backend and frontend locally using demo data:
 
    ```shell
-   FAKE_TRACES=true FAKE_TRACES_PATH=./backend/pkg/test/trace_files \
+   DATABASE_DRIVER=LOCAL FAKE_TRACES=true FAKE_TRACES_PATH=./backend/pkg/test/trace_files \
    ENABLE_DB_INFO_LOGS=true ./backend/bin/backend run
    ```
 

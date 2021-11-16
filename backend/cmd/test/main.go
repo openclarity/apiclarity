@@ -25,7 +25,6 @@ import (
 	"github.com/apiclarity/apiclarity/api/server/restapi"
 	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
 	_database "github.com/apiclarity/apiclarity/backend/pkg/database"
-	"github.com/apiclarity/apiclarity/backend/pkg/database/fake"
 )
 
 const (
@@ -67,6 +66,9 @@ func main() {
 	}
 
 	api := operations.NewAPIClarityAPIsAPI(swaggerSpec)
+
+	dbHandler := _database.Init(&_database.DBConfig{DriverType: _database.DBDriverTypeLocal})
+
 	server := restapi.NewServer(api)
 	defer func() { _ = server.Shutdown() }()
 
@@ -75,7 +77,7 @@ func main() {
 	server.Port = viper.GetInt(serverPortEnvVar)
 
 	if viper.GetBool(_database.FakeDataEnvVar) {
-		go fake.CreateFakeData()
+		go dbHandler.CreateFakeData()
 	}
 
 	if err := server.Serve(); err != nil {

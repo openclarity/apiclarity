@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fake
+package database
 
 import (
 	"fmt"
@@ -23,13 +23,7 @@ import (
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/go-openapi/strfmt"
-
-	_database "github.com/apiclarity/apiclarity/backend/pkg/database"
 )
-
-func init() {
-	rand.Seed(time.Now().Unix())
-}
 
 var (
 	oldSpec = "{\n  \"swagger\": \"2.0\",\n  \"info\": {\n    \"title\": \"Sample API\",\n    \"description\": \"API description in Markdown.\",\n    \"version\": \"1.0.0\"\n  },\n  \"host\": \"api.example.com\",\n  \"basePath\": \"/v1\",\n  \"schemes\": [\n    \"https\"\n  ],\n  \"paths\": {\n    \"/cats\": {\n      \"get\": {\n        \"summary\": \"Returns a list of cats.\",\n        \"description\": \"Optional extended description in Markdown.\",\n        \"produces\": [\n          \"application/json\"\n        ],\n        \"responses\": {\n          \"200\": {\n            \"description\": \"OK\"\n          }\n        }\n      }\n    }\n  }\n}"
@@ -50,8 +44,8 @@ func customGenerator() {
 	})
 }
 
-func createAPIEvent() *_database.APIEvent {
-	var event _database.APIEvent
+func createAPIEvent() *APIEvent {
+	var event APIEvent
 
 	if err := faker.FakeData(&event); err != nil {
 		panic(err)
@@ -62,8 +56,8 @@ func createAPIEvent() *_database.APIEvent {
 	return &event
 }
 
-func createAPIInfo() *_database.APIInfo {
-	var event _database.APIInfo
+func createAPIInfo() *APIInfo {
+	var event APIInfo
 
 	if err := faker.FakeData(&event); err != nil {
 		panic(err)
@@ -72,7 +66,8 @@ func createAPIInfo() *_database.APIInfo {
 	return &event
 }
 
-func CreateFakeData() {
+func (db *Handler) CreateFakeData() {
+	rand.Seed(time.Now().Unix())
 	time.Sleep(1 * time.Second)
 	customGenerator()
 
@@ -85,7 +80,7 @@ func CreateFakeData() {
 			apiInfo.ReconstructedSpec = oldSpec
 		}
 		// put in table to get ID
-		_database.CreateAPIInfo(apiInfo)
+		db.APIInventoryTable().CreateAPIInfo(apiInfo)
 		for i := 0; i < rand.Int()%50; i++ {
 			apiEvent := createAPIEvent()
 			apiEvent.APIInfoID = apiInfo.ID
@@ -98,7 +93,7 @@ func CreateFakeData() {
 				apiEvent.NewReconstructedSpec = newSpec
 			}
 
-			_database.CreateAPIEvent(apiEvent)
+			db.APIEventsTable().CreateAPIEvent(apiEvent)
 		}
 	}
 
@@ -110,6 +105,6 @@ func CreateFakeData() {
 		apiEvent.Path = "/images/image.png"
 		apiEvent.Method = "GET"
 
-		_database.CreateAPIEvent(apiEvent)
+		db.APIEventsTable().CreateAPIEvent(apiEvent)
 	}
 }

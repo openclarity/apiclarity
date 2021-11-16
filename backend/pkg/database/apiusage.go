@@ -17,8 +17,13 @@ package database
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/go-openapi/strfmt"
 	"gorm.io/gorm"
+
+	"github.com/apiclarity/apiclarity/api/server/models"
+	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
 )
 
 type APIUsageType string
@@ -29,15 +34,15 @@ const (
 	NewAPI       APIUsageType = "NewAPI"
 )
 
-func GetAPIUsageDBSession(apiType APIUsageType) (db *gorm.DB, err error) {
+func (a *APIEventsTableHandler) getAPIUsageDBSession(apiType APIUsageType) (db *gorm.DB, err error) {
 	switch apiType {
 	case APIWithDiffs:
-		db = GetAPIEventsTable().Where(hasSpecDiffColumnName+" = ?", true).Session(&gorm.Session{})
+		db = a.tx.Where(hasSpecDiffColumnName+" = ?", true).Session(&gorm.Session{})
 	case ExistingAPI:
 		// REST api (not a non-api)
 		// no spec diff
 		// have reconstructed OR provided spec
-		db = GetAPIEventsTable().
+		db = a.tx.
 			Where(FieldInTable(apiEventTableName, isNonAPIColumnName)+" = ?", false).
 			Where(FieldInTable(apiEventTableName, hasSpecDiffColumnName)+" = ?", false).
 			Where(FieldInTable(apiInventoryTableName, hasReconstructedSpecColumnName)+" = ? OR "+
@@ -49,7 +54,7 @@ func GetAPIUsageDBSession(apiType APIUsageType) (db *gorm.DB, err error) {
 		// REST api (not a non-api)
 		// no spec diff
 		// no reconstructed AND no provided spec
-		db = GetAPIEventsTable().
+		db = a.tx.
 			Where(FieldInTable(apiEventTableName, isNonAPIColumnName)+" = ?", false).
 			Where(FieldInTable(apiEventTableName, hasSpecDiffColumnName)+" = ?", false).
 			Where(FieldInTable(apiInventoryTableName, hasReconstructedSpecColumnName)+" = ? AND "+
@@ -62,4 +67,68 @@ func GetAPIUsageDBSession(apiType APIUsageType) (db *gorm.DB, err error) {
 	}
 
 	return db, nil
+}
+
+func (a *APIEventsTableHandler) GetDashboardAPIUsages(startTime, endTime time.Time, apiType APIUsageType) ([]*models.APIUsage, error) {
+	var apiUsages []*models.APIUsage
+	var count int64
+
+	diff := endTime.Sub(startTime)
+
+	timeInterval := diff / hitCountGranularity
+
+	db, err := a.getAPIUsageDBSession(apiType)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get DB session: %v", err)
+	}
+
+	for i := 0; i < hitCountGranularity; i++ {
+		endTime := startTime.Add(timeInterval)
+		st := strfmt.DateTime(startTime)
+		et := strfmt.DateTime(endTime)
+
+		if err := db.Where(CreateTimeFilter(st, et)).Count(&count).Error; err != nil {
+			return nil, fmt.Errorf("failed to query DB: %v", err)
+		}
+
+		apiUsages = append(apiUsages, &models.APIUsage{
+			Time:       st,
+			NumOfCalls: count,
+		})
+
+		startTime = endTime
+	}
+	return apiUsages, nil
+}
+
+const hitCountGranularity = 50
+
+func (a *APIEventsTableHandler) GetAPIUsages(params operations.GetAPIUsageHitCountParams) ([]*models.HitCount, error) {
+	var apiUsages []*models.HitCount
+
+	startTime := time.Time(params.StartTime)
+	endTime := time.Time(params.EndTime)
+	diff := endTime.Sub(startTime)
+	timeInterval := diff / hitCountGranularity
+
+	db := a.setAPIEventsFilters(getAPIUsageHitCountParamsToFilters(params), false).
+		Session(&gorm.Session{})
+
+	for i := 0; i < hitCountGranularity; i++ {
+		var count int64
+		st := strfmt.DateTime(startTime)
+		et := strfmt.DateTime(startTime.Add(timeInterval))
+
+		if err := db.Where(CreateTimeFilter(st, et)).Count(&count).Error; err != nil {
+			return nil, err
+		}
+
+		apiUsages = append(apiUsages, &models.HitCount{
+			Count: count,
+			Time:  st,
+		})
+
+		startTime = startTime.Add(timeInterval)
+	}
+	return apiUsages, nil
 }

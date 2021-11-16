@@ -38,7 +38,7 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 	pathToPathItem := map[string]*spec.PathItem{}
 
 	// find the relevant review
-	if err := database.GetReviewTable().First(&review, params.ReviewID).Error; err != nil {
+	if err := s.dbHandler.ReviewTable().First(&review, params.ReviewID); err != nil {
 		log.Errorf("Failed to find review with id %v in db. %v", params.ReviewID, err)
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
 	}
@@ -60,7 +60,7 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 	}
 
 	// mark review as approved for later deletion
-	if err := database.UpdateApprovedReview(true, params.ReviewID); err != nil {
+	if err := s.dbHandler.ReviewTable().UpdateApprovedReview(true, params.ReviewID); err != nil {
 		log.Errorf("Failed to update approve in review table. %v", err)
 	}
 
@@ -83,7 +83,7 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 	}
 
 	// TODO: Update PostAPIInventoryReviewIDApprovedReview params to include api ID AND review ID
-	apiID, err := database.GetAPIID(host, port)
+	apiID, err := s.dbHandler.APIInventoryTable().GetAPIID(host, port)
 	if err != nil {
 		log.Errorf("Failed to get API ID: %v", err)
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
@@ -95,14 +95,14 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
 	}
 
-	if err := database.PutAPISpec(apiID, string(oapSpec), specInfo, database.ReconstructedSpecType); err != nil {
+	if err := s.dbHandler.APIInventoryTable().PutAPISpec(apiID, string(oapSpec), specInfo, database.ReconstructedSpecType); err != nil {
 		log.Errorf("Failed to save reconstructed API spec to db: %v", err)
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
 	}
 
 	// update all the API events corresponding to the APIEventsPaths in the approved review
 	go func() {
-		if err := database.SetAPIEventsReconstructedPathID(approvedReview.PathItemsReview, host, port); err != nil {
+		if err := s.dbHandler.APIEventsTable().SetAPIEventsReconstructedPathID(approvedReview.PathItemsReview, host, port); err != nil {
 			log.Errorf("Failed to set path ID on API events: %v", err)
 		}
 	}()
@@ -151,7 +151,7 @@ func createPathMap(apiEventPathAndMethods []*models.APIEventPathAndMethods) map[
 func (s *Server) GetAPIInventoryAPIIDSuggestedReview(params operations.GetAPIInventoryAPIIDSuggestedReviewParams) middleware.Responder {
 	// get api data from db
 	apiInfo := database.APIInfo{}
-	if err := database.GetAPIInventoryTable().First(&apiInfo, params.APIID).Error; err != nil {
+	if err := s.dbHandler.APIInventoryTable().First(&apiInfo, params.APIID); err != nil {
 		log.Errorf("Failed to find api with  id %v in db. %v", params.APIID, err)
 		return operations.NewGetAPIInventoryAPIIDSuggestedReviewDefault(http.StatusInternalServerError)
 	}
@@ -175,7 +175,7 @@ func (s *Server) GetAPIInventoryAPIIDSuggestedReview(params operations.GetAPIInv
 		PathToPathItemStr: string(pathToPathItemB),
 		Approved:          false,
 	}
-	if err := database.CreateReview(review); err != nil {
+	if err := s.dbHandler.ReviewTable().Create(review); err != nil {
 		log.Errorf("Failed to create review in database: %v. %v", review, err)
 		return operations.NewGetAPIInventoryAPIIDSuggestedReviewDefault(http.StatusInternalServerError)
 	}

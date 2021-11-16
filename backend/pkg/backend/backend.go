@@ -37,7 +37,6 @@ import (
 	"github.com/apiclarity/apiclarity/api/server/models"
 	_config "github.com/apiclarity/apiclarity/backend/pkg/config"
 	_database "github.com/apiclarity/apiclarity/backend/pkg/database"
-	"github.com/apiclarity/apiclarity/backend/pkg/database/fake"
 	"github.com/apiclarity/apiclarity/backend/pkg/healthz"
 	"github.com/apiclarity/apiclarity/backend/pkg/k8smonitor"
 	"github.com/apiclarity/apiclarity/backend/pkg/rest"
@@ -53,21 +52,28 @@ type Backend struct {
 	stateBackupFileName string
 	monitor             *k8smonitor.Monitor
 	apiInventoryLock    sync.RWMutex
+	dbHandler           *_database.Handler
 }
 
-func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor) *Backend {
-	speculator, err := _speculator.DecodeState(config.StateBackupFileName, config.SpeculatorConfig)
-	if err != nil {
-		log.Infof("No speculator state to decode, creating new: %v", err)
-		speculator = _speculator.CreateSpeculator(config.SpeculatorConfig)
-	} else {
-		log.Infof("Using encoded speculator state")
-	}
+func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, dbHandler *_database.Handler) *Backend {
 	return &Backend{
 		speculator:          speculator,
 		stateBackupInterval: time.Second * time.Duration(config.StateBackupIntervalSec),
 		stateBackupFileName: config.StateBackupFileName,
 		monitor:             monitor,
+		dbHandler:           dbHandler,
+	}
+}
+
+func createDatabaseConfig(config *_config.Config) *_database.DBConfig {
+	return &_database.DBConfig{
+		DriverType:     config.DatabaseDriver,
+		EnableInfoLogs: config.EnableDBInfoLogs,
+		DBPassword:     config.DBPassword,
+		DBUser:         config.DBUser,
+		DBHost:         config.DBHost,
+		DBPort:         config.DBPort,
+		DBName:         config.DBName,
 	}
 }
 
@@ -91,6 +97,10 @@ func Run() {
 
 	log.Info("APIClarity backend is running")
 
+	dbConfig := createDatabaseConfig(config)
+	dbHandler := _database.Init(dbConfig)
+	dbHandler.StartReviewTableCleaner(globalCtx, time.Duration(config.DatabaseCleanerIntervalSec)*time.Second)
+
 	var monitor *k8smonitor.Monitor
 	if !viper.GetBool(_database.FakeTracesEnvVar) && !viper.GetBool(_database.FakeDataEnvVar) {
 		monitor, err = k8smonitor.CreateMonitor()
@@ -101,24 +111,34 @@ func Run() {
 		monitor.Start()
 		defer monitor.Stop()
 	} else if viper.GetBool(_database.FakeDataEnvVar) {
-		go fake.CreateFakeData()
+		go dbHandler.CreateFakeData()
 	}
 
-	backend := CreateBackend(config, monitor)
+	speculator, err := _speculator.DecodeState(config.StateBackupFileName, config.SpeculatorConfig)
+	if err != nil {
+		log.Infof("No speculator state to decode, creating new: %v", err)
+		speculator = _speculator.CreateSpeculator(config.SpeculatorConfig)
+	} else {
+		log.Infof("Using encoded speculator state")
+	}
 
-	tracesServer := traces.CreateHTTPTracesServer(config.HTTPTracesPort, backend.handleHTTPTrace)
-	tracesServer.Start(errChan)
-	defer tracesServer.Stop()
+	backend := CreateBackend(config, monitor, speculator, dbHandler)
 
-	restServer, err := rest.CreateRESTServer(config.BackendRestPort, backend.speculator)
+	restServer, err := rest.CreateRESTServer(config.BackendRestPort, speculator, dbHandler)
 	if err != nil {
 		log.Fatalf("Failed to create REST server: %v", err)
 	}
 	restServer.Start(errChan)
 	defer restServer.Stop()
 
+	tracesServer, err := traces.CreateHTTPTracesServer(config.HTTPTracesPort, backend.handleHTTPTrace)
+	if err != nil {
+		log.Fatalf("Failed to create trace server: %v", err)
+	}
+	tracesServer.Start(errChan)
+	defer tracesServer.Stop()
+
 	backend.startStateBackup(globalCtx)
-	startReviewTableCleaner(globalCtx, time.Duration(config.DatabaseCleanerIntervalSec)*time.Second)
 
 	healthServer.SetIsReady(true)
 	log.Info("APIClarity backend is ready")
@@ -137,22 +157,6 @@ func Run() {
 	case s := <-sig:
 		log.Warningf("Received a termination signal: %v", s)
 	}
-}
-
-func startReviewTableCleaner(ctx context.Context, cleanInterval time.Duration) {
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				log.Debugf("Stopping database cleaner")
-				return
-			case <-time.After(cleanInterval):
-				if err := _database.GetReviewTable().Where("approved =  ?", true).Delete(_database.Review{}).Error; err != nil {
-					log.Errorf("Failed to delete approved review from database. %v", err)
-				}
-			}
-		}
-	}()
 }
 
 type eventDiff struct {
@@ -229,8 +233,7 @@ func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 	if !isNonAPI {
 		// lock the API inventory to avoid creating API entries twice on trace handling races
 		b.apiInventoryLock.Lock()
-		// TODO: Access the database via a database handler instance
-		if err := _database.GetAPIInventoryTable().Where(apiInfo).FirstOrCreate(&apiInfo).Error; err != nil {
+		if err := b.dbHandler.APIInventoryTable().FirstOrCreate(&apiInfo); err != nil {
 			b.apiInventoryLock.Unlock()
 			return fmt.Errorf("failed to get or create API info: %v", err)
 		}
@@ -315,7 +318,7 @@ func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 
 	event.SpecDiffType = getHighestPrioritySpecDiffType(providedDiffType, reconstructedDiffType)
 
-	_database.CreateAPIEvent(event)
+	b.dbHandler.APIEventsTable().CreateAPIEvent(event)
 
 	return nil
 }

@@ -52,21 +52,32 @@ api: ## Generating API code
 	@(cd api; ./generate.sh)
 
 .PHONY: docker
-docker: ## Build Docker image 
-	@(echo "Building docker image ..." )
+docker:	docker-backend docker-plugins
+
+.PHONY: docker-backend
+docker-backend: ## Build Docker image
+	@(echo "Building backend docker image ..." )
 	docker build --build-arg VERSION=${VERSION} \
 		--build-arg BUILD_TIMESTAMP=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") \
 		--build-arg COMMIT_HASH=$(shell git rev-parse HEAD) \
 		-t ${DOCKER_IMAGE}:${DOCKER_TAG} .
 
-.PHONY: push-docker
-push-docker: docker ## Build and Push Docker image
-	@echo "Publishing Docker image ..."
+.PHONY: push-docker-backend
+push-docker-backend: docker-backend ## Build and Push Docker image
+	@echo "Publishing backend Docker image ..."
 	docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+
+.PHONY: docker-plugins
+docker-plugins: ## Build plugins Docker image
+	$(MAKE) docker -C plugins
+
+.PHONY: push-docker-plugins
+push-docker-plugins: ## Build and Push plugins Docker image
+	$(MAKE) push-docker -C plugins
 
 .PHONY: test
 test: ## Run Unit Tests
-	@(cd backend && FAKE_DATA=true go test ./pkg/...)
+	@(cd backend && go test ./pkg/...)
 
 .PHONY: clean
 clean: clean-ui clean-backend ## Clean all build artifacts
@@ -83,16 +94,18 @@ bin/golangci-lint: bin/golangci-lint-${GOLANGCI_VERSION}
 	@ln -sf golangci-lint-${GOLANGCI_VERSION} bin/golangci-lint
 bin/golangci-lint-${GOLANGCI_VERSION}:
 	@mkdir -p bin
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b ./bin/ v${GOLANGCI_VERSION}
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | bash -s -- -b ./bin/ v${GOLANGCI_VERSION}
 	@mv bin/golangci-lint $@
 
 .PHONY: lint
 lint: bin/golangci-lint ## Run linter
 	cd backend && ../bin/golangci-lint run
+	cd plugins/gateway/kong && ../../../bin/golangci-lint run
 
 .PHONY: fix
 fix: bin/golangci-lint ## Fix lint violations
 	cd backend && ../bin/golangci-lint run --fix
+	cd plugins/gateway/kong && ../../../bin/golangci-lint run --fix
 
 bin/licensei: bin/licensei-${LICENSEI_VERSION}
 	@ln -sf licensei-${LICENSEI_VERSION} bin/licensei
@@ -105,6 +118,7 @@ bin/licensei-${LICENSEI_VERSION}:
 license-check: bin/licensei ## Run license check
 	bin/licensei header
 	cd backend && ../bin/licensei check --config=../.licensei.toml
+	cd plugins/gateway/kong && ../../../bin/licensei check --config=../../../.licensei.toml
 
 .PHONY: license-cache
 license-cache: bin/licensei ## Generate license cache

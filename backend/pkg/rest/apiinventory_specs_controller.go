@@ -27,13 +27,12 @@ import (
 
 	"github.com/apiclarity/apiclarity/api/server/models"
 	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
-	"github.com/apiclarity/apiclarity/backend/pkg/database"
 )
 
 const defaultTagName = "default-tag"
 
 func (s *Server) GetAPIInventoryAPIIDSpecs(params operations.GetAPIInventoryAPIIDSpecsParams) middleware.Responder {
-	specsInfo, err := database.GetAPISpecsInfo(params.APIID)
+	specsInfo, err := s.dbHandler.APIInventoryTable().GetAPISpecsInfo(params.APIID)
 	if err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go

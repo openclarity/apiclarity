@@ -56,6 +56,9 @@ jobs:
           sed -i 's/image: ghcr.io\/apiclarity\/apiclarity:latest/image: ghcr.io\/apiclarity\/apiclarity:'"$tag"'/g' deployment/apiclarity.yaml
           git commit deployment/apiclarity.yaml -m "workflow: update tag in deployment yaml"
 
+          sed -i 's/image: ghcr.io\/apiclarity\/kong-plugin:latest/image: ghcr.io\/apiclarity\/kong-plugin:'"$tag"'/g' plugins/gateway/kong/deploy/deploy.sh
+          git commit plugins/gateway/kong/deploy/deploy.sh -m "workflow: update tag in kong deploy script"
+
           git tag --annotate --message "Tag for release $tag" "$tag"
           git push origin "refs/tags/$tag"
 
@@ -95,6 +98,16 @@ jobs:
             BUILD_TIMESTAMP=${{ steps.timestamp.outputs.timestamp }}
             COMMIT_HASH=${{ github.sha }}
 
+      - name: Build and Push Kong plugin
+        uses: docker/build-push-action@v2
+        with:
+          context: plugins
+          tags: ghcr.io/apiclarity/kong-plugin:${{ github.event.inputs.version }}
+          file: plugins/Dockerfile.kong
+          push: true
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
@@ -104,3 +117,53 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GORELEASER_CURRENT_TAG: ${{ github.event.inputs.version }}
           GORELEASER_PREVIOUS_TAG: ${{ github.event.inputs.pre_version }}
+
+  helm_release:
+    name: Publish Helm Chart
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Tag validation
+        run: |
+          tag='${{ github.event.inputs.version }}'
+          [[ $tag =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+
+      - name: Replace release version
+        id: replace_version
+        run: find . -type f -name "values.yaml" -o -name "Chart.yaml" |
+          xargs sed -i -e s/latest/${{ github.event.inputs.version }}/g
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v1
+        with:
+          version: v3.4.0
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.1.0
+
+      - name: Add Bitnami Repository
+        run: helm repo add bitnami https://charts.bitnami.com/bitnami
+
+      - name: Run chart-testing (lint)
+        run: ct lint --check-version-increment=false --validate-maintainers=false
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.2.1
+        with:
+          charts_dir: charts
+          config: charts/cr.yaml
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

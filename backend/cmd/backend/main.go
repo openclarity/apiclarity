@@ -25,6 +25,7 @@ import (
 
 	"github.com/apiclarity/apiclarity/backend/pkg/backend"
 	"github.com/apiclarity/apiclarity/backend/pkg/config"
+	"github.com/apiclarity/apiclarity/backend/pkg/database"
 	"github.com/apiclarity/apiclarity/backend/pkg/version"
 	log_utils "github.com/apiclarity/speculator/pkg/utils/log"
 )
@@ -46,6 +47,7 @@ func main() {
 	viper.SetDefault(config.StateBackupIntervalSec, "30")
 	viper.SetDefault(config.DatabaseCleanerIntervalSec, "30")
 	viper.SetDefault(config.StateBackupFileName, "state.gob")
+	viper.SetDefault(config.DatabaseDriver, database.DBDriverTypePostgres)
 	viper.AutomaticEnv()
 	app := cli.NewApp()
 	app.Usage = ""
