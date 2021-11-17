@@ -67,7 +67,12 @@ func newAPIClient(host string) *client.APIClarityPluginsTelemetriesAPI {
 	return apiClient
 }
 
+const MaxBodySize = 1000 * 1000
+
 func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
+	truncatedBodyReq := false
+	truncatedBodyRes := false
+
 	routedService, err := kong.Router.GetService()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get routed serivce: %v", err)
@@ -88,9 +93,20 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get request body: %v", err)
 	}
+	if len(reqBody) > MaxBodySize {
+		_ = kong.Log.Info("Request body is too long, ignoring")
+		reqBody = ""
+		truncatedBodyReq = true
+
+	}
 	resBody, err := kong.ServiceResponse.GetRawBody()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get response body: %v", err)
+	}
+	if len(resBody) > MaxBodySize {
+		_ = kong.Log.Info("Response body is too long, ignoring")
+		resBody = ""
+		truncatedBodyRes = true
 	}
 	method, err := kong.Request.GetMethod()
 	if err != nil {
@@ -127,7 +143,7 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 		DestinationNamespace: namespace,
 		Request: &models.Request{
 			Common: &models.Common{
-				TruncatedBody: false,
+				TruncatedBody: truncatedBodyReq,
 				Body:          strfmt.Base64(reqBody),
 				Headers:       createHeaders(reqHeaders),
 				Version:       fmt.Sprintf("%f", version),
@@ -139,7 +155,7 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 		RequestID: generateRequestID(),
 		Response: &models.Response{
 			Common: &models.Common{
-				TruncatedBody: false,
+				TruncatedBody: truncatedBodyRes,
 				Body:          strfmt.Base64(resBody),
 				Headers:       createHeaders(resHeaders),
 				Version:       fmt.Sprintf("%f", version),
