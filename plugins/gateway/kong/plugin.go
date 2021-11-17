@@ -97,7 +97,6 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 		_ = kong.Log.Info("Request body is too long, ignoring")
 		reqBody = ""
 		truncatedBodyReq = true
-
 	}
 	resBody, err := kong.ServiceResponse.GetRawBody()
 	if err != nil {
