@@ -53,8 +53,8 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-          sed -i 's/image: ghcr.io\/apiclarity\/kong-plugin:latest/image: ghcr.io\/apiclarity\/kong-plugin:'"$tag"'/g' plugins/gateway/kong/deploy/deploy.sh
-          git commit plugins/gateway/kong/deploy/deploy.sh -m "workflow: update tag in kong deploy script"
+          sed -i 's/image: ghcr.io\/apiclarity\/kong-plugin:latest/image: ghcr.io\/apiclarity\/kong-plugin:'"$tag"'/g' plugins/gateway/kong/deploy/patch-deployment.yaml
+          git commit plugins/gateway/kong/deploy/patch-deployment.yaml -m "workflow: update tag in kong deploy script"
 
           git tag --annotate --message "Tag for release $tag" "$tag"
           git push origin "refs/tags/$tag"
