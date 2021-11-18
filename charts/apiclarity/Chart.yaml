@@ -1,0 +1,19 @@
+apiVersion: v2
+name: apiclarity
+appVersion: latest
+description: Charts for APIClarity deployment. Reconstruct OpenAPI Specifications from real-time workload traffic seamlessly.
+version: latest
+home: https://apiclarity.io/
+icon: https://github.com/apiclarity/apiclarity/raw/master/API_clarity.svg
+sources:
+  - https://github.com/apiclarity/apiclarity
+maintainers:
+  - name: API Clarity
+    url: https://apiclarity.io
+type: application
+dependencies:
+  - name: postgresql
+    version: "10.12.2"
+    repository: https://charts.bitnami.com/bitnami
+    condition: apiclarity-postgresql.enabled
+    alias: apiclarity-postgresql

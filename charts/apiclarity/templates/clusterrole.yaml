@@ -1,0 +1,10 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "apiclarity.name" . }}
+  labels:
+    {{ include "apiclarity.labels" . }}
+rules:
+- apiGroups: [""]
+  resources: ["nodes", "services"]
+  verbs: ["get", "list", "watch"]

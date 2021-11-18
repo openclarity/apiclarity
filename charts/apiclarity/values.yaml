@@ -1,0 +1,83 @@
+#######################################################################################
+## Global Values
+
+global:
+  ## Enable APIClarity in the following namespaces
+  ##
+  namespaces:
+    - default
+
+  ## Database password
+  ##
+  databasePassword: apiclarity
+
+  ## Docker image
+  ##
+  docker:
+    ## Configure registry
+    ##
+    registry: "ghcr.io"
+
+  ## Whether or not persistence is enabled
+  ##
+  persistentVolume:
+    ## Persistent Volume size
+    ##
+    size: 100Mi
+
+    ## Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    # storageClass: ""
+
+  ## Disable Istio Check Pre-Install Job
+  ##
+  disableIstioVerify: false
+## End of Global Values
+#######################################################################################
+
+#######################################################################################
+## APIClarity Values
+
+apiclarity:
+  ## Docker Image values.
+  docker:
+    imageTag: "latest"
+    imagePullPolicy: Always
+
+## End of APIClarity Values
+#######################################################################################
+
+#######################################################################################
+## APIClarity Postgres Values
+
+apiclarity-postgresql:
+  enabled: true
+
+  ## ConfigMap with scripts to be run at first boot
+  ## NOTE: This will override initdbScripts
+  # initdbScriptsConfigMap:
+
+  ## Secret with scripts to be run at first boot (in case it contains sensitive information)
+  ## NOTE: This can work along initdbScripts or initdbScriptsConfigMap
+  # initdbScriptsSecret:
+
+  ## Specify the PostgreSQL username and password to execute the initdb scripts
+  # initdbUser:
+  # initdbPassword:
+
+  ## Setup database name and password
+  existingSecret: apiclarity-postgresql-secret
+  postgresqlDatabase: apiclarity
+
+  ## Enable security context
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
+
+# End of APIClarity Postgres Values
+#######################################################################################
