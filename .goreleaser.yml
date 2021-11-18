@@ -26,7 +26,6 @@ archives:
       - wasm-filters/deploy.sh
       - wasm-filters/envoyFilter.yaml
       - wasm-filters/bin/release/http-trace-filter.wasm
-      - deployment/apiclarity.yaml
       - plugins/gateway/kong/deploy/*
 
 checksum:
