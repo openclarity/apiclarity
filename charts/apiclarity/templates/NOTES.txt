@@ -1,0 +1,9 @@
+Thank you for installing {{ .Chart.Name | upper }}.
+
+Your release is named {{ .Release.Name }}.
+
+Here is how to access the APIClarity UI:
+
+    $ kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "apiclarity.name" . }} 9999:8080
+    $ Open APIClarity UI in the browser: http://localhost:9999/
+    $ Generate some traffic in the applications in the traced namespaces and check the APIClarity UI :)
