@@ -53,9 +53,6 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-          sed -i 's/image: ghcr.io\/apiclarity\/apiclarity:latest/image: ghcr.io\/apiclarity\/apiclarity:'"$tag"'/g' deployment/apiclarity.yaml
-          git commit deployment/apiclarity.yaml -m "workflow: update tag in deployment yaml"
-
           sed -i 's/image: ghcr.io\/apiclarity\/kong-plugin:latest/image: ghcr.io\/apiclarity\/kong-plugin:'"$tag"'/g' plugins/gateway/kong/deploy/deploy.sh
           git commit plugins/gateway/kong/deploy/deploy.sh -m "workflow: update tag in kong deploy script"
 
@@ -119,6 +116,7 @@ jobs:
           GORELEASER_PREVIOUS_TAG: ${{ github.event.inputs.pre_version }}
 
   helm_release:
+    needs: release
     name: Publish Helm Chart
     runs-on: ubuntu-latest
     steps:
