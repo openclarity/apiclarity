@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "apiclarity.name" . }}
+  namespace: '{{ .Release.Namespace }}'
+  labels:
+    {{ include "apiclarity.labels" . }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "apiclarity.name" . }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: {{ include "apiclarity.name" . }}
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      serviceAccountName: {{ include "apiclarity.name" . }}
+      initContainers:
+        - name: '{{ include "apiclarity.name" . }}-wait-for-db'
+          image: docker.io/bitnami/postgresql:11.13.0-debian-10-r33
+          command: ['sh', '-c', 'until pg_isready -h {{ include "apiclarity.name" . }}-postgresql -p 5432 -U "postgres" -d "dbname={{ index .Values "apiclarity-postgresql" "postgresqlDatabase" }}";
+            do echo waiting for database; sleep 2; done;']
+          securityContext:
+            runAsUser: 1001
+      containers:
+        - name: apiclarity
+          image: '{{ .Values.global.docker.registry }}/apiclarity/apiclarity:{{ .Values.apiclarity.docker.imageTag }}'
+          imagePullPolicy: {{ .Values.apiclarity.docker.imagePullPolicy }}
+          args:
+            - run
+          env:
+            # space separated list of response headers to ignore when reconstructing the spec
+            - name: RESPONSE_HEADERS_TO_IGNORE
+              valueFrom:
+                configMapKeyRef:
+                  name: '{{ include "apiclarity.name" . }}-headers-to-ignore-configmap'
+                  key: response.headers
+            # space separated list of request headers to ignore when reconstructing the spec
+            - name: REQUEST_HEADERS_TO_IGNORE
+              valueFrom:
+                configMapKeyRef:
+                  name: '{{ include "apiclarity.name" . }}-headers-to-ignore-configmap'
+                  key: request.headers
+            - name: DB_NAME
+              value: {{ index .Values "apiclarity-postgresql" "postgresqlDatabase" }}
+            - name: DB_HOST
+              value: "{{ include "apiclarity.name" . }}-postgresql"
+            - name: DB_PORT_NUMBER
+              value: "5432"
+            - name: DB_USER
+              value: "postgres"
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ index .Values "apiclarity-postgresql" "existingSecret" }}
+                  key: postgresql-password
+            - name: STATE_BACKUP_FILE_NAME
+              value: /apiclarity/state.gob
+          readinessProbe:
+            httpGet:
+              path: /healthz/ready
+              port: 8081
+            periodSeconds: 30
+            failureThreshold: 5
+            timeoutSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz/live
+              port: 8081
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            failureThreshold: 5
+            timeoutSeconds: 10
+          securityContext:
+            capabilities:
+              drop:
+                - all
+            runAsNonRoot: true
+            runAsGroup: 1000
+            runAsUser: 1000
+            privileged: false
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              memory: "200Mi"
+              cpu: "100m"
+            limits:
+              memory: "1000Mi"
+              cpu: "1000m"
+          volumeMounts:
+            - name: {{ include "apiclarity.name" . }}
+              mountPath: '/apiclarity'
+      volumes:
+      - name: {{ include "apiclarity.name" . }}
+        persistentVolumeClaim:
+          claimName: {{ include "apiclarity.name" . }}-pvc
+      securityContext:
+        fsGroup: 1000

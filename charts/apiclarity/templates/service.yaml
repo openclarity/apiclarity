@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "apiclarity.name" . }}
+  namespace: '{{ .Release.Namespace }}'
+  labels:
+    {{ include "apiclarity.labels" . }}
+  annotations:
+    helm.sh/hook: pre-install
+spec:
+  ports:
+    - name: trace-server
+      port: 9000
+      protocol: TCP
+      targetPort: 9000
+    - name: backend
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: {{ include "apiclarity.name" . }}
