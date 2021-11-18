@@ -73,7 +73,7 @@ make backend
 4. Port forward to APIClarity UI:
 
    ```shell
-   kubectl port-forward -n apiclarity svc/apiclarity 9999:8080
+   kubectl port-forward -n apiclarity svc/apiclarity-apiclarity 9999:8080
    ```
 
 5. Open APIClarity UI in the browser: <http://localhost:9999/>
