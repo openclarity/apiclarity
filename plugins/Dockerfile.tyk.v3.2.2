@@ -1,5 +1,9 @@
 FROM tykio/tyk-plugin-compiler:v3.2.2 AS builder
 
+WORKDIR /go/src
+
+COPY api ./api
+
 WORKDIR /plugin-source/
 
 COPY gateway/tyk/v3.2.2/* ./.
