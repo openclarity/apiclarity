@@ -13,4 +13,4 @@ require (
 	github.com/go-openapi/strfmt v0.21.0
 )
 
-replace github.com/apiclarity/apiclarity/plugins/api v0.0.0 => ./../api
+replace github.com/apiclarity/apiclarity/plugins/api v0.0.0 => ./../../../api
