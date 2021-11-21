@@ -108,6 +108,10 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
+      - name: Fix Tyk Plugin API dep
+        id: tyk-dep
+        run: cd plugins/gateway/tyk/v3.2.2 && go mod edit -replace github.com/apiclarity/apiclarity/plugins/api@v0.0.0=./../api
+
       - name: Build and Push Tyk plugin
         uses: docker/build-push-action@v2
         with:
