@@ -9,6 +9,7 @@ replace github.com/jensneuse/graphql-go-tools => github.com/TykTechnologies/grap
 require (
 	github.com/TykTechnologies/tyk v1.9.2-0.20211119141645-a642669fba58
 	github.com/apiclarity/apiclarity/plugins/api v0.0.0
+	github.com/gin-gonic/gin v1.7.0 // indirect
 	github.com/go-openapi/runtime v0.21.0
 	github.com/go-openapi/strfmt v0.21.0
 )
