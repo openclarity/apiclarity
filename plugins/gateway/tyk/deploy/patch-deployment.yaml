@@ -15,7 +15,7 @@ spec:
             fieldRef:
               fieldPath: metadata.namespace
         - name: APICLARITY_HOST
-          value: "apiclarity.apiclarity:9000"
+          value: "apiclarity-apiclarity.apiclarity:9000"
       initContainers:
       - command:
         - cp
