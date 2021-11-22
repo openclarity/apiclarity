@@ -15,7 +15,7 @@ spec:
             fieldRef:
               fieldPath: metadata.namespace
         - name: APICLARITY_HOST
-          value: "apiclarity.apiclarity:9000"
+          value: {{UPSTREAM_TELEMETRY_HOST_NAME}}
       initContainers:
       - command:
         - cp

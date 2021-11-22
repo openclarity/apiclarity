@@ -13,7 +13,13 @@ docker-kong:
 
 .PHONY: docker-tyk
 docker-tyk:
+	@(cd gateway/tyk/${TYK_VERSION} && \
+	go mod edit -replace github.com/apiclarity/apiclarity/plugins/api@v0.0.0=./../api && \
+	 cd -)
 	@DOCKER_BUILDKIT=1 docker build -t ${DOCKER_REGISTRY}/tyk-plugin-${TYK_VERSION}:${DOCKER_TAG} --file Dockerfile.tyk.${TYK_VERSION} .
+	@(cd gateway/tyk/${TYK_VERSION} && \
+	go mod edit -replace github.com/apiclarity/apiclarity/plugins/api@v0.0.0=./../../../api && \
+	 cd -)
 
 .PHONY: push-docker
 push-docker: push-docker-kong push-docker-tyk
