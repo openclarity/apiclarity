@@ -37,7 +37,7 @@ curl -s -H "x-tyk-authorization: $TYK_ADMIN_KEY" http://$TYK_ADMIN_ADDRESS/tyk/a
 ```
 4. Hot reload Tyk:
 ```shell
-curl -s -H "x-tyk-authorization: foo" http://localhost:8080/tyk/reload
+curl -s -H "x-tyk-authorization: $TYK_ADMIN_KEY" http://$TYK_ADMIN_ADDRESS/tyk/reload
 ```
 
 Refer to the documentation for more details:
