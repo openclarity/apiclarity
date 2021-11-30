@@ -128,10 +128,7 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get request headers: %v", err)
 	}
-	// Unlike kong.Response.GetHeaders(), this function will only return headers
-	// that were present in the response from the Service (ignoring headers added
-	// by Kong itself)
-	resHeaders, err := kong.ServiceResponse.GetHeaders(-1) // default limit of 100 headers
+	resHeaders, err := kong.Response.GetHeaders(-1) // default limit of 100 headers
 	if err != nil {
 		return nil, fmt.Errorf("failed to get response headers: %v", err)
 	}
