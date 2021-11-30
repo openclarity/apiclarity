@@ -190,6 +190,8 @@ func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 	var providedDiff *_spec.APIDiff
 	var err error
 
+	log.Debugf("Handling telemetry: %+v", trace)
+
 	if trace.SCNTRequest.Host == "" {
 		headers := _spec.ConvertHeadersToMap(trace.SCNTRequest.Headers)
 		if host, ok := headers["host"]; ok {
