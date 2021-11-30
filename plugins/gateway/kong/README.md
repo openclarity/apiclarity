@@ -1,3 +1,41 @@
+APIClarity Kong gateway plugin
+
+Prerequisuts:
+Make sure thst kong plugin is installed in your cluster, and that he is configured with an ingress resource.
+For quick installation:
+# Deploy Kong
+kubectl create namespace kong
+kubectl apply -f https://bit.ly/kong-ingress-dbless
+
+# Wait for pod to be ready
+watch kubectl get pods -n kong
+
+# Configure Ingress
+kubectl apply -f - <<EOF
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: <name>
+  namespace: <namespace>
+spec:
+  ingressClassName: kong
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: <service-name>
+            port:
+              number: 80
+EOF
+
+Refer to the documentation for more details: https://tyk.io/docs/plugins/supported-languages/golang/#loading-the-plugin
+
+Installation using pre-built image
+
+
 ## APIClarity Kong plugin
 
 ### Deploy
