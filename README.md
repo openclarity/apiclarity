@@ -100,7 +100,7 @@ To deploy the Sock Shop Demo follow these steps:
 3. Deploy APIClarity in the `sock-shop` namespace:
 
    ```shell
-   helm install --set 'global.namespaces={sock-shop}' apiclarity apiclarity/apiclarity -n apiclarity
+   helm install --set 'global.namespaces={sock-shop}' --create-namespace apiclarity apiclarity/apiclarity -n apiclarity
    ```
 
 4. Find the NodePort to access the Sock Shop Demo App
