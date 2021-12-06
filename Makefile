@@ -80,6 +80,7 @@ test: ## Run Unit Tests
 	@(cd backend && go test ./pkg/...)
 	cd plugins/gateway/kong && go test ./...
 	cd plugins/gateway/tyk/v3.2.2 && go test ./...
+	cd plugins/gopacket && go test ./...
 
 .PHONY: clean
 clean: clean-ui clean-backend ## Clean all build artifacts
@@ -104,12 +105,14 @@ lint: bin/golangci-lint ## Run linter
 	cd backend && ../bin/golangci-lint run
 	cd plugins/gateway/kong && ../../../bin/golangci-lint run
 	cd plugins/gateway/tyk/v3.2.2 && ../../../../bin/golangci-lint run
+	cd plugins/gopacket && ../../bin/golangci-lint run
 
 .PHONY: fix
 fix: bin/golangci-lint ## Fix lint violations
 	cd backend && ../bin/golangci-lint run --fix
 	cd plugins/gateway/kong && ../../../bin/golangci-lint run --fix
 	cd plugins/gateway/tyk/v3.2.2 && ../../../../bin/golangci-lint run --fix
+	cd plugins/gopacket && ../../bin/golangci-lint run --fix
 
 bin/licensei: bin/licensei-${LICENSEI_VERSION}
 	@ln -sf licensei-${LICENSEI_VERSION} bin/licensei
@@ -124,6 +127,7 @@ license-check: bin/licensei ## Run license check
 	cd backend && ../bin/licensei check --config=../.licensei.toml
 	cd plugins/gateway/kong && ../../../bin/licensei check --config=../../../.licensei.toml
 	cd plugins/gateway/tyk/v3.2.2 && ../../../../bin/licensei check --config=../../../../.licensei.toml
+	cd plugins/gopacket && ../../bin/licensei check --config=../../.licensei.toml
 
 .PHONY: license-cache
 license-cache: bin/licensei ## Generate license cache

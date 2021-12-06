@@ -4,6 +4,8 @@ WORKDIR /go/src
 
 COPY api ./api
 
+COPY common ./common
+
 WORKDIR /plugin-source/
 
 COPY gateway/tyk/v3.2.2/* ./.

@@ -27,6 +27,7 @@ import (
 	"github.com/TykTechnologies/tyk/ctx"
 
 	"github.com/apiclarity/apiclarity/plugins/api/client/models"
+	"github.com/apiclarity/apiclarity/plugins/common"
 )
 
 func Test_getHostAndPortFromTargetURL(t *testing.T) {
@@ -85,55 +86,6 @@ func Test_getHostAndPortFromTargetURL(t *testing.T) {
 	}
 }
 
-func Test_getPathWithQuery(t *testing.T) {
-	type args struct {
-		reqURL *url.URL
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{
-			name: "no query",
-			args: args{
-				reqURL: &url.URL{
-					Path:     "/foo/bar",
-					RawQuery: "",
-				},
-			},
-			want: "/foo/bar",
-		},
-		{
-			name: "with query",
-			args: args{
-				reqURL: &url.URL{
-					Path:     "/foo/bar",
-					RawQuery: "bla=bloo",
-				},
-			},
-			want: "/foo/bar?bla=bloo",
-		},
-		{
-			name: "with query - path has no leading slash",
-			args: args{
-				reqURL: &url.URL{
-					Path:     "foo/bar",
-					RawQuery: "bla=bloo",
-				},
-			},
-			want: "/foo/bar?bla=bloo",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := getPathWithQuery(tt.args.reqURL); got != tt.want {
-				t.Errorf("getPathWithQuery() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func Test_createTelemetry(t *testing.T) {
 	apiDefinition := apidef.APIDefinition{
 		Proxy: apidef.ProxyConfig{
@@ -174,7 +126,7 @@ func Test_createTelemetry(t *testing.T) {
 					},
 					Proto: "HTTP/1.0",
 					Header: map[string][]string{
-						RequestIDHeaderKey: {"reqID"},
+						common.RequestIDHeaderKey: {"reqID"},
 					},
 					Body:       io.NopCloser(strings.NewReader(reqBodyJSON)),
 					Host:       "localhost:8080",
@@ -190,7 +142,7 @@ func Test_createTelemetry(t *testing.T) {
 						Body:          []byte(reqBodyJSON),
 						Headers: []*models.Header{
 							{
-								Key:   RequestIDHeaderKey,
+								Key:   common.RequestIDHeaderKey,
 								Value: "reqID",
 							},
 						},
@@ -231,58 +183,6 @@ func Test_createTelemetry(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("createTelemetry() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_readBody(t *testing.T) {
-	reqBodyJSON := "{Hello: world!}"
-	reqBodyJSONLong := "aaaaaaaaaaaaaaaaaaaa"
-	for i := 0; i < 16; i++ {
-		reqBodyJSONLong += reqBodyJSONLong
-	}
-	type args struct {
-		body io.ReadCloser
-	}
-	tests := []struct {
-		name          string
-		args          args
-		want          []byte
-		wantTruncated bool
-		wantErr       bool
-	}{
-		{
-			name: "body is not truncated",
-			args: args{
-				body: io.NopCloser(strings.NewReader(reqBodyJSON)),
-			},
-			want:          []byte(reqBodyJSON),
-			wantTruncated: false,
-			wantErr:       false,
-		},
-		{
-			name: "body is truncated",
-			args: args{
-				body: io.NopCloser(strings.NewReader(reqBodyJSONLong)),
-			},
-			want:          []byte{},
-			wantTruncated: true,
-			wantErr:       false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := readBody(tt.args.body)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("readBody() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("readBody() got = %v, want %v", got, tt.want)
-			}
-			if got1 != tt.wantTruncated {
-				t.Errorf("readBody() got1 = %v, want %v", got1, tt.wantTruncated)
 			}
 		})
 	}

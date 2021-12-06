@@ -17,6 +17,8 @@ linters-settings:
     # List of allowed `replace` directives. Default is empty.
     replace-allow-list:
       - github.com/jensneuse/graphql-go-tools
+      - github.com/up9inc/mizu/tap/api
+      - github.com/up9inc/mizu/shared
     # Allow local `replace` directives. Default is false.
     replace-local: true
   gosec:

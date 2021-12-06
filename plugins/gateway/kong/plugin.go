@@ -22,13 +22,12 @@ import (
 
 	"github.com/Kong/go-pdk"
 	"github.com/Kong/go-pdk/server"
-	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/gofrs/uuid"
 
 	"github.com/apiclarity/apiclarity/plugins/api/client/client"
 	"github.com/apiclarity/apiclarity/plugins/api/client/client/operations"
 	"github.com/apiclarity/apiclarity/plugins/api/client/models"
+	"github.com/apiclarity/apiclarity/plugins/common"
 )
 
 type Config struct {
@@ -43,7 +42,7 @@ func New() interface{} {
 func (conf Config) Response(kong *pdk.PDK) {
 	_ = kong.Log.Info("Handling telemetry")
 	if conf.apiClient == nil {
-		conf.apiClient = newAPIClient(conf.Host)
+		conf.apiClient = common.NewAPIClient(conf.Host)
 	}
 	telemetry, err := createTelemetry(kong)
 	if err != nil {
@@ -58,13 +57,6 @@ func (conf Config) Response(kong *pdk.PDK) {
 		_ = kong.Log.Err(fmt.Sprintf("Failed to post telemetry: %v", err))
 	}
 	_ = kong.Log.Info(fmt.Sprintf("Telemetry has been sent: %v", telemetry))
-}
-
-func newAPIClient(host string) *client.APIClarityPluginsTelemetriesAPI {
-	cfg := client.DefaultTransportConfig()
-	transport := httptransport.New(host, "/api", cfg.Schemes)
-	apiClient := client.New(transport, strfmt.Default)
-	return apiClient
 }
 
 const MaxBodySize = 1000 * 1000
@@ -148,7 +140,7 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 			Method: method,
 			Path:   path,
 		},
-		RequestID: generateRequestID(),
+		RequestID: common.GetRequestIDFromHeadersOrGenerate(reqHeaders),
 		Response: &models.Response{
 			Common: &models.Common{
 				TruncatedBody: truncatedBodyRes,
@@ -163,14 +155,6 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	}
 
 	return &telemetry, nil
-}
-
-func generateRequestID() string {
-	requestID, err := uuid.NewV4()
-	if err != nil {
-		return ""
-	}
-	return requestID.String()
 }
 
 // KongHost: <svc-name>.<namespace>.8000.svc

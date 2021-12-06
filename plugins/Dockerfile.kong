@@ -7,8 +7,15 @@ RUN apk add --update --no-cache gcc g++
 WORKDIR /plugins
 COPY api ./api
 
+WORKDIR /plugins/common
+
+COPY common/utils.go ./
+COPY common/go.* ./
+RUN go mod download
+
 WORKDIR /plugins/gateway/kong
 COPY gateway/kong/go.* ./
+
 RUN go mod download
 
 COPY gateway/kong .

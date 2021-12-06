@@ -19,7 +19,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -32,17 +31,14 @@ import (
 	"github.com/TykTechnologies/tyk/apidef"
 	"github.com/TykTechnologies/tyk/ctx"
 	"github.com/TykTechnologies/tyk/log"
-	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/apiclarity/apiclarity/plugins/api/client/client"
 	"github.com/apiclarity/apiclarity/plugins/api/client/client/operations"
 	"github.com/apiclarity/apiclarity/plugins/api/client/models"
+	"github.com/apiclarity/apiclarity/plugins/common"
 )
 
 const (
-	MaxBodySize              = 1000 * 1000
-	RequestIDHeaderKey       = "X-Request-Id"
 	MinimumSeparatedHostSize = 2
 )
 
@@ -84,7 +80,7 @@ func ResponseSendTelemetry(_ http.ResponseWriter, res *http.Response, req *http.
 		return
 	}
 
-	apiClient := newAPIClient(host)
+	apiClient := common.NewAPIClient(host)
 	params := operations.NewPostTelemetryParams().WithBody(telemetry)
 
 	_, err = apiClient.Operations.PostTelemetry(params)
@@ -104,21 +100,21 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 	host, port := getHostAndPortFromTargetURL(apiDefinition.Proxy.TargetURL)
 	destinationNamespace := getDestinationNamespaceFromHost(host)
 
-	reqBody, truncatedBodyReq, err := readBody(req.Body)
+	reqBody, truncatedBodyReq, err := common.ReadBody(req.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read request body: %v", err)
 	}
 	// Restore the content to the request body (since we read it)
 	req.Body = ioutil.NopCloser(bytes.NewBuffer(reqBody))
 
-	resBody, truncatedBodyRes, err := readBody(res.Body)
+	resBody, truncatedBodyRes, err := common.ReadBody(res.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %v", err)
 	}
 	// Restore the content to the response body (since we read it)
 	res.Body = ioutil.NopCloser(bytes.NewBuffer(resBody))
 
-	pathAndQuery := getPathWithQuery(req.URL)
+	pathAndQuery := common.GetPathWithQuery(req.URL)
 
 	telemetry := models.Telemetry{
 		DestinationAddress:   ":" + port, // No destination ip for now
@@ -127,19 +123,19 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 			Common: &models.Common{
 				TruncatedBody: truncatedBodyReq,
 				Body:          strfmt.Base64(reqBody),
-				Headers:       createHeaders(req.Header),
+				Headers:       common.CreateHeaders(req.Header),
 				Version:       req.Proto,
 			},
 			Host:   host,
 			Method: req.Method,
 			Path:   pathAndQuery,
 		},
-		RequestID: getRequestIDFromHeaders(req.Header),
+		RequestID: common.GetRequestIDFromHeadersOrGenerate(req.Header),
 		Response: &models.Response{
 			Common: &models.Common{
 				TruncatedBody: truncatedBodyRes,
 				Body:          strfmt.Base64(resBody),
-				Headers:       createHeaders(res.Header),
+				Headers:       common.CreateHeaders(res.Header),
 				Version:       res.Proto,
 			},
 			StatusCode: strconv.Itoa(res.StatusCode),
@@ -149,35 +145,6 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 	}
 
 	return &telemetry, nil
-}
-
-func readBody(body io.ReadCloser) ([]byte, bool, error) {
-	ret, err := ioutil.ReadAll(body)
-	if err != nil {
-		return nil, false, fmt.Errorf("failed to read body: %v", err)
-	}
-	if len(ret) > MaxBodySize {
-		return []byte{}, true, nil
-	}
-	return ret, false, nil
-}
-
-func getRequestIDFromHeaders(reqHeaders http.Header) string {
-	if reqID, ok := reqHeaders[RequestIDHeaderKey]; ok {
-		return reqID[0]
-	}
-	return ""
-}
-
-func getPathWithQuery(reqURL *url.URL) string {
-	pathAndQuery := reqURL.Path
-	if !strings.HasPrefix(pathAndQuery, "/") {
-		pathAndQuery = "/" + pathAndQuery
-	}
-	if reqURL.RawQuery != "" {
-		pathAndQuery += "?" + reqURL.RawQuery
-	}
-	return pathAndQuery
 }
 
 // Will try to extract the namespace from the host name, and if not found, will use the namespace that the gateway is running in.
@@ -211,26 +178,6 @@ func getHostAndPortFromTargetURL(targetURL string) (host, port string) {
 	}
 
 	return
-}
-
-func createHeaders(headers map[string][]string) []*models.Header {
-	ret := []*models.Header{}
-
-	// TODO support multiple values for a header
-	for header, values := range headers {
-		ret = append(ret, &models.Header{
-			Key:   header,
-			Value: values[0],
-		})
-	}
-	return ret
-}
-
-func newAPIClient(host string) *client.APIClarityPluginsTelemetriesAPI {
-	cfg := client.DefaultTransportConfig()
-	transport := httptransport.New(host, "/api", cfg.Schemes)
-	apiClient := client.New(transport, strfmt.Default)
-	return apiClient
 }
 
 // This is a hack. Currently there is an open bug in Tyk that the APIDefinition is nil
