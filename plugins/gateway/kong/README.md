@@ -53,17 +53,18 @@ KONG_PROXY_CONTAINER_NAME=<name> KONG_GATEWAY_DEPLOYMENT_NAME=<name> KONG_GATEWA
 
 Where:
 
-KONG_PROXY_CONTAINER_NAME - the name of the proxy container in Kong gateway deployment (default to proxy)
+## _KONG_PROXY_CONTAINER_NAME_ - the name of the proxy container in Kong gateway deployment (default to proxy)
 
-KONG_GATEWAY_DEPLOYMENT_NAME - the name of the Kong gateway deployment to be patched
+## _KONG_GATEWAY_DEPLOYMENT_NAME_ - the name of the Kong gateway deployment to be patched
 
-KONG_GATEWAY_DEPLOYMENT_NAMESPACE - the namespace of the Kong gateway deployment to be patched
+## _KONG_GATEWAY_DEPLOYMENT_NAMESPACE_ - the namespace of the Kong gateway deployment to be patched
 
-KONG_GATEWAY_INGRESS_NAME - the name of the ingress resource to be patched
+## _KONG_GATEWAY_INGRESS_NAME_ - the name of the ingress resource to be patched
 
-KONG_GATEWAY_INGRESS_NAMESPACE - the namespace of the ingress resource to be patched
+## _KONG_GATEWAY_INGRESS_NAMESPACE_ - the namespace of the ingress resource to be patched
 
-UPSTREAM_TELEMETRY_HOST_NAME - The name of the telemetry service (defaults to apiclarity-apiclaritzy.apiclarity:9000)
+## _UPSTREAM_TELEMETRY_HOST_NAME_ - The name of the telemetry service (defaults to apiclarity-apiclaritzy.apiclarity:9000)
+
 
 Once the plugin is deployed, traces will be sent to APIClarity to start learning specs.
   
