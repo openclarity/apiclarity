@@ -1,6 +1,6 @@
 # APIClarity Kong gateway plugin
 
-**Prerequisuts: 
+## _Prerequisuts:_ 
 
 Make sure thst kong gateway is installed in your cluster, and that he is configured with an ingress resource.
 
