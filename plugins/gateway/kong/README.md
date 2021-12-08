@@ -7,15 +7,18 @@ Make sure thst kong gateway is installed in your cluster, and that he is configu
 ### For quick installation:
 
 ### Deploy Kong
+```sh
 kubectl create namespace kong
 kubectl apply -f https://bit.ly/kong-ingress-dbless
+```
 
 ### Wait for pod to be ready
+```sh
 watch kubectl get pods -n kong
+```
 
 ### Configure Ingress
 ```sh
-
 kubectl apply -f - <<EOF
 apiVersion: networking.k8s.io/v1
 kind: Ingress
