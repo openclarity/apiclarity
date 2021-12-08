@@ -4,16 +4,18 @@
 
 Make sure thst kong gateway is installed in your cluster, and that he is configured with an ingress resource.
 
-For quick installation:
+### For quick installation:
 
-Deploy Kong
+### Deploy Kong
 kubectl create namespace kong
 kubectl apply -f https://bit.ly/kong-ingress-dbless
 
-Wait for pod to be ready
+### Wait for pod to be ready
 watch kubectl get pods -n kong
 
-Configure Ingress
+### Configure Ingress
+```sh
+
 kubectl apply -f - <<EOF
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -33,6 +35,7 @@ spec:
             port:
               number: 80
 EOF
+```
 
 Refer to the documentation for more details: https://docs.konghq.com/gateway/2.6.x/install-and-run/kubernetes/
 
