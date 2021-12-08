@@ -43,9 +43,9 @@ EOF
 Refer to the documentation for more details: https://docs.konghq.com/gateway/2.6.x/install-and-run/kubernetes/
 
   
-Deploy plugin:
+## _Deploy The Plugin:_
   
-Run:
+### Run:
   
 ```shell
 KONG_PROXY_CONTAINER_NAME=<name> KONG_GATEWAY_DEPLOYMENT_NAME=<name> KONG_GATEWAY_DEPLOYMENT_NAMESPACE=<namespace> KONG_GATEWAY_INGRESS_NAME=<name> KONG_GATEWAY_INGRESS_NAMESPACE=<namespace> UPSTREAM_TELEMETRY_HOST_NAME=<telemetry service address> ./deploy/deploy.sh
