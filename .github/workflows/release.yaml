@@ -122,6 +122,10 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
+      - name: Undo Tyk Plugin API dep change
+        id: undo-tyk-dep
+        run: git checkout -- plugins/gateway/tyk/v3.2.2/go.mod
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
