@@ -84,7 +84,7 @@ const UploadSpec = ({title, inventoryId, onUpdate}) => {
                             {loading ? "Processing..." : "Error in file"}
                         </div>
                     }
-                    <div className="upload-spec-file-supported-message">Supported format json or yaml, OAPI 2.0 and 3.0</div>
+                    <div className="upload-spec-file-supported-message">Supported format is OAS v2.0 (json or yaml)</div>
                 </div>
             </div>
             <div className="submit-button-wrapper">
