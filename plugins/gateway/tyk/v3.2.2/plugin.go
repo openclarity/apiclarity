@@ -16,6 +16,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -107,10 +108,15 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to read request body: %v", err)
 	}
+	// Return the content to the request body (since we read it)
+	req.Body = ioutil.NopCloser(bytes.NewBuffer(reqBody))
+
 	resBody, truncatedBodyRes, err := readBody(res.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %v", err)
 	}
+	// Return the content to the request body (since we read it)
+	res.Body = ioutil.NopCloser(bytes.NewBuffer(resBody))
 
 	pathAndQuery := getPathWithQuery(req.URL)
 
