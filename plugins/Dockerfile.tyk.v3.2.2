@@ -8,7 +8,7 @@ WORKDIR /plugin-source/
 
 COPY gateway/tyk/v3.2.2/* ./.
 
-RUN /build.sh plugin.so
+RUN /build.sh plugin.so 1
 
 FROM busybox
 WORKDIR /plugins
