@@ -114,6 +114,16 @@ func Test_getPathWithQuery(t *testing.T) {
 			},
 			want: "/foo/bar?bla=bloo",
 		},
+		{
+			name: "with query - path has no leading slash",
+			args: args{
+				reqURL: &url.URL{
+					Path:     "foo/bar",
+					RawQuery: "bla=bloo",
+				},
+			},
+			want: "/foo/bar?bla=bloo",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
