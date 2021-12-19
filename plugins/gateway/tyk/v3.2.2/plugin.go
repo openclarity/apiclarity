@@ -165,6 +165,9 @@ func getRequestIDFromHeaders(reqHeaders http.Header) string {
 
 func getPathWithQuery(reqURL *url.URL) string {
 	pathAndQuery := reqURL.Path
+	if !strings.HasPrefix(pathAndQuery, "/") {
+		pathAndQuery = "/" + pathAndQuery
+	}
 	if reqURL.RawQuery != "" {
 		pathAndQuery += "?" + reqURL.RawQuery
 	}
