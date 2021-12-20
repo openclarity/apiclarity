@@ -16,8 +16,7 @@ from real-time workload traffic seamlessly.
 
 ## Solution
 
-- Capture all API traffic in an existing environment using a service mesh
-  framework (e.g. [Istio](https://istio.io/))
+- Capture all API traffic in an existing environment using multiple traffic sources
 - Construct an OpenAPI specification by observing API traffic or upload a
   reference OpenAPI spec
 - Review, modify and approve automatically generated OpenAPI specs
@@ -29,70 +28,62 @@ from real-time workload traffic seamlessly.
 
 ![High level architecture](diagram.jpg "High level architecture")
 
-## Building
 
-### Building UI and backend in docker
+## Getting started
 
-```shell
-DOCKER_IMAGE=<your repo>/apiclarity DOCKER_TAG=<your tag> make push-docker
-# Modify the image name of the APIClarity deployment in ./deployment/apiclarity.yaml
-```
+### Supported traffic source integrations
+APIClarity supports integrating with the following traffic sources. Install APIClarity and follow the instructions per required integration.
 
-### Building UI
+* Istio Service Mesh
+  * Make sure that Istio 1.10+ is installed and running in your cluster.
+  See the [Official installation instructions](https://istio.io/latest/docs/setup/getting-started/#install)
+  for more information.
 
-```shell
-make ui
-```
+* Kong API Gateway
+  * [Integration instructions](https://github.com/apiclarity/apiclarity/tree/master/plugins/gateway/kong)
 
-### Building Backend
+* Tyk API Gateway
+  * [Integration instructions](https://github.com/apiclarity/apiclarity/tree/master/plugins/gateway/tyk)
 
-```shell
-make backend
-```
+### Install APIClarity in a K8s cluster using Helm:
 
-## Installation in a K8s cluster
-
-1. Make sure that Istio is installed and running in your cluster.
-   See the [Official installation instructions](https://istio.io/latest/docs/setup/getting-started/#install)
-   for more information.
-
-2. Add Helm repo
+1. Add Helm repo
 
    ```shell
    helm repo add apiclarity https://apiclarity.github.io/apiclarity
    ```
+2. Save APIClarity default chart values
+    ```shell
+    helm show values apiclarity/apiclarity > values.yaml
+    ```
 
-3. Deploy APIClarity with Helm
+3. Update `values.yaml` with the required traffic source values
+
+4. Deploy APIClarity with Helm for the selected traffic source
 
    ```shell
-   helm install --set 'global.namespaces={namespace1,namespace2}' apiclarity apiclarity/apiclarity -n apiclarity
+   helm install --values values.yaml --create-namespace apiclarity apiclarity/apiclarity -n apiclarity
    ```
-  **Note**:
-  namespace1 and namespace2 are the namespaces where the Envoy Wasm filters will be deployed to allow traffic tracing.
 
-4. Port forward to APIClarity UI:
+3. Port forward to APIClarity UI:
 
    ```shell
    kubectl port-forward -n apiclarity svc/apiclarity-apiclarity 9999:8080
    ```
 
-5. Open APIClarity UI in the browser: <http://localhost:9999/>
-6. Generate some traffic in the applications in the traced namespaces and check
-   the APIClarity UI :)
+4. Open APIClarity UI in the browser: <http://localhost:9999/>
+5. Generate some traffic in the traced applications and check the APIClarity UI :)
 
 ## Configurations
 
-The file `values.yaml` is used to deploy and configure APIClarity on your cluster via Helm.
-
-1. Set `RESPONSE_HEADERS_TO_IGNORE` and `REQUEST_HEADERS_TO_IGNORE` with a space separated list of headers to ignore when reconstructing the spec.
-
-    Note: Current values defined in `headers-to-ignore-config` ConfigMap
+The file [values.yaml](https://github.com/apiclarity/apiclarity/blob/master/charts/apiclarity/values.yaml) is used to deploy and configure APIClarity on your cluster via Helm.
+[This ConfigMap](https://github.com/apiclarity/apiclarity/blob/master/charts/apiclarity/templates/configmap.yaml) is used to define the list of headers to ignore when reconstructing the spec.
 
 ## Testing with a demo application
 
 A good demo application to try APIClarity with is the [Sock Shop Demo](https://microservices-demo.github.io/).
 
-To deploy the Sock Shop Demo follow these steps:
+To deploy the Sock Shop Demo, follow these steps:
 
 1. Create the `sock-shop` namespace and enable Istio injection:
 
@@ -107,10 +98,10 @@ To deploy the Sock Shop Demo follow these steps:
    kubectl apply -f https://raw.githubusercontent.com/microservices-demo/microservices-demo/master/deploy/kubernetes/complete-demo.yaml
    ```
 
-3. Deploy APIClarity in the `sock-shop` namespace:
+3. Deploy APIClarity in the `sock-shop` namespace (e.g. Istio service-mesh traffic source):
 
    ```shell
-   helm install --set 'global.namespaces={sock-shop}' apiclarity apiclarity/apiclarity -n apiclarity
+   helm install --set 'trafficSource.envoyWasm.enabled=true' --set 'trafficSource.envoyWasm.namespaces={sock-shop}' --create-namespace apiclarity apiclarity/apiclarity -n apiclarity
    ```
 
 4. Find the NodePort to access the Sock Shop Demo App
@@ -124,6 +115,16 @@ To deploy the Sock Shop Demo follow these steps:
 
    Use this port together with your node IP to access the demo webshop and run
    some transactions to generate data to review on the APIClarity dashboard.
+
+## Building
+
+### Building from source:
+Build and push the image to your repo:
+
+```shell
+DOCKER_IMAGE=<your docker registry>/apiclarity/apiclarity DOCKER_TAG=<your tag> make push-docker
+```
+Update [values.yaml](https://github.com/apiclarity/apiclarity/blob/master/charts/apiclarity/values.yaml) accordingly.
 
 ## Running locally with demo data
 
