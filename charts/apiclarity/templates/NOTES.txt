@@ -14,5 +14,5 @@ Here is how to access the APIClarity UI:
 
 
 Note: Tyk traffic source is enabled.
-      Follow the instruction in https://github.com/apiclarity/apiclarity/tree/{{ .Chart.AppVersion }}/plugins/gateway/tyk to update Tyk API definition with the plugin configuration.
+      Follow the instructions in https://github.com/apiclarity/apiclarity/tree/{{ .Chart.AppVersion }}/plugins/gateway/tyk to update Tyk API definition with the plugin configuration.
 {{- end }}
