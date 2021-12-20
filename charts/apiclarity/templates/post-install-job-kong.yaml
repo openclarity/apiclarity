@@ -1,0 +1,97 @@
+{{- if .Values.trafficSource.kong.enabled }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "apiclarity.name" . }}-kong-post-install-job
+  labels:
+    {{ include "apiclarity.labels" . }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded,hook-failed
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets", "daemonsets"]
+  verbs: ["get", "list", "create", "patch"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get", "list", "create", "patch"]
+- apiGroups: ["configuration.konghq.com"]
+  resources: ["kongplugins"]
+  verbs: ["get", "list", "create", "patch"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "apiclarity.name" . }}-kong-post-install-job
+  namespace: '{{ .Release.Namespace }}'
+  labels:
+    {{ include "apiclarity.labels" . }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded,hook-failed
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "apiclarity.name" . }}-kong-post-install-job
+  labels:
+    {{ include "apiclarity.labels" . }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded,hook-failed
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "apiclarity.name" . }}-kong-post-install-job
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "apiclarity.name" . }}-kong-post-install-job
+    namespace: '{{ .Release.Namespace }}'
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "apiclarity.name" . }}-kong-post-install-job
+  namespace: '{{ .Release.Namespace }}'
+  labels:
+    {{ include "apiclarity.labels" . }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded,hook-failed
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      name: {{ include "apiclarity.name" . }}-kong-post-install-job
+    spec:
+      serviceAccountName: {{ include "apiclarity.name" . }}-kong-post-install-job
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1999
+      containers:
+        - name: kubectl
+          image: "k8s.gcr.io/hyperkube:v1.16.12"
+          imagePullPolicy: "IfNotPresent"
+          env:
+            - name: KONG_PROXY_CONTAINER_NAME
+              value: {{ .Values.trafficSource.kong.containerName }}
+            - name: KONG_GATEWAY_DEPLOYMENT_NAME
+              value: {{ .Values.trafficSource.kong.deplyomentName }}
+            - name: KONG_GATEWAY_DEPLOYMENT_NAMESPACE
+              value: {{ .Values.trafficSource.kong.deplyomentNamespace }}
+            - name: KONG_GATEWAY_INGRESS_NAME
+              value: {{ .Values.trafficSource.kong.ingressName }}
+            - name: KONG_GATEWAY_INGRESS_NAMESPACE
+              value: {{ .Values.trafficSource.kong.ingressNamespace }}
+            - name: UPSTREAM_TELEMETRY_HOST_NAME
+              value: '{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:9000'
+          command:
+          - /bin/bash
+          - -c
+          - "cd /tmp &&
+            git clone -b {{ .Chart.AppVersion }} https://github.com/apiclarity/apiclarity.git &&
+            cd apiclarity &&
+            ./plugins/gateway/kong/deploy/deploy.sh"
+      restartPolicy: Never
+{{- end }}

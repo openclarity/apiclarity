@@ -1,0 +1,86 @@
+{{- if .Values.trafficSource.tyk.enabled }}
+{{- if .Values.trafficSource.tyk.enableTykVerify }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "apiclarity.name" . }}-tyk-pre-install-job
+  labels:
+    {{ include "apiclarity.labels" . }}
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded,hook-failed
+rules:
+- apiGroups: [""]
+  resources: ["pods/exec"]
+  verbs: ["create"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "apiclarity.name" . }}-tyk-pre-install-job
+  namespace: '{{ .Release.Namespace }}'
+  labels:
+    {{ include "apiclarity.labels" . }}
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded,hook-failed
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "apiclarity.name" . }}-tyk-pre-install-job
+  labels:
+    {{ include "apiclarity.labels" . }}
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded,hook-failed
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "apiclarity.name" . }}-tyk-pre-install-job
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "apiclarity.name" . }}-tyk-pre-install-job
+    namespace: '{{ .Release.Namespace }}'
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "apiclarity.name" . }}-tyk-pre-install-job
+  namespace: '{{ .Release.Namespace }}'
+  labels:
+    {{ include "apiclarity.labels" . }}
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded,hook-failed
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      name: {{ include "apiclarity.name" . }}-tyk-pre-install-job
+    spec:
+      serviceAccountName: {{ include "apiclarity.name" . }}-tyk-pre-install-job
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1999
+      containers:
+        - name: kubectl
+          image: "k8s.gcr.io/hyperkube:v1.16.12"
+          imagePullPolicy: "IfNotPresent"
+          env:
+            - name: TYK_GATEWAY_DEPLOYMENT_NAME
+              value: {{ .Values.trafficSource.tyk.deplyomentName }}
+            - name: TYK_GATEWAY_DEPLOYMENT_NAMESPACE
+              value: {{ .Values.trafficSource.tyk.deplyomentNamespace }}
+          command:
+            - /bin/bash
+            - -c
+            - "TYK_GATEWAY_POD_NAME=$(kubectl -n ${TYK_GATEWAY_DEPLOYMENT_NAMESPACE} get pods -lapp=${TYK_GATEWAY_DEPLOYMENT_NAME} -o jsonpath='{.items[0].metadata.name}') && 
+            kubectl -n ${TYK_GATEWAY_DEPLOYMENT_NAMESPACE} exec ${TYK_GATEWAY_POD_NAME} -- ./tyk --version 2>/dev/stdout | grep v3.2.2"
+      restartPolicy: Never
+{{- end }}
+{{- end }}

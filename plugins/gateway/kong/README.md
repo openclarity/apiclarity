@@ -1,26 +1,30 @@
 ## APIClarity Kong plugin
 
-### Deploy
+### Installation using a pre-built image
 
-run:
+1. Choose one of the following installation techniques
 
+    1. Script installation
+        * Run the following script to add the plugin to your Kong deployment and Ingress configuration.
+        * Please set all env variables accordingly:
 
-```shell
-KONG_PROXY_CONTAINER_NAME=<name> KONG_GATEWAY_DEPLOYMENT_NAME=<name> KONG_GATEWAY_DEPLOYMENT_NAMESPACE=<namespace> KONG_GATEWAY_INGRESS_NAME=<name> KONG_GATEWAY_INGRESS_NAMESPACE=<namespace> UPSTREAM_TELEMETRY_HOST_NAME=<telemetry service address> ./deploy/deploy.sh
-```
+        ```shell
+        KONG_PROXY_CONTAINER_NAME=<name> \
+       KONG_GATEWAY_DEPLOYMENT_NAME=<name> \
+       KONG_GATEWAY_DEPLOYMENT_NAMESPACE=<namespace> \
+       KONG_GATEWAY_INGRESS_NAME=<name> \
+       KONG_GATEWAY_INGRESS_NAMESPACE=<namespace> \
+       UPSTREAM_TELEMETRY_HOST_NAME=<telemetry service address> ./deploy/deploy.sh
+        ```
 
-Where:
-
-KONG_PROXY_CONTAINER_NAME - the name of the proxy container in Kong gateway (default to proxy)
-
-KONG_GATEWAY_DEPLOYMENT_NAME - the name of the Kong gateway deployment to be patched
-
-KONG_GATEWAY_DEPLOYMENT_NAMESPACE - the namespace of the Kong gateway deployment to be patched
-
-KONG_GATEWAY_INGRESS_NAME - the name of the ingress resource to be patched
-
-KONG_GATEWAY_INGRESS_NAMESPACE - the namespace of the ingress resource to be patched
-
-UPSTREAM_TELEMETRY_HOST_NAME - The name of the telemetry service (defaults to apiclarity-apiclarity.apiclarity:9000)
-
-Once the plugin is deployed, traces will be sent to APIClarity to start learning specs.
+    2. Helm installation
+        * Save APIClarity default chart values
+        ```shell
+        helm show values apiclarity/apiclarity > values.yaml
+        ```
+        * Update the values in `trafficSource.kong`
+        * Deploy or Upgrade APIClarity
+       ```shell
+       helm upgrade --values values.yaml --create-namespace apiclarity apiclarity/apiclarity -n apiclarity --install
+       ```
+        * A post install job will execute the installation script in your cluster

@@ -1,9 +1,10 @@
-{{- if not .Values.global.disableIstioVerify }}
+{{- if .Values.trafficSource.envoyWasm.enabled }}
+{{- if .Values.trafficSource.envoyWasm.enableIstioVerify }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "apiclarity.name" . }}-pre-install-job
+  name: {{ include "apiclarity.name" . }}-istio-pre-install-job
   labels:
     {{ include "apiclarity.labels" . }}
   annotations:
@@ -17,7 +18,7 @@ rules:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ include "apiclarity.name" . }}-pre-install-job
+  name: {{ include "apiclarity.name" . }}-istio-pre-install-job
   namespace: '{{ .Release.Namespace }}'
   labels:
     {{ include "apiclarity.labels" . }}
@@ -28,7 +29,7 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "apiclarity.name" . }}-pre-install-job
+  name: {{ include "apiclarity.name" . }}-istio-pre-install-job
   labels:
     {{ include "apiclarity.labels" . }}
   annotations:
@@ -37,16 +38,16 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "apiclarity.name" . }}-pre-install-job
+  name: {{ include "apiclarity.name" . }}-istio-pre-install-job
 subjects:
   - kind: ServiceAccount
-    name: {{ include "apiclarity.name" . }}-pre-install-job
+    name: {{ include "apiclarity.name" . }}-istio-pre-install-job
     namespace: '{{ .Release.Namespace }}'
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "apiclarity.name" . }}-pre-install-job
+  name: {{ include "apiclarity.name" . }}-istio-pre-install-job
   namespace: '{{ .Release.Namespace }}'
   labels:
     {{ include "apiclarity.labels" . }}
@@ -57,9 +58,9 @@ spec:
   backoffLimit: 0
   template:
     metadata:
-      name: {{ include "apiclarity.name" . }}-pre-install-job
+      name: {{ include "apiclarity.name" . }}-istio-pre-install-job
     spec:
-      serviceAccountName: {{ include "apiclarity.name" . }}-pre-install-job
+      serviceAccountName: {{ include "apiclarity.name" . }}-istio-pre-install-job
       securityContext:
         runAsNonRoot: true
         runAsUser: 1999
@@ -72,4 +73,5 @@ spec:
           - -c
           - "istioctl verify-install 2>/dev/null | grep -c 'Istio control planes detected'"
       restartPolicy: Never
+{{- end }}
 {{- end }}

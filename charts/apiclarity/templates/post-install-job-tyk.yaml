@@ -1,32 +1,23 @@
-{{- if .Values.global.namespaces }}
+{{- if .Values.trafficSource.tyk.enabled }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "apiclarity.name" . }}-post-install-job
+  name: {{ include "apiclarity.name" . }}-tyk-post-install-job
   labels:
     {{ include "apiclarity.labels" . }}
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded,hook-failed
 rules:
-- apiGroups: [""]
-  resources: ["namespaces"]
-  verbs: ["get", "list"]
 - apiGroups: ["apps"]
   resources: ["deployments", "statefulsets", "daemonsets"]
-  verbs: ["get", "list", "patch"]
-- apiGroups: [""]
-  resources: ["configmaps"]
-  verbs: ["get", "list", "create", "delete"]
-- apiGroups: ["networking.istio.io"]
-  resources: ["envoyfilters"]
   verbs: ["get", "list", "create", "patch"]
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ include "apiclarity.name" . }}-post-install-job
+  name: {{ include "apiclarity.name" . }}-tyk-post-install-job
   namespace: '{{ .Release.Namespace }}'
   labels:
     {{ include "apiclarity.labels" . }}
@@ -37,7 +28,7 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "apiclarity.name" . }}-post-install-job
+  name: {{ include "apiclarity.name" . }}-tyk-post-install-job
   labels:
     {{ include "apiclarity.labels" . }}
   annotations:
@@ -46,16 +37,16 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "apiclarity.name" . }}-post-install-job
+  name: {{ include "apiclarity.name" . }}-tyk-post-install-job
 subjects:
   - kind: ServiceAccount
-    name: {{ include "apiclarity.name" . }}-post-install-job
+    name: {{ include "apiclarity.name" . }}-tyk-post-install-job
     namespace: '{{ .Release.Namespace }}'
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "apiclarity.name" . }}-post-install-job
+  name: {{ include "apiclarity.name" . }}-tyk-post-install-job
   namespace: '{{ .Release.Namespace }}'
   labels:
     {{ include "apiclarity.labels" . }}
@@ -63,12 +54,12 @@ metadata:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded,hook-failed
 spec:
-  backoffLimit: 0
+  backoffLimit: 3
   template:
     metadata:
-      name: {{ include "apiclarity.name" . }}-post-install-job
+      name: {{ include "apiclarity.name" . }}-tyk-post-install-job
     spec:
-      serviceAccountName: {{ include "apiclarity.name" . }}-post-install-job
+      serviceAccountName: {{ include "apiclarity.name" . }}-tyk-post-install-job
       securityContext:
         runAsNonRoot: true
         runAsUser: 1999
@@ -76,12 +67,21 @@ spec:
         - name: kubectl
           image: "k8s.gcr.io/hyperkube:v1.16.12"
           imagePullPolicy: "IfNotPresent"
+          env:
+            - name: TYK_PROXY_CONTAINER_NAME
+              value: {{ .Values.trafficSource.tyk.containerName }}
+            - name: TYK_GATEWAY_DEPLOYMENT_NAME
+              value: {{ .Values.trafficSource.tyk.deplyomentName }}
+            - name: TYK_GATEWAY_DEPLOYMENT_NAMESPACE
+              value: {{ .Values.trafficSource.tyk.deplyomentNamespace }}
+            - name: UPSTREAM_TELEMETRY_HOST_NAME
+              value: '{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:9000'
           command:
           - /bin/bash
           - -c
           - "cd /tmp &&
-            git clone -b {{ .Chart.AppVersion }} https://github.com/apiclarity/apiclarity.git --recurse-submodules &&
-            cd apiclarity/wasm-filters &&
-            WASM_FILTER_TRACE_BACKEND_ADDRESS={{ include "apiclarity.name" . }}.{{ .Release.Namespace }}.svc.cluster.local ./deploy.sh {{ join " " .Values.global.namespaces }}"
+            git clone -b {{ .Chart.AppVersion }} https://github.com/apiclarity/apiclarity.git &&
+            cd apiclarity &&
+            ./plugins/gateway/tyk/deploy/deploy.sh"
       restartPolicy: Never
 {{- end }}
