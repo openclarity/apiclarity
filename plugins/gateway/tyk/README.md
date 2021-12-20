@@ -3,7 +3,7 @@
 ### Prerequisite
 * Make sure that Tyk v3.2.2 is running in your K8s cluster.
 
-### Installation using pre-built image
+### Installation using a pre-built image
 
 1. Choose one of the following installation techniques 
 

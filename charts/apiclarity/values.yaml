@@ -79,9 +79,11 @@ apiclarity-postgresql:
 
 trafficSource:
   envoyWasm:
+    ## Enable Envoy wasm traffic source
+    ##
     enabled: false
 
-    ## Enable Istio Check Pre-Install Job
+    ## Enable Istio verification in a Pre-Install Job
     ##
     enableIstioVerify: true
 
@@ -91,7 +93,10 @@ trafficSource:
       - default
 
   kong:
+    ## Enable Kong traffic source
+    ##
     enabled: false
+
     ## Specify the name of the proxy container in Kong gateway to patch
     ##
     containerName: "proxy"
@@ -109,9 +114,11 @@ trafficSource:
     ingressNamespace: ""
 
   tyk:
+    ## Enable Tyk traffic source
+    ##
     enabled: false
 
-    ## Enable Tyk Check Pre-Install Job
+    ## Enable Tyk verification in a Pre-Install Job
     ##
     enableTykVerify: true
     ## Specify the name of the proxy container in Tyk gateway to patch

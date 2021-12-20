@@ -1,6 +1,6 @@
 ## APIClarity Kong plugin
 
-### Installation using pre-built image
+### Installation using a pre-built image
 
 1. Choose one of the following installation techniques
 
