@@ -7,3 +7,12 @@ Here is how to access the APIClarity UI:
     $ kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "apiclarity.name" . }} 9999:8080
     $ Open APIClarity UI in the browser: http://localhost:9999/
     $ Generate some traffic in the applications in the traced namespaces and check the APIClarity UI :)
+
+
+
+{{- if .Values.trafficSource.tyk.enabled }}
+
+
+Note: Tyk traffic source is enabled.
+      Follow the instruction in https://github.com/apiclarity/apiclarity/tree/{{ .Chart.AppVersion }}/plugins/gateway/tyk to update Tyk API definition with the plugin configuration.
+{{- end }}

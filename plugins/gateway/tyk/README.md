@@ -1,15 +1,35 @@
 ## APIClarity Tyk gateway plugin
 
+### Prerequisite
+* Make sure that Tyk v3.2.2 is running in your K8s cluster.
+
 ### Installation using pre-built image
 
-1. Make sure that Tyk v3.2.2 is running in your K8s cluster.
-2. Run the following script to add the plugin to your Tyk deployment. The script will add an init container with the plugin image and will mount the plugin into the plugin to /plugins/tyk-plugin.so. Please set TYK_PROXY_CONTAINER_NAME, TYK_GATEWAY_DEPLOYMENT_NAME and TYK_GATEWAY_DEPLOYMENT_NAMESPACE accordingly:
+1. Choose one of the following installation techniques 
 
-```shell
-TYK_PROXY_CONTAINER_NAME=<name> TYK_GATEWAY_DEPLOYMENT_NAME=<name> TYK_GATEWAY_DEPLOYMENT_NAMESPACE=<namespace> ./deploy/deploy.sh
-```
+   1. Script installation
+      * Run the following script to add the plugin to your Tyk deployment. 
+      * The script will add an init container with the plugin image and will mount the plugin into the plugin to /plugins/tyk-plugin.so. 
+      * Please set TYK_PROXY_CONTAINER_NAME, TYK_GATEWAY_DEPLOYMENT_NAME and TYK_GATEWAY_DEPLOYMENT_NAMESPACE accordingly:
 
-3. Update your Tyk API definition with the plugin configuration:
+       ```shell
+       TYK_PROXY_CONTAINER_NAME=<name> TYK_GATEWAY_DEPLOYMENT_NAME=<name> TYK_GATEWAY_DEPLOYMENT_NAMESPACE=<namespace> ./deploy/deploy.sh
+       ```
+
+   2. Helm installation
+      * Save APIClarity default chart values
+       ```shell
+       helm show values apiclarity/apiclarity > values.yaml
+       ```
+      * Update the values in `trafficSource.tyk`
+      * Deploy or Upgrade APIClarity
+      ```shell
+      helm upgrade --values values.yaml --create-namespace apiclarity apiclarity/apiclarity -n apiclarity --install
+      ```
+      * A post install job will execute the installation script in your cluster 
+
+
+2. Update your Tyk API definition with the plugin configuration:
 ```shell
 curl -s -H "x-tyk-authorization: $TYK_ADMIN_KEY" http://$TYK_ADMIN_ADDRESS/tyk/apis/ -X POST -d '{
 

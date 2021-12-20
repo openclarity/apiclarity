@@ -2,11 +2,6 @@
 ## Global Values
 
 global:
-  ## Enable APIClarity in the following namespaces
-  ##
-  namespaces:
-    - default
-
   ## Database password
   ##
   databasePassword: apiclarity
@@ -33,9 +28,6 @@ global:
     ##   GKE, AWS & OpenStack)
     # storageClass: ""
 
-  ## Disable Istio Check Pre-Install Job
-  ##
-  disableIstioVerify: false
 ## End of Global Values
 #######################################################################################
 
@@ -80,4 +72,57 @@ apiclarity-postgresql:
     runAsNonRoot: true
 
 # End of APIClarity Postgres Values
+#######################################################################################
+
+#######################################################################################
+## APIClarity Traffic Source Values
+
+trafficSource:
+  envoyWasm:
+    enabled: false
+
+    ## Enable Istio Check Pre-Install Job
+    ##
+    enableIstioVerify: true
+
+    ## Enable APIClarity WASM filter in the following namespaces
+    ##
+    namespaces:
+      - default
+
+  kong:
+    enabled: false
+    ## Specify the name of the proxy container in Kong gateway to patch
+    ##
+    containerName: "proxy"
+    ## Specify the name of the Kong gateway deployment to patch
+    ##
+    deplyomentName: ""
+    ## Specify the namespace of the Kong gateway deployment to patch
+    ##
+    deplyomentNamespace: ""
+    ## Specify the name of the ingress resource to patch
+    ##
+    ingressName: ""
+    ## Specify the namespace of the ingress resource to patch
+    ##
+    ingressNamespace: ""
+
+  tyk:
+    enabled: false
+
+    ## Enable Tyk Check Pre-Install Job
+    ##
+    enableTykVerify: true
+    ## Specify the name of the proxy container in Tyk gateway to patch
+    ##
+    containerName: "proxy"
+    ## Specify the name of the Tyk gateway deployment to patch
+    ##
+    deplyomentName: ""
+    ## Specify the namespace of the Tyk gateway deployment to patch
+    ##
+    deplyomentNamespace: ""
+
+# End of APIClarity Traffic Source Values
 #######################################################################################
