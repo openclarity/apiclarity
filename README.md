@@ -83,7 +83,7 @@ The file [values.yaml](https://github.com/apiclarity/apiclarity/blob/master/char
 
 A good demo application to try APIClarity with is the [Sock Shop Demo](https://microservices-demo.github.io/).
 
-To deploy the Sock Shop Demo follows these steps:
+To deploy the Sock Shop Demo, follow these steps:
 
 1. Create the `sock-shop` namespace and enable Istio injection:
 
