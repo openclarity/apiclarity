@@ -12,7 +12,7 @@ WORKDIR /plugins/common
 COPY common/go.* ./
 RUN go mod download
 
-COPY common/utils.go ./
+COPY common ./
 
 WORKDIR /plugins/gateway/kong
 COPY gateway/kong/go.* ./
