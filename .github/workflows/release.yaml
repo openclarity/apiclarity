@@ -59,8 +59,8 @@ jobs:
           sed -i 's/image: ghcr.io\/apiclarity\/tyk-plugin-v3.2.2:latest/image: ghcr.io\/apiclarity\/tyk-plugin-v3.2.2:'"$tag"'/g' plugins/gateway/tyk/deploy/patch-deployment.yaml
           git commit plugins/gateway/tyk/deploy/patch-deployment.yaml -m "workflow: update tag in tyk deploy script"
 
-          sed -i 's/image: ghcr.io\/apiclarity\/gopacket-agent:latest/image: ghcr.io\/apiclarity\/gopacket-agent:'"$tag"'/g' plugins/gopacket/gopacket-ds.yml
-          git commit plugins/gopacket/gopacket-ds.yml -m "workflow: update tag in gopacket deploy script"
+          sed -i 's/image: ghcr.io\/apiclarity\/passive-taper:latest/image: ghcr.io\/apiclarity\/passive-taper:'"$tag"'/g' plugins/taper/gopacket-ds.yml
+          git commit plugins/taper/gopacket-ds.yml -m "workflow: update tag in taper deploy script"
 
           git tag --annotate --message "Tag for release $tag" "$tag"
           git push origin "refs/tags/$tag"
@@ -130,12 +130,12 @@ jobs:
         id: undo-tyk-dep
         run: git checkout -- plugins/gateway/tyk/v3.2.2/go.mod
 
-      - name: Build and Push gopacket extension
+      - name: Build and Push passive taper
         uses: docker/build-push-action@v2
         with:
           context: plugins
-          tags: ghcr.io/apiclarity/gopacket-agent:${{ github.event.inputs.version }}
-          file: plugins/Dockerfile.gopacket
+          tags: ghcr.io/apiclarity/passive-taper:${{ github.event.inputs.version }}
+          file: plugins/Dockerfile.taper
           push: true
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache

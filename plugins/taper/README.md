@@ -1,4 +1,4 @@
-## APIClarity Gopacket Traffic Source
+## APIClarity Passive Tapper Traffic Source
 
 ### Deploy
 

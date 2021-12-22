@@ -39,8 +39,8 @@ import (
 	"github.com/apiclarity/apiclarity/plugins/api/client/client/operations"
 	"github.com/apiclarity/apiclarity/plugins/api/client/models"
 	"github.com/apiclarity/apiclarity/plugins/common"
-	"github.com/apiclarity/apiclarity/plugins/gopacket/config"
-	"github.com/apiclarity/apiclarity/plugins/gopacket/monitor"
+	"github.com/apiclarity/apiclarity/plugins/taper/config"
+	"github.com/apiclarity/apiclarity/plugins/taper/monitor"
 )
 
 type Agent struct {

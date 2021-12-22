@@ -32,7 +32,7 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: spec.nodeName
-        image: ghcr.io/apiclarity/gopacket-agent:latest
+        image: ghcr.io/apiclarity/passive-taper:latest
         imagePullPolicy: Always
         name: apiclarity-taper
         resources:

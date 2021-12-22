@@ -5,15 +5,15 @@ DOCKER_TAG ?= ${VERSION}
 TYK_VERSION ?= v3.2.2
 
 .PHONY: docker
-docker: docker-kong docker-tyk docker-gopacket
+docker: docker-kong docker-tyk docker-taper
 
 .PHONY: docker-kong
 docker-kong:
 	@DOCKER_BUILDKIT=1 docker build -t ${DOCKER_REGISTRY}/kong-plugin:${DOCKER_TAG} --file Dockerfile.kong .
 
-.PHONY: docker-gopacket
-docker-gopacket:
-	@DOCKER_BUILDKIT=1 docker build --build-arg VERSION=${VERSION} -t ${DOCKER_REGISTRY}/gopacket-agent:${DOCKER_TAG} --file Dockerfile.gopacket .
+.PHONY: docker-taper
+docker-taper:
+	@DOCKER_BUILDKIT=1 docker build --build-arg VERSION=${VERSION} -t ${DOCKER_REGISTRY}/passive-taper:${DOCKER_TAG} --file Dockerfile.taper .
 
 .PHONY: docker-tyk
 docker-tyk:
@@ -28,7 +28,7 @@ docker-tyk:
 	 cd -)
 
 .PHONY: push-docker
-push-docker: push-docker-kong push-docker-tyk push-docker-gopacket
+push-docker: push-docker-kong push-docker-tyk push-docker-taper
 
 .PHONY: push-docker-kong
 push-docker-kong: docker-kong
@@ -40,7 +40,7 @@ push-docker-tyk: docker-tyk
 	@echo "Publishing Tyk plugin Docker image ..."
 	docker push ${DOCKER_REGISTRY}/tyk-plugin-${TYK_VERSION}:${DOCKER_TAG}
 
-.PHONY: push-docker-gopacket
-push-docker-gopacket: docker-gopacket
-	@echo "Publishing gopacket extension Docker image ..."
-	docker push ${DOCKER_REGISTRY}/gopacket-agent:${DOCKER_TAG}
+.PHONY: push-docker-taper
+push-docker-taper: docker-taper
+	@echo "Publishing passive taper Docker image ..."
+	docker push ${DOCKER_REGISTRY}/passive-taper:${DOCKER_TAG}

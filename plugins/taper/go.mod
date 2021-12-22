@@ -1,4 +1,4 @@
-module github.com/apiclarity/apiclarity/plugins/gopacket
+module github.com/apiclarity/apiclarity/plugins/taper
 
 go 1.17
 

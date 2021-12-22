@@ -10,19 +10,19 @@ WORKDIR /plugins
 COPY api ./api
 COPY common ./common
 
-WORKDIR /plugins/gopacket
+WORKDIR /plugins/taper
 
-COPY gopacket/go.* ./
+COPY taper/go.* ./
 RUN go mod download
 
 ARG VERSION
-COPY gopacket .
+COPY taper .
 RUN go build -ldflags="-s -w \
-     -X 'github.com/apiclarity/apiclarity/plugins/gopacket/version.Version=${VERSION}'" -o agent .
+     -X 'github.com/apiclarity/apiclarity/plugins/taper/version.Version=${VERSION}'" -o agent .
 
-WORKDIR /plugins/gopacket/extensions/http
+WORKDIR /plugins/taper/extensions/http
 
-COPY gopacket/extensions/http .
+COPY taper/extensions/http .
 RUN go build -buildmode=plugin -o ../http.so .
 
 FROM alpine:3.14
@@ -31,7 +31,7 @@ RUN apk add bash libpcap-dev tcpdump
 WORKDIR /app
 
 # Copy binary and config files from /build to root folder of scratch container.
-COPY --from=builder ["/plugins/gopacket/agent", "."]
-COPY --from=builder ["/plugins/gopacket/extensions/http.so", "extensions/http.so"]
+COPY --from=builder ["/plugins/taper/agent", "."]
+COPY --from=builder ["/plugins/taper/extensions/http.so", "extensions/http.so"]
 
 ENTRYPOINT ["/app/agent"]

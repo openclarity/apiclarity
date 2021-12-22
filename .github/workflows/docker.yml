@@ -75,12 +75,12 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
-      - name: Build gopacket extension
+      - name: Build passive taper
         uses: docker/build-push-action@v2
         with:
           context: plugins
-          tags: ghcr.io/apiclarity/gopacket-agent:latest
-          file: plugins/Dockerfile.gopacket
+          tags: ghcr.io/apiclarity/passive-taper:latest
+          file: plugins/Dockerfile.taper
           push: true
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
