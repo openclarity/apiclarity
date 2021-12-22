@@ -59,9 +59,6 @@ jobs:
           sed -i 's/image: ghcr.io\/apiclarity\/tyk-plugin-v3.2.2:latest/image: ghcr.io\/apiclarity\/tyk-plugin-v3.2.2:'"$tag"'/g' plugins/gateway/tyk/deploy/patch-deployment.yaml
           git commit plugins/gateway/tyk/deploy/patch-deployment.yaml -m "workflow: update tag in tyk deploy script"
 
-          sed -i 's/image: ghcr.io\/apiclarity\/passive-taper:latest/image: ghcr.io\/apiclarity\/passive-taper:'"$tag"'/g' plugins/taper/gopacket-ds.yml
-          git commit plugins/taper/gopacket-ds.yml -m "workflow: update tag in taper deploy script"
-
           git tag --annotate --message "Tag for release $tag" "$tag"
           git push origin "refs/tags/$tag"
 
