@@ -39,6 +39,9 @@ APIClarity supports integrating with the following traffic sources. Install APIC
   See the [Official installation instructions](https://istio.io/latest/docs/setup/getting-started/#install)
   for more information.
 
+* Tap via a DaemonSet
+  * [Integration instructions](https://github.com/apiclarity/apiclarity/tree/master/plugins/gopacket)
+
 * Kong API Gateway
   * [Integration instructions](https://github.com/apiclarity/apiclarity/tree/master/plugins/gateway/kong)
 
