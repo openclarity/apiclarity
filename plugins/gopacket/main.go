@@ -18,6 +18,7 @@ package main
 import (
 	"os"
 
+	logutils "github.com/Portshift/go-utils/log"
 	"github.com/op/go-logging"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -49,6 +50,11 @@ func main() {
 		},
 		cli.BoolFlag{
 			Name: "nodefrag",
+		},
+		cli.StringFlag{
+			Name:  logutils.LogLevelFlag,
+			Value: logutils.LogLevelDefaultValue,
+			Usage: logutils.LogLevelFlagUsage,
 		},
 	}
 

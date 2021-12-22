@@ -9,9 +9,10 @@ COPY api ./api
 
 WORKDIR /plugins/common
 
-COPY common/utils.go ./
 COPY common/go.* ./
 RUN go mod download
+
+COPY common/utils.go ./
 
 WORKDIR /plugins/gateway/kong
 COPY gateway/kong/go.* ./

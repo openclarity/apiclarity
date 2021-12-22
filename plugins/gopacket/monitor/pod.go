@@ -133,9 +133,12 @@ func (pm *PodMonitor) Start(ctx context.Context) {
 }
 
 func (pm *PodMonitor) updateFilteredAuthorities() {
+	pm.lock.Lock()
+	defer pm.lock.Unlock()
+
 	podIPs := pm.GetPodsIps()
 	tap.SetFilterAuthorities(podIPs)
-	pm.setIsStateChange(false)
+	pm.isStateChange = false
 }
 
 func (pm *PodMonitor) GetPodsIps() []string {
