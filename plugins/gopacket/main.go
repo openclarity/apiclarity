@@ -16,6 +16,7 @@
 package main
 
 import (
+	"flag"
 	"os"
 
 	logutils "github.com/Portshift/go-utils/log"
@@ -27,6 +28,9 @@ import (
 	"github.com/apiclarity/apiclarity/plugins/gopacket/config"
 	"github.com/apiclarity/apiclarity/plugins/gopacket/version"
 )
+
+// We need to set this here since mizu code is using a global flags to define the flags, otherwise it will not work.
+var _ = flag.String(logutils.LogLevelFlag, logutils.LogLevelDefaultValue, logutils.LogLevelFlagUsage)
 
 func main() {
 	viper.SetDefault(config.UpstreamAddressEnv, "apiclarity-apiclarity.apiclarity:9000")
