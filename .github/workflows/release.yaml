@@ -59,6 +59,9 @@ jobs:
           sed -i 's/image: ghcr.io\/apiclarity\/tyk-plugin-v3.2.2:latest/image: ghcr.io\/apiclarity\/tyk-plugin-v3.2.2:'"$tag"'/g' plugins/gateway/tyk/deploy/patch-deployment.yaml
           git commit plugins/gateway/tyk/deploy/patch-deployment.yaml -m "workflow: update tag in tyk deploy script"
 
+          sed -i 's/image: ghcr.io\/apiclarity\/passive-taper:latest/image: ghcr.io\/apiclarity\/passive-taper:'"$tag"'/g' plugins/taper/gopacket-ds.yml
+          git commit plugins/taper/gopacket-ds.yml -m "workflow: update tag in taper deploy script"
+
           git tag --annotate --message "Tag for release $tag" "$tag"
           git push origin "refs/tags/$tag"
 
@@ -110,7 +113,8 @@ jobs:
 
       - name: Fix Tyk Plugin API dep
         id: tyk-dep
-        run: cd plugins/gateway/tyk/v3.2.2 && go mod edit -replace github.com/apiclarity/apiclarity/plugins/api@v0.0.0=./../api
+        run: cd plugins/gateway/tyk/v3.2.2 && go mod edit -replace github.com/apiclarity/apiclarity/plugins/api@v0.0.0=./../api &&
+        go mod edit -replace github.com/apiclarity/apiclarity/plugins/common@v0.0.0=./../common
 
       - name: Build and Push Tyk plugin
         uses: docker/build-push-action@v2
@@ -125,6 +129,18 @@ jobs:
       - name: Undo Tyk Plugin API dep change
         id: undo-tyk-dep
         run: git checkout -- plugins/gateway/tyk/v3.2.2/go.mod
+
+      - name: Build and Push passive taper
+        uses: docker/build-push-action@v2
+        with:
+          context: plugins
+          tags: ghcr.io/apiclarity/passive-taper:${{ github.event.inputs.version }}
+          file: plugins/Dockerfile.taper
+          push: true
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          build-args: |
+            VERSION=${{ github.event.inputs.version }}
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
