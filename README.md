@@ -40,7 +40,7 @@ APIClarity supports integrating with the following traffic sources. Install APIC
   for more information.
 
 * Tap via a DaemonSet
-  * [Integration instructions](https://github.com/apiclarity/apiclarity/tree/master/plugins/gopacket)
+  * [Integration instructions](https://github.com/apiclarity/apiclarity/tree/master/plugins/taper)
 
 * Kong API Gateway
   * [Integration instructions](https://github.com/apiclarity/apiclarity/tree/master/plugins/gateway/kong)

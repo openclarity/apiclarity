@@ -102,6 +102,10 @@ trafficSource:
     namespaces:
       - default
 
+    ## APIClarity Tap logging level (debug, info, warning, error, fatal, panic)
+    ##
+    logLevel: "warning"
+
     ## Docker Image values.
     docker:
       imageTag: "latest"

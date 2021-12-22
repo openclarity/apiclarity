@@ -23,6 +23,8 @@ spec:
             - ./agent
             - -i
             - any
+            - --log-level
+            - {{ .Values.trafficSource.tap.logLevel }}
           env:
             - name: GOGC
               value: "12800"
@@ -35,7 +37,7 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: spec.nodeName
-          image: '{{ .Values.global.docker.registry }}/gopacket-agent:{{ .Values.trafficSource.tap.docker.imageTag }}'
+          image: '{{ .Values.global.docker.registry }}/passive-taper:{{ .Values.trafficSource.tap.docker.imageTag }}'
           imagePullPolicy: {{ .Values.trafficSource.tap.docker.imagePullPolicy }}
           name: apiclarity-taper
           resources:
