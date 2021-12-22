@@ -11,7 +11,7 @@ global:
   docker:
     ## Configure registry
     ##
-    registry: "ghcr.io"
+    registry: "ghcr.io/apiclarity"
 
   ## Whether or not persistence is enabled
   ##
@@ -91,6 +91,21 @@ trafficSource:
     ##
     namespaces:
       - default
+
+  tap:
+    ## Enable Tap traffic source
+    ##
+    enabled: false
+
+    ## Enable APIClarity Tap in the following namespaces
+    ##
+    namespaces:
+      - default
+
+    ## Docker Image values.
+    docker:
+      imageTag: "latest"
+      imagePullPolicy: Always
 
   kong:
     ## Enable Kong traffic source

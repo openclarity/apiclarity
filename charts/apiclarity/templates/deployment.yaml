@@ -29,7 +29,7 @@ spec:
             runAsUser: 1001
       containers:
         - name: apiclarity
-          image: '{{ .Values.global.docker.registry }}/apiclarity/apiclarity:{{ .Values.apiclarity.docker.imageTag }}'
+          image: '{{ .Values.global.docker.registry }}/apiclarity:{{ .Values.apiclarity.docker.imageTag }}'
           imagePullPolicy: {{ .Values.apiclarity.docker.imagePullPolicy }}
           args:
             - run

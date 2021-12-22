@@ -1,0 +1,16 @@
+{{- if .Values.trafficSource.tap.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "apiclarity-taper.name" . }}
+  labels:
+    {{ include "apiclarity-taper.labels" . }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "apiclarity-taper.name" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "apiclarity-taper.name" . }}
+    namespace: '{{ .Release.Namespace }}'
+{{- end }}

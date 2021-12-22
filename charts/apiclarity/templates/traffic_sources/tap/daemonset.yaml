@@ -1,0 +1,59 @@
+{{- if .Values.trafficSource.tap.enabled }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  annotations:
+    deprecated.daemonset.template.generation: "1"
+  name: {{ include "apiclarity-taper.name" . }}
+  namespace: '{{ .Release.Namespace }}'
+  labels:
+    {{ include "apiclarity-taper.labels" . }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ include "apiclarity-taper.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "apiclarity-taper.name" . }}
+    spec:
+      serviceAccountName: {{ include "apiclarity-taper.name" . }}
+      containers:
+        - command:
+            - ./agent
+            - -i
+            - any
+          env:
+            - name: GOGC
+              value: "12800"
+            - name: UPSTREAM_TELEMETRY_HOST_NAME
+              value: '{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:9000'
+            - name: NAMESPACES_TO_TAP
+              value: {{ join " " .Values.trafficSource.tap.namespaces }}
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
+          image: '{{ .Values.global.docker.registry }}/gopacket-agent:{{ .Values.trafficSource.tap.docker.imageTag }}'
+          imagePullPolicy: {{ .Values.trafficSource.tap.docker.imagePullPolicy }}
+          name: apiclarity-taper
+          resources:
+            limits:
+              cpu: 750m
+              memory: 1Gi
+            requests:
+              cpu: 50m
+              memory: 50Mi
+          securityContext:
+            privileged: true
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+{{- end }}
