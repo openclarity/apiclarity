@@ -1,16 +1,15 @@
 ## APIClarity Passive Tapper Traffic Source
 
-### Deploy
+### Installation using a pre-built image
 
-run:
-
-
+#### Helm installation
+* Save APIClarity default chart values
 ```shell
-UPSTREAM_TELEMETRY_HOST_NAME=<address> NAMESPACES_TO_TAP=<namespaces> ./deploy/deploy.sh
+helm show values apiclarity/apiclarity > values.yaml
 ```
-
-Where:
-
-UPSTREAM_TELEMETRY_HOST_NAME - The address of the telemetry service (defaults to apiclarity-apiclarity.apiclarity:9000)
-
-NAMESPACES_TO_TAP - list of namespaces to tap in the format: "ns1 ns2 ns3" (defaults to default namespace)
+* Update the values in `trafficSource.tap`
+* Deploy or Upgrade APIClarity
+```shell
+helm upgrade --values values.yaml --create-namespace apiclarity apiclarity/apiclarity -n apiclarity --install
+```
+* An APIClarity Tap DaemonSet will we deployed to your cluster and will tap the provided namesapces.

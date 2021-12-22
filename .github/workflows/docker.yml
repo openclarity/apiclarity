@@ -62,8 +62,10 @@ jobs:
 
       - name: Fix Tyk Plugin API dep
         id: tyk-dep
-        run: cd plugins/gateway/tyk/v3.2.2 && go mod edit -replace github.com/apiclarity/apiclarity/plugins/api@v0.0.0=./../api &&
-        go mod edit -replace github.com/apiclarity/apiclarity/plugins/common@v0.0.0=./../common
+        run: |
+          cd plugins/gateway/tyk/v3.2.2
+          go mod edit -replace github.com/apiclarity/apiclarity/plugins/api@v0.0.0=./../api
+          go mod edit -replace github.com/apiclarity/apiclarity/plugins/common@v0.0.0=./../common
 
       - name: Build Tyk Plugin
         uses: docker/build-push-action@v2
