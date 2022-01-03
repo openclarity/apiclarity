@@ -14,7 +14,7 @@ env:
   GO_VERSION: 1.16
 
 jobs:
-  release:
+  verification:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -27,6 +27,10 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: ${{ env.GO_VERSION }}
+
+      - shell: bash
+        run: |
+          sudo apt-get install libpcap-dev
 
       - name: Check licenses
         env:
@@ -45,6 +49,21 @@ jobs:
         run: |
           tag='${{ github.event.inputs.version }}'
           [[ $tag =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+
+  release:
+    needs: verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
 
       - name: Tag
         run: |
