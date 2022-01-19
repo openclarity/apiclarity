@@ -12,6 +12,7 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // Common common
@@ -29,6 +30,10 @@ type Common struct {
 	// headers
 	Headers []*Header `json:"headers"`
 
+	// time
+	// Format: date-time
+	Time strfmt.DateTime `json:"time,omitempty"`
+
 	// version
 	Version string `json:"version,omitempty"`
 }
@@ -38,6 +43,10 @@ func (m *Common) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateHeaders(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateTime(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -66,6 +75,18 @@ func (m *Common) validateHeaders(formats strfmt.Registry) error {
 			}
 		}
 
+	}
+
+	return nil
+}
+
+func (m *Common) validateTime(formats strfmt.Registry) error {
+	if swag.IsZero(m.Time) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("time", "body", "date-time", m.Time.String(), formats); err != nil {
+		return err
 	}
 
 	return nil

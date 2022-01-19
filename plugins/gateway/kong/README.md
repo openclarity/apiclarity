@@ -28,3 +28,10 @@
        helm upgrade --values values.yaml --create-namespace apiclarity apiclarity/apiclarity -n apiclarity --install
        ```
         * A post install job will execute the installation script in your cluster
+
+### Preserving Client IP Address
+Kong is usually deployed behind a Load Balancer (using a Kubernetes Service of type LoadBalancer).
+This can result in loss of actual Client IP address and Kong observing the IP address of the Load Balancer
+as the client IP address. 
+
+[This](https://docs.konghq.com/kubernetes-ingress-controller/2.1.x/guides/preserve-client-ip/) guide lays out different methods of solving this problem.
