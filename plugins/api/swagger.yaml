@@ -83,6 +83,9 @@ definitions:
         format: 'byte'
       TruncatedBody:
         type: 'boolean'
+      time:
+        type: 'string'
+        format: date-time
 
   Header:
     type: 'object'

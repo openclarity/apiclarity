@@ -88,6 +88,10 @@ func init() {
             "$ref": "#/definitions/Header"
           }
         },
+        "time": {
+          "type": "string",
+          "format": "date-time"
+        },
         "version": {
           "type": "string"
         }
@@ -259,6 +263,10 @@ func init() {
           "items": {
             "$ref": "#/definitions/Header"
           }
+        },
+        "time": {
+          "type": "string",
+          "format": "date-time"
         },
         "version": {
           "type": "string"

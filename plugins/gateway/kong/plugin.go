@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Kong/go-pdk"
 	"github.com/Kong/go-pdk/server"
@@ -39,6 +40,12 @@ func New() interface{} {
 	return &Config{}
 }
 
+func (conf Config) Access(kong *pdk.PDK) {
+	if err := kong.Ctx.SetShared(common.RequestTimeContextKey, time.Now().Format(time.RFC3339Nano)); err != nil {
+		_ = kong.Log.Err(fmt.Sprintf("Failed to set request time on shared context: %v", err))
+	}
+}
+
 func (conf Config) Response(kong *pdk.PDK) {
 	_ = kong.Log.Info("Handling telemetry")
 	if conf.apiClient == nil {
@@ -55,6 +62,7 @@ func (conf Config) Response(kong *pdk.PDK) {
 	_, err = conf.apiClient.Operations.PostTelemetry(params)
 	if err != nil {
 		_ = kong.Log.Err(fmt.Sprintf("Failed to post telemetry: %v", err))
+		return
 	}
 	_ = kong.Log.Info(fmt.Sprintf("Telemetry has been sent: %v", telemetry))
 }
@@ -65,13 +73,21 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	truncatedBodyReq := false
 	truncatedBodyRes := false
 
+	requestTime, err := getRequestTimeFromContext(kong)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get request time from context %v", err)
+	}
+	responseTime, err := common.GetTimeNowRFC3339Nano()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get time now: %v", err)
+	}
 	routedService, err := kong.Router.GetService()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get routed serivce: %v", err)
 	}
-	clientIP, err := kong.Client.GetIp()
+	clientIP, err := kong.Client.GetForwardedIp()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get client ip: %v", err)
+		_ = kong.Log.Warn(fmt.Sprintf("Failed to get client forwarded ip: %v", err))
 	}
 	destPort := routedService.Port
 	host := routedService.Host
@@ -135,6 +151,7 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 				Body:          strfmt.Base64(reqBody),
 				Headers:       createHeaders(reqHeaders),
 				Version:       fmt.Sprintf("%f", version),
+				Time:          strfmt.DateTime(requestTime),
 			},
 			Host:   parsedHost,
 			Method: method,
@@ -147,6 +164,7 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 				Body:          strfmt.Base64(resBody),
 				Headers:       createHeaders(resHeaders),
 				Version:       fmt.Sprintf("%f", version),
+				Time:          strfmt.DateTime(responseTime),
 			},
 			StatusCode: strconv.Itoa(statusCode),
 		},
@@ -155,6 +173,18 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	}
 
 	return &telemetry, nil
+}
+
+func getRequestTimeFromContext(kong *pdk.PDK) (time.Time, error) {
+	requestTimeStr, err := kong.Ctx.GetSharedString(common.RequestTimeContextKey)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to get request time from shared context: %v", err)
+	}
+	requestTime, err := time.Parse(time.RFC3339Nano, requestTimeStr)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to parse request time %v: %v", requestTimeStr, err)
+	}
+	return requestTime, nil
 }
 
 // KongHost: <svc-name>.<namespace>.8000.svc

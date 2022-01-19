@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
@@ -32,8 +33,9 @@ import (
 )
 
 const (
-	MaxBodySize        = 1000 * 1000
-	RequestIDHeaderKey = "X-Request-Id"
+	MaxBodySize           = 1000 * 1000
+	RequestIDHeaderKey    = "X-Request-Id"
+	RequestTimeContextKey = "request_time"
 )
 
 func ReadBody(body io.ReadCloser) ([]byte, bool, error) {
@@ -86,4 +88,13 @@ func NewAPIClient(host string) *client.APIClarityPluginsTelemetriesAPI {
 	transport := httptransport.New(host, "/api", cfg.Schemes)
 	apiClient := client.New(transport, strfmt.Default)
 	return apiClient
+}
+
+func GetTimeNowRFC3339Nano() (time.Time, error) {
+	tNowStr := time.Now().Format(time.RFC3339Nano)
+	tNow, err := time.Parse(time.RFC3339Nano, tNowStr)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to parse time: %v", err)
+	}
+	return tNow, nil
 }
