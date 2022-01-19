@@ -87,7 +87,7 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	}
 	clientIP, err := kong.Client.GetForwardedIp()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get client forwarded ip: %v", err)
+		_ = kong.Log.Warn(fmt.Sprintf("Failed to get client forwarded ip: %v", err))
 	}
 	destPort := routedService.Port
 	host := routedService.Host
