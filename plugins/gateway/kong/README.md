@@ -31,7 +31,7 @@
 
 ### Preserving Client IP Address
 Kong is usually deployed behind a Load Balancer (using a Kubernetes Service of type LoadBalancer).
-This can result in loss of actual Client IP address and Kong observing the IP address of the Load Balancer
-as the client IP address. 
+This can result in a loss of actual Client IP address, as Kong will get the IP address of the Load Balancer
+as the Client IP address. 
 
 [This](https://docs.konghq.com/kubernetes-ingress-controller/2.1.x/guides/preserve-client-ip/) guide lays out different methods of solving this problem.
