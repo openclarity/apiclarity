@@ -26,6 +26,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 	"unsafe"
 
 	"github.com/TykTechnologies/tyk/apidef"
@@ -40,6 +41,7 @@ import (
 
 const (
 	MinimumSeparatedHostSize = 2
+	HTTPDateHeader = "Date"
 )
 
 var logger = log.Get()
@@ -55,7 +57,7 @@ func init() {
 	gatewayNamespace = os.Getenv("TYK_GATEWAY_NAMESPACE")
 }
 
-// Called during post phase for setting the apiDefinition since we dont get it in the response phase.
+// Called during post phase.
 //nolint:deadcode
 func PostGetAPIDefinition(_ http.ResponseWriter, r *http.Request) {
 	apiDefinition := ctx.GetDefinition(r)
@@ -67,7 +69,19 @@ func PostGetAPIDefinition(_ http.ResponseWriter, r *http.Request) {
 		logger.Error("Failed to get api definition")
 		return
 	}
+	// set the apiDefinition since we dont get it in the response phase
 	ctx.SetDefinition(r, apiDefinition)
+
+	// TODO do we want to do it in the pre phase? this is an earlier
+	// phase before the authentication is happening. The downside is that it
+	// requires to add more configuration to the gateway (meaning adding the pre
+	// phase to the configuration). Not sure it is so critical since both happens during the
+	// request (before the request is being sent to the upstream)
+	if date := r.Header.Get(HTTPDateHeader); date != "" {
+		return
+	}
+	// If Date header is not present, add it to the headers
+	r.Header.Set(HTTPDateHeader, time.Now().Format(time.RFC3339Nano))
 }
 
 // Called during response phase.
@@ -95,6 +109,16 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 	apiDefinition := ctx.GetDefinition(req)
 	if apiDefinition == nil {
 		return nil, fmt.Errorf("failed to get api definition")
+	}
+
+	requestTime, err := getRequestTimeFromHeader(req.Header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get request time from header %v", err)
+	}
+
+	responseTime, err := common.GetTimeNowRFC3339Nano()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get time now: %v", err)
 	}
 
 	host, port := getHostAndPortFromTargetURL(apiDefinition.Proxy.TargetURL)
@@ -125,6 +149,7 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 				Body:          strfmt.Base64(reqBody),
 				Headers:       common.CreateHeaders(req.Header),
 				Version:       req.Proto,
+				Time:          strfmt.DateTime(requestTime),
 			},
 			Host:   host,
 			Method: req.Method,
@@ -137,6 +162,7 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 				Body:          strfmt.Base64(resBody),
 				Headers:       common.CreateHeaders(res.Header),
 				Version:       res.Proto,
+				Time:          strfmt.DateTime(responseTime),
 			},
 			StatusCode: strconv.Itoa(res.StatusCode),
 		},
@@ -145,6 +171,15 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 	}
 
 	return &telemetry, nil
+}
+
+func getRequestTimeFromHeader(header http.Header) (time.Time, error) {
+	requestTimeStr := header.Get(HTTPDateHeader)
+	requestTime, err := time.Parse(time.RFC3339Nano, requestTimeStr)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to parse request time %v: %v", requestTimeStr, err)
+	}
+	return requestTime, nil
 }
 
 // Will try to extract the namespace from the host name, and if not found, will use the namespace that the gateway is running in.
