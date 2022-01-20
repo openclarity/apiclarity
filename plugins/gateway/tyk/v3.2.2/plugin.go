@@ -41,7 +41,7 @@ import (
 
 const (
 	MinimumSeparatedHostSize = 2
-	HTTPDateHeader = "Date"
+	HTTPXRequestTimeHeader = "x-request-time"
 )
 
 var logger = log.Get()
@@ -77,11 +77,7 @@ func PostGetAPIDefinition(_ http.ResponseWriter, r *http.Request) {
 	// requires to add more configuration to the gateway (meaning adding the pre
 	// phase to the configuration). Not sure it is so critical since both happens during the
 	// request (before the request is being sent to the upstream)
-	if date := r.Header.Get(HTTPDateHeader); date != "" {
-		return
-	}
-	// If Date header is not present, add it to the headers
-	r.Header.Set(HTTPDateHeader, time.Now().Format(time.RFC3339Nano))
+	r.Header.Set(HTTPXRequestTimeHeader, time.Now().Format(time.RFC3339Nano))
 }
 
 // Called during response phase.
@@ -174,7 +170,7 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 }
 
 func getRequestTimeFromHeader(header http.Header) (time.Time, error) {
-	requestTimeStr := header.Get(HTTPDateHeader)
+	requestTimeStr := header.Get(HTTPXRequestTimeHeader)
 	requestTime, err := time.Parse(time.RFC3339Nano, requestTimeStr)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("failed to parse request time %v: %v", requestTimeStr, err)
