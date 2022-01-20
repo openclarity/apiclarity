@@ -72,11 +72,7 @@ func PostGetAPIDefinition(_ http.ResponseWriter, r *http.Request) {
 	// set the apiDefinition since we dont get it in the response phase
 	ctx.SetDefinition(r, apiDefinition)
 
-	// TODO do we want to do it in the pre phase? this is an earlier
-	// phase before the authentication is happening. The downside is that it
-	// requires to add more configuration to the gateway (meaning adding the pre
-	// phase to the configuration). Not sure it is so critical since both happens during the
-	// request (before the request is being sent to the upstream)
+	// set request time header
 	r.Header.Set(HTTPXRequestTimeHeader, time.Now().Format(time.RFC3339Nano))
 }
 
