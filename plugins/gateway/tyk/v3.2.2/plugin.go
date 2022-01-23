@@ -26,11 +26,13 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 	"unsafe"
 
 	"github.com/TykTechnologies/tyk/apidef"
 	"github.com/TykTechnologies/tyk/ctx"
 	"github.com/TykTechnologies/tyk/log"
+	"github.com/TykTechnologies/tyk/user"
 	"github.com/go-openapi/strfmt"
 
 	"github.com/apiclarity/apiclarity/plugins/api/client/client/operations"
@@ -55,7 +57,7 @@ func init() {
 	gatewayNamespace = os.Getenv("TYK_GATEWAY_NAMESPACE")
 }
 
-// Called during post phase for setting the apiDefinition since we dont get it in the response phase.
+// Called during post phase.
 //nolint:deadcode
 func PostGetAPIDefinition(_ http.ResponseWriter, r *http.Request) {
 	apiDefinition := ctx.GetDefinition(r)
@@ -67,7 +69,25 @@ func PostGetAPIDefinition(_ http.ResponseWriter, r *http.Request) {
 		logger.Error("Failed to get api definition")
 		return
 	}
+	// set the apiDefinition since we dont get it in the response phase
 	ctx.SetDefinition(r, apiDefinition)
+
+	requestTime, err := common.GetTimeNowRFC3339NanoUTC()
+	if err != nil {
+		logger.Errorf("Failed to get request time: %v", err)
+		return
+	}
+
+	session := ctx.GetSession(r)
+	if session == nil {
+		session = &user.SessionState{MetaData: map[string]interface{}{common.RequestTimeContextKey: requestTime}}
+	} else if session.MetaData == nil {
+		session.MetaData = map[string]interface{}{common.RequestTimeContextKey: requestTime}
+	} else {
+		session.MetaData[common.RequestTimeContextKey] = requestTime
+	}
+	// set request time on session metadata
+	ctx.SetSession(r, session, false, false)
 }
 
 // Called during response phase.
@@ -95,6 +115,17 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 	apiDefinition := ctx.GetDefinition(req)
 	if apiDefinition == nil {
 		return nil, fmt.Errorf("failed to get api definition")
+	}
+
+	metadata := ctx.GetSession(req).MetaData
+	requestTime, ok := metadata[common.RequestTimeContextKey].(time.Time)
+	if !ok {
+		return nil, fmt.Errorf("failed to get request time from metadata")
+	}
+
+	responseTime, err := common.GetTimeNowRFC3339NanoUTC()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get response time: %v", err)
 	}
 
 	host, port := getHostAndPortFromTargetURL(apiDefinition.Proxy.TargetURL)
@@ -125,6 +156,7 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 				Body:          strfmt.Base64(reqBody),
 				Headers:       common.CreateHeaders(req.Header),
 				Version:       req.Proto,
+				Time:          strfmt.DateTime(requestTime),
 			},
 			Host:   host,
 			Method: req.Method,
@@ -137,6 +169,7 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 				Body:          strfmt.Base64(resBody),
 				Headers:       common.CreateHeaders(res.Header),
 				Version:       res.Proto,
+				Time:          strfmt.DateTime(responseTime),
 			},
 			StatusCode: strconv.Itoa(res.StatusCode),
 		},

@@ -77,3 +77,10 @@ make docker-tyk
 
 Then, push the built image and change the image name in deploy/patch-deployment.yaml accordingly.
 Then, run the [./deploy/deploy.sh](https://github.com/apiclarity/apiclarity/blob/tyk-plugin/plugins/gateway/tyk/deploy/deploy.sh) script.
+
+### Preserving Client IP Address
+Tyk is usually deployed behind a Load Balancer (using a Kubernetes Service of type LoadBalancer).
+This can result in a loss of actual Client IP address, as Tyk will get the IP address of the Load Balancer
+as the Client IP address. 
+
+[This](https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip) guide lays out different methods of solving this problem.

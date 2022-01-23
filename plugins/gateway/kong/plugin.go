@@ -41,7 +41,7 @@ func New() interface{} {
 }
 
 func (conf Config) Access(kong *pdk.PDK) {
-	if err := kong.Ctx.SetShared(common.RequestTimeContextKey, time.Now().Format(time.RFC3339Nano)); err != nil {
+	if err := kong.Ctx.SetShared(common.RequestTimeContextKey, time.Now().UTC().Format(time.RFC3339Nano)); err != nil {
 		_ = kong.Log.Err(fmt.Sprintf("Failed to set request time on shared context: %v", err))
 	}
 }
@@ -75,11 +75,11 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 
 	requestTime, err := getRequestTimeFromContext(kong)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get request time from context %v", err)
+		return nil, fmt.Errorf("failed to get request time from context: %v", err)
 	}
-	responseTime, err := common.GetTimeNowRFC3339Nano()
+	responseTime, err := common.GetTimeNowRFC3339NanoUTC()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get time now: %v", err)
+		return nil, fmt.Errorf("failed to get response time: %v", err)
 	}
 	routedService, err := kong.Router.GetService()
 	if err != nil {

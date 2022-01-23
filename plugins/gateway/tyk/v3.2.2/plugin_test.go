@@ -22,9 +22,12 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/TykTechnologies/tyk/apidef"
 	"github.com/TykTechnologies/tyk/ctx"
+	"github.com/TykTechnologies/tyk/user"
+	"github.com/go-openapi/strfmt"
 
 	"github.com/apiclarity/apiclarity/plugins/api/client/models"
 	"github.com/apiclarity/apiclarity/plugins/common"
@@ -87,6 +90,8 @@ func Test_getHostAndPortFromTargetURL(t *testing.T) {
 }
 
 func Test_createTelemetry(t *testing.T) {
+	tNow := time.Now()
+
 	apiDefinition := apidef.APIDefinition{
 		Proxy: apidef.ProxyConfig{
 			TargetURL: "ns.echo:9000",
@@ -147,6 +152,7 @@ func Test_createTelemetry(t *testing.T) {
 							},
 						},
 						Version: "HTTP/1.0",
+						Time:    strfmt.DateTime(tNow),
 					},
 					Host:   "ns.echo",
 					Method: "GET",
@@ -176,11 +182,16 @@ func Test_createTelemetry(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx.SetDefinition(tt.args.req, &apiDefinition)
+			session := &user.SessionState{MetaData: map[string]interface{}{common.RequestTimeContextKey: tNow}}
+			ctx.SetSession(tt.args.req, session, false, false)
+
 			got, err := createTelemetry(tt.args.res, tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("createTelemetry() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+			// no way to predict response time
+			got.Response.Common.Time = strfmt.DateTime{}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("createTelemetry() got = %v, want %v", got, tt.want)
 			}
