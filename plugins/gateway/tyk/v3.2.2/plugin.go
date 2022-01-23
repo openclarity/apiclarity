@@ -72,8 +72,13 @@ func PostGetAPIDefinition(_ http.ResponseWriter, r *http.Request) {
 	// set the apiDefinition since we dont get it in the response phase
 	ctx.SetDefinition(r, apiDefinition)
 
+	requestTime, err := common.GetTimeNowRFC3339Nano()
+	if err != nil {
+		logger.Errorf("Failed to get time now: %v", err)
+		return
+	}
 	// set request time on session metadata
-	ctx.SetSession(r, &user.SessionState{MetaData: map[string]interface{}{common.RequestTimeContextKey: time.Now()}}, false, false)
+	ctx.SetSession(r, &user.SessionState{MetaData: map[string]interface{}{common.RequestTimeContextKey: requestTime}}, false, false)
 }
 
 // Called during response phase.
@@ -163,6 +168,7 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 		SourceAddress: req.RemoteAddr,
 	}
 
+	logger.Errorf("reqTime: %v, resTime: %v", requestTime, responseTime)
 	return &telemetry, nil
 }
 
