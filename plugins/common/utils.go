@@ -90,7 +90,7 @@ func NewAPIClient(host string) *client.APIClarityPluginsTelemetriesAPI {
 	return apiClient
 }
 
-func GetTimeNowRFC3339Nano() (time.Time, error) {
+func GetTimeNowRFC3339NanoUTC() (time.Time, error) {
 	tNowStr := time.Now().UTC().Format(time.RFC3339Nano)
 	tNow, err := time.Parse(time.RFC3339Nano, tNowStr)
 	if err != nil {

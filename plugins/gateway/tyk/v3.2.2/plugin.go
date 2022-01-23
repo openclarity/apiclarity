@@ -72,7 +72,7 @@ func PostGetAPIDefinition(_ http.ResponseWriter, r *http.Request) {
 	// set the apiDefinition since we dont get it in the response phase
 	ctx.SetDefinition(r, apiDefinition)
 
-	requestTime, err := common.GetTimeNowRFC3339Nano()
+	requestTime, err := common.GetTimeNowRFC3339NanoUTC()
 	if err != nil {
 		logger.Errorf("Failed to get request time: %v", err)
 		return
@@ -114,7 +114,7 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 		return nil, fmt.Errorf("failed to get request time from metadata")
 	}
 
-	responseTime, err := common.GetTimeNowRFC3339Nano()
+	responseTime, err := common.GetTimeNowRFC3339NanoUTC()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get response time: %v", err)
 	}
