@@ -77,14 +77,17 @@ func PostGetAPIDefinition(_ http.ResponseWriter, r *http.Request) {
 		logger.Errorf("Failed to get request time: %v", err)
 		return
 	}
-	metadata := ctx.GetSession(r).MetaData
-	if metadata == nil {
-		metadata = map[string]interface{}{common.RequestTimeContextKey: requestTime}
+
+	session := ctx.GetSession(r)
+	if session == nil {
+		session = &user.SessionState{MetaData: map[string]interface{}{common.RequestTimeContextKey: requestTime}}
+	} else if session.MetaData == nil {
+		session.MetaData = map[string]interface{}{common.RequestTimeContextKey: requestTime}
 	} else {
-		metadata[common.RequestTimeContextKey] = requestTime
+		session.MetaData[common.RequestTimeContextKey] = requestTime
 	}
 	// set request time on session metadata
-	ctx.SetSession(r, &user.SessionState{MetaData: metadata}, false, false)
+	ctx.SetSession(r, session, false, false)
 }
 
 // Called during response phase.
