@@ -32,6 +32,7 @@ import (
 	"github.com/TykTechnologies/tyk/apidef"
 	"github.com/TykTechnologies/tyk/ctx"
 	"github.com/TykTechnologies/tyk/log"
+	"github.com/TykTechnologies/tyk/user"
 	"github.com/go-openapi/strfmt"
 
 	"github.com/apiclarity/apiclarity/plugins/api/client/client/operations"
@@ -41,7 +42,6 @@ import (
 
 const (
 	MinimumSeparatedHostSize = 2
-	HTTPXRequestTimeHeader = "x-request-time"
 )
 
 var logger = log.Get()
@@ -72,8 +72,8 @@ func PostGetAPIDefinition(_ http.ResponseWriter, r *http.Request) {
 	// set the apiDefinition since we dont get it in the response phase
 	ctx.SetDefinition(r, apiDefinition)
 
-	// set request time header
-	r.Header.Set(HTTPXRequestTimeHeader, time.Now().Format(time.RFC3339Nano))
+	// set request time on session metadata
+	ctx.SetSession(r, &user.SessionState{MetaData: map[string]interface{}{common.RequestTimeContextKey: time.Now()}}, false, false)
 }
 
 // Called during response phase.
@@ -103,9 +103,10 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 		return nil, fmt.Errorf("failed to get api definition")
 	}
 
-	requestTime, err := getRequestTimeFromHeader(req.Header)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get request time from header %v", err)
+	metadata := ctx.GetSession(req).MetaData
+	requestTime, ok := metadata[common.RequestTimeContextKey].(time.Time)
+	if !ok {
+		return nil, fmt.Errorf("failed to get request time from metadata")
 	}
 
 	responseTime, err := common.GetTimeNowRFC3339Nano()
@@ -163,15 +164,6 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 	}
 
 	return &telemetry, nil
-}
-
-func getRequestTimeFromHeader(header http.Header) (time.Time, error) {
-	requestTimeStr := header.Get(HTTPXRequestTimeHeader)
-	requestTime, err := time.Parse(time.RFC3339Nano, requestTimeStr)
-	if err != nil {
-		return time.Time{}, fmt.Errorf("failed to parse request time %v: %v", requestTimeStr, err)
-	}
-	return requestTime, nil
 }
 
 // Will try to extract the namespace from the host name, and if not found, will use the namespace that the gateway is running in.
