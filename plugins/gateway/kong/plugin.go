@@ -41,7 +41,7 @@ func New() interface{} {
 }
 
 func (conf Config) Access(kong *pdk.PDK) {
-	if err := kong.Ctx.SetShared(common.RequestTimeContextKey, time.Now().Format(time.RFC3339Nano)); err != nil {
+	if err := kong.Ctx.SetShared(common.RequestTimeContextKey, time.Now().UTC().Format(time.RFC3339Nano)); err != nil {
 		_ = kong.Log.Err(fmt.Sprintf("Failed to set request time on shared context: %v", err))
 	}
 }
