@@ -74,7 +74,7 @@ func PostGetAPIDefinition(_ http.ResponseWriter, r *http.Request) {
 
 	requestTime, err := common.GetTimeNowRFC3339Nano()
 	if err != nil {
-		logger.Errorf("Failed to get time now: %v", err)
+		logger.Errorf("Failed to get request time: %v", err)
 		return
 	}
 	// set request time on session metadata
@@ -116,7 +116,7 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 
 	responseTime, err := common.GetTimeNowRFC3339Nano()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get time now: %v", err)
+		return nil, fmt.Errorf("failed to get response time: %v", err)
 	}
 
 	host, port := getHostAndPortFromTargetURL(apiDefinition.Proxy.TargetURL)
@@ -168,7 +168,6 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 		SourceAddress: req.RemoteAddr,
 	}
 
-	logger.Errorf("reqTime: %v, resTime: %v", requestTime, responseTime)
 	return &telemetry, nil
 }
 
