@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Javascript continueOnError="false" enabled="true" timeLimit="500" name="JavaScript-Policy">
+    <DisplayName>JavaScript-Policy</DisplayName>
+    <Properties/>
+    <ResourceURL>jsc://telemetry-policy.js</ResourceURL>
+</Javascript>
