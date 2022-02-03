@@ -40,6 +40,9 @@ apiclarity:
     imageTag: "latest"
     imagePullPolicy: Always
 
+  ## Logging level (debug, info, warning, error, fatal, panic).
+  logLevel: warning
+
 ## End of APIClarity Values
 #######################################################################################
 
