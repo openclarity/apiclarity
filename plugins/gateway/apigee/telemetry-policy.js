@@ -88,7 +88,7 @@ var res = {
 
 
 var telemetry = {
-                    destinationAddress: context.getVariable("request.header.host")+":"+context.getVariable("target.port"),
+                    destinationAddress: ":"+context.getVariable("target.port"),
                     destinationNamespace: "",
                     request: req,
                     requestID: context.getVariable("request.header.x-request-id"),
