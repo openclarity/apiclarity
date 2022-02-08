@@ -150,5 +150,9 @@ trafficSource:
     ##
     deplyomentNamespace: ""
 
+  apigee:
+    ## Enable Apigee traffic source
+    ##
+    enabled: false
 # End of APIClarity Traffic Source Values
 #######################################################################################

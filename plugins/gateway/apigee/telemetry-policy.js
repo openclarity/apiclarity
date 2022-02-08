@@ -1,41 +1,45 @@
+var maxBodySize = 1000 * 1000
+
 // REQUEST
 //------>Header<------//
 var requestHeaderList = [];
 
 var requestHeaders = context.getVariable("request.headers.names"),
 
-requestResults = {};
-    
 requestHeaders = requestHeaders + '';
 
 requestHeaders = requestHeaders.slice(1, -1).split(', ');
 
 requestHeaders.forEach(function(k){
   var v = context.getVariable("request.header." + k );
-  requestResults[k] = v;
   var header = { key : k, value: v};
   requestHeaderList.push(header);
-  
+
 });
 //------>Body<------//
+var truncatedReqBody = false
+
 var reqContent = context.getVariable('request.content')
 
 if(reqContent !== null){
-    reqContent = crypto.base64(crypto.asBytes(reqContent))
+
+    if (reqContent.length > maxBodySize){
+		truncatedBodyReq = true
+		reqContent = ""
+    }
 }
 
-
-var requestCommon = { 
-                        truncatedBody : true, 
-                        body: reqContent, 
-                        headers: requestHeaderList, 
+var requestCommon = {
+                        truncatedBody : truncatedReqBody,
+                        body: crypto.base64(crypto.asBytes(reqContent)),
+                        headers: requestHeaderList,
                         version: "0.0.1"
                     };
-                    
-var req = { 
-            common : requestCommon, 
-            host: context.getVariable("request.header.host"), 
-            method: context.getVariable('request.verb'), 
+
+var req = {
+            common : requestCommon,
+            host: context.getVariable("request.header.host"),
+            method: context.getVariable('request.verb'),
             path: context.getVariable("request.uri")
           };
 
@@ -46,52 +50,56 @@ var responseHeaderList = [];
 
 var responseHeaders = context.getVariable("response.headers.names"),
 
-responseResults = {};
-
 responseHeaders = responseHeaders + '';
 
 responseHeaders = responseHeaders.slice(1, -1).split(', ');
 
 responseHeaders.forEach(function(k){
   var v = context.getVariable("response.header." + k );
-  responseResults[k] = v;
   var header = { key : k, value: v};
   responseHeaderList.push(header);
 });
 
 //------>Body<------//
+var truncatedResBody = false
+
 var resContent = context.getVariable('response.content')
 
 if(resContent !== null){
-    resContent = crypto.base64(crypto.asBytes(resContent))
+
+    if (resContent.length > maxBodySize){
+		truncatedResBody = true
+		resContent = ""
+    }
 }
 
-var responseCommon = { 
-                        truncatedBody : true, 
-                        body: resContent, 
-                        headers: responseHeaderList, 
+var responseCommon = {
+                        truncatedBody : truncatedResBody,
+                        body: crypto.base64(crypto.asBytes(resContent)),
+                        headers: responseHeaderList,
                         version: "0.0.1"
                     };
-                    
-var res = { 
+
+var res = {
             common : responseCommon,
             statusCode: context.getVariable('response.status.code').toString()
           };
 
 
 var telemetry = {
-                    destinationAddress: ":80",
+                    destinationAddress: context.getVariable("request.header.host"),
                     destinationNamespace: "",
                     request: req,
                     requestID: context.getVariable("request.header.x-request-id"),
                     response: res,
                     scheme: context.getVariable('client.scheme'),
-                    sourceAddress: ":80"
+                    sourceAddress: context.getVariable("request.header.x-forwarded-for")
                 }
 
 print("Telemetry:", JSON.stringify(telemetry));
 
 var url = "http://<API_CLARITY_SERVICE>:9000/api/telemetry";
+
 var payload = JSON.stringify(telemetry);
 
 var headers = {
@@ -112,6 +120,3 @@ function onComplete(response, error) {
       context.setVariable('apiclarity.error', 'oops: ' + error);
     }
   }
-
-
-

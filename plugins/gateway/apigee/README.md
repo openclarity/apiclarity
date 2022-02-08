@@ -5,9 +5,9 @@ This section describes the steps used in setting up apigee proxy, creating a pol
  
  
 ## Starting condition
-* A running deployment of APIClarity with a service to expose it through LoadBalancer so as to publish traffic from Apigee policy, also make a note of the LB IP address.
+* A running deployment of APIClarity with an extra service (using plugins/gateway/apigee/k8s/apiclarity-svc.yaml) to expose it through LoadBalancer inorder to publish traffic from Apigee policy, also make a note of the LB IP address.
  The APIClarity telemetry url should be something like <API_CLARITY_SERVICE:9000/api/telemetry>. This service endpoint will be used in the javascript policy.
- N/B: Make sure not to change the existing apicalrity service cluster type from ClusetrIP to LoadBalancer, rather make a copy of the original apiclarity and define cluster type as Load Balancer
+ N/B: Make sure not to change the existing apiclarity service cluster type from ClusetrIP to LoadBalancer, rather make a copy of the original apiclarity and define cluster type as Load Balancer
 * A running k8s cluster where backend service to be exposed from outside will reside.
 * URL of backend service (BACKEND_SERVICE_URL) is noted.
 * An Apigee instance is currently provisioned with endpoint to gateway (APIGEE_GATEWAY_URL) noted
