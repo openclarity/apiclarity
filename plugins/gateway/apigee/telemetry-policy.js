@@ -29,6 +29,7 @@ if(reqContent !== null){
     }
 }
 
+
 var requestCommon = {
                         truncatedBody : truncatedReqBody,
                         body: crypto.base64(crypto.asBytes(reqContent)),
@@ -87,13 +88,13 @@ var res = {
 
 
 var telemetry = {
-                    destinationAddress: context.getVariable("request.header.host"),
+                    destinationAddress: context.getVariable("request.header.host")+":"+context.getVariable("target.port"),
                     destinationNamespace: "",
                     request: req,
                     requestID: context.getVariable("request.header.x-request-id"),
                     response: res,
                     scheme: context.getVariable('client.scheme'),
-                    sourceAddress: context.getVariable("request.header.x-forwarded-for")
+                    sourceAddress: context.getVariable("request.header.x-forwarded-for")+":"
                 }
 
 print("Telemetry:", JSON.stringify(telemetry));
