@@ -19,12 +19,13 @@ import (
 	"testing"
 
 	"github.com/apiclarity/apiclarity/api/server/models"
+	models2 "github.com/apiclarity/apiclarity/plugins/api/server/models"
 	_spec "github.com/apiclarity/speculator/pkg/spec"
 )
 
 func Test_isNonAPI(t *testing.T) {
 	type args struct {
-		trace *_spec.SCNTelemetry
+		trace *models2.Telemetry
 	}
 	tests := []struct {
 		name string
@@ -34,10 +35,15 @@ func Test_isNonAPI(t *testing.T) {
 		{
 			name: "content type is not application/json expected to classify as non API",
 			args: args{
-				trace: &_spec.SCNTelemetry{
-					SCNTResponse: _spec.SCNTResponse{
-						SCNTCommon: _spec.SCNTCommon{
-							Headers: [][2]string{{contentTypeHeaderName, "non-api"}},
+				trace: &models2.Telemetry{
+					Response: &models2.Response{
+						Common: &models2.Common{
+							Headers: []*models2.Header{
+								{
+									Key:   contentTypeHeaderName,
+									Value: "non-api",
+								},
+							},
 						},
 					},
 				},
@@ -47,10 +53,15 @@ func Test_isNonAPI(t *testing.T) {
 		{
 			name: "REST API",
 			args: args{
-				trace: &_spec.SCNTelemetry{
-					SCNTResponse: _spec.SCNTResponse{
-						SCNTCommon: _spec.SCNTCommon{
-							Headers: [][2]string{{contentTypeHeaderName, contentTypeApplicationJSON}},
+				trace: &models2.Telemetry{
+					Response: &models2.Response{
+						Common: &models2.Common{
+							Headers: []*models2.Header{
+								{
+									Key:   contentTypeHeaderName,
+									Value: contentTypeApplicationJSON,
+								},
+							},
 						},
 					},
 				},
@@ -60,9 +71,9 @@ func Test_isNonAPI(t *testing.T) {
 		{
 			name: "no headers expected to classify as API",
 			args: args{
-				trace: &_spec.SCNTelemetry{
-					SCNTResponse: _spec.SCNTResponse{
-						SCNTCommon: _spec.SCNTCommon{},
+				trace: &models2.Telemetry{
+					Response: &models2.Response{
+						Common: &models2.Common{},
 					},
 				},
 			},
@@ -71,10 +82,15 @@ func Test_isNonAPI(t *testing.T) {
 		{
 			name: "content type is application/hal+json - classify as API",
 			args: args{
-				trace: &_spec.SCNTelemetry{
-					SCNTResponse: _spec.SCNTResponse{
-						SCNTCommon: _spec.SCNTCommon{
-							Headers: [][2]string{{contentTypeHeaderName, "application/hal+json"}},
+				trace: &models2.Telemetry{
+					Response: &models2.Response{
+						Common: &models2.Common{
+							Headers: []*models2.Header{
+								{
+									Key:   contentTypeHeaderName,
+									Value: "application/hal+json",
+								},
+							},
 						},
 					},
 				},
