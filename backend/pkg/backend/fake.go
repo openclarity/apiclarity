@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	models2 "github.com/apiclarity/apiclarity/plugins/api/server/models"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -30,7 +31,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/apiclarity/apiclarity/api/server/models"
-	_spec "github.com/apiclarity/speculator/pkg/spec"
 )
 
 func (b *Backend) startSendingFakeTraces() {
@@ -78,7 +78,7 @@ func (b *Backend) handleHTTPTraceFromFile(fileName string) error {
 		return fmt.Errorf("failed to read file: %v. %v", fileName, err)
 	}
 
-	var trace _spec.SCNTelemetry
+	var trace models2.Telemetry
 	if err := json.Unmarshal(byteValue, &trace); err != nil {
 		return fmt.Errorf("failed to unmarshal. %v", err)
 	}

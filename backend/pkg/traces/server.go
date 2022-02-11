@@ -27,10 +27,9 @@ import (
 	"github.com/apiclarity/apiclarity/plugins/api/server/models"
 	"github.com/apiclarity/apiclarity/plugins/api/server/restapi"
 	"github.com/apiclarity/apiclarity/plugins/api/server/restapi/operations"
-	"github.com/apiclarity/speculator/pkg/spec"
 )
 
-type HandleTraceFunc func(trace *spec.SCNTelemetry) error
+type HandleTraceFunc func(trace *models.Telemetry) error
 
 type HTTPTracesServer struct {
 	traceHandleFunc HandleTraceFunc
@@ -84,51 +83,10 @@ func (s *HTTPTracesServer) Stop() {
 }
 
 func (s *HTTPTracesServer) PostTelemetry(params operations.PostTelemetryParams) middleware.Responder {
-	telemetry := convertTelemetry(params.Body)
-
-	if err := s.traceHandleFunc(telemetry); err != nil {
+	if err := s.traceHandleFunc(params.Body); err != nil {
 		log.Errorf("Error from trace handling func: %v", err)
 		return operations.NewPostTelemetryDefault(http.StatusInternalServerError)
 	}
 
 	return operations.NewPostTelemetryOK()
-}
-
-func convertTelemetry(telemetry *models.Telemetry) *spec.SCNTelemetry {
-	return &spec.SCNTelemetry{
-		RequestID:          telemetry.RequestID,
-		Scheme:             telemetry.Scheme,
-		DestinationAddress: telemetry.DestinationAddress,
-		SourceAddress:      telemetry.SourceAddress,
-		SCNTRequest: spec.SCNTRequest{
-			Method:     telemetry.Request.Method,
-			Path:       telemetry.Request.Path,
-			Host:       telemetry.Request.Host,
-			SCNTCommon: convertCommon(telemetry.Request.Common),
-		},
-		SCNTResponse: spec.SCNTResponse{
-			StatusCode: telemetry.Response.StatusCode,
-			SCNTCommon: convertCommon(telemetry.Response.Common),
-		},
-	}
-}
-
-func convertCommon(common *models.Common) spec.SCNTCommon {
-	return spec.SCNTCommon{
-		Version:       common.Version,
-		Headers:       convertHeaders(common.Headers),
-		Body:          common.Body,
-		TruncatedBody: common.TruncatedBody,
-	}
-}
-
-func convertHeaders(headers []*models.Header) [][2]string {
-	var ret [][2]string
-
-	for _, header := range headers {
-		ret = append(ret, [2]string{
-			header.Key, header.Value,
-		})
-	}
-	return ret
 }

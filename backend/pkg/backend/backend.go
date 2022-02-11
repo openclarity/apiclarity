@@ -18,6 +18,7 @@ package backend
 import (
 	"context"
 	"fmt"
+	models2 "github.com/apiclarity/apiclarity/plugins/api/server/models"
 	"mime"
 	"net/url"
 	"os"
@@ -185,21 +186,21 @@ func convertSpecDiffToEventDiff(diff *_spec.APIDiff) (originalRet, modifiedRet [
 	return originalRet, modifiedRet, nil
 }
 
-func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
+func (b *Backend) handleHTTPTrace(trace *models2.Telemetry) error {
 	var reconstructedDiff *_spec.APIDiff
 	var providedDiff *_spec.APIDiff
 	var err error
 
 	log.Debugf("Handling telemetry: %+v", trace)
 
-	if trace.SCNTRequest.Host == "" {
-		headers := _spec.ConvertHeadersToMap(trace.SCNTRequest.Headers)
+	if trace.Request.Host == "" {
+		headers := _spec.ConvertHeadersToMap(trace.Request.Common.Headers) // should be fix after changing speculator pointer
 		if host, ok := headers["host"]; ok {
-			trace.SCNTRequest.Host = host
+			trace.Request.Host = host
 		}
 	}
 
-	trace.SCNTRequest.Host, err = getHostname(trace.SCNTRequest.Host)
+	trace.Request.Host, err = getHostname(trace.Request.Host)
 	if err != nil {
 		return fmt.Errorf("failed to get hostname from host: %v", err)
 	}
@@ -219,7 +220,7 @@ func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 
 	// Initialize API info
 	apiInfo := _database.APIInfo{
-		Name: trace.SCNTRequest.Host,
+		Name: trace.Request.Host,
 		Port: int64(destPort),
 	}
 
@@ -243,20 +244,20 @@ func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 		log.Infof("API Info in DB: %+v", apiInfo)
 
 		// Handle trace telemetry by Speculator
-		specKey := _speculator.GetSpecKey(trace.SCNTRequest.Host, destInfo.Port)
+		specKey := _speculator.GetSpecKey(trace.Request.Host, destInfo.Port)
 		if b.speculator.HasProvidedSpec(specKey) {
-			providedDiff, err = b.speculator.DiffTelemetry(trace, _spec.DiffSourceProvided)
+			providedDiff, err = b.speculator.DiffTelemetry(trace, _spec.DiffSourceProvided) // should be fix after changing speculator pointer
 			if err != nil {
 				return fmt.Errorf("failed to diff telemetry against provided spec: %v", err)
 			}
 		}
 		if b.speculator.HasApprovedSpec(specKey) {
-			reconstructedDiff, err = b.speculator.DiffTelemetry(trace, _spec.DiffSourceReconstructed)
+			reconstructedDiff, err = b.speculator.DiffTelemetry(trace, _spec.DiffSourceReconstructed) // should be fix after changing speculator pointer
 			if err != nil {
 				return fmt.Errorf("failed to diff telemetry against approved spec: %v", err)
 			}
 		} else {
-			err := b.speculator.LearnTelemetry(trace)
+			err := b.speculator.LearnTelemetry(trace) // should be fix after changing speculator pointer
 			if err != nil {
 				return fmt.Errorf("failed to learn telemetry: %v", err)
 			}
@@ -264,24 +265,24 @@ func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 	}
 
 	// Update API event in DB
-	statusCode, err := strconv.Atoi(trace.SCNTResponse.StatusCode)
+	statusCode, err := strconv.Atoi(trace.Response.StatusCode)
 	if err != nil {
 		return fmt.Errorf("failed to convert status code: %v", err)
 	}
 
-	path, query := _spec.GetPathAndQuery(trace.SCNTRequest.Path)
+	path, query := _spec.GetPathAndQuery(trace.Request.Path)
 
 	event := &_database.APIEvent{
 		APIInfoID:       apiInfo.ID,
 		Time:            strfmt.DateTime(time.Now().UTC()),
-		Method:          models.HTTPMethod(trace.SCNTRequest.Method),
+		Method:          models.HTTPMethod(trace.Request.Method),
 		Path:            path,
 		Query:           query,
 		StatusCode:      int64(statusCode),
 		SourceIP:        srcInfo.IP,
 		DestinationIP:   destInfo.IP,
 		DestinationPort: int64(destPort),
-		HostSpecName:    trace.SCNTRequest.Host,
+		HostSpecName:    trace.Request.Host,
 		IsNonAPI:        isNonAPI,
 		EventType:       apiInfo.Type,
 	}
@@ -385,8 +386,8 @@ const (
 	contentTypeApplicationJSON = "application/json"
 )
 
-func isNonAPI(trace *_spec.SCNTelemetry) bool {
-	respHeaders := _spec.ConvertHeadersToMap(trace.SCNTResponse.Headers)
+func isNonAPI(trace *models2.Telemetry) bool {
+	respHeaders := _spec.ConvertHeadersToMap(trace.Response.Common.Headers) // should be fix after changing speculator pointer
 
 	// If response content-type header is missing, we will classify it as API
 	respContentType, ok := respHeaders[contentTypeHeaderName]
