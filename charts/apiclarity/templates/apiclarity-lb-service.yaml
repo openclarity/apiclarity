@@ -7,7 +7,7 @@ metadata:
   labels:
     {{ include "apiclarity.labels" . }}
   annotations:
-    helm.sh/hook: pre-install
+    cloud.google.com/load-balancer-type: "Internal"
 spec:
   ports:
     - name: trace-server
