@@ -48,7 +48,7 @@ APIClarity supports integrating with the following traffic sources. Install APIC
 * Tyk API Gateway
   * [Integration instructions](https://github.com/apiclarity/apiclarity/tree/master/plugins/gateway/tyk)
 
-The integrations (plugins) for the supported traffic sources above are located [here](https://github.com/apiclarity/apiclarity/tree/master/plugins) and implement the [plugins API](https://github.com/apiclarity/apiclarity/tree/master/plugins/api) to export the API events to APIClarity.
+The integrations (plugins) for the supported traffic sources above are located [here](https://github.com/apiclarity/apiclarity/tree/master/plugins) and implement the [plugins API](https://github.com/apiclarity/apiclarity/tree/master/plugins/api) to export the API events to APIClarity. To enable and configure the supported traffic sources, please check the ```trafficSource:``` section in [Helm values](https://github.com/apiclarity/apiclarity/blob/master/charts/apiclarity/values.yaml).
 Contributions of integrations with additional traffic sources are more than welcome!
 
 ### Install APIClarity in a K8s cluster using Helm:
