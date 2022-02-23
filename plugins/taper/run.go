@@ -64,8 +64,19 @@ func run(c *cli.Context) {
 		HostMode: true,
 	}
 
+	var tlsOptions *common.ClientTLSOptions
+	if runConfig.EnableTLS {
+		tlsOptions = &common.ClientTLSOptions{
+			RootCAFileName: common.LocalCertFile,
+		}
+	}
+	apiClient, err := common.NewAPIClient(runConfig.UpstreamAddress, tlsOptions)
+	if err != nil {
+		log.Errorf("Failed to create new api client: %v", err)
+		return
+	}
 	agent := &Agent{
-		apiClient: common.NewAPIClient(runConfig.UpstreamAddress),
+		apiClient: apiClient,
 	}
 
 	// set mizu logger

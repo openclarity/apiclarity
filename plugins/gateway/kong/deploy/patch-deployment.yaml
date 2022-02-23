@@ -4,17 +4,11 @@ spec:
       volumes:
       - emptyDir: {}
         name: kong-apiclarity-trace-plugin
-      - name: ca-cert
-        secret:
-          secretName: ca-cert
       containers:
       - name: {{KONG_PROXY_CONTAINER_NAME}}
         volumeMounts:
         - mountPath: /plugins/
           name: kong-apiclarity-trace-plugin
-        - mountPath: "/etc/ca-certs"
-          name: ca-cert
-          readOnly: true
         env:
         - name: KONG_PLUGINS
           value: bundled, kong-plugin

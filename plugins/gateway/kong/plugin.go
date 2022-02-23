@@ -16,12 +16,7 @@
 package main
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
-	httptransport "github.com/go-openapi/runtime/client"
-	"io/ioutil"
-	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -37,6 +32,7 @@ import (
 )
 
 type Config struct {
+	EnableTLS bool
 	Host      string `json:"host"`
 	apiClient *client.APIClarityPluginsTelemetriesAPI
 }
@@ -51,47 +47,21 @@ func (conf Config) Access(kong *pdk.PDK) {
 	}
 }
 
-func newAPIClient(host string, kong *pdk.PDK) *client.APIClarityPluginsTelemetriesAPI {
-	// Get the SystemCertPool, continue with an empty pool on error
-	rootCAs, _ := x509.SystemCertPool()
-	if rootCAs == nil {
-		rootCAs = x509.NewCertPool()
-	}
-
-	// Read in the cert file
-	certs, err := ioutil.ReadFile(localCertFile)
-	if err != nil {
-		_ = kong.Log.Err(fmt.Sprintf("Failed to append %q to RootCAs: %v", localCertFile, err))
-	}
-
-	// Append our cert to the system pool
-	if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
-		_ = kong.Log.Err("No certs appended, using system certs only")
-	}
-
-	//Trust the augmented cert pool in our client
-	tlsConfig := &tls.Config{
-		RootCAs:            rootCAs,
-	}
-	customTransport := http.DefaultTransport.(*http.Transport).Clone()
-	customTransport.TLSClientConfig = tlsConfig
-	//client := &http.Client{Transport: tr}
-
-
-	transport := httptransport.NewWithClient("nats-proxy.dummy-nats.svc.cluster.local:4443", client.DefaultBasePath, []string{"https"},
-		&http.Client{Transport: customTransport})
-	//AppendCertificateToCertPool(kong)
-	//cfg := client.DefaultTransportConfig()
-	apiClient := client.New(transport, strfmt.Default)
-	return apiClient
-}
-
-const localCertFile = "/etc/self-signed/ca-cert"
-
 func (conf Config) Response(kong *pdk.PDK) {
 	_ = kong.Log.Info("Handling telemetry")
 	if conf.apiClient == nil {
-		conf.apiClient = newAPIClient(conf.Host, kong)
+		var tlsOptions *common.ClientTLSOptions
+		if conf.EnableTLS {
+			tlsOptions = &common.ClientTLSOptions{
+				RootCAFileName: common.LocalCertFile,
+			}
+		}
+		apiClient, err := common.NewAPIClient("nats-proxy.portshift:4443", tlsOptions)
+		if err != nil {
+			_ = kong.Log.Err(fmt.Sprintf("Failed to create new api client: %v", err))
+			return
+		}
+		conf.apiClient = apiClient
 	}
 	telemetry, err := createTelemetry(kong)
 	if err != nil {

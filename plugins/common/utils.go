@@ -16,6 +16,8 @@
 package common
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -24,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 	uuid "github.com/satori/go.uuid"
@@ -83,11 +86,59 @@ func GetPathWithQuery(reqURL *url.URL) string {
 	return pathAndQuery
 }
 
-func NewAPIClient(host string) *client.APIClarityPluginsTelemetriesAPI {
-	cfg := client.DefaultTransportConfig()
-	transport := httptransport.New(host, "/api", cfg.Schemes)
-	apiClient := client.New(transport, strfmt.Default)
-	return apiClient
+const LocalCertFile = "/etc/traces/certs/root-ca.crt"
+
+type ClientTLSOptions struct {
+	RootCAFileName string
+}
+
+func NewAPIClient(host string, tlsOptions *ClientTLSOptions) (*client.APIClarityPluginsTelemetriesAPI, error) {
+	var clientTransport runtime.ClientTransport
+	var err error
+
+	if tlsOptions != nil {
+		clientTransport, err = createClientTransportTLS(host, tlsOptions)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create client transport: %v", err)
+		}
+	} else {
+		cfg := client.DefaultTransportConfig()
+		clientTransport = httptransport.New(host, client.DefaultBasePath, cfg.Schemes)
+	}
+
+	apiClient := client.New(clientTransport, strfmt.Default)
+	return apiClient, nil
+}
+
+func createClientTransportTLS(host string, tlsOptions *ClientTLSOptions) (runtime.ClientTransport, error) {
+	// Get the SystemCertPool
+	rootCAs, _ := x509.SystemCertPool()
+	if rootCAs == nil {
+		rootCAs = x509.NewCertPool()
+	}
+
+	// Read in the cert file
+	certs, err := ioutil.ReadFile(tlsOptions.RootCAFileName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to append %q to RootCAs: %v", tlsOptions.RootCAFileName, err)
+	}
+
+	// Append our cert to the system pool
+	if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
+		return nil, fmt.Errorf("no certs appended, using system certs only")
+	}
+
+	//Trust the augmented cert pool in our client
+	tlsConfig := &tls.Config{
+		RootCAs: rootCAs,
+	}
+	customTransport := http.DefaultTransport.(*http.Transport).Clone()
+	customTransport.TLSClientConfig = tlsConfig
+
+	transport := httptransport.NewWithClient(host, client.DefaultBasePath, []string{"https"},
+		&http.Client{Transport: customTransport})
+
+	return transport, nil
 }
 
 func GetTimeNowRFC3339NanoUTC() (time.Time, error) {
