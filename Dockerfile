@@ -1,31 +1,40 @@
-FROM node:14-slim AS site-build
+## Build Frontend
+FROM --platform=$BUILDPLATFORM node:14-slim AS site-build
 
 WORKDIR /app/ui-build
 
+# Cache optimization: Avoid npm install unless package.json changed
+COPY ui/package-lock.json ui/package.json ./
+RUN npm ci
+
 COPY ui .
-RUN npm i
 RUN npm run build
 
+## Build Backend
+# Cross-compilation tools
+FROM --platform=$BUILDPLATFORM tonistiigi/xx AS xx
 
-FROM golang:1.16.6-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.16.6-alpine AS builder
 
-RUN apk add --update --no-cache gcc g++
+# Copy cross-compilation tools
+COPY --from=xx / /
 
 WORKDIR /build
 COPY api ./api
 COPY plugins/api ./plugins/api
 
+# Cache optimization: Avoid go module downloads unless go.mod/go.sum changed
 WORKDIR /build/backend
 COPY backend/go.* ./
 RUN go mod download
 
-ARG VERSION
-ARG BUILD_TIMESTAMP
-ARG COMMIT_HASH
+ARG BUILD_TIMESTAMP COMMIT_HASH VERSION TARGETOS TARGETARCH
 
 # Copy and build backend code
 COPY backend .
-RUN go build -ldflags="-s -w \
+ARG TARGETPLATFORM
+ENV CGO_ENABLED=0
+RUN xx-go build -ldflags="-s -w \
      -X 'github.com/apiclarity/apiclarity/backend/pkg/version.Version=${VERSION}' \
      -X 'github.com/apiclarity/apiclarity/backend/pkg/version.CommitHash=${COMMIT_HASH}' \
      -X 'github.com/apiclarity/apiclarity/backend/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}'" -o backend ./cmd/backend/main.go

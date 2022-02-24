@@ -9,11 +9,11 @@ docker: docker-kong docker-tyk docker-taper
 
 .PHONY: docker-kong
 docker-kong:
-	@DOCKER_BUILDKIT=1 docker build -t ${DOCKER_REGISTRY}/kong-plugin:${DOCKER_TAG} --file Dockerfile.kong .
+	@DOCKER_BUILDKIT=1 docker buildx build --load -t ${DOCKER_REGISTRY}/kong-plugin:${DOCKER_TAG} --file Dockerfile.kong .
 
 .PHONY: docker-taper
 docker-taper:
-	@DOCKER_BUILDKIT=1 docker build --build-arg VERSION=${VERSION} -t ${DOCKER_REGISTRY}/passive-taper:${DOCKER_TAG} --file Dockerfile.taper .
+	@DOCKER_BUILDKIT=1 docker buildx build --load --build-arg VERSION=${VERSION} -t ${DOCKER_REGISTRY}/passive-taper:${DOCKER_TAG} --file Dockerfile.taper .
 
 .PHONY: docker-tyk
 docker-tyk:
@@ -21,7 +21,7 @@ docker-tyk:
 	go mod edit -replace github.com/apiclarity/apiclarity/plugins/api@v0.0.0=./../api && \
 	go mod edit -replace github.com/apiclarity/apiclarity/plugins/common@v0.0.0=./../common && \
 	 cd -)
-	@DOCKER_BUILDKIT=1 docker build -t ${DOCKER_REGISTRY}/tyk-plugin-${TYK_VERSION}:${DOCKER_TAG} --file Dockerfile.tyk.${TYK_VERSION} .
+	@DOCKER_BUILDKIT=1 docker buildx build --load -t ${DOCKER_REGISTRY}/tyk-plugin-${TYK_VERSION}:${DOCKER_TAG} --file Dockerfile.tyk.${TYK_VERSION} .
 	@(cd gateway/tyk/${TYK_VERSION} && \
 	go mod edit -replace github.com/apiclarity/apiclarity/plugins/api@v0.0.0=./../../../api && \
 	go mod edit -replace github.com/apiclarity/apiclarity/plugins/common@v0.0.0=./../../../common && \
