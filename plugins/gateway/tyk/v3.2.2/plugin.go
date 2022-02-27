@@ -107,7 +107,7 @@ func ResponseSendTelemetry(_ http.ResponseWriter, res *http.Response, req *http.
 	var tlsOptions *common.ClientTLSOptions
 	if enableTLS {
 		tlsOptions = &common.ClientTLSOptions{
-			RootCAFileName: common.LocalCertFile,
+			RootCAFileName: common.CACertFile,
 		}
 	}
 	apiClient, err := common.NewAPIClient(host, tlsOptions)

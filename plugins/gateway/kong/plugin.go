@@ -53,10 +53,10 @@ func (conf Config) Response(kong *pdk.PDK) {
 		var tlsOptions *common.ClientTLSOptions
 		if conf.EnableTLS {
 			tlsOptions = &common.ClientTLSOptions{
-				RootCAFileName: common.LocalCertFile,
+				RootCAFileName: common.CACertFile,
 			}
 		}
-		apiClient, err := common.NewAPIClient("nats-proxy.portshift:4443", tlsOptions)
+		apiClient, err := common.NewAPIClient(conf.Host, tlsOptions)
 		if err != nil {
 			_ = kong.Log.Err(fmt.Sprintf("Failed to create new api client: %v", err))
 			return

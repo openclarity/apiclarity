@@ -67,7 +67,7 @@ func run(c *cli.Context) {
 	var tlsOptions *common.ClientTLSOptions
 	if runConfig.EnableTLS {
 		tlsOptions = &common.ClientTLSOptions{
-			RootCAFileName: common.LocalCertFile,
+			RootCAFileName: common.CACertFile,
 		}
 	}
 	apiClient, err := common.NewAPIClient(runConfig.UpstreamAddress, tlsOptions)

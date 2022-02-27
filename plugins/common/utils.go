@@ -86,7 +86,7 @@ func GetPathWithQuery(reqURL *url.URL) string {
 	return pathAndQuery
 }
 
-const LocalCertFile = "/etc/traces/certs/root-ca.crt"
+const CACertFile = "/etc/traces/certs/root-ca.crt"
 
 type ClientTLSOptions struct {
 	RootCAFileName string
@@ -120,12 +120,12 @@ func createClientTransportTLS(host string, tlsOptions *ClientTLSOptions) (runtim
 	// Read in the cert file
 	certs, err := ioutil.ReadFile(tlsOptions.RootCAFileName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to append %q to RootCAs: %v", tlsOptions.RootCAFileName, err)
+		return nil, fmt.Errorf("failed to read file (%v): %v", tlsOptions.RootCAFileName, err)
 	}
 
 	// Append our cert to the system pool
 	if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
-		return nil, fmt.Errorf("no certs appended, using system certs only")
+		return nil, fmt.Errorf("failed to append certs from PEM")
 	}
 
 	//Trust the augmented cert pool in our client
