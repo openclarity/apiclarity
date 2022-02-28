@@ -1,0 +1,157 @@
+#######################################################################################
+## Global Values
+
+global:
+  ## Database password
+  ##
+  databasePassword: apiclarity
+
+  ## Docker image
+  ##
+  docker:
+    ## Configure registry
+    ##
+    registry: "erezfish"
+
+  ## Whether or not persistence is enabled
+  ##
+  persistentVolume:
+    ## Persistent Volume size
+    ##
+    size: 100Mi
+
+    ## Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    # storageClass: ""
+
+## End of Global Values
+#######################################################################################
+
+#######################################################################################
+## APIClarity Values
+
+apiclarity:
+  ## Docker Image values.
+  docker:
+    imageTag: "1.1"
+    imagePullPolicy: Always
+
+  ## Logging level (debug, info, warning, error, fatal, panic).
+  logLevel: warning
+
+## End of APIClarity Values
+#######################################################################################
+
+#######################################################################################
+## APIClarity Postgres Values
+
+apiclarity-postgresql:
+  enabled: true
+
+  ## ConfigMap with scripts to be run at first boot
+  ## NOTE: This will override initdbScripts
+  # initdbScriptsConfigMap:
+
+  ## Secret with scripts to be run at first boot (in case it contains sensitive information)
+  ## NOTE: This can work along initdbScripts or initdbScriptsConfigMap
+  # initdbScriptsSecret:
+
+  ## Specify the PostgreSQL username and password to execute the initdb scripts
+  # initdbUser:
+  # initdbPassword:
+
+  ## Setup database name and password
+  existingSecret: apiclarity-postgresql-secret
+  postgresqlDatabase: apiclarity
+
+  ## Enable security context
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
+
+# End of APIClarity Postgres Values
+#######################################################################################
+
+#######################################################################################
+## APIClarity Traffic Source Values
+
+trafficSource:
+  envoyWasm:
+    ## Enable Envoy wasm traffic source
+    ##
+    enabled: false
+
+    ## Enable Istio verification in a Pre-Install Job
+    ##
+    enableIstioVerify: true
+
+    ## Enable APIClarity WASM filter in the following namespaces
+    ##
+    namespaces:
+      - sock-shop
+
+  tap:
+    ## Enable Tap traffic source
+    ##
+    enabled: false
+
+    ## Enable APIClarity Tap in the following namespaces
+    ##
+    namespaces:
+      - default
+
+    ## APIClarity Tap logging level (debug, info, warning, error, fatal, panic)
+    ##
+    logLevel: "warning"
+
+    ## Docker Image values.
+    docker:
+      imageTag: "latest"
+      imagePullPolicy: Always
+
+  kong:
+    ## Enable Kong traffic source
+    ##
+    enabled: false
+
+    ## Specify the name of the proxy container in Kong gateway to patch
+    ##
+    containerName: "proxy"
+    ## Specify the name of the Kong gateway deployment to patch
+    ##
+    deplyomentName: ""
+    ## Specify the namespace of the Kong gateway deployment to patch
+    ##
+    deplyomentNamespace: ""
+    ## Specify the name of the ingress resource to patch
+    ##
+    ingressName: ""
+    ## Specify the namespace of the ingress resource to patch
+    ##
+    ingressNamespace: ""
+
+  tyk:
+    ## Enable Tyk traffic source
+    ##
+    enabled: false
+
+    ## Enable Tyk verification in a Pre-Install Job
+    ##
+    enableTykVerify: true
+    ## Specify the name of the proxy container in Tyk gateway to patch
+    ##
+    containerName: "proxy"
+    ## Specify the name of the Tyk gateway deployment to patch
+    ##
+    deplyomentName: ""
+    ## Specify the namespace of the Tyk gateway deployment to patch
+    ##
+    deplyomentNamespace: ""
+
+# End of APIClarity Traffic Source Values
+#######################################################################################
