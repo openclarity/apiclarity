@@ -32,7 +32,7 @@ import (
 )
 
 type Config struct {
-	EnableTLS bool
+	EnableTLS bool   `json:"enable_tls"`
 	Host      string `json:"host"`
 	apiClient *client.APIClarityPluginsTelemetriesAPI
 }

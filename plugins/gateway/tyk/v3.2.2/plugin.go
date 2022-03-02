@@ -49,7 +49,7 @@ var logger = log.Get()
 var (
 	host             string
 	gatewayNamespace string
-	enableTLS bool
+	enableTLS        bool
 )
 
 //nolint:gochecknoinits

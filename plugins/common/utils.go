@@ -99,11 +99,10 @@ func NewAPIClient(host string, tlsOptions *ClientTLSOptions) (*client.APIClarity
 	if tlsOptions != nil {
 		clientTransport, err = createClientTransportTLS(host, tlsOptions)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create client transport: %v", err)
+			return nil, fmt.Errorf("failed to create tls client transport: %v", err)
 		}
 	} else {
-		cfg := client.DefaultTransportConfig()
-		clientTransport = httptransport.New(host, client.DefaultBasePath, cfg.Schemes)
+		clientTransport = httptransport.New(host, client.DefaultBasePath, []string{"http"})
 	}
 
 	apiClient := client.New(clientTransport, strfmt.Default)
