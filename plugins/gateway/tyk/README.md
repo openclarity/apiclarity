@@ -67,7 +67,7 @@ https://tyk.io/docs/plugins/supported-languages/golang/#loading-the-plugin
 
 Note: The tyk plugin has to be compiled with the same version of the tyk gateway.
 This is due to limitation of how the go plugin is being build.
-Currently, the plugin is competible only for tyk gateway version v3.2.2
+Currently, the plugin is compatible only for tyk gateway version v3.2.2
 
 If you would like to build the plugin for other versions, you need to add the appropriate go.mod dependencies, and then run (from [plugins directory](https://github.com/apiclarity/apiclarity/edit/tyk-plugin/plugins/)):
 ```shell

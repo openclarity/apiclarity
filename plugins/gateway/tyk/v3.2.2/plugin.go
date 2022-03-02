@@ -49,12 +49,16 @@ var logger = log.Get()
 var (
 	host             string
 	gatewayNamespace string
+	enableTLS bool
 )
 
 //nolint:gochecknoinits
 func init() {
 	host = os.Getenv("APICLARITY_HOST")
 	gatewayNamespace = os.Getenv("TYK_GATEWAY_NAMESPACE")
+	if os.Getenv("ENABLE_TLS") == "true" {
+		enableTLS = true
+	}
 }
 
 // Called during post phase.
@@ -100,7 +104,17 @@ func ResponseSendTelemetry(_ http.ResponseWriter, res *http.Response, req *http.
 		return
 	}
 
-	apiClient := common.NewAPIClient(host)
+	var tlsOptions *common.ClientTLSOptions
+	if enableTLS {
+		tlsOptions = &common.ClientTLSOptions{
+			RootCAFileName: common.CACertFile,
+		}
+	}
+	apiClient, err := common.NewAPIClient(host, tlsOptions)
+	if err != nil {
+		logger.Errorf("Failed to create new api client: %v", err)
+		return
+	}
 	params := operations.NewPostTelemetryParams().WithBody(telemetry)
 
 	_, err = apiClient.Operations.PostTelemetry(params)
