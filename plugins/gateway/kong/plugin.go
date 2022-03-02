@@ -32,6 +32,7 @@ import (
 )
 
 type Config struct {
+	EnableTLS bool   `json:"enable_tls"`
 	Host      string `json:"host"`
 	apiClient *client.APIClarityPluginsTelemetriesAPI
 }
@@ -49,7 +50,18 @@ func (conf Config) Access(kong *pdk.PDK) {
 func (conf Config) Response(kong *pdk.PDK) {
 	_ = kong.Log.Info("Handling telemetry")
 	if conf.apiClient == nil {
-		conf.apiClient = common.NewAPIClient(conf.Host)
+		var tlsOptions *common.ClientTLSOptions
+		if conf.EnableTLS {
+			tlsOptions = &common.ClientTLSOptions{
+				RootCAFileName: common.CACertFile,
+			}
+		}
+		apiClient, err := common.NewAPIClient(conf.Host, tlsOptions)
+		if err != nil {
+			_ = kong.Log.Err(fmt.Sprintf("Failed to create new api client: %v", err))
+			return
+		}
+		conf.apiClient = apiClient
 	}
 	telemetry, err := createTelemetry(kong)
 	if err != nil {

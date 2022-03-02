@@ -24,17 +24,20 @@ const (
 	UpstreamAddressEnv = "UPSTREAM_TELEMETRY_HOST_NAME"
 	NamespacesToTapEnv = "NAMESPACES_TO_TAP"
 	TapLogLevelEnv     = "TAP_LOG_LEVEL"
+	EnableTLSEnv       = "ENABLE_TLS"
 )
 
 type Config struct {
 	NamespaceToTap  []string
 	UpstreamAddress string
 	MizuLogLevel    logging.Level
+	EnableTLS       bool
 }
 
 func LoadConfig() *Config {
 	return &Config{
 		NamespaceToTap:  viper.GetStringSlice(NamespacesToTapEnv),
 		UpstreamAddress: viper.GetString(UpstreamAddressEnv),
+		EnableTLS:       viper.GetBool(EnableTLSEnv),
 	}
 }
