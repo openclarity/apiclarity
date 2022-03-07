@@ -84,8 +84,8 @@ definitions:
       TruncatedBody:
         type: 'boolean'
       time:
-        type: 'string'
-        format: date-time
+        type: 'integer'
+        format: int64
 
   Header:
     type: 'object'

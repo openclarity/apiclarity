@@ -89,8 +89,8 @@ func init() {
           }
         },
         "time": {
-          "type": "string",
-          "format": "date-time"
+          "type": "integer",
+          "format": "int64"
         },
         "version": {
           "type": "string"
@@ -265,8 +265,8 @@ func init() {
           }
         },
         "time": {
-          "type": "string",
-          "format": "date-time"
+          "type": "integer",
+          "format": "int64"
         },
         "version": {
           "type": "string"

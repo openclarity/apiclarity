@@ -76,11 +76,7 @@ func PostGetAPIDefinition(_ http.ResponseWriter, r *http.Request) {
 	// set the apiDefinition since we dont get it in the response phase
 	ctx.SetDefinition(r, apiDefinition)
 
-	requestTime, err := common.GetTimeNowRFC3339NanoUTC()
-	if err != nil {
-		logger.Errorf("Failed to get request time: %v", err)
-		return
-	}
+	requestTime := time.Now().UTC().UnixNano()/(1000*1000) // UnixMilli supported only from go 1.17
 
 	session := ctx.GetSession(r)
 	if session == nil {
@@ -132,15 +128,12 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 	}
 
 	metadata := ctx.GetSession(req).MetaData
-	requestTime, ok := metadata[common.RequestTimeContextKey].(time.Time)
+	requestTime, ok := metadata[common.RequestTimeContextKey].(int64)
 	if !ok {
 		return nil, fmt.Errorf("failed to get request time from metadata")
 	}
 
-	responseTime, err := common.GetTimeNowRFC3339NanoUTC()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get response time: %v", err)
-	}
+	responseTime := time.Now().UTC().UnixNano()/(1000*1000)
 
 	host, port := getHostAndPortFromTargetURL(apiDefinition.Proxy.TargetURL)
 	destinationNamespace := getDestinationNamespaceFromHost(host)
@@ -170,7 +163,7 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 				Body:          strfmt.Base64(reqBody),
 				Headers:       common.CreateHeaders(req.Header),
 				Version:       req.Proto,
-				Time:          strfmt.DateTime(requestTime),
+				Time:          requestTime,
 			},
 			Host:   host,
 			Method: req.Method,
@@ -183,7 +176,7 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 				Body:          strfmt.Base64(resBody),
 				Headers:       common.CreateHeaders(res.Header),
 				Version:       res.Proto,
-				Time:          strfmt.DateTime(responseTime),
+				Time:          responseTime,
 			},
 			StatusCode: strconv.Itoa(res.StatusCode),
 		},
