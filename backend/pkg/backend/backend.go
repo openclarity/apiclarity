@@ -41,6 +41,7 @@ import (
 	"github.com/apiclarity/apiclarity/backend/pkg/k8smonitor"
 	"github.com/apiclarity/apiclarity/backend/pkg/rest"
 	"github.com/apiclarity/apiclarity/backend/pkg/traces"
+	pluginsmodels "github.com/apiclarity/apiclarity/plugins/api/server/models"
 	_spec "github.com/apiclarity/speculator/pkg/spec"
 	_speculator "github.com/apiclarity/speculator/pkg/speculator"
 	_mimeutils "github.com/apiclarity/speculator/pkg/utils"
@@ -185,26 +186,28 @@ func convertSpecDiffToEventDiff(diff *_spec.APIDiff) (originalRet, modifiedRet [
 	return originalRet, modifiedRet, nil
 }
 
-func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
+func (b *Backend) handleHTTPTrace(trace *pluginsmodels.Telemetry) error {
 	var reconstructedDiff *_spec.APIDiff
 	var providedDiff *_spec.APIDiff
 	var err error
 
 	log.Debugf("Handling telemetry: %+v", trace)
 
-	if trace.SCNTRequest.Host == "" {
-		headers := _spec.ConvertHeadersToMap(trace.SCNTRequest.Headers)
+	telemetry := ConvertModelsToSpeculatorTelemetry(trace)
+
+	if telemetry.Request.Host == "" {
+		headers := _spec.ConvertHeadersToMap(telemetry.Request.Common.Headers)
 		if host, ok := headers["host"]; ok {
-			trace.SCNTRequest.Host = host
+			telemetry.Request.Host = host
 		}
 	}
 
-	trace.SCNTRequest.Host, err = getHostname(trace.SCNTRequest.Host)
+	telemetry.Request.Host, err = getHostname(telemetry.Request.Host)
 	if err != nil {
 		return fmt.Errorf("failed to get hostname from host: %v", err)
 	}
 
-	destInfo, err := _speculator.GetAddressInfoFromAddress(trace.DestinationAddress)
+	destInfo, err := _speculator.GetAddressInfoFromAddress(telemetry.DestinationAddress)
 	if err != nil {
 		return fmt.Errorf("failed to get destination info: %v", err)
 	}
@@ -212,14 +215,14 @@ func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 	if err != nil {
 		return fmt.Errorf("failed to convert destination port: %v", err)
 	}
-	srcInfo, err := _speculator.GetAddressInfoFromAddress(trace.SourceAddress)
+	srcInfo, err := _speculator.GetAddressInfoFromAddress(telemetry.SourceAddress)
 	if err != nil {
 		return fmt.Errorf("failed to get source info: %v", err)
 	}
 
 	// Initialize API info
 	apiInfo := _database.APIInfo{
-		Name: trace.SCNTRequest.Host,
+		Name: telemetry.Request.Host,
 		Port: int64(destPort),
 	}
 
@@ -230,7 +233,7 @@ func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 		apiInfo.Type = models.APITypeEXTERNAL
 	}
 
-	isNonAPI := isNonAPI(trace)
+	isNonAPI := isNonAPI(telemetry)
 	// Don't link non APIs to an API in the inventory
 	if !isNonAPI {
 		// lock the API inventory to avoid creating API entries twice on trace handling races
@@ -243,20 +246,20 @@ func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 		log.Infof("API Info in DB: %+v", apiInfo)
 
 		// Handle trace telemetry by Speculator
-		specKey := _speculator.GetSpecKey(trace.SCNTRequest.Host, destInfo.Port)
+		specKey := _speculator.GetSpecKey(telemetry.Request.Host, destInfo.Port)
 		if b.speculator.HasProvidedSpec(specKey) {
-			providedDiff, err = b.speculator.DiffTelemetry(trace, _spec.DiffSourceProvided)
+			providedDiff, err = b.speculator.DiffTelemetry(telemetry, _spec.DiffSourceProvided)
 			if err != nil {
 				return fmt.Errorf("failed to diff telemetry against provided spec: %v", err)
 			}
 		}
 		if b.speculator.HasApprovedSpec(specKey) {
-			reconstructedDiff, err = b.speculator.DiffTelemetry(trace, _spec.DiffSourceReconstructed)
+			reconstructedDiff, err = b.speculator.DiffTelemetry(telemetry, _spec.DiffSourceReconstructed)
 			if err != nil {
 				return fmt.Errorf("failed to diff telemetry against approved spec: %v", err)
 			}
 		} else {
-			err := b.speculator.LearnTelemetry(trace)
+			err := b.speculator.LearnTelemetry(telemetry)
 			if err != nil {
 				return fmt.Errorf("failed to learn telemetry: %v", err)
 			}
@@ -264,24 +267,24 @@ func (b *Backend) handleHTTPTrace(trace *_spec.SCNTelemetry) error {
 	}
 
 	// Update API event in DB
-	statusCode, err := strconv.Atoi(trace.SCNTResponse.StatusCode)
+	statusCode, err := strconv.Atoi(trace.Response.StatusCode)
 	if err != nil {
 		return fmt.Errorf("failed to convert status code: %v", err)
 	}
 
-	path, query := _spec.GetPathAndQuery(trace.SCNTRequest.Path)
+	path, query := _spec.GetPathAndQuery(trace.Request.Path)
 
 	event := &_database.APIEvent{
 		APIInfoID:       apiInfo.ID,
 		Time:            strfmt.DateTime(time.Now().UTC()),
-		Method:          models.HTTPMethod(trace.SCNTRequest.Method),
+		Method:          models.HTTPMethod(trace.Request.Method),
 		Path:            path,
 		Query:           query,
 		StatusCode:      int64(statusCode),
 		SourceIP:        srcInfo.IP,
 		DestinationIP:   destInfo.IP,
 		DestinationPort: int64(destPort),
-		HostSpecName:    trace.SCNTRequest.Host,
+		HostSpecName:    trace.Request.Host,
 		IsNonAPI:        isNonAPI,
 		EventType:       apiInfo.Type,
 	}
@@ -385,8 +388,8 @@ const (
 	contentTypeApplicationJSON = "application/json"
 )
 
-func isNonAPI(trace *_spec.SCNTelemetry) bool {
-	respHeaders := _spec.ConvertHeadersToMap(trace.SCNTResponse.Headers)
+func isNonAPI(telemetry *_spec.Telemetry) bool {
+	respHeaders := _spec.ConvertHeadersToMap(telemetry.Response.Common.Headers)
 
 	// If response content-type header is missing, we will classify it as API
 	respContentType, ok := respHeaders[contentTypeHeaderName]
@@ -400,7 +403,7 @@ func isNonAPI(trace *_spec.SCNTelemetry) bool {
 		return true
 	}
 
-	// If response content-type is not application/json, need to classify the trace as non-api
+	// If response content-type is not application/json, need to classify the telemetry as non-api
 	return !_mimeutils.IsApplicationJSONMediaType(mediaType)
 }
 

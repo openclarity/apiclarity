@@ -24,7 +24,7 @@ import (
 
 func Test_isNonAPI(t *testing.T) {
 	type args struct {
-		trace *_spec.SCNTelemetry
+		trace *_spec.Telemetry
 	}
 	tests := []struct {
 		name string
@@ -34,10 +34,15 @@ func Test_isNonAPI(t *testing.T) {
 		{
 			name: "content type is not application/json expected to classify as non API",
 			args: args{
-				trace: &_spec.SCNTelemetry{
-					SCNTResponse: _spec.SCNTResponse{
-						SCNTCommon: _spec.SCNTCommon{
-							Headers: [][2]string{{contentTypeHeaderName, "non-api"}},
+				trace: &_spec.Telemetry{
+					Response: &_spec.Response{
+						Common: &_spec.Common{
+							Headers: []*_spec.Header{
+								{
+									Key:   contentTypeHeaderName,
+									Value: "non-api",
+								},
+							},
 						},
 					},
 				},
@@ -47,10 +52,15 @@ func Test_isNonAPI(t *testing.T) {
 		{
 			name: "REST API",
 			args: args{
-				trace: &_spec.SCNTelemetry{
-					SCNTResponse: _spec.SCNTResponse{
-						SCNTCommon: _spec.SCNTCommon{
-							Headers: [][2]string{{contentTypeHeaderName, contentTypeApplicationJSON}},
+				trace: &_spec.Telemetry{
+					Response: &_spec.Response{
+						Common: &_spec.Common{
+							Headers: []*_spec.Header{
+								{
+									Key:   contentTypeHeaderName,
+									Value: contentTypeApplicationJSON,
+								},
+							},
 						},
 					},
 				},
@@ -60,9 +70,9 @@ func Test_isNonAPI(t *testing.T) {
 		{
 			name: "no headers expected to classify as API",
 			args: args{
-				trace: &_spec.SCNTelemetry{
-					SCNTResponse: _spec.SCNTResponse{
-						SCNTCommon: _spec.SCNTCommon{},
+				trace: &_spec.Telemetry{
+					Response: &_spec.Response{
+						Common: &_spec.Common{},
 					},
 				},
 			},
@@ -71,10 +81,15 @@ func Test_isNonAPI(t *testing.T) {
 		{
 			name: "content type is application/hal+json - classify as API",
 			args: args{
-				trace: &_spec.SCNTelemetry{
-					SCNTResponse: _spec.SCNTResponse{
-						SCNTCommon: _spec.SCNTCommon{
-							Headers: [][2]string{{contentTypeHeaderName, "application/hal+json"}},
+				trace: &_spec.Telemetry{
+					Response: &_spec.Response{
+						Common: &_spec.Common{
+							Headers: []*_spec.Header{
+								{
+									Key:   contentTypeHeaderName,
+									Value: "application/hal+json",
+								},
+							},
 						},
 					},
 				},
