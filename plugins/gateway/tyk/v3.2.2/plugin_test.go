@@ -27,8 +27,6 @@ import (
 	"github.com/TykTechnologies/tyk/apidef"
 	"github.com/TykTechnologies/tyk/ctx"
 	"github.com/TykTechnologies/tyk/user"
-	"github.com/go-openapi/strfmt"
-
 	"github.com/apiclarity/apiclarity/plugins/api/client/models"
 	"github.com/apiclarity/apiclarity/plugins/common"
 )
@@ -90,7 +88,7 @@ func Test_getHostAndPortFromTargetURL(t *testing.T) {
 }
 
 func Test_createTelemetry(t *testing.T) {
-	tNow := time.Now()
+	tNow := time.Now().UTC().UnixNano()/int64(time.Millisecond)
 
 	apiDefinition := apidef.APIDefinition{
 		Proxy: apidef.ProxyConfig{
@@ -152,7 +150,7 @@ func Test_createTelemetry(t *testing.T) {
 							},
 						},
 						Version: "HTTP/1.0",
-						Time:    strfmt.DateTime(tNow),
+						Time:    tNow,
 					},
 					Host:   "ns.echo",
 					Method: "GET",
@@ -191,7 +189,7 @@ func Test_createTelemetry(t *testing.T) {
 				return
 			}
 			// no way to predict response time
-			got.Response.Common.Time = strfmt.DateTime{}
+			got.Response.Common.Time = 0
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("createTelemetry() got = %v, want %v", got, tt.want)
 			}
