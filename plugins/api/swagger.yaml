@@ -84,6 +84,7 @@ definitions:
       TruncatedBody:
         type: 'boolean'
       time:
+        description: 'Time since epoch (milliseconds)'
         type: 'integer'
         format: int64
 
