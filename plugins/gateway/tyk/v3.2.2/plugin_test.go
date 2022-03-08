@@ -88,7 +88,7 @@ func Test_getHostAndPortFromTargetURL(t *testing.T) {
 }
 
 func Test_createTelemetry(t *testing.T) {
-	tNow := time.Now().UTC().UnixNano()/int64(time.Millisecond)
+	tNow := time.Now().UTC().UnixNano() / int64(time.Millisecond)
 
 	apiDefinition := apidef.APIDefinition{
 		Proxy: apidef.ProxyConfig{

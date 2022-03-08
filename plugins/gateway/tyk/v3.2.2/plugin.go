@@ -76,7 +76,7 @@ func PostGetAPIDefinition(_ http.ResponseWriter, r *http.Request) {
 	// set the apiDefinition since we dont get it in the response phase
 	ctx.SetDefinition(r, apiDefinition)
 
-	requestTime := time.Now().UTC().UnixNano()/int64(time.Millisecond) // UnixMilli supported only from go 1.17
+	requestTime := time.Now().UTC().UnixNano() / int64(time.Millisecond) // UnixMilli supported only from go 1.17
 
 	session := ctx.GetSession(r)
 	if session == nil {
@@ -133,7 +133,7 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 		return nil, fmt.Errorf("failed to get request time from metadata")
 	}
 
-	responseTime := time.Now().UTC().UnixNano()/int64(time.Millisecond)
+	responseTime := time.Now().UTC().UnixNano() / int64(time.Millisecond)
 
 	host, port := getHostAndPortFromTargetURL(apiDefinition.Proxy.TargetURL)
 	destinationNamespace := getDestinationNamespaceFromHost(host)
