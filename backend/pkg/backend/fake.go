@@ -20,7 +20,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	models2 "github.com/apiclarity/apiclarity/plugins/api/server/models"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -31,6 +30,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/apiclarity/apiclarity/api/server/models"
+	models2 "github.com/apiclarity/apiclarity/plugins/api/server/models"
 )
 
 func (b *Backend) startSendingFakeTraces() {

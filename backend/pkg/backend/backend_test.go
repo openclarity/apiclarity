@@ -19,13 +19,12 @@ import (
 	"testing"
 
 	"github.com/apiclarity/apiclarity/api/server/models"
-	models2 "github.com/apiclarity/apiclarity/plugins/api/server/models"
 	_spec "github.com/apiclarity/speculator/pkg/spec"
 )
 
 func Test_isNonAPI(t *testing.T) {
 	type args struct {
-		trace *models2.Telemetry
+		trace *_spec.Telemetry
 	}
 	tests := []struct {
 		name string
@@ -35,10 +34,10 @@ func Test_isNonAPI(t *testing.T) {
 		{
 			name: "content type is not application/json expected to classify as non API",
 			args: args{
-				trace: &models2.Telemetry{
-					Response: &models2.Response{
-						Common: &models2.Common{
-							Headers: []*models2.Header{
+				trace: &_spec.Telemetry{
+					Response: &_spec.Response{
+						Common: &_spec.Common{
+							Headers: []*_spec.Header{
 								{
 									Key:   contentTypeHeaderName,
 									Value: "non-api",
@@ -53,10 +52,10 @@ func Test_isNonAPI(t *testing.T) {
 		{
 			name: "REST API",
 			args: args{
-				trace: &models2.Telemetry{
-					Response: &models2.Response{
-						Common: &models2.Common{
-							Headers: []*models2.Header{
+				trace: &_spec.Telemetry{
+					Response: &_spec.Response{
+						Common: &_spec.Common{
+							Headers: []*_spec.Header{
 								{
 									Key:   contentTypeHeaderName,
 									Value: contentTypeApplicationJSON,
@@ -71,9 +70,9 @@ func Test_isNonAPI(t *testing.T) {
 		{
 			name: "no headers expected to classify as API",
 			args: args{
-				trace: &models2.Telemetry{
-					Response: &models2.Response{
-						Common: &models2.Common{},
+				trace: &_spec.Telemetry{
+					Response: &_spec.Response{
+						Common: &_spec.Common{},
 					},
 				},
 			},
@@ -82,10 +81,10 @@ func Test_isNonAPI(t *testing.T) {
 		{
 			name: "content type is application/hal+json - classify as API",
 			args: args{
-				trace: &models2.Telemetry{
-					Response: &models2.Response{
-						Common: &models2.Common{
-							Headers: []*models2.Header{
+				trace: &_spec.Telemetry{
+					Response: &_spec.Response{
+						Common: &_spec.Common{
+							Headers: []*_spec.Header{
 								{
 									Key:   contentTypeHeaderName,
 									Value: "application/hal+json",
