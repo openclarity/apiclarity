@@ -27,6 +27,7 @@ import (
 	"github.com/TykTechnologies/tyk/apidef"
 	"github.com/TykTechnologies/tyk/ctx"
 	"github.com/TykTechnologies/tyk/user"
+
 	"github.com/apiclarity/apiclarity/plugins/api/client/models"
 	"github.com/apiclarity/apiclarity/plugins/common"
 )
