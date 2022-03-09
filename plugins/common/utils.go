@@ -24,7 +24,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
@@ -138,13 +137,4 @@ func createClientTransportTLS(host string, tlsOptions *ClientTLSOptions) (runtim
 		&http.Client{Transport: customTransport})
 
 	return transport, nil
-}
-
-func GetTimeNowRFC3339NanoUTC() (time.Time, error) {
-	tNowStr := time.Now().UTC().Format(time.RFC3339Nano)
-	tNow, err := time.Parse(time.RFC3339Nano, tNowStr)
-	if err != nil {
-		return time.Time{}, fmt.Errorf("failed to parse time: %v", err)
-	}
-	return tNow, nil
 }
