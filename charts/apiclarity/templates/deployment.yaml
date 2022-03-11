@@ -19,7 +19,7 @@ spec:
       annotations:
         sidecar.istio.io/inject: "false"
     spec:
-      serviceAccountName: {{ include "apiclarity.name" . }}
+      serviceAccountName: {{ include "apiclarity.serviceAccountName" . }}
       initContainers:
         - name: '{{ include "apiclarity.name" . }}-wait-for-db'
           image: docker.io/bitnami/postgresql:11.13.0-debian-10-r33
@@ -27,6 +27,8 @@ spec:
             do echo waiting for database; sleep 2; done;']
           securityContext:
             runAsUser: 1001
+          resources:
+          {{- toYaml .Values.apiclarity.initResources | nindent 12 }}
       containers:
         - name: apiclarity
           image: '{{ .Values.global.docker.registry }}/apiclarity:{{ .Values.apiclarity.docker.imageTag }}'
@@ -89,12 +91,7 @@ spec:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
           resources:
-            requests:
-              memory: "200Mi"
-              cpu: "100m"
-            limits:
-              memory: "1000Mi"
-              cpu: "1000m"
+          {{- toYaml .Values.apiclarity.resources | nindent 12 }}
           volumeMounts:
             - name: {{ include "apiclarity.name" . }}
               mountPath: '/apiclarity'

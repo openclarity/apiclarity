@@ -43,6 +43,35 @@ apiclarity:
   ## Logging level (debug, info, warning, error, fatal, panic).
   logLevel: warning
 
+  ## Enable/disable rbac resource creation (i.e. ClusterRole, ClusterRoleBinding)
+  rbac:
+    create: true
+
+  ## ServiceAccount settings
+  serviceAccount:
+    ## Enable/disable ServiceAccount creation. Set false to use a pre-existing account
+    create: true
+    ## Override name of ServiceAccount
+    # name:
+
+  ## Resource limits for APIClarity deployment
+  resources:
+    requests:
+      memory: "200Mi"
+      cpu: "100m"
+    limits:
+      memory: "1000Mi"
+      cpu: "1000m"
+
+  ## Resource limits for APIClarity init container deployment
+  initResources:
+    requests:
+      memory: "200Mi"
+      cpu: "100m"
+    limits:
+      memory: "1000Mi"
+      cpu: "200m"
+
 ## End of APIClarity Values
 #######################################################################################
 
@@ -118,6 +147,9 @@ trafficSource:
     ## Enable Kong traffic source
     ##
     enabled: false
+
+    ## Carry out post-install patching of kong container to install plugin
+    patch: true
 
     ## Specify the name of the proxy container in Kong gateway to patch
     ##

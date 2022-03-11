@@ -1,3 +1,4 @@
+{{- if .Values.apiclarity.rbac.create -}}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -10,5 +11,6 @@ roleRef:
   name: {{ include "apiclarity.name" . }}
 subjects:
   - kind: ServiceAccount
-    name: {{ include "apiclarity.name" . }}
+    name: {{ include "apiclarity.serviceAccountName" . }}
     namespace: '{{ .Release.Namespace }}'
+{{- end -}}
