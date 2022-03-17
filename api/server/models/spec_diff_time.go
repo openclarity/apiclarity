@@ -60,6 +60,8 @@ func (m *SpecDiffTime) validateDiffType(formats strfmt.Registry) error {
 		if err := m.DiffType.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("diffType")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("diffType")
 			}
 			return err
 		}
@@ -100,6 +102,8 @@ func (m *SpecDiffTime) contextValidateDiffType(ctx context.Context, formats strf
 		if err := m.DiffType.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("diffType")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("diffType")
 			}
 			return err
 		}

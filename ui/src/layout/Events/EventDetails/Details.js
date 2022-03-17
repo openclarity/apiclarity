@@ -9,18 +9,24 @@ const Details = ({data}) => {
     const {method, statusCode, path, query, sourceIP, destinationIP, destinationPort, hostSpecName, apiInfoId, apiType} = data;
 
     const history = useHistory();
-    
+
     return (
         <div>
             <TitleValueDisplayRow>
                 <TitleValueDisplay title="Method"><Tag>{method}</Tag></TitleValueDisplay>
                 <TitleValueDisplay title="Status code"><StatusIndicator title={statusCode} isError={statusCode >= 400} /></TitleValueDisplay>
+            </TitleValueDisplayRow>
+            <TitleValueDisplayRow>
                 <TitleValueDisplay title="Path" className="path-display">{path}</TitleValueDisplay>
+            </TitleValueDisplayRow>
+            <TitleValueDisplayRow>
                 <TitleValueDisplay title="Query" className="query-display">{query}</TitleValueDisplay>
             </TitleValueDisplayRow>
             <TitleValueDisplayRow>
                 <TitleValueDisplay title="Source">{sourceIP}</TitleValueDisplay>
                 <TitleValueDisplay title="Destination">{destinationIP}</TitleValueDisplay>
+            </TitleValueDisplayRow>
+            <TitleValueDisplayRow>
                 <TitleValueDisplay title="Destination port">{destinationPort}</TitleValueDisplay>
             </TitleValueDisplayRow>
             <TitleValueDisplayRow>

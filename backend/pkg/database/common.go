@@ -148,3 +148,19 @@ func FilterLte(db *gorm.DB, column string, value *string) *gorm.DB {
 	}
 	return db.Where(fmt.Sprintf("%s <= ?", column), value)
 }
+
+func FilterAlertIs(db *gorm.DB, values []string) *gorm.DB {
+	if len(values) == 0 {
+		return db
+	}
+	db = db.Joins("JOIN event_annotations ON api_events.id = event_annotations.event_id")
+	db = db.Where("event_annotations.name IN ?", alertKinds)
+
+	// or := db.Session(&gorm.Session{NewDB: true})
+	// for _, value := range values {
+	// 	or = or.Or("event_annotations.annotation LIKE ?", value)
+	// }
+
+	// db = db.Where(or)
+	return db
+}

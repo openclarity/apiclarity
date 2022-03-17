@@ -7,13 +7,14 @@ import Button from 'components/Button';
 import SelectField from './filter-fields/SelectField';
 import MultiselectField from './filter-fields/MultiselectField';
 import TextField from './filter-fields/TextField';
-import { OPERATORS, METHOD_ITEMS, formatFiltersToQueryParams, getValueLabel } from './utils';
+import { OPERATORS, METHOD_ITEMS, ALERT_ITEMS, formatFiltersToQueryParams, getValueLabel } from './utils';
 
 import './filter.scss';
 
 export {
     OPERATORS,
     METHOD_ITEMS,
+    ALERT_ITEMS,
     formatFiltersToQueryParams
 }
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import Filter, { OPERATORS, METHOD_ITEMS, formatFiltersToQueryParams } from 'components/Filter';
+import Filter, { OPERATORS, METHOD_ITEMS, ALERT_ITEMS, formatFiltersToQueryParams } from 'components/Filter';
 import { SPEC_DIFF_TYPES_MAP } from 'components/SpecDiffIcon';
 
 export {
@@ -52,6 +52,9 @@ const FILTERS_MAP = {
     ]},
     specDiffType: {value: "specDiffType", label: "Spec diff type", operators: [
         {...OPERATORS.is, valueItems: Object.values(SPEC_DIFF_TYPES_MAP), creatable: false}
+    ]},
+    alert: {value: "alert", label: "Alert Level", valuesMapItems: ALERT_ITEMS, operators: [
+        {...OPERATORS.is, valueItems: ALERT_ITEMS, creatable: false}
     ]},
 }
 

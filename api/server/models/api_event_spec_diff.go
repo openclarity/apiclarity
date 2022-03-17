@@ -62,6 +62,8 @@ func (m *APIEventSpecDiff) validateDiffType(formats strfmt.Registry) error {
 		if err := m.DiffType.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("diffType")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("diffType")
 			}
 			return err
 		}
@@ -108,6 +110,8 @@ func (m *APIEventSpecDiff) contextValidateDiffType(ctx context.Context, formats 
 		if err := m.DiffType.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("diffType")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("diffType")
 			}
 			return err
 		}

@@ -1,0 +1,80 @@
+openapi: 3.0.3
+info:
+  title: Planets and Webhooks Demo API
+  version: 0.0.1
+  description: Simple flask-backed API showing some example API endpoints and with webhook debugging features.
+  contact:
+    name: Lorna Mitchell
+    url: https://github.com/lornajane/flask-planets-and-webhooks
+    email: github@lornajane.net
+servers:
+  - url: http://localhost:5000
+    description: Sample project running locally
+externalDocs:
+  description: GitHub project for the code and information about this API
+  url: https://github.com/lornajane/flask-planets-and-webhooks
+paths:
+  /planets:
+    get:
+      operationId: allPlanets
+      summary: List all planets
+      description: Returns a list of all the planets that are stored in the system.
+      tags:
+        - planets
+      responses:
+        '200':
+          description: Planets in a list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/planet"
+
+  /planets/{planetId}:
+    get:
+      operationId: onePlanet
+      summary: Fetch one planet by position
+      description: Get the data relating to one planet
+      tags:
+        - planets
+      parameters:
+      - name: planetId
+        in: path
+        required: true
+        schema:
+          type: number
+          example: 4
+
+      responses:
+        '200':
+          description: Planets in a list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/planet"
+
+components:
+  schemas:
+    planet:
+      type: object
+      description: a planet...
+      properties:
+        name:
+          type: string
+          description: Name of planet
+          example: "Saturn"
+        position:
+          type: number
+          description: Order in place from the sun
+          example: 6
+        moons:
+          type: number
+          description: Number of moons, according to NASA
+          example: 62
+
+
+tags:
+  - name: planets
+    description: API containing solar system data
+    

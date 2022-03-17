@@ -89,7 +89,15 @@ func (b *Backend) handleHTTPTraceFromFile(fileName string) error {
 }
 
 func putProvidedSpecLocally(root string) {
-	fileName := root + "/../provided_spec/provided_spec.json"
+
+	putProvidedSpecLocallyImp(root, "provided_spec.json", 1)
+	putProvidedSpecLocallyImp(root, "petstorev2.json", 2)
+	putProvidedSpecLocallyImp(root, "petstorev2.json", 3)
+}
+
+func putProvidedSpecLocallyImp(root string, specfile string, apiId int) {
+
+	fileName := root + fmt.Sprintf("/../provided_spec/%v", specfile)
 
 	// initialize http client
 	client := &http.Client{}
@@ -110,7 +118,7 @@ func putProvidedSpecLocally(root string) {
 	}
 
 	// set the HTTP method, url, and request body
-	req, err := http.NewRequestWithContext(context.TODO(), http.MethodPut, "http://localhost:8080/api/apiInventory/1/specs/providedSpec", bytes.NewBuffer(jsonBody))
+	req, err := http.NewRequestWithContext(context.TODO(), http.MethodPut, fmt.Sprintf("http://localhost:8080/api/apiInventory/%v/specs/providedSpec", apiId), bytes.NewBuffer(jsonBody))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create new request. %v", err))
 	}

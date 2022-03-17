@@ -34,7 +34,11 @@ export const TIME_SELECT_ITEMS = {
     CUSTOM: {
         value: "CUSTOM",
         label: "Custom"
-    }
+    },
+    DEFAULT: {
+        value: "DEFAULT",
+        label: "Default"       
+    },
 }
 
 export const getNow = () => moment().toISOString();
@@ -70,11 +74,13 @@ const CustomDateRange = ({startTime, endTime, onChange}) => (
     </React.Fragment>
 );
 
-const TimeFilter = ({selectedRange=TIME_SELECT_ITEMS.HOUR.value, startTime, endTime, onChange}) => {
+const TimeFilter = ({selectedRange=TIME_SELECT_ITEMS.HOUR.value, startTime, endTime, onChange, withDefault}) => {
     const isCustom = selectedRange === TIME_SELECT_ITEMS.CUSTOM.value;
     const selectItems = Object.values(TIME_SELECT_ITEMS);
     const selectedValue = selectItems.find(item => item.value === selectedRange);
-
+    if (!withDefault){
+        selectItems.pop();
+    }
     return (
         <div className="time-filter-wrapper">
             {isCustom &&
@@ -90,11 +96,14 @@ const TimeFilter = ({selectedRange=TIME_SELECT_ITEMS.HOUR.value, startTime, endT
                 onChange={selectedRangeItem => {
                     const {value} = selectedRangeItem;
                     const {calc} = TIME_SELECT_ITEMS[value];
-
                     if (!!calc) {
                         onChange({selectedRange: value, ...calc()})
                     } else {
-                        onChange({selectedRange: value, startTime: getNow(), endTime: getNow()})
+                        if (value == 'CUSTOM') {
+                            onChange({selectedRange: value, startTime: getNow(), endTime: getNow()})
+                        } else {
+                            onChange({selectedRange: value, startTime: null, endTime: null})
+                        }                       
                     }
                 }}
             />
