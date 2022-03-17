@@ -3,6 +3,7 @@ import { useHistory, useRouteMatch } from 'react-router-dom';
 import Table, { utils } from 'components/Table';
 import Tag from 'components/Tag';
 import StatusIndicator from 'components/StatusIndicator';
+import RiskTag from 'components/RiskTag';
 import SpecDiffIcon, { SPEC_DIFF_TYPES_MAP } from 'components/SpecDiffIcon';
 import { formatDate } from 'utils/utils';
 import { API_TYPE_ITEMS } from 'layout/Inventory';
@@ -71,11 +72,11 @@ const EventsTable = ({filters, refreshTimestamp}) => {
                 const {id, specDiffType} = row.original;
 
                 const {value} = SPEC_DIFF_TYPES_MAP[specDiffType] || {};
-                
+
                 if (!value || value === SPEC_DIFF_TYPES_MAP.NO_DIFF.value) {
                     return <utils.EmptyValue />;
                 }
-                
+
                 return (
                     <SpecDiffIcon id={id} specDiffType={specDiffType} />
                 )
@@ -86,7 +87,8 @@ const EventsTable = ({filters, refreshTimestamp}) => {
         {
             Header: 'Host',
             id: "hostSpecName",
-            accessor: "hostSpecName"
+            accessor: "hostSpecName",
+            width: 30
         },
         {
             Header: 'Type',
@@ -97,12 +99,27 @@ const EventsTable = ({filters, refreshTimestamp}) => {
                 return !!typeItem ? typeItem.label : null;
             },
             width: 30
+        },
+        {
+            Header: 'Alerts',
+            id: "alerts",
+            accessor: original => {
+                if (original.alerts == null) {
+                    return "";
+                }
+                const alerts = original.alerts.map((a, idx) => {
+                    const alert = a.reason.split('_')[1];
+                    return <RiskTag key={idx} risk={alert} label={a.moduleName} />;
+                });
+                return <div className="alerts-column">{alerts}</div>;
+            },
+            width: 50
         }
     ], []);
 
     const history = useHistory();
     const {path} = useRouteMatch();
-    
+
     return (
         <Table
             columns={columns}

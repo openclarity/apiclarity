@@ -56,6 +56,8 @@ func (m *APICount) validateAPIType(formats strfmt.Registry) error {
 	if err := m.APIType.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
 			return ve.ValidateName("apiType")
+		} else if ce, ok := err.(*errors.CompositeError); ok {
+			return ce.ValidateName("apiType")
 		}
 		return err
 	}
@@ -82,6 +84,8 @@ func (m *APICount) contextValidateAPIType(ctx context.Context, formats strfmt.Re
 	if err := m.APIType.ContextValidate(ctx, formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
 			return ve.ValidateName("apiType")
+		} else if ce, ok := err.(*errors.CompositeError); ok {
+			return ce.ValidateName("apiType")
 		}
 		return err
 	}

@@ -52,6 +52,8 @@ func (m *OpenAPISpecs) validateProvidedSpec(formats strfmt.Registry) error {
 		if err := m.ProvidedSpec.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("providedSpec")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("providedSpec")
 			}
 			return err
 		}
@@ -69,6 +71,8 @@ func (m *OpenAPISpecs) validateReconstructedSpec(formats strfmt.Registry) error 
 		if err := m.ReconstructedSpec.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("reconstructedSpec")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("reconstructedSpec")
 			}
 			return err
 		}
@@ -101,6 +105,8 @@ func (m *OpenAPISpecs) contextValidateProvidedSpec(ctx context.Context, formats 
 		if err := m.ProvidedSpec.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("providedSpec")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("providedSpec")
 			}
 			return err
 		}
@@ -115,6 +121,8 @@ func (m *OpenAPISpecs) contextValidateReconstructedSpec(ctx context.Context, for
 		if err := m.ReconstructedSpec.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("reconstructedSpec")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("reconstructedSpec")
 			}
 			return err
 		}

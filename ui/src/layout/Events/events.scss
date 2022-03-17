@@ -50,5 +50,12 @@
             width: 100%;
             height: 500px;
         }
+
+        .alerts-column {
+            display: flex;
+            .risk-tag-wrapper {
+                margin-right: 3px;
+            }
+        }
     }
 }

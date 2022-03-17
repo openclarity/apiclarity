@@ -34,6 +34,7 @@ const (
 
 	// NOTE: when changing one of the column names change also the gorm label in APIEvent.
 	timeColumnName                 = "time"
+	reqtimeColumnName              = "request_time"
 	methodColumnName               = "method"
 	pathColumnName                 = "path"
 	providedPathIDColumnName       = "provided_path_id"
@@ -63,6 +64,7 @@ type APIEvent struct {
 	// UpdatedAt time.Time
 
 	Time                     strfmt.DateTime   `json:"time" gorm:"column:time" faker:"-"`
+	RequestTime              strfmt.DateTime   `json:"requestTime" gorm:"column:request_time" faker:"-"`
 	Method                   models.HTTPMethod `json:"method,omitempty" gorm:"column:method" faker:"oneof: GET, PUT, POST, DELETE"`
 	Path                     string            `json:"path,omitempty" gorm:"column:path" faker:"oneof: /news, /customers, /jokes"`
 	ProvidedPathID           string            `json:"providedPathId,omitempty" gorm:"column:provided_path_id" faker:"-"`
@@ -126,6 +128,7 @@ type APIEventsFilters struct {
 	DestinationPortIsNot  []string
 	DestinationPortIs     []string
 	EndTime               strfmt.DateTime
+	RequestEndTime        strfmt.DateTime
 	ShowNonAPI            bool
 	HasSpecDiffIs         *bool
 	SpecDiffTypeIs        []string
@@ -145,10 +148,12 @@ type APIEventsFilters struct {
 	SpecIs                []string
 	SpecStart             *string
 	StartTime             strfmt.DateTime
+	RequestStartTime      strfmt.DateTime
 	StatusCodeGte         *string
 	StatusCodeIsNot       []string
 	StatusCodeIs          []string
 	StatusCodeLte         *string
+	AlertIs               []string
 }
 
 const dashboardTopAPIsNum = 5
@@ -213,6 +218,7 @@ func APIEventFromDB(event *APIEvent) *models.APIEvent {
 		SpecDiffType:             &event.SpecDiffType,
 		StatusCode:               event.StatusCode,
 		Time:                     event.Time,
+		RequestTime:              event.RequestTime,
 	}
 }
 
@@ -220,7 +226,7 @@ func (a *APIEventsTableHandler) CreateAPIEvent(event *APIEvent) {
 	if result := a.tx.Create(event); result.Error != nil {
 		log.Errorf("Failed to create event: %v", result.Error)
 	} else {
-		log.Infof("Event created %+v", event)
+		log.Debugf("Event created %+v", event)
 	}
 }
 
@@ -340,6 +346,9 @@ func (a *APIEventsTableHandler) setAPIEventsFilters(filters *APIEventsFilters, s
 	tx = FilterStartsWith(tx, hostSpecNameColumnName, filters.SpecStart)
 	tx = FilterEndsWith(tx, hostSpecNameColumnName, filters.SpecEnd)
 
+	// alert filter
+	tx = FilterAlertIs(tx, filters.AlertIs)
+
 	// ignore non APIs
 	if !filters.ShowNonAPI {
 		tx.Where(fmt.Sprintf("%s = ?", isNonAPIColumnName), false)
@@ -433,5 +442,6 @@ func getAPIEventsParamsToFilters(params operations.GetAPIEventsParams) *APIEvent
 		StatusCodeIsNot:      params.StatusCodeIsNot,
 		StatusCodeIs:         params.StatusCodeIs,
 		StatusCodeLte:        params.StatusCodeLte,
+		AlertIs:              params.AlertIs,
 	}
 }

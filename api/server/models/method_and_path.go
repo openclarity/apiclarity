@@ -56,6 +56,8 @@ func (m *MethodAndPath) validateMethod(formats strfmt.Registry) error {
 	if err := m.Method.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
 			return ve.ValidateName("method")
+		} else if ce, ok := err.(*errors.CompositeError); ok {
+			return ce.ValidateName("method")
 		}
 		return err
 	}
@@ -94,6 +96,8 @@ func (m *MethodAndPath) contextValidateMethod(ctx context.Context, formats strfm
 	if err := m.Method.ContextValidate(ctx, formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
 			return ve.ValidateName("method")
+		} else if ce, ok := err.(*errors.CompositeError); ok {
+			return ce.ValidateName("method")
 		}
 		return err
 	}

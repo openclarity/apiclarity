@@ -57,6 +57,7 @@ func (m *Monitor) IsInternalCIDR(ip string) bool {
 	if m == nil {
 		return true
 	}
+
 	if ip == "" {
 		// workaround for now, assuming the telemetry is coming from gateway
 		return true

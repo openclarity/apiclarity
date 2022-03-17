@@ -16,6 +16,7 @@ import (
 
 // GetAPIEventsURL generates an URL for the get API events operation
 type GetAPIEventsURL struct {
+	AlertIs              []string
 	DestinationIPIsNot   []string
 	DestinationIPIs      []string
 	DestinationPortIsNot []string
@@ -80,6 +81,23 @@ func (o *GetAPIEventsURL) Build() (*url.URL, error) {
 	_result.Path = golangswaggerpaths.Join(_basePath, _path)
 
 	qs := make(url.Values)
+
+	var alertIsIR []string
+	for _, alertIsI := range o.AlertIs {
+		alertIsIS := alertIsI
+		if alertIsIS != "" {
+			alertIsIR = append(alertIsIR, alertIsIS)
+		}
+	}
+
+	alertIs := swag.JoinByFormat(alertIsIR, "")
+
+	if len(alertIs) > 0 {
+		qsv := alertIs[0]
+		if qsv != "" {
+			qs.Set("alert[is]", qsv)
+		}
+	}
 
 	var destinationIPIsNotIR []string
 	for _, destinationIPIsNotI := range o.DestinationIPIsNot {

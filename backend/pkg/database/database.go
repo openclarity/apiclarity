@@ -41,6 +41,8 @@ type Database interface {
 	APIEventsTable() APIEventsTable
 	APIInventoryTable() APIInventoryTable
 	ReviewTable() ReviewTable
+	EventAnnotationsTable() EventAnnotationsTable
+	APIAnnotationsTable() APIAnnotationsTable
 }
 
 type Handler struct {
@@ -83,6 +85,18 @@ func (db *Handler) ReviewTable() ReviewTable {
 	}
 }
 
+func (db *Handler) EventAnnotationsTable() EventAnnotationsTable {
+	return &EventAnnotationsTableHandler{
+		tx: db.DB.Table(eventAnnotationsTableName),
+	}
+}
+
+func (db *Handler) APIAnnotationsTable() APIAnnotationsTable {
+	return &APIAnnotationsTableHandler{
+		tx: db.DB.Table(apiAnnotationsTableName),
+	}
+}
+
 func cleanLocalDataBase(databasePath string) {
 	if _, err := os.Stat(databasePath); !os.IsNotExist(err) {
 		log.Debug("deleting db...")
@@ -110,7 +124,11 @@ func initDataBase(config *DBConfig) *gorm.DB {
 	}
 
 	// this will ensure table is created
-	if err := db.AutoMigrate(&APIEvent{}, &APIInfo{}, &Review{}); err != nil {
+	if err := db.AutoMigrate(&APIEvent{},
+		&APIInfo{},
+		&Review{},
+		&EventAnnotation{},
+		&APIAnnotation{}); err != nil {
 		log.Fatalf("Failed to run auto migration: %v", err)
 	}
 

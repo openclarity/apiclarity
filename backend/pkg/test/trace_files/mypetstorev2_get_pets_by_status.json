@@ -1,0 +1,68 @@
+{
+  "request_id": "a3f582e1-df80-4e68-a602-816b831e7e1b",
+  "scheme": "",
+  "destination_address": "mypetstorev2:5000",
+  "source_address": "10.116.207.197:8000",
+  "scnt_request": {
+    "method": "GET",
+    "path": "/v2/pet/findByStatus?status=available",
+    "host": "",
+    "version": "",
+    "headers": [
+      [
+        "host",
+        "mypetstorev2:5000"
+      ],
+      [
+        "user-agent",
+        "curl/7.35.0"
+      ],
+      [
+        "accept",
+        "text/plain"
+      ],
+      [
+        "x-forwarded-proto",
+        "http"
+      ],
+      [
+        "x-request-id",
+        "c44c2e8d-8f97-99c7-97ab-8ce59d7d70c3"
+      ]
+    ],
+    "body": "",
+    "truncated_body": false
+  },
+  "scnt_response": {
+    "status_code": "501",
+    "version": "",
+    "headers": [
+      [
+        "server",
+        "istio-envoy"
+      ],
+      [
+        "date",
+        "Mon, 16 Aug 2021 10:46:20 GMT"
+      ],
+      [
+        "content-type",
+        "application/json"
+      ],
+      [
+        "access-control-allow-origin",
+        "*"
+      ],
+      [
+        "access-control-allow-credentials",
+        "true"
+      ],
+      [
+        "content-length",
+        "0"
+      ]
+    ],
+    "body": "ewogICJkZXRhaWwiOiAiRW1wdHkgbW9kdWxlIG5hbWUiLAogICJzdGF0dXMiOiA1MDEsCiAgInRpdGxlIjogIk5vdCBJbXBsZW1lbnRlZCIsCiAgInR5cGUiOiAiYWJvdXQ6YmxhbmsiCn0=",
+    "truncated_body": false
+  }
+}

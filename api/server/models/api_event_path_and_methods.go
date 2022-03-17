@@ -50,6 +50,8 @@ func (m *APIEventPathAndMethods) validateMethods(formats strfmt.Registry) error 
 		if err := m.Methods[i].Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("methods" + "." + strconv.Itoa(i))
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("methods" + "." + strconv.Itoa(i))
 			}
 			return err
 		}
@@ -80,6 +82,8 @@ func (m *APIEventPathAndMethods) contextValidateMethods(ctx context.Context, for
 		if err := m.Methods[i].ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("methods" + "." + strconv.Itoa(i))
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("methods" + "." + strconv.Itoa(i))
 			}
 			return err
 		}

@@ -22,6 +22,11 @@ export const METHOD_ITEMS = [
     {value: "PATCH", label: "PATCH"}
 ];
 
+export const ALERT_ITEMS = [
+	{value: "ALERT_HIGH", label: "HIGH"},
+	{value: "ALERT_CRITICAL", label: "CRITICAL"},
+]
+
 export const formatFiltersToQueryParams = (filters) => {
     const filtersList = filters.map(({scope, operator, value} )=> ({key: `${scope}[${operator}]`, value}));
 

@@ -32,6 +32,7 @@ const (
 	StateBackupIntervalSec     = "STATE_BACKUP_INTERVAL_SEC"
 	DatabaseCleanerIntervalSec = "DATABASE_CLEANER_INTERVAL_SEC"
 	StateBackupFileName        = "STATE_BACKUP_FILE_NAME"
+	NoMonitorEnvVar            = "NO_K8S_MONITOR"
 
 	DBNameEnvVar     = "DB_NAME"
 	DBUserEnvVar     = "DB_USER"
@@ -43,6 +44,8 @@ const (
 
 	ResponseHeadersToIgnore = "RESPONSE_HEADERS_TO_IGNORE"
 	RequestHeadersToIgnore  = "REQUEST_HEADERS_TO_IGNORE"
+
+	ModulesAssetsEnvVar = "MODULES_ASSETS"
 )
 
 type Config struct {

@@ -7,6 +7,7 @@ package models
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
@@ -18,6 +19,9 @@ import (
 //
 // swagger:model ApiEvent
 type APIEvent struct {
+
+	// alerts
+	Alerts []*ModuleAlert `json:"alerts"`
 
 	// hold the relevant api spec info id
 	APIInfoID uint32 `json:"apiInfoId,omitempty"`
@@ -52,6 +56,10 @@ type APIEvent struct {
 	// query
 	Query string `json:"query,omitempty"`
 
+	// request time
+	// Format: date-time
+	RequestTime strfmt.DateTime `json:"requestTime,omitempty"`
+
 	// source IP
 	SourceIP string `json:"sourceIP,omitempty"`
 
@@ -70,11 +78,19 @@ type APIEvent struct {
 func (m *APIEvent) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateAlerts(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateAPIType(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if err := m.validateMethod(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateRequestTime(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -92,6 +108,32 @@ func (m *APIEvent) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *APIEvent) validateAlerts(formats strfmt.Registry) error {
+	if swag.IsZero(m.Alerts) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Alerts); i++ {
+		if swag.IsZero(m.Alerts[i]) { // not required
+			continue
+		}
+
+		if m.Alerts[i] != nil {
+			if err := m.Alerts[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("alerts" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("alerts" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
 func (m *APIEvent) validateAPIType(formats strfmt.Registry) error {
 	if swag.IsZero(m.APIType) { // not required
 		return nil
@@ -100,6 +142,8 @@ func (m *APIEvent) validateAPIType(formats strfmt.Registry) error {
 	if err := m.APIType.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
 			return ve.ValidateName("apiType")
+		} else if ce, ok := err.(*errors.CompositeError); ok {
+			return ce.ValidateName("apiType")
 		}
 		return err
 	}
@@ -115,7 +159,21 @@ func (m *APIEvent) validateMethod(formats strfmt.Registry) error {
 	if err := m.Method.Validate(formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
 			return ve.ValidateName("method")
+		} else if ce, ok := err.(*errors.CompositeError); ok {
+			return ce.ValidateName("method")
 		}
+		return err
+	}
+
+	return nil
+}
+
+func (m *APIEvent) validateRequestTime(formats strfmt.Registry) error {
+	if swag.IsZero(m.RequestTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("requestTime", "body", "date-time", m.RequestTime.String(), formats); err != nil {
 		return err
 	}
 
@@ -131,6 +189,8 @@ func (m *APIEvent) validateSpecDiffType(formats strfmt.Registry) error {
 		if err := m.SpecDiffType.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("specDiffType")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("specDiffType")
 			}
 			return err
 		}
@@ -155,6 +215,10 @@ func (m *APIEvent) validateTime(formats strfmt.Registry) error {
 func (m *APIEvent) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.contextValidateAlerts(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateAPIType(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -173,11 +237,33 @@ func (m *APIEvent) ContextValidate(ctx context.Context, formats strfmt.Registry)
 	return nil
 }
 
+func (m *APIEvent) contextValidateAlerts(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Alerts); i++ {
+
+		if m.Alerts[i] != nil {
+			if err := m.Alerts[i].ContextValidate(ctx, formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("alerts" + "." + strconv.Itoa(i))
+				} else if ce, ok := err.(*errors.CompositeError); ok {
+					return ce.ValidateName("alerts" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
 func (m *APIEvent) contextValidateAPIType(ctx context.Context, formats strfmt.Registry) error {
 
 	if err := m.APIType.ContextValidate(ctx, formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
 			return ve.ValidateName("apiType")
+		} else if ce, ok := err.(*errors.CompositeError); ok {
+			return ce.ValidateName("apiType")
 		}
 		return err
 	}
@@ -190,6 +276,8 @@ func (m *APIEvent) contextValidateMethod(ctx context.Context, formats strfmt.Reg
 	if err := m.Method.ContextValidate(ctx, formats); err != nil {
 		if ve, ok := err.(*errors.Validation); ok {
 			return ve.ValidateName("method")
+		} else if ce, ok := err.(*errors.CompositeError); ok {
+			return ce.ValidateName("method")
 		}
 		return err
 	}
@@ -203,6 +291,8 @@ func (m *APIEvent) contextValidateSpecDiffType(ctx context.Context, formats strf
 		if err := m.SpecDiffType.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("specDiffType")
+			} else if ce, ok := err.(*errors.CompositeError); ok {
+				return ce.ValidateName("specDiffType")
 			}
 			return err
 		}

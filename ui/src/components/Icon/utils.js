@@ -21,5 +21,6 @@ export const ICON_NAMES = {
     GRAPH: "graph",
     UNMERGE: "unmerge",
     ZOMBIE: "zombie",
-    SHADOW: "shadow"
+    SHADOW: "shadow",
+    BEETLE_ROUND: "beetle-round"
 }
