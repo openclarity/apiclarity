@@ -5,3 +5,8 @@ metadata:
 plugin: kong-plugin
 config:
   host: {{UPSTREAM_TELEMETRY_HOST_NAME}}
+  services_to_trace:
+  - service: "*"
+    port: 0
+  # - service: "example-microservice.test"
+  #   port: 9876

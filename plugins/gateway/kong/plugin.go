@@ -31,10 +31,16 @@ import (
 	"github.com/apiclarity/apiclarity/plugins/common"
 )
 
+type ServiceToTrace struct {
+	Service string `json:"service"`
+	Port    int    `json:"port"`
+}
+
 type Config struct {
-	EnableTLS bool   `json:"enable_tls"`
-	Host      string `json:"host"`
-	apiClient *client.APIClarityPluginsTelemetriesAPI
+	EnableTLS       bool             `json:"enable_tls"`
+	Host            string           `json:"host"`
+	ServicesToTrace []ServiceToTrace `json:"services_to_trace"`
+	apiClient       *client.APIClarityPluginsTelemetriesAPI
 }
 
 func New() interface{} {
@@ -49,6 +55,10 @@ func (conf Config) Access(kong *pdk.PDK) {
 
 func (conf Config) Response(kong *pdk.PDK) {
 	_ = kong.Log.Info("Handling telemetry")
+	if !conf.dumpTelemetry(kong) {
+		_ = kong.Log.Debug("Not dumping telemetry because tracing is not enabled for this service")
+		return
+	}
 	if conf.apiClient == nil {
 		var tlsOptions *common.ClientTLSOptions
 		if conf.EnableTLS {
@@ -79,6 +89,40 @@ func (conf Config) Response(kong *pdk.PDK) {
 	_ = kong.Log.Info(fmt.Sprintf("Telemetry has been sent: %v", telemetry))
 }
 
+// dumpTelemetry returns true if telemetry must be sent.
+// if ServicesToTrace is an empty list, nothing is sent.
+// if ServicesToTrace contains {"*", 0} everything is sent.
+// if ServicesToTrace contains {"example.com", 1234}, only traces to services "example.com" and port 1234 are sent.
+func (conf Config) dumpTelemetry(kong *pdk.PDK) bool {
+	traceAllServices := ServiceToTrace{
+		Service: "*",
+		Port:    0,
+	}
+
+	if len(conf.ServicesToTrace) == 0 {
+		return false
+	}
+
+	routedService, err := kong.Router.GetService()
+	if err != nil {
+		return false
+	}
+
+	parsedHost, _ := parseHost(routedService.Host)
+	targetService := ServiceToTrace{
+		Service: strings.ToLower(parsedHost),
+		Port:    routedService.Port,
+	}
+
+	for _, s := range conf.ServicesToTrace {
+		if s == traceAllServices || s == targetService {
+			return true
+		}
+	}
+
+	return false
+}
+
 const MaxBodySize = 1000 * 1000
 
 func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
@@ -93,7 +137,7 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 
 	routedService, err := kong.Router.GetService()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get routed serivce: %v", err)
+		return nil, fmt.Errorf("failed to get routed service: %v", err)
 	}
 	clientIP, err := kong.Client.GetForwardedIp()
 	if err != nil {
