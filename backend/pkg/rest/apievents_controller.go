@@ -41,29 +41,8 @@ func (s *Server) GetAPIEvents(params operations.GetAPIEventsParams) middleware.R
 
 	log.Debugf("GetAPIEvents controller was invoked. params=%+v, apiEventsFromDB=%+v, total=%+v", params, apiEventsFromDB, total)
 
-	// Get alerts for those events
-	var eventIDs []uint
-	for _, evDb := range apiEventsFromDB {
-		eventIDs = append(eventIDs, evDb.ID)
-	}
-	apiEventsAlertsFromDB, err := s.dbHandler.EventAnnotationsTable().GetEventsAlerts(eventIDs)
-	if err != nil {
-		// TODO: Likewise, need to handle errors
-		log.Error(err)
-		return operations.NewGetAPIEventsDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
-			Message: "Oops",
-		})
-	}
-
 	for i := range apiEventsFromDB {
-		e := _database.APIEventFromDB(&apiEventsFromDB[i])
-		e.Alerts = []*models.ModuleAlert{}
-		for _, alert := range apiEventsAlertsFromDB {
-			if alert.EventID == uint(e.ID) {
-				e.Alerts = append(e.Alerts, &models.ModuleAlert{ModuleName: alert.ModuleName, Alert: alert.Name, Reason: string(alert.Annotation)})
-			}
-		}
-		events = append(events, e)
+		events = append(events, _database.APIEventFromDB(&apiEventsFromDB[i]))
 	}
 
 	return operations.NewGetAPIEventsOK().WithPayload(

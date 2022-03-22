@@ -21,7 +21,7 @@ import (
 type ModuleAlert struct {
 
 	// Level of alert
-	// Enum: [ALERT_HIGH ALERT_CRITICAL]
+	// Enum: [ALERT_INFO ALERT_WARN]
 	Alert string `json:"alert,omitempty"`
 
 	// Name of the module which created this alert
@@ -49,7 +49,7 @@ var moduleAlertTypeAlertPropEnum []interface{}
 
 func init() {
 	var res []string
-	if err := json.Unmarshal([]byte(`["ALERT_HIGH","ALERT_CRITICAL"]`), &res); err != nil {
+	if err := json.Unmarshal([]byte(`["ALERT_INFO","ALERT_WARN"]`), &res); err != nil {
 		panic(err)
 	}
 	for _, v := range res {
@@ -59,11 +59,11 @@ func init() {
 
 const (
 
-	// ModuleAlertAlertALERTHIGH captures enum value "ALERT_HIGH"
-	ModuleAlertAlertALERTHIGH string = "ALERT_HIGH"
+	// ModuleAlertAlertALERTINFO captures enum value "ALERT_INFO"
+	ModuleAlertAlertALERTINFO string = "ALERT_INFO"
 
-	// ModuleAlertAlertALERTCRITICAL captures enum value "ALERT_CRITICAL"
-	ModuleAlertAlertALERTCRITICAL string = "ALERT_CRITICAL"
+	// ModuleAlertAlertALERTWARN captures enum value "ALERT_WARN"
+	ModuleAlertAlertALERTWARN string = "ALERT_WARN"
 )
 
 // prop value enum

@@ -39,14 +39,13 @@ import (
 	_database "github.com/apiclarity/apiclarity/backend/pkg/database"
 	"github.com/apiclarity/apiclarity/backend/pkg/healthz"
 	"github.com/apiclarity/apiclarity/backend/pkg/k8smonitor"
+	"github.com/apiclarity/apiclarity/backend/pkg/modules"
 	"github.com/apiclarity/apiclarity/backend/pkg/rest"
 	"github.com/apiclarity/apiclarity/backend/pkg/traces"
 	pluginsmodels "github.com/apiclarity/apiclarity/plugins/api/server/models"
 	_spec "github.com/apiclarity/speculator/pkg/spec"
 	_speculator "github.com/apiclarity/speculator/pkg/speculator"
 	_mimeutils "github.com/apiclarity/speculator/pkg/utils"
-
-	_modules "github.com/apiclarity/apiclarity/backend/pkg/modules"
 )
 
 type Backend struct {
@@ -56,10 +55,10 @@ type Backend struct {
 	monitor             *k8smonitor.Monitor
 	apiInventoryLock    sync.RWMutex
 	dbHandler           *_database.Handler
-	modules             *[]_modules.Module
+	modules             modules.Module
 }
 
-func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, dbHandler *_database.Handler, modules *[]_modules.Module) *Backend {
+func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, dbHandler *_database.Handler, modules modules.Module) *Backend {
 	return &Backend{
 		speculator:          speculator,
 		stateBackupInterval: time.Second * time.Duration(config.StateBackupIntervalSec),
@@ -105,10 +104,13 @@ func Run() {
 	dbConfig := createDatabaseConfig(config)
 	dbHandler := _database.Init(dbConfig)
 	dbHandler.StartReviewTableCleaner(globalCtx, time.Duration(config.DatabaseCleanerIntervalSec)*time.Second)
-
+	clientset, err := k8smonitor.CreateK8sClientset()
+	if err != nil {
+		log.Fatalf("failed to create K8s clientset: %v", err)
+	}
 	var monitor *k8smonitor.Monitor
 	if !viper.GetBool(_config.NoMonitorEnvVar) && !viper.GetBool(_database.FakeTracesEnvVar) && !viper.GetBool(_database.FakeDataEnvVar) {
-		monitor, err = k8smonitor.CreateMonitor()
+		monitor, err = k8smonitor.CreateMonitor(clientset)
 		if err != nil {
 			log.Errorf("Failed to create a monitor: %v", err)
 			return
@@ -127,30 +129,13 @@ func Run() {
 		log.Infof("Using encoded speculator state")
 	}
 
-	modules := _modules.Modules()
-	backend := CreateBackend(config, monitor, speculator, dbHandler, modules)
+	module := modules.New(globalCtx, &backendAccessor{
+		dbHandler: dbHandler,
+		clientset: clientset,
+	})
+	backend := CreateBackend(config, monitor, speculator, dbHandler, module)
 
-	// TODO: Refactor the for loop
-	newmodules := &[]_modules.Module{}
-	for _, m := range *modules {
-		func() {
-			log.Infof("Initializing Module %s", m.Name())
-			if err := m.Start(backend); err != nil {
-				log.Error(err)
-			} else {
-				*newmodules = append(*newmodules, m)
-				defer func() {
-					if err := m.Stop(); err != nil {
-						log.Error(err)
-					}
-				}()
-			}
-
-		}()
-	}
-	*modules = *newmodules
-
-	restServer, err := rest.CreateRESTServer(config.BackendRestPort, speculator, dbHandler, modules)
+	restServer, err := rest.CreateRESTServer(config.BackendRestPort, speculator, dbHandler, module)
 	if err != nil {
 		log.Fatalf("Failed to create REST server: %v", err)
 	}
@@ -211,7 +196,7 @@ func convertSpecDiffToEventDiff(diff *_spec.APIDiff) (originalRet, modifiedRet [
 	return originalRet, modifiedRet, nil
 }
 
-func (b *Backend) handleHTTPTrace(trace *pluginsmodels.Telemetry) error {
+func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Telemetry) error {
 	var reconstructedDiff *_spec.APIDiff
 	var providedDiff *_spec.APIDiff
 	var err error
@@ -351,9 +336,7 @@ func (b *Backend) handleHTTPTrace(trace *pluginsmodels.Telemetry) error {
 
 	b.dbHandler.APIEventsTable().CreateAPIEvent(event)
 
-	for _, m := range *b.modules {
-		m.EventNotify(*event, trace)
-	}
+	b.modules.EventNotify(ctx, &modules.Event{APIEvent: event, Telemetry: trace})
 
 	return nil
 }
@@ -452,169 +435,4 @@ func (b *Backend) startStateBackup(ctx context.Context) {
 			}
 		}
 	}()
-}
-
-// SetEventAnnotation adds a new annotation for a specific event and specific module
-func (b *Backend) SetEventAnnotation(modName string, eventID uint, a _modules.Annotation) error {
-	var ann = _database.EventAnnotation{
-		EventID:    eventID,
-		ModuleName: modName,
-		Name:       a.Name,
-		Annotation: a.Annotation,
-	}
-
-	if err := b.dbHandler.EventAnnotationsTable().Create(&ann); err != nil {
-		return err
-	}
-
-	for _, m := range *b.modules {
-		m.EventAnnotationNotify(modName, eventID, a)
-	}
-
-	return nil
-}
-
-// SetEventAnnotations bulk-adds annotations for a specific event and specific module
-func (b *Backend) SetEventAnnotations(modName string, eventID uint, eas []_modules.Annotation) error {
-	dbAnns := []_database.EventAnnotation{}
-
-	for _, a := range eas {
-		dbAnn := _database.EventAnnotation{EventID: eventID, ModuleName: modName, Name: a.Name, Annotation: a.Annotation}
-		dbAnns = append(dbAnns, dbAnn)
-	}
-
-	b.dbHandler.EventAnnotationsTable().BulkCreate(&dbAnns)
-
-	return nil
-}
-
-// GetEventAnnotation is this method for the UI only?
-func (b *Backend) GetEventAnnotation(modName string, eventID uint, name string) (_modules.Annotation, error) {
-	result, err := b.dbHandler.EventAnnotationsTable().GetAnnotation(modName, eventID, name)
-	if err != nil {
-		return _modules.Annotation{}, err
-	}
-
-	return _modules.Annotation{
-		Id:         uint32(result.ID),
-		Name:       name,
-		Annotation: result.Annotation,
-	}, nil
-}
-
-func (b *Backend) GetEventAnnotationsHistory(modName string, filter _modules.GetEventAnnotationFilter) ([]_modules.EventAnnotation, error) {
-	return b.dbHandler.EventAnnotationsTable().GetAnnotationsHistory(modName, filter)
-}
-
-func (b *Backend) GetEventAnnotations(modName string, eventID uint) ([]_modules.Annotation, error) {
-	result := []_modules.Annotation{}
-	annotations, err := b.dbHandler.EventAnnotationsTable().GetAnnotations(modName, eventID)
-	if err != nil {
-		return []_modules.Annotation{}, err
-	}
-	for _, a := range annotations {
-		result = append(result, _modules.Annotation{
-			Id:         uint32(a.ID),
-			Name:       a.Name,
-			Annotation: a.Annotation,
-		})
-	}
-
-	return result, nil
-}
-
-func (b *Backend) SetEventAlert(modName string, eventID uint, severity _modules.AlertSeverity) error {
-	var a = _modules.Annotation{
-		Name:       "ALERT",
-		Annotation: []byte(severity.String()),
-	}
-	return b.SetEventAnnotation(modName, eventID, a)
-}
-
-func (b *Backend) SetAPIAnnotation(modName string, apiID uint, annotation _modules.Annotation) error {
-	apiAnnotation := &_database.APIAnnotation{
-		APIID:      apiID,
-		ModuleName: modName,
-		Name:       annotation.Name,
-		Annotation: annotation.Annotation,
-	}
-	b.dbHandler.APIAnnotationsTable().UpdateOrCreate(apiAnnotation)
-
-	// Notify modules of this new model
-	for _, m := range *b.modules {
-		m.APIAnnotationNotify(modName, apiID, &annotation)
-	}
-
-	return nil
-}
-
-// SetEventAnnotations bulk-adds annotations for a specific event and specific module
-func (b *Backend) SetAPIAnnotations(modName string, apiID uint, aas []_modules.Annotation) error {
-	dbAnns := []_database.APIAnnotation{}
-
-	for _, a := range aas {
-		dbAnn := _database.APIAnnotation{APIID: apiID, ModuleName: modName, Name: a.Name, Annotation: a.Annotation}
-		dbAnns = append(dbAnns, dbAnn)
-	}
-
-	b.dbHandler.APIAnnotationsTable().BulkCreate(&dbAnns)
-
-	return nil
-}
-
-func (b *Backend) GetAPIAnnotations(modName string, apiID uint) ([]_modules.Annotation, error) {
-	result := []_modules.Annotation{}
-	annotations, err := b.dbHandler.APIAnnotationsTable().GetAnnotations(modName, apiID)
-	if err != nil {
-		return []_modules.Annotation{}, err
-	}
-	for _, a := range annotations {
-		result = append(result, _modules.Annotation{
-			Id:         uint32(a.ID),
-			Name:       a.Name,
-			Annotation: a.Annotation,
-		})
-	}
-
-	return result, nil
-}
-
-func (b *Backend) DeleteAPIAnnotations(modName string, apiID uint, annIDs []uint) error {
-	return b.dbHandler.APIAnnotationsTable().DeleteAnnotations(modName, apiID, annIDs)
-}
-
-func (b *Backend) GetAPISpecsInfo(apiID uint32) (*models.OpenAPISpecs, error) {
-	return b.dbHandler.APIInventoryTable().GetAPISpecsInfo(apiID)
-}
-
-func (b *Backend) GetAPISpecs(apiID uint32) (*_modules.APIInfo, error) {
-	return b.dbHandler.APIInventoryTable().GetAPISpecs(apiID)
-}
-
-func (b *Backend) GetAPIEvent(eventID uint32) (*_modules.APIEvent, error) {
-	return b.dbHandler.APIEventsTable().GetAPIEvent(eventID)
-}
-
-func (b *Backend) GetAPIAnnotation(modName string, apiID uint, name string) (_modules.Annotation, error) {
-	var result *_database.APIAnnotation
-
-	result, err := b.dbHandler.APIAnnotationsTable().GetAnnotation(modName, apiID, name)
-	if err != nil {
-		return _modules.Annotation{}, err
-	}
-
-	return _modules.Annotation{
-		Id:         uint32(result.ID),
-		Name:       name,
-		Annotation: result.Annotation,
-	}, nil
-}
-
-func (b *Backend) GetAPI(apiID uint32) (*_modules.APIInfo, error) {
-	apiInfo := &_modules.APIInfo{}
-	if err := b.dbHandler.APIInventoryTable().First(apiInfo, apiID); err != nil {
-		log.Errorf("Failed to retreive API info for apiID=%v: %v", apiID, err)
-		return nil, fmt.Errorf("Failed to retreive API info for apiID=%v: %v", apiID, err)
-	}
-	return apiInfo, nil
 }

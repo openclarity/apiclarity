@@ -34,46 +34,6 @@ func init() {
   },
   "basePath": "/api",
   "paths": {
-    "/apiAnnotations/{apiId}": {
-      "get": {
-        "summary": "Get Annotations",
-        "parameters": [
-          {
-            "$ref": "#/parameters/apiId"
-          },
-          {
-            "$ref": "#/parameters/annotationNameFilter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "type": "object",
-              "required": [
-                "total"
-              ],
-              "properties": {
-                "items": {
-                  "description": "List of annotations for this specific API",
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/ApiAnnotation"
-                  }
-                },
-                "total": {
-                  "description": "Total filtered annotations",
-                  "type": "integer"
-                }
-              }
-            }
-          },
-          "default": {
-            "$ref": "#/responses/UnknownError"
-          }
-        }
-      }
-    },
     "/apiEvents": {
       "get": {
         "summary": "Get API events",
@@ -719,19 +679,6 @@ func init() {
     }
   },
   "definitions": {
-    "ApiAnnotation": {
-      "type": "object",
-      "properties": {
-        "model": {
-          "description": "The annotation itself",
-          "type": "string"
-        },
-        "name": {
-          "description": "Name of the annotation",
-          "type": "string"
-        }
-      }
-    },
     "ApiCount": {
       "type": "object",
       "properties": {
@@ -1025,8 +972,8 @@ func init() {
           "description": "Level of alert",
           "type": "string",
           "enum": [
-            "ALERT_HIGH",
-            "ALERT_CRITICAL"
+            "ALERT_INFO",
+            "ALERT_WARN"
           ]
         },
         "moduleName": {
@@ -1158,12 +1105,6 @@ func init() {
         "type": "string"
       },
       "name": "alert[is]",
-      "in": "query"
-    },
-    "annotationNameFilter": {
-      "type": "string",
-      "description": "Name of the annotation to return",
-      "name": "annotationName",
       "in": "query"
     },
     "apiEventSortKey": {
@@ -1569,56 +1510,6 @@ func init() {
   },
   "basePath": "/api",
   "paths": {
-    "/apiAnnotations/{apiId}": {
-      "get": {
-        "summary": "Get Annotations",
-        "parameters": [
-          {
-            "type": "integer",
-            "format": "uint32",
-            "name": "apiId",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Name of the annotation to return",
-            "name": "annotationName",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "type": "object",
-              "required": [
-                "total"
-              ],
-              "properties": {
-                "items": {
-                  "description": "List of annotations for this specific API",
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/ApiAnnotation"
-                  }
-                },
-                "total": {
-                  "description": "Total filtered annotations",
-                  "type": "integer"
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "unknown error",
-            "schema": {
-              "$ref": "#/definitions/ApiResponse"
-            }
-          }
-        }
-      }
-    },
     "/apiEvents": {
       "get": {
         "summary": "Get API events",
@@ -2739,19 +2630,6 @@ func init() {
     }
   },
   "definitions": {
-    "ApiAnnotation": {
-      "type": "object",
-      "properties": {
-        "model": {
-          "description": "The annotation itself",
-          "type": "string"
-        },
-        "name": {
-          "description": "Name of the annotation",
-          "type": "string"
-        }
-      }
-    },
     "ApiCount": {
       "type": "object",
       "properties": {
@@ -3045,8 +2923,8 @@ func init() {
           "description": "Level of alert",
           "type": "string",
           "enum": [
-            "ALERT_HIGH",
-            "ALERT_CRITICAL"
+            "ALERT_INFO",
+            "ALERT_WARN"
           ]
         },
         "moduleName": {
@@ -3178,12 +3056,6 @@ func init() {
         "type": "string"
       },
       "name": "alert[is]",
-      "in": "query"
-    },
-    "annotationNameFilter": {
-      "type": "string",
-      "description": "Name of the annotation to return",
-      "name": "annotationName",
       "in": "query"
     },
     "apiEventSortKey": {

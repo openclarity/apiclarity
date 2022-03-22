@@ -48,9 +48,6 @@ func NewAPIClarityAPIsAPI(spec *loads.Document) *APIClarityAPIsAPI {
 		DeleteAPIInventoryAPIIDSpecsReconstructedSpecHandler: DeleteAPIInventoryAPIIDSpecsReconstructedSpecHandlerFunc(func(params DeleteAPIInventoryAPIIDSpecsReconstructedSpecParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteAPIInventoryAPIIDSpecsReconstructedSpec has not yet been implemented")
 		}),
-		GetAPIAnnotationsAPIIDHandler: GetAPIAnnotationsAPIIDHandlerFunc(func(params GetAPIAnnotationsAPIIDParams) middleware.Responder {
-			return middleware.NotImplemented("operation GetAPIAnnotationsAPIID has not yet been implemented")
-		}),
 		GetAPIEventsHandler: GetAPIEventsHandlerFunc(func(params GetAPIEventsParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetAPIEvents has not yet been implemented")
 		}),
@@ -136,8 +133,6 @@ type APIClarityAPIsAPI struct {
 	DeleteAPIInventoryAPIIDSpecsProvidedSpecHandler DeleteAPIInventoryAPIIDSpecsProvidedSpecHandler
 	// DeleteAPIInventoryAPIIDSpecsReconstructedSpecHandler sets the operation handler for the delete API inventory API ID specs reconstructed spec operation
 	DeleteAPIInventoryAPIIDSpecsReconstructedSpecHandler DeleteAPIInventoryAPIIDSpecsReconstructedSpecHandler
-	// GetAPIAnnotationsAPIIDHandler sets the operation handler for the get API annotations API ID operation
-	GetAPIAnnotationsAPIIDHandler GetAPIAnnotationsAPIIDHandler
 	// GetAPIEventsHandler sets the operation handler for the get API events operation
 	GetAPIEventsHandler GetAPIEventsHandler
 	// GetAPIEventsEventIDHandler sets the operation handler for the get API events event ID operation
@@ -250,9 +245,6 @@ func (o *APIClarityAPIsAPI) Validate() error {
 	}
 	if o.DeleteAPIInventoryAPIIDSpecsReconstructedSpecHandler == nil {
 		unregistered = append(unregistered, "DeleteAPIInventoryAPIIDSpecsReconstructedSpecHandler")
-	}
-	if o.GetAPIAnnotationsAPIIDHandler == nil {
-		unregistered = append(unregistered, "GetAPIAnnotationsAPIIDHandler")
 	}
 	if o.GetAPIEventsHandler == nil {
 		unregistered = append(unregistered, "GetAPIEventsHandler")
@@ -395,10 +387,6 @@ func (o *APIClarityAPIsAPI) initHandlerCache() {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
 	o.handlers["DELETE"]["/apiInventory/{apiId}/specs/reconstructedSpec"] = NewDeleteAPIInventoryAPIIDSpecsReconstructedSpec(o.context, o.DeleteAPIInventoryAPIIDSpecsReconstructedSpecHandler)
-	if o.handlers["GET"] == nil {
-		o.handlers["GET"] = make(map[string]http.Handler)
-	}
-	o.handlers["GET"]["/apiAnnotations/{apiId}"] = NewGetAPIAnnotationsAPIID(o.context, o.GetAPIAnnotationsAPIIDHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

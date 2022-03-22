@@ -313,17 +313,6 @@ definitions:
         type: 'array'
         items:
           $ref: '#/definitions/ReviewPathItem'
-
-  ApiAnnotation:
-    type: 'object'
-    properties:
-      name:
-        description: 'Name of the annotation'
-        type: 'string'
-      model:
-        description: 'The annotation itself'
-        type: 'string'
-
   ModuleAlert:
     type: 'object'
     properties:
@@ -337,9 +326,8 @@ definitions:
         description: 'Level of alert'
         type: 'string'
         enum:
-          - ALERT_HIGH
-          - ALERT_CRITICAL
-
+          - ALERT_INFO
+          - ALERT_WARN
 paths:
   /apiEvents:
     get:
@@ -686,31 +674,6 @@ paths:
           description: 'Success'
           schema:
             $ref: '#/responses/Success'
-        default:
-          $ref: '#/responses/UnknownError'
-
-  /apiAnnotations/{apiId}:
-    get:
-      summary: 'Get Annotations'
-      parameters:
-        - $ref: '#/parameters/apiId'
-        - $ref: '#/parameters/annotationNameFilter'
-      responses:
-        '200':
-          description: 'Success'
-          schema:
-            type: 'object'
-            required:
-              - total
-            properties:
-              total:
-                type: 'integer'
-                description: 'Total filtered annotations'
-              items:
-                type: 'array'
-                description: 'List of annotations for this specific API'
-                items:
-                  $ref: '#/definitions/ApiAnnotation'
         default:
           $ref: '#/responses/UnknownError'
 
@@ -1070,13 +1033,6 @@ parameters:
     type: 'integer'
     format: 'uint32'
     required: true
-
-  annotationNameFilter:
-    name: 'annotationName'
-    description: 'Name of the annotation to return'
-    in: 'query'
-    type: 'string'
-    required: false
 
 responses:
   UnknownError:
