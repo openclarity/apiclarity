@@ -87,7 +87,7 @@ func (a *APIEventsTableHandler) GetDashboardAPIUsages(startTime, endTime time.Ti
 		st := strfmt.DateTime(startTime)
 		et := strfmt.DateTime(endTime)
 
-		if err := db.Where(CreateTimeFilter(st, et)).Count(&count).Error; err != nil {
+		if err := db.Where(CreateTimeFilter(timeColumnName, st, et)).Count(&count).Error; err != nil {
 			return nil, fmt.Errorf("failed to query DB: %v", err)
 		}
 
@@ -110,8 +110,10 @@ func (a *APIEventsTableHandler) GetAPIUsages(params operations.GetAPIUsageHitCou
 	endTime := time.Time(params.EndTime)
 	diff := endTime.Sub(startTime)
 	timeInterval := diff / hitCountGranularity
-
-	db := a.setAPIEventsFilters(getAPIUsageHitCountParamsToFilters(params), false).
+	filters := getAPIUsageHitCountParamsToFilters(params)
+	filters.StartTime = nil
+	filters.EndTime = nil
+	db := a.setAPIEventsFilters(filters).
 		Session(&gorm.Session{})
 
 	for i := 0; i < hitCountGranularity; i++ {
@@ -119,7 +121,7 @@ func (a *APIEventsTableHandler) GetAPIUsages(params operations.GetAPIUsageHitCou
 		st := strfmt.DateTime(startTime)
 		et := strfmt.DateTime(startTime.Add(timeInterval))
 
-		if err := db.Where(CreateTimeFilter(st, et)).Count(&count).Error; err != nil {
+		if err := db.Where(CreateTimeFilter(timeColumnName, st, et)).Count(&count).Error; err != nil {
 			return nil, err
 		}
 

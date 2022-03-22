@@ -54,6 +54,8 @@ type APIInfo struct {
 	ReconstructedSpecInfo string         `json:"reconstructedSpecInfo,omitempty" gorm:"column:reconstructed_spec_info" faker:"-"`
 	ProvidedSpec          string         `json:"providedSpec,omitempty" gorm:"column:provided_spec" faker:"-"`
 	ProvidedSpecInfo      string         `json:"providedSpecInfo,omitempty" gorm:"column:provided_spec_info" faker:"-"`
+
+	Annotations []*APIInfoAnnotation `gorm:"foreignKey:APIID;references:ID"`
 }
 
 type APIInventoryTable interface {

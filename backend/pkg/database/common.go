@@ -36,8 +36,8 @@ func Paginate(page, pageSize int64) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func CreateTimeFilter(startTime, endTime strfmt.DateTime) string {
-	return fmt.Sprintf("time BETWEEN '%v' AND '%v'", startTime, endTime)
+func CreateTimeFilter(columnName string, startTime, endTime strfmt.DateTime) string {
+	return fmt.Sprintf("%s BETWEEN '%v' AND '%v'", columnName, startTime, endTime)
 }
 
 func CreateSortOrder(sortKey string, sortDir *string) (string, error) {
@@ -147,20 +147,4 @@ func FilterLte(db *gorm.DB, column string, value *string) *gorm.DB {
 		return db
 	}
 	return db.Where(fmt.Sprintf("%s <= ?", column), value)
-}
-
-func FilterAlertIs(db *gorm.DB, values []string) *gorm.DB {
-	if len(values) == 0 {
-		return db
-	}
-	db = db.Joins("JOIN event_annotations ON api_events.id = event_annotations.event_id")
-	db = db.Where("event_annotations.name IN ?", alertKinds)
-
-	// or := db.Session(&gorm.Session{NewDB: true})
-	// for _, value := range values {
-	// 	or = or.Or("event_annotations.annotation LIKE ?", value)
-	// }
-
-	// db = db.Where(or)
-	return db
 }
