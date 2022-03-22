@@ -71,9 +71,9 @@ spec:
             - name: TYK_PROXY_CONTAINER_NAME
               value: {{ .Values.trafficSource.tyk.containerName }}
             - name: TYK_GATEWAY_DEPLOYMENT_NAME
-              value: {{ .Values.trafficSource.tyk.deplyomentName }}
+              value: {{ .Values.trafficSource.tyk.deploymentName }}
             - name: TYK_GATEWAY_DEPLOYMENT_NAMESPACE
-              value: {{ .Values.trafficSource.tyk.deplyomentNamespace }}
+              value: {{ .Values.trafficSource.tyk.deploymentNamespace }}
             - name: UPSTREAM_TELEMETRY_HOST_NAME
               value: '{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:9000'
           command:
