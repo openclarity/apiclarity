@@ -12,5 +12,9 @@ spec:
     requests:
       storage: '{{ .Values.global.persistentVolume.size }}'
 {{- if .Values.global.persistentVolume.storageClass }}
+{{- if (eq "-" .Values.global.persistentVolume.storageClass) }}
+  storageClassName: ""
+{{- else }}
   storageClassName: '{{ .Values.global.persistentVolume.storageClass }}'
+{{- end }}
 {{- end }}
