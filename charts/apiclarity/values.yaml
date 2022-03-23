@@ -156,10 +156,10 @@ trafficSource:
     containerName: "proxy"
     ## Specify the name of the Kong gateway deployment to patch
     ##
-    deplyomentName: ""
+    deploymentName: ""
     ## Specify the namespace of the Kong gateway deployment to patch
     ##
-    deplyomentNamespace: ""
+    deploymentNamespace: ""
     ## Specify the name of the ingress resource to patch
     ##
     ingressName: ""
@@ -180,10 +180,10 @@ trafficSource:
     containerName: "proxy"
     ## Specify the name of the Tyk gateway deployment to patch
     ##
-    deplyomentName: ""
+    deploymentName: ""
     ## Specify the namespace of the Tyk gateway deployment to patch
     ##
-    deplyomentNamespace: ""
+    deploymentNamespace: ""
 
 # End of APIClarity Traffic Source Values
 #######################################################################################
