@@ -77,9 +77,9 @@ spec:
             - name: KONG_PROXY_CONTAINER_NAME
               value: {{ .Values.trafficSource.kong.containerName }}
             - name: KONG_GATEWAY_DEPLOYMENT_NAME
-              value: {{ .Values.trafficSource.kong.deplyomentName }}
+              value: {{ .Values.trafficSource.kong.deploymentName }}
             - name: KONG_GATEWAY_DEPLOYMENT_NAMESPACE
-              value: {{ .Values.trafficSource.kong.deplyomentNamespace }}
+              value: {{ .Values.trafficSource.kong.deploymentNamespace }}
             - name: KONG_GATEWAY_INGRESS_NAME
               value: {{ .Values.trafficSource.kong.ingressName }}
             - name: KONG_GATEWAY_INGRESS_NAMESPACE

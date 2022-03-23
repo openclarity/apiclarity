@@ -73,9 +73,9 @@ spec:
           imagePullPolicy: "IfNotPresent"
           env:
             - name: TYK_GATEWAY_DEPLOYMENT_NAME
-              value: {{ .Values.trafficSource.tyk.deplyomentName }}
+              value: {{ .Values.trafficSource.tyk.deploymentName }}
             - name: TYK_GATEWAY_DEPLOYMENT_NAMESPACE
-              value: {{ .Values.trafficSource.tyk.deplyomentNamespace }}
+              value: {{ .Values.trafficSource.tyk.deploymentNamespace }}
           command:
             - /bin/bash
             - -c
