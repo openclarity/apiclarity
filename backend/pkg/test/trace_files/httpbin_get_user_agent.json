@@ -1,68 +1,60 @@
 {
-  "request_id": "a0f979bc-f9a6-981a-b899-3b720bf0447c",
-  "scheme": "",
-  "destination_address": "10.116.207.196:8000",
-  "source_address": "10.116.207.197:8000",
-  "scnt_request": {
+  "destinationAddress": "10.116.207.196:8000",
+  "request": {
+    "common": {
+      "headers": [
+        {
+          "key": "host",
+          "value": "httpbin:8000"
+        },
+        {
+          "key": "user-agent",
+          "value": "curl/7.35.0"
+        },
+        {
+          "key": "accept",
+          "value": "application/json"
+        },
+        {
+          "key": "x-forwarded-proto",
+          "value": "http"
+        },
+        {
+          "key": "x-request-id",
+          "value": "a0f979bc-f9a6-981a-b899-3b720bf0447c"
+        }
+      ]
+    },
     "method": "GET",
-    "path": "/user-agent",
-    "host": "",
-    "version": "",
-    "headers": [
-      [
-        "host",
-        "httpbin:8000"
-      ],
-      [
-        "user-agent",
-        "curl/7.35.0"
-      ],
-      [
-        "accept",
-        "application/json"
-      ],
-      [
-        "x-forwarded-proto",
-        "http"
-      ],
-      [
-        "x-request-id",
-        "a0f979bc-f9a6-981a-b899-3b720bf0447c"
-      ]
-    ],
-    "body": "",
-    "truncated_body": false
+    "path": "/user-agent"
   },
-  "scnt_response": {
-    "status_code": "200",
-    "version": "",
-    "headers": [
-      [
-        "server",
-        "istio-envoy"
-      ],
-      [
-        "date",
-        "Mon, 16 Aug 2021 11:16:02 GMT"
-      ],
-      [
-        "content-type",
-        "application/json"
-      ],
-      [
-        "content-length",
-        "34"
-      ],
-      [
-        "access-control-allow-origin",
-        "*"
-      ],
-      [
-        "access-control-allow-credentials",
-        "true"
+  "requestID": "a0f979bc-f9a6-981a-b899-3b720bf0447c",
+  "response": {
+    "common": {
+      "headers": [
+        {
+          "key": "host",
+          "value": "httpbin:8000"
+        },
+        {
+          "key": "user-agent",
+          "value": "curl/7.35.0"
+        },
+        {
+          "key": "accept",
+          "value": "application/json"
+        },
+        {
+          "key": "x-forwarded-proto",
+          "value": "http"
+        },
+        {
+          "key": "x-request-id",
+          "value": "a0f979bc-f9a6-981a-b899-3b720bf0447c"
+        }
       ]
-    ],
-    "body": "ewogICJ1c2VyLWFnZW50IjogImN1cmwvNy4zNS4wIgp9Cg==",
-    "truncated_body": false
-  }
+    },
+    "statusCode": "200"
+  },
+  "sourceAddress": "10.116.207.197:8000"
 }

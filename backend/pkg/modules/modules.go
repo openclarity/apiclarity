@@ -2,6 +2,8 @@ package modules
 
 import (
 	"github.com/apiclarity/apiclarity/backend/pkg/modules/internal/core"
+
+	_ "github.com/apiclarity/apiclarity/backend/pkg/modules/internal/demo"
 )
 
 type (

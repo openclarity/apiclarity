@@ -1,68 +1,60 @@
 {
-  "request_id": "afd3d070-e880-48e0-b00e-a4bd17f53c29",
-  "scheme": "",
-  "destination_address": "localhost:5000",
-  "source_address": "10.116.207.197:8000",
-  "scnt_request": {
+  "destinationAddress": "localhost:5000",
+  "request": {
+    "common": {
+      "headers": [
+        {
+          "key": "host",
+          "value": "localhost:5000"
+        },
+        {
+          "key": "user-agent",
+          "value": "curl/7.35.0"
+        },
+        {
+          "key": "accept",
+          "value": "text/plain"
+        },
+        {
+          "key": "x-forwarded-proto",
+          "value": "http"
+        },
+        {
+          "key": "x-request-id",
+          "value": "c44c2e8d-8f97-99c7-97ab-8ce59d7d70c3"
+        }
+      ]
+    },
     "method": "GET",
-    "path": "/v2/pet/1",
-    "host": "",
-    "version": "",
-    "headers": [
-      [
-        "host",
-        "localhost:5000"
-      ],
-      [
-        "user-agent",
-        "curl/7.35.0"
-      ],
-      [
-        "accept",
-        "text/plain"
-      ],
-      [
-        "x-forwarded-proto",
-        "http"
-      ],
-      [
-        "x-request-id",
-        "c44c2e8d-8f97-99c7-97ab-8ce59d7d70c3"
-      ]
-    ],
-    "body": "",
-    "truncated_body": false
+    "path": "/v2/pet/1"
   },
-  "scnt_response": {
-    "status_code": "200",
-    "version": "",
-    "headers": [
-      [
-        "server",
-        "istio-envoy"
-      ],
-      [
-        "date",
-        "Mon, 16 Aug 2021 10:47:20 GMT"
-      ],
-      [
-        "content-type",
-        "application/json"
-      ],
-      [
-        "access-control-allow-origin",
-        "*"
-      ],
-      [
-        "access-control-allow-credentials",
-        "true"
-      ],
-      [
-        "content-length",
-        "0"
+  "requestID": "afd3d070-e880-48e0-b00e-a4bd17f53c29",
+  "response": {
+    "common": {
+      "headers": [
+        {
+          "key": "host",
+          "value": "localhost:5000"
+        },
+        {
+          "key": "user-agent",
+          "value": "curl/7.35.0"
+        },
+        {
+          "key": "accept",
+          "value": "text/plain"
+        },
+        {
+          "key": "x-forwarded-proto",
+          "value": "http"
+        },
+        {
+          "key": "x-request-id",
+          "value": "c44c2e8d-8f97-99c7-97ab-8ce59d7d70c3"
+        }
       ]
-    ],
-    "body": "ewogICJjYXRlZ29yeSI6IHsKICAgICJpZCI6IDEsCiAgICAibmFtZSI6ICJjYXQiCiAgfSwKICAiaWQiOiAxLAogICJuYW1lIjogInBldHJ1c2hrYSIsCiAgInBob3RvVXJscyI6IFsKICAgICJzdHJpbmciCiAgXSwKICAic3RhdHVzIjogImF2YWlsYWJsZSIsCiAgInRhZ3MiOiBbCiAgICB7CiAgICAgICJpZCI6IDAsCiAgICAgICJuYW1lIjogInN0cmluZyIKICAgIH0KICBdCn0=",
-    "truncated_body": false
-  }
+    },
+    "statusCode": "200"
+  },
+  "sourceAddress": "10.116.207.197:8000"
 }
