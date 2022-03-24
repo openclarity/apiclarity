@@ -73,6 +73,7 @@ func (b *Backend) startSendingFakeTraces() {
 }
 
 func (b *Backend) handleHTTPTraceFromFile(fileName string) error {
+	log.Info("fileName", fileName)
 	byteValue, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		return fmt.Errorf("failed to read file: %v. %v", fileName, err)

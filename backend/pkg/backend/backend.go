@@ -18,6 +18,7 @@ package backend
 import (
 	"context"
 	"fmt"
+	"k8s.io/client-go/kubernetes"
 	"mime"
 	"net/url"
 	"os"
@@ -104,10 +105,19 @@ func Run() {
 	dbConfig := createDatabaseConfig(config)
 	dbHandler := _database.Init(dbConfig)
 	dbHandler.StartReviewTableCleaner(globalCtx, time.Duration(config.DatabaseCleanerIntervalSec)*time.Second)
-	clientset, err := k8smonitor.CreateK8sClientset()
-	if err != nil {
-		log.Fatalf("failed to create K8s clientset: %v", err)
+	var clientset kubernetes.Interface
+	if config.K8sLocal {
+		clientset, err = k8smonitor.CreateLocalK8sClientset()
+		if err != nil {
+			log.Fatalf("failed to create K8s clientset: %v", err)
+		}
+	} else {
+		clientset, err = k8smonitor.CreateK8sClientset()
+		if err != nil {
+			log.Fatalf("failed to create K8s clientset: %v", err)
+		}
 	}
+
 	var monitor *k8smonitor.Monitor
 	if !viper.GetBool(_config.NoMonitorEnvVar) && !viper.GetBool(_database.FakeTracesEnvVar) && !viper.GetBool(_database.FakeDataEnvVar) {
 		monitor, err = k8smonitor.CreateMonitor(clientset)

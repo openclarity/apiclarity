@@ -19,10 +19,14 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"os"
+	"path"
 	"time"
 
 	"k8s.io/client-go/kubernetes"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 const ResyncPeriod = 1 * time.Minute
@@ -43,6 +47,29 @@ func CreateK8sClientset() (kubernetes.Interface, error) {
 		return nil, fmt.Errorf("failed to create a rest client: %v", err)
 	}
 
+	return clientset, nil
+}
+
+func CreateLocalK8sClientset() (kubernetes.Interface, error) {
+	kubepath := ""
+	kubecfg, ok := os.LookupEnv("KUBECONFIG")
+	if ok {
+		kubepath = kubecfg
+	} else {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return nil, err
+		}
+		kubepath = path.Join(home, ".kube", "config")
+	}
+	config, err := clientcmd.BuildConfigFromFlags("", kubepath)
+	if err != nil {
+		return nil, err
+	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
 	return clientset, nil
 }
 
