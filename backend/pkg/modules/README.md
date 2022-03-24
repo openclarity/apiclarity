@@ -4,7 +4,7 @@
 2. Implement the `backend/pkg/modules/internal/core.Module` interface
 3. Create an init function and call the `core.RegisterModule` function that should do the initialization stems and return the module
 4. Create a `openapi.yaml` for the http handlers and generate the code using oapi-codegen
-   1. Tip: greate a `gen.go` file and add a `//go:generate` annotation for generating the server easier
+   1. Tip: create a `gen.go` file and add a `//go:generate` annotation for generating the server easier
 5. Add the import to the new module with underscore. Eg: `_ "github.com/apiclarity/apiclarity/backend/pkg/modules/internal/demo"`
 
 ### Create alerts

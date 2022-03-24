@@ -10,31 +10,12 @@
     background-color: $color-grey;
     display: inline-block;
 
-    &.critical {
-        background-color: $color-risk-critical;
-        color: white;
-    }
-    &.high {
+    &.warn {
         background-color: $color-risk-high;
         color: white;
     }
-    &.medium {
-        background-color: $color-risk-medium;
-    }
-    &.low {
-        background-color: $color-risk-low;
-    }
-    &.unknown {
+    &.info {
         background-color: $color-risk-unknown;
         color: white;
-    }
-    &.approved {
-        background-color: $color-risk-approved;
-    }
-    &.no_risk {
-        background-color: $color-risk-no-known;
-    }
-    &.neutral {
-        background-color: $color-risk-approved;
     }
 }

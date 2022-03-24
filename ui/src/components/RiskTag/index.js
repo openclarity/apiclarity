@@ -1,16 +1,19 @@
 import React from 'react';
 import classnames from 'classnames';
-import { SYSTEM_RISKS } from 'utils/utils';
-
 import './risk-tag.scss';
 
+const ALERT_RISKS = {
+    INFO: {value: "INFO", label: "Info"},
+    WARN: {value: "WARN", label: "Warn"}
+}
+
 const RiskTag = ({risk, label}) => {
-    const formattedRisk = risk || SYSTEM_RISKS.UNKNOWN.value;
+    const formattedRisk = risk || ALERT_RISKS.INFO.value;
 
     return (
         <div>
             <div className={classnames("risk-tag-wrapper", formattedRisk.toLowerCase())}>
-                {label || SYSTEM_RISKS[formattedRisk].label}
+                {label || ALERT_RISKS[formattedRisk].label}
             </div>
         </div>
     )

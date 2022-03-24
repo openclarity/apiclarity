@@ -31,9 +31,9 @@ var alertKinds = []string{"ALERT"}
 type APIEventAnnotation struct {
 	// will be populated after inserting to DB
 	ID         uint   `gorm:"primarykey" faker:"-"`
-	ModuleName string `json:"module_name,omitempty" gorm:"column:module_name" faker:"-"`
-	EventID    uint   `json:"event_id,omitempty" gorm:"column:event_id" faker:"-"`
-	Name       string `json:"name,omitempty" gorm:"column:name" faker:"-"`
+	ModuleName string `json:"module_name,omitempty" gorm:"column:module_name;uniqueIndex:api_event_ann_idx_model" faker:"-"`
+	EventID    uint   `json:"event_id,omitempty" gorm:"column:event_id;uniqueIndex:api_event_ann_idx_model" faker:"-"`
+	Name       string `json:"name,omitempty" gorm:"column:name;uniqueIndex:api_event_ann_idx_model" faker:"-"`
 	Annotation []byte `json:"annotation,omitempty" gorm:"column:annotation" faker:"-"`
 }
 
