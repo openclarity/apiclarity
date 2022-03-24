@@ -118,6 +118,9 @@ type ServerInterface interface {
 	// (GET /api/{apiID})
 	GetApiApiID(w http.ResponseWriter, r *http.Request, apiID int)
 
+	// (DELETE /api/{apiID}/annotation/{annotation})
+	DeleteApiApiIDAnnotationAnnotation(w http.ResponseWriter, r *http.Request, apiID int, annotation string)
+
 	// (GET /api/{apiID}/annotation/{annotation})
 	GetApiApiIDAnnotationAnnotation(w http.ResponseWriter, r *http.Request, apiID int, annotation string)
 
@@ -206,6 +209,41 @@ func (siw *ServerInterfaceWrapper) GetApiApiID(w http.ResponseWriter, r *http.Re
 
 	var handler = func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetApiApiID(w, r, apiID)
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler(w, r.WithContext(ctx))
+}
+
+// DeleteApiApiIDAnnotationAnnotation operation middleware
+func (siw *ServerInterfaceWrapper) DeleteApiApiIDAnnotationAnnotation(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID int
+
+	err = runtime.BindStyledParameter("simple", false, "apiID", chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "annotation" -------------
+	var annotation string
+
+	err = runtime.BindStyledParameter("simple", false, "annotation", chi.URLParam(r, "annotation"), &annotation)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "annotation", Err: err})
+		return
+	}
+
+	var handler = func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteApiApiIDAnnotationAnnotation(w, r, apiID, annotation)
 	}
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -505,6 +543,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/api/{apiID}", wrapper.GetApiApiID)
 	})
 	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/api/{apiID}/annotation/{annotation}", wrapper.DeleteApiApiIDAnnotationAnnotation)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/api/{apiID}/annotation/{annotation}", wrapper.GetApiApiIDAnnotationAnnotation)
 	})
 	r.Group(func(r chi.Router) {
@@ -529,16 +570,16 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/9xWTW/bMAz9Kwa3oxBn6803d2uLAEMX7NAdih40m3VU2JIi0QUCw/99oOzENpYlaYt2",
-	"H6cI0Msj3yNFs4HMVNZo1OQhacBnK6xkON6g88poPlpnLDpSGC4ehwvaWIQEPDmlC2hbAQ7XtXKYQ3K7",
-	"A96JLdD8eMCMoGWk0veGOXL0mVOWAiWky8WnUjpFm2hZ1oXSUbpcgABSVOL0/vzySwpiSAfms/nsA7QC",
-	"jEUtrYIEzmbz2RkIsJJWIflYlugobvARNS0+t0Ge8cS/LFJyHoscElgaTymDLzpoYHGyQkLnIbltQHFQ",
-	"ZgYBWlacHu6wgxHkahS9syPTlCYs0LFrPdW6RrcZuALuEBHqumKfF9eXX0HA9/Tb9cjrXVHumMNbo31X",
-	"v4/zOf9kRhPqIFxaW6osSI8ffFfaIYzMc8VXslyO+oCTCXWc1s8jRcFiLnIrIJZWxY20qve6wD1WXyGl",
-	"VqUMOsll2SOf4PFfY0IstTbUhWmG80nmpDv4cIK3FFawsCF0QLxKucR+oqnqI2zjB3DgiR/zdl2jp3OT",
-	"b55k63Rk5pL2Zta1xxs35qR+3J1haA0j8TkdGmZkPyj/0S590eh+/T49yeH/qVeL3/eqP/zVvugwzzfk",
-	"YJ7tH/2SjJav/i1O/3CFFNEKox4XmfuIVsr3yxSIX5/uds97oaz3Du8hgXfxsFDG/TYZb0PsEXgzzhO3",
-	"aTLO11Ul3ea4JnbmZwAAAP//hPqx5cgKAAA=",
+	"H4sIAAAAAAAC/9xWTW+cMBD9K2jao7Vsmxs30nxopSpd9ZAeohxcmLCOwHbsIdIK8d+rMewCzWY3aZSk",
+	"7QkLP57fvJkx00BmKms0avKQNOCzFVYyLC/ReWU0L60zFh0pDBv3wwatLUICnpzSBbStAId3tXKYQ3K1",
+	"BV6LDdD8vMWMoGWk0jeGOXL0mVOWAiWky8WXUjpF62hZ1oXSUbpcgABSVOJ0//jsawpikAPz2Xz2CVoB",
+	"xqKWVkECR7P57AgEWEmrID6WJTqKG7xHTYuTNoRnPPGTg5SsY5FDAkvjKWXwaQcNLE5WSOg8JFcNKD6U",
+	"mUGAlhXLwy12MIJcjaJ3dmSa0oQFOnatp7qr0a0HroDbR4S6rtjnxcXZNxDwI/1+MfJ6m5Rr5vDWaN/l",
+	"7/N8zo/MaEIdApfWlioLoce3vkvtcIzMc8VbslyO6oDFhDxO8+eRomAxJ7kVEEur4kZa1Xtd4A6rz5FS",
+	"q1IGPcll2SOf4fFfY0IstTbUHdMM67ZrhRIJH/pzEt5vLEq3Hw0reMvwOpnRIL5r6EOpfXfdBaflN9Gv",
+	"UmxiN9E06gNs4/bdc0Ed8vauRk/HJl8/y9bphZ9L2qmsK+43bqtJ/ri3wpU7XOj7+uuxCg03fH/N/6NV",
+	"+qIfz+vX6ZMc/p9qtXi8Vv3+meO0w/y5IXt1tu/6HxyNjn0vTj84R4pohVGPi8xNRCvl+1EQxMPW3Uyp",
+	"Lwzro8MbSOBDPIzDcT8Lx5sjdgR4OdaJG5mM83VVSbc+HBM78ysAAP//xLNfTIYLAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -72,6 +72,15 @@ func (c *controller) GetApiApiIDAnnotationAnnotation(w http.ResponseWriter, r *h
 	httpResponse(w, api)
 }
 
+func (c *controller) DeleteApiApiIDAnnotationAnnotation(w http.ResponseWriter, r *http.Request, apiID int, annotation string) {
+	err := c.accessor.DeleteAPIInfoAnnotations(r.Context(), ModuleName, uint(apiID), annotation)
+	if err != nil {
+		httpError(w, err)
+		return
+	}
+	httpResponse(w, "success")
+}
+
 func (c *controller) PostApiApiIDAnnotationAnnotation(w http.ResponseWriter, r *http.Request, apiID int, annotation string) {
 	type Data struct {
 		Data string `json:"data"`

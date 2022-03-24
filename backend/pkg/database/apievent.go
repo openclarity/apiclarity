@@ -128,13 +128,13 @@ type GetAPIEventsQuery struct {
 }
 
 type AnnotationFilters struct {
-	ModuleNamesIs []string
-	NamesIs       []string
-	ValuesIs      []string
+	ModuleNameIs []string
+	NameIs       []string
+	ValueIs      []string
 
-	ModuleNamesIsNot []string
-	NamesIsNot       []string
-	ValuesIsNot      []string
+	ModuleNameIsNot []string
+	NameIsNot       []string
+	ValueIsNot      []string
 }
 
 type APIEventAnnotationFilter struct {
@@ -204,13 +204,13 @@ func (a *APIEventsTableHandler) GetAPIEvents(ctx context.Context, query GetAPIEv
 		tx = tx.Where(fmt.Sprintf("%s.%s = ?", apiEventTableName, idColumnName), *query.EventID)
 	}
 	if query.AnnotationFilters != nil {
-		tx = FilterIs(tx, nameColumnName, query.AnnotationFilters.NamesIs)
-		tx = FilterIs(tx, moduleNameColumnName, query.AnnotationFilters.ModuleNamesIs)
-		tx = FilterIs(tx, annotationColumnName, query.AnnotationFilters.ValuesIs)
+		tx = FilterIs(tx, "ea."+nameColumnName, query.AnnotationFilters.NameIs)
+		tx = FilterIs(tx, "ea."+moduleNameColumnName, query.AnnotationFilters.ModuleNameIs)
+		tx = FilterIs(tx, "ea."+annotationColumnName, query.AnnotationFilters.ValueIs)
 
-		tx = FilterIsNot(tx, nameColumnName, query.AnnotationFilters.NamesIsNot)
-		tx = FilterIsNot(tx, moduleNameColumnName, query.AnnotationFilters.ModuleNamesIsNot)
-		tx = FilterIsNot(tx, annotationColumnName, query.AnnotationFilters.ValuesIsNot)
+		tx = FilterIsNotOrNull(tx, "ea."+nameColumnName, query.AnnotationFilters.NameIsNot)
+		tx = FilterIsNotOrNull(tx, "ea."+moduleNameColumnName, query.AnnotationFilters.ModuleNameIsNot)
+		tx = FilterIsNotOrNull(tx, "ea."+annotationColumnName, query.AnnotationFilters.ValueIsNot)
 	}
 	tx = tx.Joins(fmt.Sprintf("LEFT JOIN %s ea ON %s.%s = ea.%s ",
 		eventAnnotationsTableName, apiEventTableName, idColumnName, eventIDColumnName)).
@@ -219,9 +219,9 @@ func (a *APIEventsTableHandler) GetAPIEvents(ctx context.Context, query GetAPIEv
 	tx = tx.Preload("Annotations")
 	if err := tx.Offset(query.Offset).
 		Limit(query.Limit).
-		Find(&events).
 		Order(fmt.Sprintf("%s DESC", query.Order)).
-		WithContext(ctx).Error; err != nil {
+		WithContext(ctx).
+		Find(&events).Error; err != nil {
 		return nil, err
 	}
 	return events, nil
