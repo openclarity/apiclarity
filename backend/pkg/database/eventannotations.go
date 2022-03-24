@@ -52,7 +52,7 @@ func (APIEventAnnotation) TableName() string {
 }
 
 func (ea *APIEventsAnnotationsTableHandler) Create(ctx context.Context, annotations ...APIEventAnnotation) error {
-	return ea.tx.Create(annotations).WithContext(ctx).Error
+	return ea.tx.WithContext(ctx).Create(annotations).Error
 }
 
 func (ea *APIEventsAnnotationsTableHandler) List(ctx context.Context, modName string, eventID uint) ([]*APIEventAnnotation, error) {
@@ -60,7 +60,7 @@ func (ea *APIEventsAnnotationsTableHandler) List(ctx context.Context, modName st
 
 	t := ea.tx.Where("module_name = ? AND event_id = ? AND name NOT IN ?", modName, eventID, alertKinds)
 
-	if err := t.Find(&events).WithContext(ctx).Error; err != nil {
+	if err := t.WithContext(ctx).Find(&events).Error; err != nil {
 		return nil, err
 	}
 
@@ -83,7 +83,7 @@ func (ea *APIEventsAnnotationsTableHandler) Get(ctx context.Context, modName str
 
 	t := ea.tx.Where("module_name = ? AND event_id = ? AND name = ?", modName, eventID, name)
 
-	if err := t.First(&annotation).WithContext(ctx).Error; err != nil {
+	if err := t.WithContext(ctx).First(&annotation).Error; err != nil {
 		return annotation, err
 	}
 

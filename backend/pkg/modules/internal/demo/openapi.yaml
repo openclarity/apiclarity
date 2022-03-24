@@ -99,6 +99,14 @@ paths:
             application/json:
               schema:
                 additionalProperties: true
+    delete:
+      responses:
+        '200':
+          description: delete annotation
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
     post:
       requestBody:
         content:

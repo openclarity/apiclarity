@@ -90,7 +90,18 @@ func (b backendAccessor) ListAPIInfoAnnotations(ctx context.Context, modName str
 }
 
 func (b backendAccessor) StoreAPIInfoAnnotations(ctx context.Context, modName string, apiID uint, annotations ...modules.Annotation) error {
-	return b.dbHandler.APIInfoAnnotationsTable().UpdateOrCreate(ctx)
+	var dbAnns []database.APIInfoAnnotation
+
+	for _, a := range annotations {
+		dbAnns = append(dbAnns, database.APIInfoAnnotation{
+			APIID:      apiID,
+			ModuleName: modName,
+			Name:       a.Name,
+			Annotation: a.Annotation,
+		})
+	}
+
+	return b.dbHandler.APIInfoAnnotationsTable().UpdateOrCreate(ctx, dbAnns...)
 }
 
 func (b backendAccessor) DeleteAPIInfoAnnotations(ctx context.Context, modName string, apiID uint, name ...string) error {

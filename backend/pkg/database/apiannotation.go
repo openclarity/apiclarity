@@ -39,7 +39,7 @@ type APIInfoAnnotation struct {
 }
 
 type APIAnnotationsTable interface {
-	UpdateOrCreate(ctx context.Context, am ...*APIInfoAnnotation) error
+	UpdateOrCreate(ctx context.Context, am ...APIInfoAnnotation) error
 	Get(ctx context.Context, modName string, apiID uint, name string) (*APIInfoAnnotation, error)
 	List(ctx context.Context, modName string, apiID uint) ([]*APIInfoAnnotation, error)
 	Delete(ctx context.Context, modName string, apiID uint, names ...string) error
@@ -53,7 +53,7 @@ func (APIInfoAnnotation) TableName() string {
 	return apiEventAnnotationsTableName
 }
 
-func (am *APIInfoAnnotationsTableHandler) UpdateOrCreate(ctx context.Context, annotations ...*APIInfoAnnotation) error {
+func (am *APIInfoAnnotationsTableHandler) UpdateOrCreate(ctx context.Context, annotations ...APIInfoAnnotation) error {
 	return am.tx.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: moduleNameColumnName}, {Name: apiIdColumnName}, {Name: nameColumnName}},
 		UpdateAll: true,
@@ -65,8 +65,8 @@ func (am *APIInfoAnnotationsTableHandler) Get(ctx context.Context, modName strin
 
 	if err := am.tx.Where(fmt.Sprintf("%s = ? AND %s = ? AND %s = ?",
 		moduleNameColumnName, apiIdColumnName, nameColumnName), modName, apiID, name).
-		First(&model).
 		WithContext(ctx).
+		First(&model).
 		Error; err != nil {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func (am *APIInfoAnnotationsTableHandler) List(ctx context.Context, modName stri
 	} else {
 		t = am.tx.Where(fmt.Sprintf("%s = ? AND %s = ?", moduleNameColumnName, apiIdColumnName), modName, apiID)
 	}
-	if err := t.Find(&annotations).WithContext(ctx).Error; err != nil {
+	if err := t.WithContext(ctx).Find(&annotations).Error; err != nil {
 		return nil, err
 	}
 
@@ -93,7 +93,7 @@ func (am *APIInfoAnnotationsTableHandler) List(ctx context.Context, modName stri
 func (am *APIInfoAnnotationsTableHandler) Delete(ctx context.Context, modName string, apiID uint, names ...string) error {
 	return am.tx.Where(fmt.Sprintf("%s = ? AND %s = ? AND %s IN ?",
 		moduleNameColumnName, apiIdColumnName, nameColumnName), modName, apiID, names).
-		Delete(&APIInfoAnnotation{}).
 		WithContext(ctx).
+		Delete(&APIInfoAnnotation{}).
 		Error
 }
