@@ -20,12 +20,8 @@ import (
 type APIType string
 
 func NewAPIType(value APIType) *APIType {
-	return &value
-}
-
-// Pointer returns a pointer to a freshly-allocated APIType.
-func (m APIType) Pointer() *APIType {
-	return &m
+	v := value
+	return &v
 }
 
 const (

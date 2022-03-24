@@ -20,12 +20,8 @@ import (
 type DiffType string
 
 func NewDiffType(value DiffType) *DiffType {
-	return &value
-}
-
-// Pointer returns a pointer to a freshly-allocated DiffType.
-func (m DiffType) Pointer() *DiffType {
-	return &m
+	v := value
+	return &v
 }
 
 const (

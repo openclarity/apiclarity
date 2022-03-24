@@ -54,8 +54,6 @@ func (m *SuggestedReview) validateReviewPathItems(formats strfmt.Registry) error
 			if err := m.ReviewPathItems[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("reviewPathItems" + "." + strconv.Itoa(i))
-				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("reviewPathItems" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -88,8 +86,6 @@ func (m *SuggestedReview) contextValidateReviewPathItems(ctx context.Context, fo
 			if err := m.ReviewPathItems[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("reviewPathItems" + "." + strconv.Itoa(i))
-				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("reviewPathItems" + "." + strconv.Itoa(i))
 				}
 				return err
 			}

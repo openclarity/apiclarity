@@ -20,12 +20,8 @@ import (
 type APIEventSortKey string
 
 func NewAPIEventSortKey(value APIEventSortKey) *APIEventSortKey {
-	return &value
-}
-
-// Pointer returns a pointer to a freshly-allocated APIEventSortKey.
-func (m APIEventSortKey) Pointer() *APIEventSortKey {
-	return &m
+	v := value
+	return &v
 }
 
 const (

@@ -20,12 +20,8 @@ import (
 type HTTPMethod string
 
 func NewHTTPMethod(value HTTPMethod) *HTTPMethod {
-	return &value
-}
-
-// Pointer returns a pointer to a freshly-allocated HTTPMethod.
-func (m HTTPMethod) Pointer() *HTTPMethod {
-	return &m
+	v := value
+	return &v
 }
 
 const (

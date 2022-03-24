@@ -20,12 +20,8 @@ import (
 type APIInventorySortKey string
 
 func NewAPIInventorySortKey(value APIInventorySortKey) *APIInventorySortKey {
-	return &value
-}
-
-// Pointer returns a pointer to a freshly-allocated APIInventorySortKey.
-func (m APIInventorySortKey) Pointer() *APIInventorySortKey {
-	return &m
+	v := value
+	return &v
 }
 
 const (

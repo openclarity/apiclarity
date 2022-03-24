@@ -65,8 +65,6 @@ func (m *APIUsages) validateApisWithDiff(formats strfmt.Registry) error {
 			if err := m.ApisWithDiff[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("apisWithDiff" + "." + strconv.Itoa(i))
-				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("apisWithDiff" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -91,8 +89,6 @@ func (m *APIUsages) validateExistingApis(formats strfmt.Registry) error {
 			if err := m.ExistingApis[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("existingApis" + "." + strconv.Itoa(i))
-				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("existingApis" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -117,8 +113,6 @@ func (m *APIUsages) validateNewApis(formats strfmt.Registry) error {
 			if err := m.NewApis[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("newApis" + "." + strconv.Itoa(i))
-				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("newApis" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -159,8 +153,6 @@ func (m *APIUsages) contextValidateApisWithDiff(ctx context.Context, formats str
 			if err := m.ApisWithDiff[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("apisWithDiff" + "." + strconv.Itoa(i))
-				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("apisWithDiff" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -179,8 +171,6 @@ func (m *APIUsages) contextValidateExistingApis(ctx context.Context, formats str
 			if err := m.ExistingApis[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("existingApis" + "." + strconv.Itoa(i))
-				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("existingApis" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -199,8 +189,6 @@ func (m *APIUsages) contextValidateNewApis(ctx context.Context, formats strfmt.R
 			if err := m.NewApis[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("newApis" + "." + strconv.Itoa(i))
-				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("newApis" + "." + strconv.Itoa(i))
 				}
 				return err
 			}

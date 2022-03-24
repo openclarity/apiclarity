@@ -108,8 +108,6 @@ func (o *GetAPIEventsOKBody) validateItems(formats strfmt.Registry) error {
 			if err := o.Items[i].Validate(formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getApiEventsOK" + "." + "items" + "." + strconv.Itoa(i))
-				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("getApiEventsOK" + "." + "items" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
@@ -151,8 +149,6 @@ func (o *GetAPIEventsOKBody) contextValidateItems(ctx context.Context, formats s
 			if err := o.Items[i].ContextValidate(ctx, formats); err != nil {
 				if ve, ok := err.(*errors.Validation); ok {
 					return ve.ValidateName("getApiEventsOK" + "." + "items" + "." + strconv.Itoa(i))
-				} else if ce, ok := err.(*errors.CompositeError); ok {
-					return ce.ValidateName("getApiEventsOK" + "." + "items" + "." + strconv.Itoa(i))
 				}
 				return err
 			}
