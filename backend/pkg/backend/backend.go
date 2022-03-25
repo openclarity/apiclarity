@@ -18,7 +18,6 @@ package backend
 import (
 	"context"
 	"fmt"
-	"k8s.io/client-go/kubernetes"
 	"mime"
 	"net/url"
 	"os"
@@ -33,6 +32,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/yaml"
 
 	"github.com/apiclarity/apiclarity/api/server/models"
