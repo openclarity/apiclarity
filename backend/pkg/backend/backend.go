@@ -298,7 +298,7 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 		APIInfoID:       apiInfo.ID,
 		Time:            strfmt.DateTime(time.Now().UTC()),
 		Method:          models.HTTPMethod(trace.Request.Method),
-		RequestTime:     strfmt.DateTime(time.UnixMilli(trace.Request.Common.Time)),
+		RequestTime:     strfmt.DateTime(time.UnixMilli(trace.Request.Common.Time).UTC()),
 		Path:            path,
 		Query:           query,
 		StatusCode:      int64(statusCode),

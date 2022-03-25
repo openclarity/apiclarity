@@ -2,8 +2,9 @@ package core
 
 import (
 	"context"
-	log "github.com/sirupsen/logrus"
 	"net/http"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const BaseHTTPPath = "/api/modules"
@@ -47,7 +48,7 @@ func (c core) EventNotify(ctx context.Context, event *Event) {
 func (c core) HTTPHandler() http.Handler {
 	handler := http.NewServeMux()
 	for _, m := range c.modules {
-		handler.Handle("/api/modules/"+m.Name()+"/", m.HTTPHandler())
+		handler.Handle(BaseHTTPPath+"/"+m.Name()+"/", m.HTTPHandler())
 	}
 
 	return handler
