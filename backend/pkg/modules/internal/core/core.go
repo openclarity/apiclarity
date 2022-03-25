@@ -6,6 +6,8 @@ import (
 	"net/http"
 )
 
+const BaseHTTPPath = "/api/modules"
+
 // The order of the modules is not important.
 // You MUST NOT rely on a specific order of modules.
 var modules []ModuleFactory
