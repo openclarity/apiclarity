@@ -82,6 +82,9 @@ func (b *Backend) handleHTTPTraceFromFile(fileName string) error {
 	if err := json.Unmarshal(byteValue, &trace); err != nil {
 		return fmt.Errorf("failed to unmarshal. %v", err)
 	}
+	if trace.Request == nil || trace.Request.Common == nil || trace.Response == nil || trace.Response.Common == nil {
+		return fmt.Errorf("failed to handle trace for file: %v. Bad format", fileName)
+	}
 	if err := b.handleHTTPTrace(&trace); err != nil {
 		return fmt.Errorf("failed to handle trace for file: %v. %v", fileName, err)
 	}
