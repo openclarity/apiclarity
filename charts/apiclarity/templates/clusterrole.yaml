@@ -6,7 +6,7 @@ metadata:
   labels:
     {{ include "apiclarity.labels" . }}
 rules:
-  - apiGroups: [""]
-    resources: ["nodes", "services"]
-    verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["nodes", "services"]
+  verbs: ["get", "list", "watch"]
 {{- end -}}
