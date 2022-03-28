@@ -37,15 +37,15 @@ type core struct {
 	modules []Module
 }
 
-func (c core) Name() string { return "core" }
+func (c *core) Name() string { return "core" }
 
-func (c core) EventNotify(ctx context.Context, event *Event) {
+func (c *core) EventNotify(ctx context.Context, event *Event) {
 	for _, mod := range c.modules {
 		mod.EventNotify(ctx, event)
 	}
 }
 
-func (c core) HTTPHandler() http.Handler {
+func (c *core) HTTPHandler() http.Handler {
 	handler := http.NewServeMux()
 	for _, m := range c.modules {
 		handler.Handle(BaseHTTPPath+"/"+m.Name()+"/", m.HTTPHandler())

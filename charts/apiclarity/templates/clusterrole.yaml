@@ -6,18 +6,6 @@ metadata:
   labels:
     {{ include "apiclarity.labels" . }}
 rules:
-  - apiGroups: [ "" ]
-    resources: [ "pods" ]
-    verbs: [ "list", "get", "watch" ]
-  - apiGroups: [ "apps" ]
-    resources: [ "deployments" ]
-    verbs: [ "list", "get", "watch" ]
-  - apiGroups: [ "apps" ]
-    resources: [ "replicasets" ]
-    verbs: [ "list", "get", "watch" ]
-  - apiGroups: [ "apps" ]
-    resources: [ "daemonsets" ]
-    verbs: [ "list", "get", "watch" ]
   - apiGroups: [""]
     resources: ["nodes", "services"]
     verbs: ["get", "list", "watch"]

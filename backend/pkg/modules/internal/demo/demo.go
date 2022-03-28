@@ -138,7 +138,7 @@ func (c *controller) PostEvents(w http.ResponseWriter, r *http.Request) {
 	httpResponse(w, evs)
 }
 
-func (c controller) GetVersion(w http.ResponseWriter, r *http.Request) {
+func (c *controller) GetVersion(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(Version{Version: "0.0.0"})
 }
 

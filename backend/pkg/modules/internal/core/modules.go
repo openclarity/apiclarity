@@ -2,8 +2,9 @@ package core
 
 import (
 	"context"
-	"k8s.io/client-go/kubernetes"
 	"net/http"
+
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/apiclarity/apiclarity/backend/pkg/database"
 	pluginsmodels "github.com/apiclarity/apiclarity/plugins/api/server/models"

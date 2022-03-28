@@ -122,5 +122,3 @@ require (
 replace github.com/apiclarity/apiclarity/api v0.0.0 => ./../api
 
 replace github.com/apiclarity/apiclarity/plugins/api v0.0.0 => ./../plugins/api
-
-replace github.com/apiclarity/apiclarity/fuzzer v0.0.0 => ./../fuzzer
