@@ -26,7 +26,7 @@ const (
 	eventIDColumnName         = "event_id"
 )
 
-var alertKinds = []string{"ALERT"}
+var alertKinds = []string{alertAnnotation}
 
 type APIEventAnnotation struct {
 	// will be populated after inserting to DB

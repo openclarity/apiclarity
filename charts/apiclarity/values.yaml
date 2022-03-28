@@ -1,6 +1,10 @@
 #######################################################################################
 ## Global Values
 
+# Defines env variables for apiclarity pod
+env:
+  plugins:
+
 global:
   ## Database password
   ##

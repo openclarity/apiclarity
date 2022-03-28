@@ -130,6 +130,8 @@ func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *d
 
 	origHandler := server.GetHandler()
 	newHandler := http.NewServeMux()
+
+	// Enhance the default handler with modules apis handlers
 	newHandler.Handle("/api/modules/", modules.HTTPHandler())
 	newHandler.Handle("/", origHandler)
 	server.SetHandler(newHandler)

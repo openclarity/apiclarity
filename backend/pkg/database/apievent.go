@@ -331,7 +331,7 @@ func (a *APIEventsTableHandler) GetAPIEventsAndTotal(params operations.GetAPIEve
 	}
 
 	tx = tx.Scopes(Paginate(params.Page, params.PageSize)).
-		Preload("Annotations", fmt.Sprintf("%s = ?", nameColumnName), "ALERT")
+		Preload("Annotations", fmt.Sprintf("%s = ?", nameColumnName), alertAnnotation)
 
 	// get specific page ordered items with the current filters
 	if err := tx.Order(sortOrder).
