@@ -111,7 +111,7 @@ func Run() {
 		if err != nil {
 			log.Fatalf("failed to create K8s clientset: %v", err)
 		}
-	} else {
+	} else if !viper.GetBool(_database.FakeTracesEnvVar) && !viper.GetBool(_database.FakeDataEnvVar) {
 		clientset, err = k8smonitor.CreateK8sClientset()
 		if err != nil {
 			log.Fatalf("failed to create K8s clientset: %v", err)
