@@ -30,7 +30,7 @@ func (b backendAccessor) GetAPIInfo(ctx context.Context, apiID uint) (*database.
 }
 
 func (b backendAccessor) GetAPIEvents(ctx context.Context, filter database.GetAPIEventsQuery) ([]*database.APIEvent, error) {
-	return b.dbHandler.APIEventsTable().GetAPIEvents(ctx, filter)
+	return b.dbHandler.APIEventsTable().GetAPIEventsWithAnnotations(ctx, filter)
 }
 
 func (b backendAccessor) GetAPIEventAnnotation(ctx context.Context, modName string, eventID uint, name string) (*modules.Annotation, error) {

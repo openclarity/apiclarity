@@ -103,7 +103,7 @@ type APIEvent struct {
 }
 
 type APIEventsTable interface {
-	GetAPIEvents(ctx context.Context, filters GetAPIEventsQuery) ([]*APIEvent, error)
+	GetAPIEventsWithAnnotations(ctx context.Context, filters GetAPIEventsQuery) ([]*APIEvent, error)
 	GetAPIEventsAndTotal(params operations.GetAPIEventsParams) ([]APIEvent, int64, error)
 	GetAPIEvent(eventID uint32) (*APIEvent, error)
 	GetAPIEventReconstructedSpecDiff(eventID uint32) (*APIEvent, error)
@@ -190,7 +190,7 @@ type APIEventsFilters struct {
 
 const dashboardTopAPIsNum = 5
 
-func (a *APIEventsTableHandler) GetAPIEvents(ctx context.Context, query GetAPIEventsQuery) ([]*APIEvent, error) {
+func (a *APIEventsTableHandler) GetAPIEventsWithAnnotations(ctx context.Context, query GetAPIEventsQuery) ([]*APIEvent, error) {
 	var events []*APIEvent
 	if query.Order == "" {
 		query.Order = timeColumnName
