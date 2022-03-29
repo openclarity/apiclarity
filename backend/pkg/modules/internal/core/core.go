@@ -3,11 +3,26 @@ package core
 import (
 	"context"
 	"net/http"
+	"os"
+	"path/filepath"
+	"runtime"
 
 	log "github.com/sirupsen/logrus"
+
+	"github.com/apiclarity/apiclarity/backend/pkg/config"
 )
 
 const BaseHTTPPath = "/api/modules"
+
+//GetAssetsDir get assets directory from env variable or the default location
+func GetAssetsDir() string {
+	assetsDir, ok := os.LookupEnv(config.ModulesAssetsEnvVar)
+	if !ok {
+		_, file, _, _ := runtime.Caller(0)
+		return filepath.Join(filepath.Dir(file), "..", "..", "assets")
+	}
+	return assetsDir
+}
 
 // The order of the modules is not important.
 // You MUST NOT rely on a specific order of modules.
