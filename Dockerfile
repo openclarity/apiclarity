@@ -17,7 +17,7 @@ COPY plugins/api ./plugins/api
 
 WORKDIR /build/backend
 COPY backend/go.* ./
-# RUN go mod download
+RUN go mod download
 
 ARG VERSION
 ARG BUILD_TIMESTAMP
