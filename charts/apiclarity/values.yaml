@@ -39,6 +39,7 @@ apiclarity:
   # Defines env variables for apiclarity pod
   env:
     plugins:
+      ## ENV_1: example123
 
   ## Docker Image values.
   docker:
