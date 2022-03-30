@@ -41,7 +41,7 @@ type GetAPIEventsParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*
+	/*Alert Kind [ALERT_INFO or ALERT_WARN]
 	  In: query
 	*/
 	AlertIs []string
@@ -363,8 +363,12 @@ func (o *GetAPIEventsParams) bindAlertIs(rawData []string, hasKey bool, formats 
 	}
 
 	var alertIsIR []string
-	for _, alertIsIV := range alertIsIC {
+	for i, alertIsIV := range alertIsIC {
 		alertIsI := alertIsIV
+
+		if err := validate.EnumCase(fmt.Sprintf("%s.%v", "alert[is]", i), "query", alertIsI, []interface{}{"ALERT_INFO", "ALERT_WARN"}, true); err != nil {
+			return err
+		}
 
 		alertIsIR = append(alertIsIR, alertIsI)
 	}

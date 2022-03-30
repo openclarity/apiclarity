@@ -679,6 +679,14 @@ func init() {
     }
   },
   "definitions": {
+    "AlertSeverityEnum": {
+      "description": "Level of alert",
+      "type": "string",
+      "enum": [
+        "ALERT_INFO",
+        "ALERT_WARN"
+      ]
+    },
     "ApiCount": {
       "type": "object",
       "properties": {
@@ -969,12 +977,7 @@ func init() {
       "type": "object",
       "properties": {
         "alert": {
-          "description": "Level of alert",
-          "type": "string",
-          "enum": [
-            "ALERT_INFO",
-            "ALERT_WARN"
-          ]
+          "$ref": "#/definitions/AlertSeverityEnum"
         },
         "moduleName": {
           "description": "Name of the module which created this alert",
@@ -1102,8 +1105,13 @@ func init() {
     "alertIsFilter": {
       "type": "array",
       "items": {
+        "enum": [
+          "ALERT_INFO",
+          "ALERT_WARN"
+        ],
         "type": "string"
       },
+      "description": "Alert Kind [ALERT_INFO or ALERT_WARN]",
       "name": "alert[is]",
       "in": "query"
     },
@@ -1767,8 +1775,13 @@ func init() {
           {
             "type": "array",
             "items": {
+              "enum": [
+                "ALERT_INFO",
+                "ALERT_WARN"
+              ],
               "type": "string"
             },
+            "description": "Alert Kind [ALERT_INFO or ALERT_WARN]",
             "name": "alert[is]",
             "in": "query"
           }
@@ -2630,6 +2643,14 @@ func init() {
     }
   },
   "definitions": {
+    "AlertSeverityEnum": {
+      "description": "Level of alert",
+      "type": "string",
+      "enum": [
+        "ALERT_INFO",
+        "ALERT_WARN"
+      ]
+    },
     "ApiCount": {
       "type": "object",
       "properties": {
@@ -2920,12 +2941,7 @@ func init() {
       "type": "object",
       "properties": {
         "alert": {
-          "description": "Level of alert",
-          "type": "string",
-          "enum": [
-            "ALERT_INFO",
-            "ALERT_WARN"
-          ]
+          "$ref": "#/definitions/AlertSeverityEnum"
         },
         "moduleName": {
           "description": "Name of the module which created this alert",
@@ -3053,8 +3069,13 @@ func init() {
     "alertIsFilter": {
       "type": "array",
       "items": {
+        "enum": [
+          "ALERT_INFO",
+          "ALERT_WARN"
+        ],
         "type": "string"
       },
+      "description": "Alert Kind [ALERT_INFO or ALERT_WARN]",
       "name": "alert[is]",
       "in": "query"
     },

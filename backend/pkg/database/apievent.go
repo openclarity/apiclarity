@@ -286,7 +286,7 @@ func APIEventFromDB(event *APIEvent) *models.APIEvent {
 	}
 	for _, ann := range event.Annotations {
 		e.Alerts = append(e.Alerts, &models.ModuleAlert{
-			Alert:      ann.Name,
+			Alert:      models.AlertSeverityEnum(ann.Name),
 			ModuleName: ann.ModuleName,
 			Reason:     string(ann.Annotation),
 		})

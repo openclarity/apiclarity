@@ -7,12 +7,10 @@ package models
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
-	"github.com/go-openapi/validate"
 )
 
 // ModuleAlert module alert
@@ -20,9 +18,8 @@ import (
 // swagger:model ModuleAlert
 type ModuleAlert struct {
 
-	// Level of alert
-	// Enum: [ALERT_INFO ALERT_WARN]
-	Alert string `json:"alert,omitempty"`
+	// alert
+	Alert AlertSeverityEnum `json:"alert,omitempty"`
 
 	// Name of the module which created this alert
 	ModuleName string `json:"moduleName,omitempty"`
@@ -45,50 +42,44 @@ func (m *ModuleAlert) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-var moduleAlertTypeAlertPropEnum []interface{}
-
-func init() {
-	var res []string
-	if err := json.Unmarshal([]byte(`["ALERT_INFO","ALERT_WARN"]`), &res); err != nil {
-		panic(err)
-	}
-	for _, v := range res {
-		moduleAlertTypeAlertPropEnum = append(moduleAlertTypeAlertPropEnum, v)
-	}
-}
-
-const (
-
-	// ModuleAlertAlertALERTINFO captures enum value "ALERT_INFO"
-	ModuleAlertAlertALERTINFO string = "ALERT_INFO"
-
-	// ModuleAlertAlertALERTWARN captures enum value "ALERT_WARN"
-	ModuleAlertAlertALERTWARN string = "ALERT_WARN"
-)
-
-// prop value enum
-func (m *ModuleAlert) validateAlertEnum(path, location string, value string) error {
-	if err := validate.EnumCase(path, location, value, moduleAlertTypeAlertPropEnum, true); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (m *ModuleAlert) validateAlert(formats strfmt.Registry) error {
 	if swag.IsZero(m.Alert) { // not required
 		return nil
 	}
 
-	// value enum
-	if err := m.validateAlertEnum("alert", "body", m.Alert); err != nil {
+	if err := m.Alert.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("alert")
+		}
 		return err
 	}
 
 	return nil
 }
 
-// ContextValidate validates this module alert based on context it is used
+// ContextValidate validate this module alert based on the context it is used
 func (m *ModuleAlert) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.contextValidateAlert(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *ModuleAlert) contextValidateAlert(ctx context.Context, formats strfmt.Registry) error {
+
+	if err := m.Alert.ContextValidate(ctx, formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("alert")
+		}
+		return err
+	}
+
 	return nil
 }
 

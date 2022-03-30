@@ -314,6 +314,13 @@ definitions:
         items:
           $ref: '#/definitions/ReviewPathItem'
 
+  AlertSeverityEnum:
+    description: 'Level of alert'
+    type: 'string'
+    enum: &AlertSeverityEnum
+      - ALERT_INFO
+      - ALERT_WARN
+
   ModuleAlert:
     type: 'object'
     properties:
@@ -324,11 +331,8 @@ definitions:
         description: 'Optional description of reason of the alert'
         type: 'string'
       alert:
-        description: 'Level of alert'
-        type: 'string'
-        enum:
-          - ALERT_INFO
-          - ALERT_WARN
+        $ref: '#/definitions/AlertSeverityEnum'
+
 paths:
   /apiEvents:
     get:
@@ -1017,8 +1021,10 @@ parameters:
     name: 'alert[is]'
     in: 'query'
     type: 'array'
+    description: 'Alert Kind [ALERT_INFO or ALERT_WARN]'
     items:
       type: 'string'
+      enum: *AlertSeverityEnum
     required: false
 
   apiId:
