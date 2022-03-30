@@ -123,11 +123,11 @@ type GetAPIEventsQuery struct {
 	Limit  int
 	Order  string
 
-	Filters           *APIEventsFilters
-	AnnotationFilters *AnnotationFilters
+	APIEventsFilters  *APIEventsFilters
+	AnnotationFilters *APIEventAnnotationFilters
 }
 
-type AnnotationFilters struct {
+type APIEventAnnotationFilters struct {
 	ModuleNameIs []string
 	NameIs       []string
 	ValueIs      []string
@@ -135,12 +135,6 @@ type AnnotationFilters struct {
 	ModuleNameIsNot []string
 	NameIsNot       []string
 	ValueIsNot      []string
-}
-
-type APIEventAnnotationFilter struct {
-	Names       []string
-	ModuleNames []string
-	Annotations []string
 }
 
 type APIEventsTableHandler struct {
@@ -197,8 +191,8 @@ func (a *APIEventsTableHandler) GetAPIEventsWithAnnotations(ctx context.Context,
 	}
 
 	tx := a.tx
-	if query.Filters != nil {
-		tx = a.setAPIEventsFilters(query.Filters)
+	if query.APIEventsFilters != nil {
+		tx = a.setAPIEventsFilters(query.APIEventsFilters)
 	}
 	if query.EventID != nil {
 		tx = tx.Where(fmt.Sprintf("%s.%s = ?", apiEventTableName, idColumnName), *query.EventID)
@@ -318,6 +312,9 @@ func (a *APIEventsTableHandler) GetAPIEventsAndTotal(params operations.GetAPIEve
 	if err := tx.Count(&count).Error; err != nil {
 		return nil, 0, err
 	}
+
+	// if the user requests a filter on alert we need to join with the event_annotations table
+	// and do the filtering on the foreign table
 	if len(params.AlertIs) > 0 {
 		tx = tx.Joins(fmt.Sprintf("LEFT JOIN %s ea ON %s.%s = ea.%s",
 			eventAnnotationsTableName,

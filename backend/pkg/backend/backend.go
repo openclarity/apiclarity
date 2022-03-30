@@ -139,10 +139,7 @@ func Run() {
 		log.Infof("Using encoded speculator state")
 	}
 
-	module := modules.New(globalCtx, &backendAccessor{
-		dbHandler: dbHandler,
-		clientset: clientset,
-	})
+	module := modules.New(globalCtx, dbHandler, clientset)
 	backend := CreateBackend(config, monitor, speculator, dbHandler, module)
 
 	restServer, err := rest.CreateRESTServer(config.BackendRestPort, speculator, dbHandler, module)

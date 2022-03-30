@@ -16,7 +16,10 @@
 package modules
 
 import (
+	"context"
+	"github.com/apiclarity/apiclarity/backend/pkg/database"
 	"github.com/apiclarity/apiclarity/backend/pkg/modules/internal/core"
+	"k8s.io/client-go/kubernetes"
 
 	_ "github.com/apiclarity/apiclarity/backend/pkg/modules/internal/demo"
 )
@@ -28,4 +31,6 @@ type (
 	Event           = core.Event
 )
 
-var New = core.New
+func New(ctx context.Context, dbHandler *database.Handler, clientset kubernetes.Interface) Module {
+	return core.New(ctx, core.NewAccessor(dbHandler, clientset))
+}

@@ -41,7 +41,7 @@ type Database interface {
 	APIEventsTable() APIEventsTable
 	APIInventoryTable() APIInventoryTable
 	ReviewTable() ReviewTable
-	APIEventsAnnotationsTable() EventAnnotationsTable
+	APIEventsAnnotationsTable() APIEventAnnotationTable
 	APIInfoAnnotationsTable() APIAnnotationsTable
 }
 
@@ -85,8 +85,8 @@ func (db *Handler) ReviewTable() ReviewTable {
 	}
 }
 
-func (db *Handler) APIEventsAnnotationsTable() EventAnnotationsTable {
-	return &APIEventsAnnotationsTableHandler{
+func (db *Handler) APIEventsAnnotationsTable() APIEventAnnotationTable {
+	return &APIEventAnnotationTableHandler{
 		tx: db.DB.Table(eventAnnotationsTableName),
 	}
 }

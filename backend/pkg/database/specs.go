@@ -32,7 +32,7 @@ const (
 func (a *APIInventoryTableHandler) GetAPISpecs(apiID uint32) (*APIInfo, error) {
 	apiInfo := APIInfo{}
 
-	if err := a.tx.Select(hasProvidedSpecColumnName, hasReconstructedSpecColumnName, reconstructedSpecColumnName, providedSpecColumnName).First(&apiInfo, apiID).Error; err != nil {
+	if err := a.tx.Select(reconstructedSpecColumnName, providedSpecColumnName).First(&apiInfo, apiID).Error; err != nil {
 		return nil, err
 	}
 

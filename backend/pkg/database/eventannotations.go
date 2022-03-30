@@ -18,7 +18,6 @@ package database
 import (
 	"context"
 	"gorm.io/gorm"
-	"time"
 )
 
 const (
@@ -37,13 +36,13 @@ type APIEventAnnotation struct {
 	Annotation []byte `json:"annotation,omitempty" gorm:"column:annotation" faker:"-"`
 }
 
-type EventAnnotationsTable interface {
+type APIEventAnnotationTable interface {
 	Create(ctx context.Context, eas ...APIEventAnnotation) error
 	Get(ctx context.Context, modName string, eventID uint, name string) (*APIEventAnnotation, error)
 	List(ctx context.Context, modName string, eventID uint) ([]*APIEventAnnotation, error)
 }
 
-type APIEventsAnnotationsTableHandler struct {
+type APIEventAnnotationTableHandler struct {
 	tx *gorm.DB
 }
 
@@ -51,11 +50,11 @@ func (APIEventAnnotation) TableName() string {
 	return eventAnnotationsTableName
 }
 
-func (ea *APIEventsAnnotationsTableHandler) Create(ctx context.Context, annotations ...APIEventAnnotation) error {
+func (ea *APIEventAnnotationTableHandler) Create(ctx context.Context, annotations ...APIEventAnnotation) error {
 	return ea.tx.WithContext(ctx).Create(annotations).Error
 }
 
-func (ea *APIEventsAnnotationsTableHandler) List(ctx context.Context, modName string, eventID uint) ([]*APIEventAnnotation, error) {
+func (ea *APIEventAnnotationTableHandler) List(ctx context.Context, modName string, eventID uint) ([]*APIEventAnnotation, error) {
 	var events []*APIEventAnnotation
 
 	t := ea.tx.Where("module_name = ? AND event_id = ? AND name NOT IN ?", modName, eventID, alertKinds)
@@ -67,18 +66,7 @@ func (ea *APIEventsAnnotationsTableHandler) List(ctx context.Context, modName st
 	return events, nil
 }
 
-type GetEventAnnotationFilter struct {
-	StartTime        *time.Time
-	EndTime          *time.Time
-	StartRequestTime *time.Time
-	EndRequestTime   *time.Time
-	Name             *string
-	Method           *string
-	PathId           *string
-	SpecType         *string
-}
-
-func (ea *APIEventsAnnotationsTableHandler) Get(ctx context.Context, modName string, eventID uint, name string) (*APIEventAnnotation, error) {
+func (ea *APIEventAnnotationTableHandler) Get(ctx context.Context, modName string, eventID uint, name string) (*APIEventAnnotation, error) {
 	annotation := &APIEventAnnotation{}
 
 	t := ea.tx.Where("module_name = ? AND event_id = ? AND name = ?", modName, eventID, name)
