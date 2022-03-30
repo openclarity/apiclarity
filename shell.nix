@@ -12,5 +12,7 @@ pkgs.mkShell {
     pkgs.nodejs-17_x
     pkgs.go_1_17
     pkgs.go-swagger
+    pkgs.kubectl
+    pkgs.kubernetes-helm
   ];
 }

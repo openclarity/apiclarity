@@ -288,6 +288,7 @@ func APIEventFromDB(event *APIEvent) *models.APIEvent {
 		StatusCode:               event.StatusCode,
 		Time:                     event.Time,
 		RequestTime:              event.RequestTime,
+		Alerts:                   []*models.ModuleAlert{},
 	}
 	for _, ann := range event.Annotations {
 		e.Alerts = append(e.Alerts, &models.ModuleAlert{
@@ -346,7 +347,9 @@ func (a *APIEventsTableHandler) GetAPIEventsAndTotal(params operations.GetAPIEve
 func (a *APIEventsTableHandler) GetAPIEvent(eventID uint32) (*APIEvent, error) {
 	var apiEvent APIEvent
 
-	if err := a.tx.Omit(specDiffColumns...).First(&apiEvent, eventID).Error; err != nil {
+	tx := a.tx
+	tx = tx.Preload("Annotations", fmt.Sprintf("%s = ?", nameColumnName), alertAnnotation)
+	if err := tx.Omit(specDiffColumns...).First(&apiEvent, eventID).Error; err != nil {
 		return nil, err
 	}
 
