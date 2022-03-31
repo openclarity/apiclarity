@@ -64,9 +64,12 @@ If you just want to try it out with a demo application, and you don't have kong 
     ```shell
        export PROXY_IP=$(kubectl get -o jsonpath="{.status.loadBalancer.ingress[0].ip}" service -n kong kong-proxy)
     ```
+    Or on EKS get hostname:
+    ```shell
+       export HOSTNAME=$(kubectl get -o jsonpath="{.status.loadBalancer.ingress[0].hostname}" service -n kong kong-proxy)
+    ```    
     * Note:
         - If you installed Kong using helm, the service name might be different.  
-        - If you are running with EKS, this will be the LoadBalancer domain and not his ip.  
 7. Run Traffic:
     ```shell
        curl -H 'content-type: application/json' -H 'accept: application/json;charset=UTF-8' $PROXY_IP/catalogue
