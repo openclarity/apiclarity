@@ -123,8 +123,8 @@ type GetAPIEventsQuery struct {
 	Limit  int
 	Order  string
 
-	APIEventsFilters  *APIEventsFilters
-	AnnotationFilters *APIEventAnnotationFilters
+	APIEventsFilters          *APIEventsFilters
+	APIEventAnnotationFilters *APIEventAnnotationFilters
 }
 
 type APIEventAnnotationFilters struct {
@@ -197,14 +197,14 @@ func (a *APIEventsTableHandler) GetAPIEventsWithAnnotations(ctx context.Context,
 	if query.EventID != nil {
 		tx = tx.Where(fmt.Sprintf("%s.%s = ?", apiEventTableName, idColumnName), *query.EventID)
 	}
-	if query.AnnotationFilters != nil {
-		tx = FilterIs(tx, "ea."+nameColumnName, query.AnnotationFilters.NameIs)
-		tx = FilterIs(tx, "ea."+moduleNameColumnName, query.AnnotationFilters.ModuleNameIs)
-		tx = FilterIs(tx, "ea."+annotationColumnName, query.AnnotationFilters.ValueIs)
+	if query.APIEventAnnotationFilters != nil {
+		tx = FilterIs(tx, "ea."+nameColumnName, query.APIEventAnnotationFilters.NameIs)
+		tx = FilterIs(tx, "ea."+moduleNameColumnName, query.APIEventAnnotationFilters.ModuleNameIs)
+		tx = FilterIs(tx, "ea."+annotationColumnName, query.APIEventAnnotationFilters.ValueIs)
 
-		tx = FilterIsNotOrNull(tx, "ea."+nameColumnName, query.AnnotationFilters.NameIsNot)
-		tx = FilterIsNotOrNull(tx, "ea."+moduleNameColumnName, query.AnnotationFilters.ModuleNameIsNot)
-		tx = FilterIsNotOrNull(tx, "ea."+annotationColumnName, query.AnnotationFilters.ValueIsNot)
+		tx = FilterIsNotOrNull(tx, "ea."+nameColumnName, query.APIEventAnnotationFilters.NameIsNot)
+		tx = FilterIsNotOrNull(tx, "ea."+moduleNameColumnName, query.APIEventAnnotationFilters.ModuleNameIsNot)
+		tx = FilterIsNotOrNull(tx, "ea."+annotationColumnName, query.APIEventAnnotationFilters.ValueIsNot)
 	}
 	tx = tx.Joins(fmt.Sprintf("LEFT JOIN %s ea ON %s.%s = ea.%s ",
 		eventAnnotationsTableName, apiEventTableName, idColumnName, eventIDColumnName)).
