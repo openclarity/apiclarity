@@ -101,18 +101,18 @@ func FilterIs(db *gorm.DB, column string, values []string) *gorm.DB {
 	return db.Where(fmt.Sprintf("%s IN ?", column), values)
 }
 
+func FilterIsOrNull(db *gorm.DB, column string, values []string) *gorm.DB {
+	if len(values) == 0 {
+		return db
+	}
+	return db.Where(fmt.Sprintf("(%s IN ? OR %s IS NULL)", column, column), values)
+}
+
 func FilterIsNot(db *gorm.DB, column string, values []string) *gorm.DB {
 	if len(values) == 0 {
 		return db
 	}
 	return db.Where(fmt.Sprintf("%s NOT IN ?", column), values)
-}
-
-func FilterIsNotOrNull(db *gorm.DB, column string, values []string) *gorm.DB {
-	if len(values) == 0 {
-		return db
-	}
-	return db.Where(fmt.Sprintf("(%s IS NULL OR %s NOT IN ?)", column, column), values)
 }
 
 func FilterStartsWith(db *gorm.DB, column string, value *string) *gorm.DB {

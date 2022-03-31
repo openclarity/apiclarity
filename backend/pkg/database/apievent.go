@@ -128,6 +128,8 @@ type GetAPIEventsQuery struct {
 }
 
 type APIEventAnnotationFilters struct {
+	NoAnnotations bool
+
 	ModuleNameIs []string
 	NameIs       []string
 	ValueIs      []string
@@ -198,14 +200,22 @@ func (a *APIEventsTableHandler) GetAPIEventsWithAnnotations(ctx context.Context,
 		tx = tx.Where(fmt.Sprintf("%s.%s = ?", apiEventTableName, idColumnName), *query.EventID)
 	}
 	if query.APIEventAnnotationFilters != nil {
-		tx = FilterIs(tx, "ea."+nameColumnName, query.APIEventAnnotationFilters.NameIs)
-		tx = FilterIs(tx, "ea."+moduleNameColumnName, query.APIEventAnnotationFilters.ModuleNameIs)
-		tx = FilterIs(tx, "ea."+annotationColumnName, query.APIEventAnnotationFilters.ValueIs)
 
-		tx = FilterIsNotOrNull(tx, "ea."+nameColumnName, query.APIEventAnnotationFilters.NameIsNot)
-		tx = FilterIsNotOrNull(tx, "ea."+moduleNameColumnName, query.APIEventAnnotationFilters.ModuleNameIsNot)
-		tx = FilterIsNotOrNull(tx, "ea."+annotationColumnName, query.APIEventAnnotationFilters.ValueIsNot)
+		if query.APIEventAnnotationFilters.NoAnnotations {
+			tx = FilterIsOrNull(tx, "ea."+nameColumnName, query.APIEventAnnotationFilters.NameIs)
+			tx = FilterIsOrNull(tx, "ea."+moduleNameColumnName, query.APIEventAnnotationFilters.ModuleNameIs)
+			tx = FilterIsOrNull(tx, "ea."+annotationColumnName, query.APIEventAnnotationFilters.ValueIs)
+		} else {
+			tx = FilterIs(tx, "ea."+nameColumnName, query.APIEventAnnotationFilters.NameIs)
+			tx = FilterIs(tx, "ea."+moduleNameColumnName, query.APIEventAnnotationFilters.ModuleNameIs)
+			tx = FilterIs(tx, "ea."+annotationColumnName, query.APIEventAnnotationFilters.ValueIs)
+		}
+
+		tx = FilterIsNotInAnnotations(tx, nameColumnName, query.APIEventAnnotationFilters.NameIsNot)
+		tx = FilterIsNotInAnnotations(tx, moduleNameColumnName, query.APIEventAnnotationFilters.ModuleNameIsNot)
+		tx = FilterIsNotInAnnotations(tx, annotationColumnName, query.APIEventAnnotationFilters.ValueIsNot)
 	}
+
 	tx = tx.Joins(fmt.Sprintf("LEFT JOIN %s ea ON %s.%s = ea.%s ",
 		eventAnnotationsTableName, apiEventTableName, idColumnName, eventIDColumnName)).
 		Distinct()
@@ -529,4 +539,14 @@ func getAPIEventsParamsToFilters(params operations.GetAPIEventsParams) *APIEvent
 		StatusCodeIs:         params.StatusCodeIs,
 		StatusCodeLte:        params.StatusCodeLte,
 	}
+}
+
+func FilterIsNotInAnnotations(db *gorm.DB, column string, values []string) *gorm.DB {
+	if len(values) == 0 {
+		return db
+	}
+	return db.Where(fmt.Sprintf("(SELECT COUNT(%s) FROM %s WHERE %s = %s.%s AND %s IN ?) = 0",
+		idColumnName,
+		eventAnnotationsTableName,
+		eventIDColumnName, apiEventTableName, idColumnName, column), values)
 }
