@@ -1,36 +1,15 @@
 {
-  "destinationAddress": "10.116.207.196:8000",
-  "request": {
-    "common": {
-      "headers": [
-        {
-          "key": "host",
-          "value": "httpbin:8000"
-        },
-        {
-          "key": "user-agent",
-          "value": "curl/7.35.0"
-        },
-        {
-          "key": "accept",
-          "value": "text/plain"
-        },
-        {
-          "key": "x-forwarded-proto",
-          "value": "http"
-        },
-        {
-          "key": "x-request-id",
-          "value": "c44c2e8d-8f97-99c7-97ab-8ce59d7d70c3"
-        }
-      ]
-    },
-    "method": "POST",
-    "path": "/status/code"
-  },
   "requestID": "c44c2e8d-8f97-99c7-97ab-8ce59d7d70c2",
-  "response": {
+  "scheme": "",
+  "destinationAddress": "10.116.207.196:8000",
+  "destinationNamespace": null,
+  "sourceAddress": "10.116.207.197:8000",
+  "request": {
+    "method": "POST",
+    "path": "/status/code",
+    "host": "",
     "common": {
+      "version": null,
       "headers": [
         {
           "key": "host",
@@ -52,9 +31,43 @@
           "key": "x-request-id",
           "value": "c44c2e8d-8f97-99c7-97ab-8ce59d7d70c3"
         }
-      ]
-    },
-    "statusCode": "200"
+      ],
+      "body": "",
+      "TruncatedBody": false
+    }
   },
-  "sourceAddress": "10.116.207.197:8000"
+  "response": {
+    "statusCode": "200",
+    "common": {
+      "version": "",
+      "headers": [
+        {
+          "key": "server",
+          "value": "istio-envoy"
+        },
+        {
+          "key": "date",
+          "value": "Mon, 16 Aug 2021 10:46:20 GMT"
+        },
+        {
+          "key": "content-type",
+          "value": "application/json"
+        },
+        {
+          "key": "access-control-allow-origin",
+          "value": "*"
+        },
+        {
+          "key": "access-control-allow-credentials",
+          "value": "true"
+        },
+        {
+          "key": "content-length",
+          "value": "0"
+        }
+      ],
+      "body": "",
+      "TruncatedBody": false
+    }
+  }
 }

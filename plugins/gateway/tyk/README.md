@@ -69,14 +69,14 @@ Note: The tyk plugin has to be compiled with the same version of the tyk gateway
 This is due to limitation of how the go plugin is being build.
 Currently, the plugin is compatible only for tyk gateway version v3.2.2
 
-If you would like to build the plugin for other versions, you need to add the appropriate go.mod dependencies, and then run (from [plugins directory](https://github.com/apiclarity/apiclarity/edit/tyk-plugin/plugins/)):
+If you would like to build the plugin for other versions, you need to add the appropriate go.mod dependencies, and then run (from [plugins directory](https://github.com/apiclarity/apiclarity/tree/master/plugins)):
 ```shell
 export TYK_VERSION=<your version>
 make docker-tyk
 ```
 
-Then, push the built image and change the image name in deploy/patch-deployment.yaml accordingly.
-Then, run the [./deploy/deploy.sh](https://github.com/apiclarity/apiclarity/blob/tyk-plugin/plugins/gateway/tyk/deploy/deploy.sh) script.
+Then, push the built image and change the image name in [deploy/patch-deployment.yaml](https://github.com/apiclarity/apiclarity/blob/master/plugins/gateway/tyk/deploy/patch-deployment.yaml) accordingly.
+Then, run the [./deploy/deploy.sh](https://github.com/apiclarity/apiclarity/blob/master/plugins/gateway/tyk/deploy/deploy.sh) script.
 
 ### Preserving Client IP Address
 Tyk is usually deployed behind a Load Balancer (using a Kubernetes Service of type LoadBalancer).

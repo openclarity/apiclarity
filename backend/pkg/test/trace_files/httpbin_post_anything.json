@@ -1,36 +1,15 @@
 {
-  "destinationAddress": "10.116.207.196:8000",
-  "request": {
-    "common": {
-      "headers": [
-        {
-          "key": "host",
-          "value": "httpbin:8000"
-        },
-        {
-          "key": "user-agent",
-          "value": "curl/7.35.0"
-        },
-        {
-          "key": "accept",
-          "value": "application/json"
-        },
-        {
-          "key": "x-forwarded-proto",
-          "value": "http"
-        },
-        {
-          "key": "x-request-id",
-          "value": "e3ff6c72-104c-908d-bcd3-3774688fb9f1"
-        }
-      ]
-    },
-    "method": "POST",
-    "path": "/anything"
-  },
   "requestID": "e3ff6c72-104c-908d-bcd3-3774688fb9f1",
-  "response": {
+  "scheme": "",
+  "destinationAddress": "10.116.207.196:8000",
+  "destinationNamespace": null,
+  "sourceAddress": "10.116.207.197:8000",
+  "request": {
+    "method": "POST",
+    "path": "/anything",
+    "host": "",
     "common": {
+      "version": null,
       "headers": [
         {
           "key": "host",
@@ -52,9 +31,43 @@
           "key": "x-request-id",
           "value": "e3ff6c72-104c-908d-bcd3-3774688fb9f1"
         }
-      ]
-    },
-    "statusCode": "200"
+      ],
+      "body": "",
+      "TruncatedBody": false
+    }
   },
-  "sourceAddress": "10.116.207.197:8000"
+  "response": {
+    "statusCode": "200",
+    "common": {
+      "version": "",
+      "headers": [
+        {
+          "key": "server",
+          "value": "istio-envoy"
+        },
+        {
+          "key": "date",
+          "value": "Mon, 16 Aug 2021 10:42:11 GMT"
+        },
+        {
+          "key": "content-type",
+          "value": "application/json"
+        },
+        {
+          "key": "content-length",
+          "value": "738"
+        },
+        {
+          "key": "access-control-allow-origin",
+          "value": "*"
+        },
+        {
+          "key": "access-control-allow-credentials",
+          "value": "true"
+        }
+      ],
+      "body": "ewogICJhcmdzIjoge30sIAogICJkYXRhIjogIiIsIAogICJmaWxlcyI6IHt9LCAKICAiZm9ybSI6IHt9LCAKICAiaGVhZGVycyI6IHsKICAgICJBY2NlcHQiOiAiYXBwbGljYXRpb24vanNvbiIsIAogICAgIkNvbnRlbnQtTGVuZ3RoIjogIjAiLCAKICAgICJIb3N0IjogImh0dHBiaW46ODAwMCIsIAogICAgIlVzZXItQWdlbnQiOiAiY3VybC83LjM1LjAiLCAKICAgICJYLUIzLVBhcmVudHNwYW5pZCI6ICJhNDc0YTY0OGFhOGUzOGMyIiwgCiAgICAiWC1CMy1TYW1wbGVkIjogIjEiLCAKICAgICJYLUIzLVNwYW5pZCI6ICIzZmUxZmZmNGI1MDkxYmM0IiwgCiAgICAiWC1CMy1UcmFjZWlkIjogImVmNjg4NzdkOTAxZjMzZjRhNDc0YTY0OGFhOGUzOGMyIiwgCiAgICAiWC1FbnZveS1BdHRlbXB0LUNvdW50IjogIjEiLCAKICAgICJYLUZvcndhcmRlZC1DbGllbnQtQ2VydCI6ICJCeT1zcGlmZmU6Ly9jbHVzdGVyLmxvY2FsL25zL3RyYWNlcy10ZXN0L3NhL2h0dHBiaW47SGFzaD02YzJiMTkzZjVmYmEwYTJmMzhmNTQwNzBhNmJkMDA3NGVkYmNiZWRlNzg4Mzk4MGJhYTJmNjY4MTJlNDYyODhlO1N1YmplY3Q9XCJcIjtVUkk9c3BpZmZlOi8vY2x1c3Rlci5sb2NhbC9ucy90cmFjZXMtdGVzdC9zYS9jdXJsIgogIH0sIAogICJqc29uIjogbnVsbCwgCiAgIm1ldGhvZCI6ICJQT1NUIiwgCiAgIm9yaWdpbiI6ICIxMjcuMC4wLjYiLCAKICAidXJsIjogImh0dHA6Ly9odHRwYmluOjgwMDAvYW55dGhpbmciCn0K",
+      "TruncatedBody": false
+    }
+  }
 }
