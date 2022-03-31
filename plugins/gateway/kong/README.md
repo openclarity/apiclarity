@@ -1,10 +1,10 @@
 ## APIClarity Kong plugin
 
 ### Prerequisite
-* APIClarity backend is running
-* Kong gateway is running in your K8s cluster, and configured correctly.
+* APIClarity backend is running.
+* Kong gateway is running in your K8s cluster, and has an Ingress gateway resource.
 
-If you just want to experience with it, and you don't have kong, you can take these few quick steps that will help you to quickly setup a running environment:
+If you just want to try it out with a demo application, and you don't have kong installed, you can follow these few short steps that will help you to quickly setup a running environment:
 1. Deploy sock-shop app:
     ```shell
        kubectl create namespace sock-shop
@@ -14,11 +14,12 @@ If you just want to experience with it, and you don't have kong, you can take th
 2. Deploy Kong:
     - Using helm3:
     ```shell
+       helm repo add kong https://charts.konghq.com
+       helm repo update
        helm install kong/kong --generate-name --set ingressController.installCRDs=false
     ```
     - Using kubectl:
     ```shell
-       kubectl create namespace kong
        kubectl apply -f https://bit.ly/kong-ingress-dbless
     ```
 3. Wait for pod to be ready:
@@ -58,18 +59,34 @@ If you just want to experience with it, and you don't have kong, you can take th
        UPSTREAM_TELEMETRY_HOST_NAME=apiclarity-apiclarity.apiclarity:9000 \
        deploy/deploy.sh
     ```   
-    * Note: If you installed using helm, the deployment name might be different. Please change the KONG_GATEWAY_DEPLOYMENT_NAME env var accordingly.    
+    * Note: If you installed Kong using helm, the deployment name might be different. Please change the KONG_GATEWAY_DEPLOYMENT_NAME env var accordingly.    
 6. Get LoadBalacner IP:
     ```shell
        export PROXY_IP=$(kubectl get -o jsonpath="{.status.loadBalancer.ingress[0].ip}" service -n kong kong-proxy)
     ```
-    * Note: If you installed using helm, the service name might be different.    
+    * Note:
+        - If you installed Kong using helm, the service name might be different.  
+        - If you are running with EKS, this will be the LoadBalancer domain and not his ip.  
 7. Run Traffic:
     ```shell
        curl -H 'content-type: application/json' -H 'accept: application/json;charset=UTF-8' $PROXY_IP/catalogue
        curl -H 'content-type: application/json' -H 'accept: application/json;charset=UTF-8' $PROXY_IP/catalogue/size
        curl -H 'content-type: application/json' -H 'accept: application/json;charset=UTF-8' $PROXY_IP/tags
     ```
+7. Cleanup:
+    
+    1. Delete kong installation:
+        ```shell
+           helm -n kong uninstall kong 
+        ```   
+          Or if not installed with helm:
+        ```shell
+            kubectl delete ns kong 
+        ```
+    2. Delete sock-shop:
+        ```shell
+            kubectl delete ns sock-shop 
+        ```
 ### Installation using a pre-built image
 
 1. Choose one of the following installation techniques
