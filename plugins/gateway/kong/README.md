@@ -16,7 +16,7 @@ If you just want to try it out with a demo application, and you don't have kong 
     ```shell
        helm repo add kong https://charts.konghq.com
        helm repo update
-       helm install kong/kong --generate-name --set ingressController.installCRDs=false
+       helm -n kong install kong/kong --create-namespace --generate-name --set ingressController.installCRDs=false
     ```
     - Using kubectl:
     ```shell
@@ -73,7 +73,7 @@ If you just want to try it out with a demo application, and you don't have kong 
        curl -H 'content-type: application/json' -H 'accept: application/json;charset=UTF-8' $PROXY_IP/catalogue/size
        curl -H 'content-type: application/json' -H 'accept: application/json;charset=UTF-8' $PROXY_IP/tags
     ```
-7. Cleanup:
+8. Cleanup:
     
     1. Delete kong installation:
         ```shell
@@ -81,7 +81,7 @@ If you just want to try it out with a demo application, and you don't have kong 
         ```   
           Or if not installed with helm:
         ```shell
-            kubectl delete ns kong 
+            kubectl delete -f https://bit.ly/kong-ingress-dbless 
         ```
     2. Delete sock-shop:
         ```shell
