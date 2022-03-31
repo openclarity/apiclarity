@@ -1,68 +1,73 @@
 {
-  "request_id": "a0f979bc-f9a6-981a-b899-3b720bf0447c",
+  "requestID": "a0f979bc-f9a6-981a-b899-3b720bf0447c",
   "scheme": "",
-  "destination_address": "10.116.207.196:8000",
-  "source_address": "10.116.207.197:8000",
-  "scnt_request": {
+  "destinationAddress": "10.116.207.196:8000",
+  "destinationNamespace": null,
+  "sourceAddress": "10.116.207.197:8000",
+  "request": {
     "method": "GET",
     "path": "/user-agent",
     "host": "",
-    "version": "",
-    "headers": [
-      [
-        "host",
-        "httpbin:8000"
+    "common": {
+      "version": null,
+      "headers": [
+        {
+          "key": "host",
+          "value": "httpbin:8000"
+        },
+        {
+          "key": "user-agent",
+          "value": "curl/7.35.0"
+        },
+        {
+          "key": "accept",
+          "value": "application/json"
+        },
+        {
+          "key": "x-forwarded-proto",
+          "value": "http"
+        },
+        {
+          "key": "x-request-id",
+          "value": "a0f979bc-f9a6-981a-b899-3b720bf0447c"
+        }
       ],
-      [
-        "user-agent",
-        "curl/7.35.0"
-      ],
-      [
-        "accept",
-        "application/json"
-      ],
-      [
-        "x-forwarded-proto",
-        "http"
-      ],
-      [
-        "x-request-id",
-        "a0f979bc-f9a6-981a-b899-3b720bf0447c"
-      ]
-    ],
-    "body": "",
-    "truncated_body": false
+      "body": "",
+      "TruncatedBody": false
+    }
   },
-  "scnt_response": {
-    "status_code": "200",
-    "version": "",
-    "headers": [
-      [
-        "server",
-        "istio-envoy"
+  "response": {
+    "statusCode": "200",
+    "common": {
+      "version": "",
+      "headers": [
+        {
+          "key": "server",
+          "value": "istio-envoy"
+        },
+        {
+          "key": "date",
+          "value": "Mon, 16 Aug 2021 11:16:02 GMT"
+        },
+        {
+          "key": "content-type",
+          "value": "application/json"
+        },
+        {
+          "key": "content-length",
+          "value": "34"
+        },
+        {
+          "key": "access-control-allow-origin",
+          "value": "*"
+        },
+        {
+          "key": "access-control-allow-credentials",
+          "value": "true"
+        }
       ],
-      [
-        "date",
-        "Mon, 16 Aug 2021 11:16:02 GMT"
-      ],
-      [
-        "content-type",
-        "application/json"
-      ],
-      [
-        "content-length",
-        "34"
-      ],
-      [
-        "access-control-allow-origin",
-        "*"
-      ],
-      [
-        "access-control-allow-credentials",
-        "true"
-      ]
-    ],
-    "body": "ewogICJ1c2VyLWFnZW50IjogImN1cmwvNy4zNS4wIgp9Cg==",
-    "truncated_body": false
+      "body": "ewogICJ1c2VyLWFnZW50IjogImN1cmwvNy4zNS4wIgp9Cg==",
+      "TruncatedBody": false
+    }
   }
 }
