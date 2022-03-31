@@ -22,8 +22,8 @@ export const REVIEW_ACTIONS = {
     SET_FILTERS: "SET_FILTERS"
 }
 
-const filterData = (data, filters) => {
-    let filteredData = [...data];
+const filterData = (data, filters=[]) => {
+    let filteredData = [...(data || [])];
 
     filters.forEach(({scope, value}) => {
         filteredData = filteredData.filter(({suggestedPath, apiEventsPaths}) => {
