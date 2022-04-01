@@ -9,7 +9,7 @@ import { useFetch } from 'hooks';
 import { formatDate } from 'utils/utils';
 import Details from './Details';
 import Specs from './Specs';
-import { getPlugins, PLUGIN_TYPES } from 'plugins';
+import { getModules, MODULE_TYPES } from 'modules';
 
 import './event-details.scss';
 
@@ -29,13 +29,13 @@ const EventDetails = () => {
     }
 
     const {time} = data;
-    const plugins = getPlugins(PLUGIN_TYPES.EVENT_DETAILS);
-    const pluginTabs = plugins.map((p) => {
+    const modules = getModules(MODULE_TYPES.EVENT_DETAILS);
+    const moduleTabs = modules.map((m) => {
         return {
-            title: p.name,
-            linkTo: `${url}${p.endpoint}`,
-            to: `${path}${p.endpoint}`,
-            component: () => <p.component  {...{...data, eventId}}/>
+            title: m.name,
+            linkTo: `${url}${m.endpoint}`,
+            to: `${path}${m.endpoint}`,
+            component: () => <m.component  {...{...data, eventId}}/>
         };
     });
 
@@ -56,7 +56,7 @@ const EventDetails = () => {
                     <TabbedPageContainer
                         items={[
                             { title: "Spec", linkTo: url, to: path, exact: true, component: () => <Specs data={data} /> },
-                            ...pluginTabs
+                            ...moduleTabs
                         ]}
                         noContentMargin={isExact}
                     />

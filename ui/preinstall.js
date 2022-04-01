@@ -3,7 +3,7 @@ var resolve = require('path').resolve;
 var join = require('path').join;
 var cp = require('child_process');
 
-var lib = resolve(__dirname, './src/plugins');
+var lib = resolve(__dirname, './src/modules');
 fs.readdirSync(lib)
     .forEach(function(mod) {
         var modPath = join(lib, mod);

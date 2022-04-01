@@ -6,7 +6,7 @@ import TabbedPageContainer from 'components/TabbedPageContainer';
 import Loader from 'components/Loader';
 import { useFetch } from 'hooks';
 import Specs from './Specs';
-import { getPlugins, PLUGIN_TYPES } from 'plugins';
+import { getModules, MODULE_TYPES } from 'modules';
 
 const InventoryDetails = ({type}) => {
     const {path, url} = useRouteMatch();
@@ -25,13 +25,13 @@ const InventoryDetails = ({type}) => {
 
     const inventoryName = data.items[0].name;
 
-    const plugins = getPlugins(PLUGIN_TYPES.INVENTORY_DETAILS);
-    const pluginTabs = plugins.map((p) => {
+    const modules = getModules(MODULE_TYPES.INVENTORY_DETAILS);
+    const moduleTabs = modules.map((m) => {
         return {
-            title: p.name,
-            linkTo: `${url}${p.endpoint}`,
-            to: `${path}${p.endpoint}`,
-            component: () => <p.component  {...{...data.items[0], inventoryId, type}}/>
+            title: m.name,
+            linkTo: `${url}${m.endpoint}`,
+            to: `${path}${m.endpoint}`,
+            component: () => <m.component  {...{...data.items[0], inventoryId, type}}/>
         };
     });
 
@@ -43,7 +43,7 @@ const InventoryDetails = ({type}) => {
             <TabbedPageContainer
                 items={[
                     {title: "Spec", linkTo: url, to: path, exact: true, component: () => <Specs inventoryId={inventoryId} inventoryName={inventoryName} />},
-                    ...pluginTabs
+                    ...moduleTabs
                 ]}
                 noContentMargin={true}
             />
