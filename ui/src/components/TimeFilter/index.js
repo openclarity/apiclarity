@@ -37,7 +37,7 @@ export const TIME_SELECT_ITEMS = {
     },
     DEFAULT: {
         value: "DEFAULT",
-        label: "Default"       
+        label: "Default"
     },
 }
 
@@ -99,11 +99,11 @@ const TimeFilter = ({selectedRange=TIME_SELECT_ITEMS.HOUR.value, startTime, endT
                     if (!!calc) {
                         onChange({selectedRange: value, ...calc()})
                     } else {
-                        if (value == 'CUSTOM') {
+                        if (value === 'CUSTOM') {
                             onChange({selectedRange: value, startTime: getNow(), endTime: getNow()})
                         } else {
                             onChange({selectedRange: value, startTime: null, endTime: null})
-                        }                       
+                        }
                     }
                 }}
             />

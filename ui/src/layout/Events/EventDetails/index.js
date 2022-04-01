@@ -7,9 +7,9 @@ import PageContainer from 'components/PageContainer';
 import Loader from 'components/Loader';
 import { useFetch } from 'hooks';
 import { formatDate } from 'utils/utils';
+import { getModules, MODULE_TYPES } from 'modules';
 import Details from './Details';
 import Specs from './Specs';
-import { getModules, MODULE_TYPES } from 'modules';
 
 import './event-details.scss';
 

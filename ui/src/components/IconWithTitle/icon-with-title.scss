@@ -13,22 +13,6 @@
         font-size: 10px;
         line-height: 22px;
     }
-    .arrow-icon {
-        margin: 0 5px 4px 10px;
-    }
-    &:not(.disabled) {
-        .icon {
-            color: $color-main;
-        }
-    }
-    &.disabled {
-        cursor: not-allowed;
-
-        .icon,
-        .icon-title {
-            color: $color-grey;
-        }
-    }
     &.clickable {
         cursor: pointer;
     }

@@ -37,10 +37,9 @@ const InnerTabs = ({selected, items, onSelect}) => (
 const Specs = ({data}) => {
     const [selectedTab, setSelectedTab] = useState(SPEC_TAB_ITEMS.PROVIDED_DIFF.value);
     const {component: TabContentComponent, urlSuffix} = SPEC_TAB_ITEMS[selectedTab];
-    const {id: eventId } = data;
+    const {id: eventId} = data;
 
     return (
-
         <div className="events-spec-wrapper">
             <React.Fragment>
                 <InnerTabs selected={selectedTab} items={Object.values(SPEC_TAB_ITEMS)} onSelect={selected => setSelectedTab(selected)} />

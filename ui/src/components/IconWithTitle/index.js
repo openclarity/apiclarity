@@ -5,17 +5,17 @@ import Icon from 'components/Icon';
 import './icon-with-title.scss';
 
 const IconWithTitle = (props) => {
-    const {title, onClick, className, ...iconProps} = props;
-    const {disabled, name} = props;
+    const {title, onClick, ...iconProps} = props;
+    const {name} = props;
 
     return (
         <div
-            className={classnames("icon-container", `icon-container-${name}`, {disabled}, {[className]: className}, {clickable: !!onClick && !disabled})}
-            onClick={event => !disabled && onClick ? onClick(event) : null}
+            className={classnames("icon-container", `icon-container-${name}`, "clickable")}
+            onClick={event =>  onClick(event)}
         >
-            <Icon {...iconProps} /><div className="icon-title">{title}</div>
+            <Icon {...iconProps}/><div className="icon-title">{title}</div>
         </div>
     );
-}
+};
 
 export default IconWithTitle;
