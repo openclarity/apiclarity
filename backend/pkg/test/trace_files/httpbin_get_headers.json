@@ -1,68 +1,73 @@
 {
-  "request_id": "3f3c6d58-0d96-9d4a-be9f-0557eecb4dd4",
+  "requestID": "3f3c6d58-0d96-9d4a-be9f-0557eecb4dd4",
   "scheme": "",
-  "destination_address": "10.116.207.196:8000",
-  "source_address": "10.116.207.197:8000",
-  "scnt_request": {
+  "destinationAddress": "10.116.207.196:8000",
+  "destinationNamespace": null,
+  "sourceAddress": "10.116.207.197:8000",
+  "request": {
     "method": "GET",
     "path": "/headers",
     "host": "",
-    "version": "",
-    "headers": [
-      [
-        "host",
-        "httpbin:8000"
+    "common": {
+      "version": null,
+      "headers": [
+        {
+          "key": "host",
+          "value": "httpbin:8000"
+        },
+        {
+          "key": "user-agent",
+          "value": "curl/7.35.0"
+        },
+        {
+          "key": "accept",
+          "value": "application/json"
+        },
+        {
+          "key": "x-forwarded-proto",
+          "value": "http"
+        },
+        {
+          "key": "x-request-id",
+          "value": "3f3c6d58-0d96-9d4a-be9f-0557eecb4dd4"
+        }
       ],
-      [
-        "user-agent",
-        "curl/7.35.0"
-      ],
-      [
-        "accept",
-        "application/json"
-      ],
-      [
-        "x-forwarded-proto",
-        "http"
-      ],
-      [
-        "x-request-id",
-        "3f3c6d58-0d96-9d4a-be9f-0557eecb4dd4"
-      ]
-    ],
-    "body": "",
-    "truncated_body": false
+      "body": "",
+      "TruncatedBody": false
+    }
   },
-  "scnt_response": {
-    "status_code": "200",
-    "version": "",
-    "headers": [
-      [
-        "server",
-        "istio-envoy"
+  "response": {
+    "statusCode": "200",
+    "common": {
+      "version": "",
+      "headers": [
+        {
+          "key": "server",
+          "value": "istio-envoy"
+        },
+        {
+          "key": "date",
+          "value": "Mon, 16 Aug 2021 10:44:10 GMT"
+        },
+        {
+          "key": "content-type",
+          "value": "application/json"
+        },
+        {
+          "key": "content-length",
+          "value": "543"
+        },
+        {
+          "key": "access-control-allow-origin",
+          "value": "*"
+        },
+        {
+          "key": "access-control-allow-credentials",
+          "value": "true"
+        }
       ],
-      [
-        "date",
-        "Mon, 16 Aug 2021 10:44:10 GMT"
-      ],
-      [
-        "content-type",
-        "application/json"
-      ],
-      [
-        "content-length",
-        "543"
-      ],
-      [
-        "access-control-allow-origin",
-        "*"
-      ],
-      [
-        "access-control-allow-credentials",
-        "true"
-      ]
-    ],
-    "body": "ewogICJoZWFkZXJzIjogewogICAgIkFjY2VwdCI6ICJhcHBsaWNhdGlvbi9qc29uIiwgCiAgICAiSG9zdCI6ICJodHRwYmluOjgwMDAiLCAKICAgICJVc2VyLUFnZW50IjogImN1cmwvNy4zNS4wIiwgCiAgICAiWC1CMy1QYXJlbnRzcGFuaWQiOiAiYzM4YzY5Y2IwYWRiMzZmZCIsIAogICAgIlgtQjMtU2FtcGxlZCI6ICIxIiwgCiAgICAiWC1CMy1TcGFuaWQiOiAiZDEwYTI2OWM1YjA1ZWM3ZSIsIAogICAgIlgtQjMtVHJhY2VpZCI6ICJjZWE3OTJmZjA1N2UxYmNkYzM4YzY5Y2IwYWRiMzZmZCIsIAogICAgIlgtRW52b3ktQXR0ZW1wdC1Db3VudCI6ICIxIiwgCiAgICAiWC1Gb3J3YXJkZWQtQ2xpZW50LUNlcnQiOiAiQnk9c3BpZmZlOi8vY2x1c3Rlci5sb2NhbC9ucy90cmFjZXMtdGVzdC9zYS9odHRwYmluO0hhc2g9NmMyYjE5M2Y1ZmJhMGEyZjM4ZjU0MDcwYTZiZDAwNzRlZGJjYmVkZTc4ODM5ODBiYWEyZjY2ODEyZTQ2Mjg4ZTtTdWJqZWN0PVwiXCI7VVJJPXNwaWZmZTovL2NsdXN0ZXIubG9jYWwvbnMvdHJhY2VzLXRlc3Qvc2EvY3VybCIKICB9Cn0K",
-    "truncated_body": false
+      "body": "ewogICJoZWFkZXJzIjogewogICAgIkFjY2VwdCI6ICJhcHBsaWNhdGlvbi9qc29uIiwgCiAgICAiSG9zdCI6ICJodHRwYmluOjgwMDAiLCAKICAgICJVc2VyLUFnZW50IjogImN1cmwvNy4zNS4wIiwgCiAgICAiWC1CMy1QYXJlbnRzcGFuaWQiOiAiYzM4YzY5Y2IwYWRiMzZmZCIsIAogICAgIlgtQjMtU2FtcGxlZCI6ICIxIiwgCiAgICAiWC1CMy1TcGFuaWQiOiAiZDEwYTI2OWM1YjA1ZWM3ZSIsIAogICAgIlgtQjMtVHJhY2VpZCI6ICJjZWE3OTJmZjA1N2UxYmNkYzM4YzY5Y2IwYWRiMzZmZCIsIAogICAgIlgtRW52b3ktQXR0ZW1wdC1Db3VudCI6ICIxIiwgCiAgICAiWC1Gb3J3YXJkZWQtQ2xpZW50LUNlcnQiOiAiQnk9c3BpZmZlOi8vY2x1c3Rlci5sb2NhbC9ucy90cmFjZXMtdGVzdC9zYS9odHRwYmluO0hhc2g9NmMyYjE5M2Y1ZmJhMGEyZjM4ZjU0MDcwYTZiZDAwNzRlZGJjYmVkZTc4ODM5ODBiYWEyZjY2ODEyZTQ2Mjg4ZTtTdWJqZWN0PVwiXCI7VVJJPXNwaWZmZTovL2NsdXN0ZXIubG9jYWwvbnMvdHJhY2VzLXRlc3Qvc2EvY3VybCIKICB9Cn0K",
+      "TruncatedBody": false
+    }
   }
 }
