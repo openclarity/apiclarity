@@ -147,6 +147,7 @@ Update [values.yaml](https://github.com/apiclarity/apiclarity/blob/master/charts
    ```
 
 3. Run backend and frontend locally using demo data:
+   
    Note: You might need to delete the local state file, and local db:
    ```shell
    rm state.gob && rm db.db
