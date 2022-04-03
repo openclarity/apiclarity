@@ -150,7 +150,7 @@ Update [values.yaml](https://github.com/apiclarity/apiclarity/blob/master/charts
    
    Note: You might need to delete the old local state file and local db:
    ```shell
-   rm state.gob && rm db.db
+   rm state.gob; rm db.db
    ```
    ```shell
    DATABASE_DRIVER=LOCAL FAKE_TRACES=true FAKE_TRACES_PATH=./backend/pkg/test/trace_files \
