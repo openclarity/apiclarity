@@ -60,7 +60,7 @@ If you just want to try it out with a demo application, and you don't have kong 
        deploy/deploy.sh
     ```   
     * Note: If you installed Kong using helm, the deployment name might be different. Please change the KONG_GATEWAY_DEPLOYMENT_NAME env var accordingly.    
-6. Get LoadBalacner IP:
+6. Get LoadBalacner Address:
     ```shell
        export KONG_ADDRESS=$(kubectl get -o jsonpath="{.status.loadBalancer.ingress[0].ip}" service -n kong kong-proxy)
     ```
