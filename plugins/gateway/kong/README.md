@@ -62,19 +62,19 @@ If you just want to try it out with a demo application, and you don't have kong 
     * Note: If you installed Kong using helm, the deployment name might be different. Please change the KONG_GATEWAY_DEPLOYMENT_NAME env var accordingly.    
 6. Get LoadBalacner IP:
     ```shell
-       export PROXY_IP=$(kubectl get -o jsonpath="{.status.loadBalancer.ingress[0].ip}" service -n kong kong-proxy)
+       export KONG_ADDRESS=$(kubectl get -o jsonpath="{.status.loadBalancer.ingress[0].ip}" service -n kong kong-proxy)
     ```
     Or on EKS get hostname:
     ```shell
-       export HOSTNAME=$(kubectl get -o jsonpath="{.status.loadBalancer.ingress[0].hostname}" service -n kong kong-proxy)
+       export KONG_ADDRESS=$(kubectl get -o jsonpath="{.status.loadBalancer.ingress[0].hostname}" service -n kong kong-proxy)
     ```    
     * Note:
         - If you installed Kong using helm, the service name might be different.  
 7. Run Traffic:
     ```shell
-       curl -H 'content-type: application/json' -H 'accept: application/json;charset=UTF-8' $PROXY_IP/catalogue
-       curl -H 'content-type: application/json' -H 'accept: application/json;charset=UTF-8' $PROXY_IP/catalogue/size
-       curl -H 'content-type: application/json' -H 'accept: application/json;charset=UTF-8' $PROXY_IP/tags
+       curl -H 'content-type: application/json' -H 'accept: application/json;charset=UTF-8' $KONG_ADDRESS/catalogue
+       curl -H 'content-type: application/json' -H 'accept: application/json;charset=UTF-8' $KONG_ADDRESS/catalogue/size
+       curl -H 'content-type: application/json' -H 'accept: application/json;charset=UTF-8' $KONG_ADDRESS/tags
     ```
 8. Cleanup:
     
