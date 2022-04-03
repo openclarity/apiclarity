@@ -3,6 +3,7 @@ module github.com/apiclarity/apiclarity/backend
 go 1.16
 
 require (
+    github.com/golang/mock v1.6.0
 	github.com/apiclarity/apiclarity/api v0.0.0
 	github.com/apiclarity/apiclarity/plugins/api v0.0.0
 	github.com/apiclarity/speculator v0.0.5-0.20220217144620-974ad83e673f

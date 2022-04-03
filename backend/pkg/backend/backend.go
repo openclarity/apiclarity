@@ -53,7 +53,7 @@ type Backend struct {
 	stateBackupFileName string
 	monitor             *k8smonitor.Monitor
 	apiInventoryLock    sync.RWMutex
-	dbHandler           *_database.Handler
+	dbHandler           _database.Database
 }
 
 func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, dbHandler *_database.Handler) *Backend {

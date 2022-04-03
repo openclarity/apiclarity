@@ -56,6 +56,7 @@ type APIInfo struct {
 	ProvidedSpecInfo      string         `json:"providedSpecInfo,omitempty" gorm:"column:provided_spec_info" faker:"-"`
 }
 
+//go:generate $GOPATH/bin/mockgen -destination=./mock_apiinventory.go -package=database github.com/apiclarity/apiclarity/backend/pkg/database APIInventoryTable
 type APIInventoryTable interface {
 	GetAPIInventoryAndTotal(params operations.GetAPIInventoryParams) ([]APIInfo, int64, error)
 	GetAPISpecs(apiID uint32) (*APIInfo, error)

@@ -95,6 +95,7 @@ type APIEvent struct {
 	EventType models.APIType `json:"eventType,omitempty" gorm:"column:event_type" faker:"oneof: INTERNAL, EXTERNAL"`
 }
 
+//go:generate $GOPATH/bin/mockgen -destination=./mock_apievent.go -package=database github.com/apiclarity/apiclarity/backend/pkg/database APIEventsTable
 type APIEventsTable interface {
 	GetAPIEventsAndTotal(params operations.GetAPIEventsParams) ([]APIEvent, int64, error)
 	GetAPIEvent(eventID uint32) (*APIEvent, error)
