@@ -193,6 +193,8 @@ func (b *Backend) handleHTTPTrace(trace *pluginsmodels.Telemetry) error {
 
 	log.Debugf("Handling telemetry: %+v", trace)
 
+	// we need to convert the trace to speculator trace format in order to call speculator methods on that trace.
+	// from here on, we work only with speculator telemetry
 	telemetry := ConvertModelsToSpeculatorTelemetry(trace)
 
 	if telemetry.Request.Host == "" {
@@ -267,24 +269,24 @@ func (b *Backend) handleHTTPTrace(trace *pluginsmodels.Telemetry) error {
 	}
 
 	// Update API event in DB
-	statusCode, err := strconv.Atoi(trace.Response.StatusCode)
+	statusCode, err := strconv.Atoi(telemetry.Response.StatusCode)
 	if err != nil {
 		return fmt.Errorf("failed to convert status code: %v", err)
 	}
 
-	path, query := _spec.GetPathAndQuery(trace.Request.Path)
+	path, query := _spec.GetPathAndQuery(telemetry.Request.Path)
 
 	event := &_database.APIEvent{
 		APIInfoID:       apiInfo.ID,
 		Time:            strfmt.DateTime(time.Now().UTC()),
-		Method:          models.HTTPMethod(trace.Request.Method),
+		Method:          models.HTTPMethod(telemetry.Request.Method),
 		Path:            path,
 		Query:           query,
 		StatusCode:      int64(statusCode),
 		SourceIP:        srcInfo.IP,
 		DestinationIP:   destInfo.IP,
 		DestinationPort: int64(destPort),
-		HostSpecName:    trace.Request.Host,
+		HostSpecName:    telemetry.Request.Host,
 		IsNonAPI:        isNonAPI,
 		EventType:       apiInfo.Type,
 	}
