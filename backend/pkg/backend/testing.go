@@ -6,6 +6,13 @@ import (
 	"github.com/golang/mock/gomock"
 )
 
+const (
+	specKey            = "httpbin:8080"
+	host               = "httpbin"
+	port               = "8080"
+	destinationAddress = "1.1.1.1:8080"
+)
+
 type eventMatcher struct {
 	Method                   models.HTTPMethod
 	Path                     string
@@ -25,8 +32,8 @@ type eventMatcher struct {
 
 	NewReconstructedSpec string
 	OldReconstructedSpec string
-	NewProvidedSpec string
-	OldProvidedSpec string
+	NewProvidedSpec      string
+	OldProvidedSpec      string
 
 	APIInfoID uint
 	EventType models.APIType
@@ -91,8 +98,74 @@ func (m *eventMatcher) Matches(x interface{}) bool {
 	if event.DestinationPort != m.DestinationPort {
 		return false
 	}
-	//if event.IsNonAPI != m.IsNonAPI {
-	//	return false
-	//}
+	if event.IsNonAPI != m.IsNonAPI {
+		return false
+	}
+	if event.EventType != m.EventType {
+		return false
+	}
+	if event.SpecDiffType != m.SpecDiffType {
+		return false
+	}
+	if event.HasProvidedSpecDiff != m.HasProvidedSpecDiff {
+		return false
+	}
 	return true
 }
+
+type APIEventTest struct {
+	event _database.APIEvent
+}
+
+func createDefaultTestEvent() *APIEventTest {
+	return &APIEventTest{
+		event: _database.APIEvent{
+			Method:                   "GET",
+			Path:                     "/test",
+			ReconstructedPathID:      "",
+			Query:                    "foo=bar",
+			StatusCode:               200,
+			SourceIP:                 "2.2.2.2",
+			DestinationIP:            "1.1.1.1",
+			DestinationPort:          8080,
+			HasReconstructedSpecDiff: false,
+			HasProvidedSpecDiff:      false,
+			HasSpecDiff:              false,
+			SpecDiffType:             models.DiffTypeNODIFF,
+			HostSpecName:             host,
+			IsNonAPI:                 false,
+			NewReconstructedSpec:     "",
+			OldReconstructedSpec:     "",
+			NewProvidedSpec:          "",
+			OldProvidedSpec:          "",
+			APIInfoID:                0,
+			EventType:                models.APITypeINTERNAL,
+		},
+	}
+}
+
+func (t *APIEventTest) WithEventType(eventType models.APIType) *APIEventTest {
+	t.event.EventType = eventType
+	return t
+}
+
+func (t *APIEventTest) WithSpecDiffType(diffType models.DiffType) *APIEventTest {
+	t.event.SpecDiffType = diffType
+	return t
+}
+
+func (t *APIEventTest) WithIsNonAPI(isNonAPI bool) *APIEventTest {
+	t.event.IsNonAPI = isNonAPI
+	return t
+}
+
+func (t *APIEventTest) WithHasProvidedSpecDiff(hasProvidedSpecDiff bool) *APIEventTest {
+	t.event.HasProvidedSpecDiff = hasProvidedSpecDiff
+	return t
+}
+
+func (t *APIEventTest) WithHasReconstructedSpecDiff(hasReconstructedSpecDiff bool) *APIEventTest {
+	t.event.HasReconstructedSpecDiff = hasReconstructedSpecDiff
+	return t
+}
+
