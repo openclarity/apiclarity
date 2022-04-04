@@ -28,6 +28,27 @@ const (
 	destinationAddress = "1.1.1.1:8080"
 )
 
+var providedSpec = `
+    swagger: "2.0"
+    info:
+      title: Sample API
+      description: API description in Markdown.
+      version: 1.0.0
+    host: api.example.com
+    basePath: /v1
+    schemes:
+      - https
+    paths:
+      /users:
+        get:
+          summary: Returns a list of users.
+          description: Optional extended description in Markdown.
+          produces:
+            - application/json
+          responses:
+            200:
+              description: OK`
+
 type eventMatcher struct {
 	Method                   models.HTTPMethod
 	Path                     string
@@ -137,23 +158,13 @@ func createDefaultTestEvent() *APIEventTest {
 		event: _database.APIEvent{
 			Method:                   "GET",
 			Path:                     "/test",
-			ReconstructedPathID:      "",
 			Query:                    "foo=bar",
 			StatusCode:               200,
 			SourceIP:                 "2.2.2.2",
 			DestinationIP:            "1.1.1.1",
 			DestinationPort:          8080,
-			HasReconstructedSpecDiff: false,
-			HasProvidedSpecDiff:      false,
-			HasSpecDiff:              false,
 			SpecDiffType:             models.DiffTypeNODIFF,
 			HostSpecName:             host,
-			IsNonAPI:                 false,
-			NewReconstructedSpec:     "",
-			OldReconstructedSpec:     "",
-			NewProvidedSpec:          "",
-			OldProvidedSpec:          "",
-			APIInfoID:                0,
 			EventType:                models.APITypeINTERNAL,
 		},
 	}

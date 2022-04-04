@@ -283,28 +283,6 @@ func Test_getHighestPrioritySpecDiffType(t *testing.T) {
 	}
 }
 
-var speci = `
-    swagger: "2.0"
-    info:
-      title: Sample API
-      description: API description in Markdown.
-      version: 1.0.0
-    host: api.example.com
-    basePath: /v1
-    schemes:
-      - https
-    paths:
-      /users:
-        get:
-          summary: Returns a list of users.
-          description: Optional extended description in Markdown.
-          produces:
-            - application/json
-          responses:
-            200:
-              description: OK`
-
-// TODO add tests also for spec diff logic
 func TestBackend_handleHTTPTrace(t *testing.T) {
 	mockCtrlDatabase := gomock.NewController(t)
 	defer mockCtrlDatabase.Finish()
@@ -320,7 +298,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 
 	speculatorWithProvidedSpec := _speculator.CreateSpeculator(_speculator.Config{})
 	speculatorWithProvidedSpec.Specs[specKey] = _spec.CreateDefaultSpec(host, port, _spec.OperationGeneratorConfig{})
-	err := speculatorWithProvidedSpec.LoadProvidedSpec(specKey, []byte(speci), map[string]string{})
+	err := speculatorWithProvidedSpec.LoadProvidedSpec(specKey, []byte(providedSpec), map[string]string{})
 	assert.NilError(t, err)
 
 	speculatorWithApprovedSpec := _speculator.CreateSpeculator(_speculator.Config{})
