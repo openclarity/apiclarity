@@ -18,10 +18,13 @@ package database
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-openapi/strfmt"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
 	"github.com/apiclarity/apiclarity/api/server/models"
@@ -130,13 +133,13 @@ type GetAPIEventsQuery struct {
 type APIEventAnnotationFilters struct {
 	NoAnnotations bool
 
-	ModuleNameIs []string
-	NameIs       []string
-	ValueIs      []string
+	ModuleNameIs *string
+	NameIs       *string
+	ValueIs      *string
 
-	ModuleNameIsNot []string
-	NameIsNot       []string
-	ValueIsNot      []string
+	ModuleNameIsNot *string
+	NameIsNot       *string
+	ValueIsNot      *string
 }
 
 type APIEventsTableHandler struct {
@@ -200,25 +203,52 @@ func (a *APIEventsTableHandler) GetAPIEventsWithAnnotations(ctx context.Context,
 		tx = tx.Where(fmt.Sprintf("%s.%s = ?", apiEventTableName, idColumnName), *query.EventID)
 	}
 	if query.APIEventAnnotationFilters != nil {
+		var getInJsonMap func(key, value, extract string) string
+		var args []interface{}
 
-		if query.APIEventAnnotationFilters.NoAnnotations {
-			tx = FilterIsOrNull(tx, "ea."+nameColumnName, query.APIEventAnnotationFilters.NameIs)
-			tx = FilterIsOrNull(tx, "ea."+moduleNameColumnName, query.APIEventAnnotationFilters.ModuleNameIs)
-			tx = FilterIsOrNull(tx, "ea."+annotationColumnName, query.APIEventAnnotationFilters.ValueIs)
-		} else {
-			tx = FilterIs(tx, "ea."+nameColumnName, query.APIEventAnnotationFilters.NameIs)
-			tx = FilterIs(tx, "ea."+moduleNameColumnName, query.APIEventAnnotationFilters.ModuleNameIs)
-			tx = FilterIs(tx, "ea."+annotationColumnName, query.APIEventAnnotationFilters.ValueIs)
+		switch tx.Dialector.(type) {
+		case *postgres.Dialector:
+			getInJsonMap = func(key, val, extract string) string {
+				args = append(args, extract)
+				return fmt.Sprintf("jsonb_object_agg(coalesce(%s, ''), %s) -> ?", key, val)
+			}
+		case *sqlite.Dialector:
+			getInJsonMap = func(key, val, extract string) string {
+				args = append(args, extract)
+				return fmt.Sprintf("json_extract(json_group_object(coalesce(%s, ''), %s), ?)", key, val)
+			}
 		}
+		var havingConditions []string
+		if query.APIEventAnnotationFilters.NameIs != nil {
+			havingConditions = append(havingConditions, getInJsonMap("ea."+nameColumnName, "true", *query.APIEventAnnotationFilters.NameIs)+" IS NOT NULL")
+		}
+		if query.APIEventAnnotationFilters.ModuleNameIs != nil {
+			havingConditions = append(havingConditions, getInJsonMap("ea."+moduleNameColumnName, "true", *query.APIEventAnnotationFilters.ModuleNameIs)+" IS NOT NULL")
+		}
+		if query.APIEventAnnotationFilters.ValueIs != nil {
+			havingConditions = append(havingConditions, getInJsonMap("ea."+annotationColumnName, "true", *query.APIEventAnnotationFilters.ValueIs)+" IS NOT NULL")
+		}
+		if query.APIEventAnnotationFilters.NameIsNot != nil {
+			havingConditions = append(havingConditions, getInJsonMap("ea."+nameColumnName, "true", *query.APIEventAnnotationFilters.NameIsNot)+" IS NULL")
+		}
+		if query.APIEventAnnotationFilters.ModuleNameIsNot != nil {
+			havingConditions = append(havingConditions, getInJsonMap("ea."+moduleNameColumnName, "true", *query.APIEventAnnotationFilters.ModuleNameIsNot)+" IS NULL")
+		}
+		if query.APIEventAnnotationFilters.ValueIsNot != nil {
+			havingConditions = append(havingConditions, getInJsonMap("ea."+annotationColumnName, "true", *query.APIEventAnnotationFilters.ValueIsNot)+" IS NULL")
+		}
+		tx = tx.Joins(fmt.Sprintf("LEFT JOIN %s ea ON %s.%s = ea.%s ",
+			eventAnnotationsTableName, apiEventTableName, idColumnName, eventIDColumnName)).
+			Group(fmt.Sprintf("%s.%s", apiEventTableName, idColumnName)).
+			Distinct()
+		if query.APIEventAnnotationFilters.NoAnnotations {
+			tx.Having(fmt.Sprintf("(%s) OR COUNT(ea) = 0",
+				strings.Join(havingConditions, " AND ")), args...)
 
-		tx = FilterIsNotInAnnotations(tx, nameColumnName, query.APIEventAnnotationFilters.NameIsNot)
-		tx = FilterIsNotInAnnotations(tx, moduleNameColumnName, query.APIEventAnnotationFilters.ModuleNameIsNot)
-		tx = FilterIsNotInAnnotations(tx, annotationColumnName, query.APIEventAnnotationFilters.ValueIsNot)
+		} else {
+			tx.Having(strings.Join(havingConditions, " AND "), args...)
+		}
 	}
-
-	tx = tx.Joins(fmt.Sprintf("LEFT JOIN %s ea ON %s.%s = ea.%s ",
-		eventAnnotationsTableName, apiEventTableName, idColumnName, eventIDColumnName)).
-		Distinct()
 
 	tx = tx.Preload("Annotations")
 	if err := tx.Offset(query.Offset).
