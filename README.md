@@ -147,7 +147,11 @@ Update [values.yaml](https://github.com/apiclarity/apiclarity/blob/master/charts
    ```
 
 3. Run backend and frontend locally using demo data:
-
+   
+   Note: You might need to delete the old local state file and local db:
+   ```shell
+   rm state.gob; rm db.db
+   ```
    ```shell
    DATABASE_DRIVER=LOCAL FAKE_TRACES=true FAKE_TRACES_PATH=./backend/pkg/test/trace_files \
    ENABLE_DB_INFO_LOGS=true ./backend/bin/backend run

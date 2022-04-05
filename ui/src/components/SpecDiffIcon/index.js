@@ -36,6 +36,10 @@ const SpecDiffIcon = ({id, specDiffType}) => {
     const tooltipId = `spec-diff-${id}`;
     const {icon, tooltip, color} = SPEC_DIFF_TYPES_MAP[specDiffType] || {};
 
+    if (!icon) {
+        return null;
+    }
+
     return (
         <div className="spec-diff-icon" style={{width: "22px"}}>
             <div data-tip data-for={tooltipId}><Icon name={icon} style={{color}} /></div>
