@@ -3,6 +3,8 @@ run:
     - api
     - ui
     - dist
+  skip-files:
+    - ".*\\.gen\\.go$"
   timeout: 5m
 
 linters-settings:
