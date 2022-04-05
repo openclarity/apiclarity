@@ -40,15 +40,8 @@ $color-status-violet: #721BD5;
 $color-status-blue: #30749E;
 
 //risk colors:
-$color-risk-critical: $color-error-dark;
 $color-risk-high: $color-error;
-$color-risk-medium: $color-warning;
-$color-risk-medium-text: $color-warning-dark;
-$color-risk-low: $color-warning-low;
-$color-risk-low-text: $color-warning-low-dark;
 $color-risk-unknown: $color-status-blue;
-$color-risk-approved: $color-status-violet;
-$color-risk-no-known: $color-success;
 
 :export {
     color-main: $color-main;
@@ -67,13 +60,6 @@ $color-risk-no-known: $color-success;
     color-warning-low: $color-warning-low;
     color-success: $color-success;
 
-    color-risk-critical: $color-risk-critical;
     color-risk-high: $color-risk-high;
-    color-risk-medium: $color-risk-medium;
-    color-risk-medium-text: $color-risk-medium-text;
-    color-risk-low: $color-risk-low;
-    color-risk-low-text: $color-risk-low-text;
     color-risk-unknown: $color-risk-unknown;
-    color-risk-approved: $color-risk-approved;
-    color-risk-no-known: $color-risk-no-known;
 }
