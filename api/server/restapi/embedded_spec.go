@@ -313,6 +313,29 @@ func init() {
             "$ref": "#/responses/UnknownError"
           }
         }
+      },
+      "post": {
+        "summary": "Create API inventory item",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateApiInfo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ApiInfo"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
       }
     },
     "/apiInventory/{apiId}/provided_swagger.json": {
@@ -896,6 +919,21 @@ func init() {
           "items": {
             "$ref": "#/definitions/ReviewPathItem"
           }
+        }
+      }
+    },
+    "CreateApiInfo": {
+      "type": "object",
+      "properties": {
+        "apiType": {
+          "$ref": "#/definitions/ApiType"
+        },
+        "name": {
+          "description": "API name",
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
         }
       }
     },
@@ -1994,6 +2032,32 @@ func init() {
             }
           }
         }
+      },
+      "post": {
+        "summary": "Create API inventory item",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateApiInfo"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ApiInfo"
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
       }
     },
     "/apiInventory/{apiId}/provided_swagger.json": {
@@ -2800,6 +2864,21 @@ func init() {
           "items": {
             "$ref": "#/definitions/ReviewPathItem"
           }
+        }
+      }
+    },
+    "CreateApiInfo": {
+      "type": "object",
+      "properties": {
+        "apiType": {
+          "$ref": "#/definitions/ApiType"
+        },
+        "name": {
+          "description": "API name",
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
         }
       }
     },

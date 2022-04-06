@@ -87,6 +87,9 @@ func NewAPIClarityAPIsAPI(spec *loads.Document) *APIClarityAPIsAPI {
 		GetDashboardAPIUsageMostUsedHandler: GetDashboardAPIUsageMostUsedHandlerFunc(func(params GetDashboardAPIUsageMostUsedParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetDashboardAPIUsageMostUsed has not yet been implemented")
 		}),
+		PostAPIInventoryHandler: PostAPIInventoryHandlerFunc(func(params PostAPIInventoryParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostAPIInventory has not yet been implemented")
+		}),
 		PostAPIInventoryReviewIDApprovedReviewHandler: PostAPIInventoryReviewIDApprovedReviewHandlerFunc(func(params PostAPIInventoryReviewIDApprovedReviewParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostAPIInventoryReviewIDApprovedReview has not yet been implemented")
 		}),
@@ -159,6 +162,8 @@ type APIClarityAPIsAPI struct {
 	GetDashboardAPIUsageLatestDiffsHandler GetDashboardAPIUsageLatestDiffsHandler
 	// GetDashboardAPIUsageMostUsedHandler sets the operation handler for the get dashboard API usage most used operation
 	GetDashboardAPIUsageMostUsedHandler GetDashboardAPIUsageMostUsedHandler
+	// PostAPIInventoryHandler sets the operation handler for the post API inventory operation
+	PostAPIInventoryHandler PostAPIInventoryHandler
 	// PostAPIInventoryReviewIDApprovedReviewHandler sets the operation handler for the post API inventory review ID approved review operation
 	PostAPIInventoryReviewIDApprovedReviewHandler PostAPIInventoryReviewIDApprovedReviewHandler
 	// PutAPIInventoryAPIIDSpecsProvidedSpecHandler sets the operation handler for the put API inventory API ID specs provided spec operation
@@ -284,6 +289,9 @@ func (o *APIClarityAPIsAPI) Validate() error {
 	}
 	if o.GetDashboardAPIUsageMostUsedHandler == nil {
 		unregistered = append(unregistered, "GetDashboardAPIUsageMostUsedHandler")
+	}
+	if o.PostAPIInventoryHandler == nil {
+		unregistered = append(unregistered, "PostAPIInventoryHandler")
 	}
 	if o.PostAPIInventoryReviewIDApprovedReviewHandler == nil {
 		unregistered = append(unregistered, "PostAPIInventoryReviewIDApprovedReviewHandler")
@@ -439,6 +447,10 @@ func (o *APIClarityAPIsAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/dashboard/apiUsage/mostUsed"] = NewGetDashboardAPIUsageMostUsed(o.context, o.GetDashboardAPIUsageMostUsedHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/apiInventory"] = NewPostAPIInventory(o.context, o.PostAPIInventoryHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
