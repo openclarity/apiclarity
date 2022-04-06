@@ -32,7 +32,12 @@ func (s *Server) PostAPIInventory(params operations.PostAPIInventoryParams) midd
 		Name: params.Body.Name,
 		Port: params.Body.Port,
 	}
-	s.dbHandler.APIInventoryTable().CreateAPIInfo(apiInfo)
+	if err := s.dbHandler.APIInventoryTable().FirstOrCreate(apiInfo); err != nil {
+		log.Error(err)
+		return operations.NewPostAPIInventoryDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
+			Message: "Oops",
+		})
+	}
 
 	return operations.NewPostAPIInventoryOK().WithPayload(_database.APIInfoFromDB(apiInfo))
 }
