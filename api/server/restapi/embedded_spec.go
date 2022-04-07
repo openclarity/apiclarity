@@ -321,7 +321,7 @@ func init() {
             "name": "body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/CreateApiInfo"
+              "$ref": "#/definitions/ApiInfoWithType"
             }
           }
         ],
@@ -850,6 +850,21 @@ func init() {
         }
       }
     },
+    "ApiInfoWithType": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ApiInfo"
+        },
+        {
+          "properties": {
+            "apiType": {
+              "$ref": "#/definitions/ApiType"
+            }
+          }
+        }
+      ]
+    },
     "ApiInventorySortKey": {
       "type": "string",
       "enum": [
@@ -919,21 +934,6 @@ func init() {
           "items": {
             "$ref": "#/definitions/ReviewPathItem"
           }
-        }
-      }
-    },
-    "CreateApiInfo": {
-      "type": "object",
-      "properties": {
-        "apiType": {
-          "$ref": "#/definitions/ApiType"
-        },
-        "name": {
-          "description": "API name",
-          "type": "string"
-        },
-        "port": {
-          "type": "integer"
         }
       }
     },
@@ -2040,7 +2040,7 @@ func init() {
             "name": "body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/CreateApiInfo"
+              "$ref": "#/definitions/ApiInfoWithType"
             }
           }
         ],
@@ -2795,6 +2795,21 @@ func init() {
         }
       }
     },
+    "ApiInfoWithType": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ApiInfo"
+        },
+        {
+          "properties": {
+            "apiType": {
+              "$ref": "#/definitions/ApiType"
+            }
+          }
+        }
+      ]
+    },
     "ApiInventorySortKey": {
       "type": "string",
       "enum": [
@@ -2864,21 +2879,6 @@ func init() {
           "items": {
             "$ref": "#/definitions/ReviewPathItem"
           }
-        }
-      }
-    },
-    "CreateApiInfo": {
-      "type": "object",
-      "properties": {
-        "apiType": {
-          "$ref": "#/definitions/ApiType"
-        },
-        "name": {
-          "description": "API name",
-          "type": "string"
-        },
-        "port": {
-          "type": "integer"
         }
       }
     },

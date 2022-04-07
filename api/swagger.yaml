@@ -85,16 +85,13 @@ definitions:
         type: 'boolean'
         default: false
 
-  CreateApiInfo:
+  ApiInfoWithType:
     type: 'object'
-    properties:
-      name:
-        description: 'API name'
-        type: 'string'
-      port:
-        type: 'integer'
-      apiType:
-        $ref: '#/definitions/ApiType'
+    allOf:
+      - $ref: '#/definitions/ApiInfo'
+      - properties:
+          apiType:
+            $ref: '#/definitions/ApiType'
 
   ApiUsages:
     type: 'object'
@@ -469,7 +466,7 @@ paths:
         - in: body
           name: body
           schema:
-            $ref: '#/definitions/CreateApiInfo'
+            $ref: '#/definitions/ApiInfoWithType'
 
       responses:
         '200':
