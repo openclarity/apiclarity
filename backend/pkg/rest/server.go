@@ -68,6 +68,10 @@ func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *d
 		return s.GetAPIInventory(params)
 	})
 
+	api.PostAPIInventoryHandler = operations.PostAPIInventoryHandlerFunc(func(params operations.PostAPIInventoryParams) middleware.Responder {
+		return s.PostAPIInventory(params)
+	})
+
 	api.GetAPIInventoryAPIIDSpecsHandler = operations.GetAPIInventoryAPIIDSpecsHandlerFunc(func(params operations.GetAPIInventoryAPIIDSpecsParams) middleware.Responder {
 		return s.GetAPIInventoryAPIIDSpecs(params)
 	})

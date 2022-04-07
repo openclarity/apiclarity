@@ -313,6 +313,29 @@ func init() {
             "$ref": "#/responses/UnknownError"
           }
         }
+      },
+      "post": {
+        "summary": "Create API inventory item",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/ApiInfoWithType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ApiInfo"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
       }
     },
     "/apiInventory/{apiId}/provided_swagger.json": {
@@ -826,6 +849,21 @@ func init() {
           "type": "integer"
         }
       }
+    },
+    "ApiInfoWithType": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ApiInfo"
+        },
+        {
+          "properties": {
+            "apiType": {
+              "$ref": "#/definitions/ApiType"
+            }
+          }
+        }
+      ]
     },
     "ApiInventorySortKey": {
       "type": "string",
@@ -1994,6 +2032,32 @@ func init() {
             }
           }
         }
+      },
+      "post": {
+        "summary": "Create API inventory item",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/ApiInfoWithType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ApiInfo"
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
       }
     },
     "/apiInventory/{apiId}/provided_swagger.json": {
@@ -2730,6 +2794,21 @@ func init() {
           "type": "integer"
         }
       }
+    },
+    "ApiInfoWithType": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/ApiInfo"
+        },
+        {
+          "properties": {
+            "apiType": {
+              "$ref": "#/definitions/ApiType"
+            }
+          }
+        }
+      ]
     },
     "ApiInventorySortKey": {
       "type": "string",

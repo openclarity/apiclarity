@@ -85,6 +85,14 @@ definitions:
         type: 'boolean'
         default: false
 
+  ApiInfoWithType:
+    type: 'object'
+    allOf:
+      - $ref: '#/definitions/ApiInfo'
+      - properties:
+          apiType:
+            $ref: '#/definitions/ApiType'
+
   ApiUsages:
     type: 'object'
     properties:
@@ -450,6 +458,21 @@ paths:
                 description: 'List of filtered APIs in the given page. List length must be lower or equal to pageSize'
                 items:
                   $ref: '#/definitions/ApiInfo'
+        default:
+          $ref: '#/responses/UnknownError'
+    post:
+      summary: 'Create API inventory item'
+      parameters:
+        - in: body
+          name: body
+          schema:
+            $ref: '#/definitions/ApiInfoWithType'
+
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+              $ref: '#/definitions/ApiInfo'
         default:
           $ref: '#/responses/UnknownError'
 
