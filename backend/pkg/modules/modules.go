@@ -17,10 +17,11 @@ package modules
 
 import (
 	"context"
-	"github.com/apiclarity/apiclarity/backend/pkg/database"
-	"github.com/apiclarity/apiclarity/backend/pkg/modules/internal/core"
+
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/apiclarity/apiclarity/backend/pkg/database"
+	"github.com/apiclarity/apiclarity/backend/pkg/modules/internal/core"
 	_ "github.com/apiclarity/apiclarity/backend/pkg/modules/internal/demo"
 )
 

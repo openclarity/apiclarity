@@ -18,10 +18,12 @@ package demo
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+
+	log "github.com/sirupsen/logrus"
+
 	"github.com/apiclarity/apiclarity/backend/pkg/database"
 	"github.com/apiclarity/apiclarity/backend/pkg/modules/internal/core"
-	log "github.com/sirupsen/logrus"
-	"net/http"
 )
 
 func init() {
@@ -31,7 +33,6 @@ func init() {
 const ModuleName = "demo"
 
 func newModule(ctx context.Context, accessor core.BackendAccessor) (core.Module, error) {
-	//accessor.CreateAPIEventAnnotations(ctx, "mod", 1, core.AlertInfoAnn)
 	return &demo{
 		handler: HandlerWithOptions(&controller{accessor: accessor}, ChiServerOptions{BaseURL: "/api/modules/demo"}),
 	}, nil
@@ -42,12 +43,12 @@ type controller struct {
 }
 
 func httpError(w http.ResponseWriter, err error) {
-	w.WriteHeader(400)
-	json.NewEncoder(w).Encode(map[string]interface{}{"error": err.Error()})
+	w.WriteHeader(http.StatusBadRequest)
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": err.Error()})
 }
 
 func httpResponse(w http.ResponseWriter, data interface{}) {
-	w.WriteHeader(400)
+	w.WriteHeader(http.StatusBadRequest)
 	if err := json.NewEncoder(w).Encode(data); err != nil {
 		httpError(w, err)
 	}
@@ -101,7 +102,7 @@ func (c *controller) PostApiApiIDAnnotationAnnotation(w http.ResponseWriter, r *
 		Data string `json:"data"`
 	}
 	d := &Data{}
-	json.NewDecoder(r.Body).Decode(d)
+	_ = json.NewDecoder(r.Body).Decode(d)
 	err := c.accessor.StoreAPIInfoAnnotations(r.Context(), ModuleName, uint(apiID), core.Annotation{
 		Name:       annotation,
 		Annotation: []byte(d.Data),
@@ -127,7 +128,7 @@ func (c *controller) PostEventEventIDAnnotationAnnotation(w http.ResponseWriter,
 		Data string `json:"data"`
 	}
 	d := &Data{}
-	json.NewDecoder(r.Body).Decode(d)
+	_ = json.NewDecoder(r.Body).Decode(d)
 	err := c.accessor.CreateAPIEventAnnotations(r.Context(), ModuleName, uint(eventID), core.Annotation{
 		Name:       annotation,
 		Annotation: []byte(d.Data),
@@ -154,7 +155,7 @@ func (c *controller) PostEvents(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *controller) GetVersion(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(Version{Version: "0.0.0"})
+	_ = json.NewEncoder(w).Encode(Version{Version: "0.0.0"})
 }
 
 type demo struct {

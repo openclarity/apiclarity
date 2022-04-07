@@ -94,14 +94,12 @@ func (b *Backend) handleHTTPTraceFromFile(fileName string) error {
 }
 
 func putProvidedSpecLocally(root string) {
-
 	putProvidedSpecLocallyImp(root, "provided_spec.json", 1)
 	putProvidedSpecLocallyImp(root, "petstorev2.json", 2)
 	putProvidedSpecLocallyImp(root, "petstorev2.json", 3)
 }
 
 func putProvidedSpecLocallyImp(root string, specfile string, apiId int) {
-
 	fileName := root + fmt.Sprintf("/../provided_spec/%v", specfile)
 
 	// initialize http client

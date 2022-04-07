@@ -29,7 +29,7 @@ import (
 
 const BaseHTTPPath = "/api/modules"
 
-//GetAssetsDir get assets directory from env variable or the default location
+// GetAssetsDir get assets directory from env variable or the default location.
 func GetAssetsDir() string {
 	assetsDir, ok := os.LookupEnv(config.ModulesAssetsEnvVar)
 	if !ok {
@@ -49,7 +49,7 @@ func RegisterModule(m ModuleFactory) {
 
 type ModuleFactory func(ctx context.Context, accessor BackendAccessor) (Module, error)
 
-func New(ctx context.Context, accessor BackendAccessor) *core {
+func New(ctx context.Context, accessor BackendAccessor) Module {
 	c := &core{}
 	for _, moduleFactory := range modules {
 		module, err := moduleFactory(ctx, accessor)

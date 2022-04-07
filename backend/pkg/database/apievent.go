@@ -244,7 +244,6 @@ func (a *APIEventsTableHandler) GetAPIEventsWithAnnotations(ctx context.Context,
 		if query.APIEventAnnotationFilters.NoAnnotations {
 			tx.Having(fmt.Sprintf("(%s) OR COUNT(ea) = 0",
 				strings.Join(havingConditions, " AND ")), args...)
-
 		} else {
 			tx.Having(strings.Join(havingConditions, " AND "), args...)
 		}
