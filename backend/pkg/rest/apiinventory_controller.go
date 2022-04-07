@@ -26,6 +26,22 @@ import (
 	_database "github.com/apiclarity/apiclarity/backend/pkg/database"
 )
 
+func (s *Server) PostAPIInventory(params operations.PostAPIInventoryParams) middleware.Responder {
+	apiInfo := &_database.APIInfo{
+		Type: params.Body.APIType,
+		Name: params.Body.Name,
+		Port: params.Body.Port,
+	}
+	if err := s.dbHandler.APIInventoryTable().FirstOrCreate(apiInfo); err != nil {
+		log.Error(err)
+		return operations.NewPostAPIInventoryDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
+			Message: "Oops",
+		})
+	}
+
+	return operations.NewPostAPIInventoryOK().WithPayload(_database.APIInfoFromDB(apiInfo))
+}
+
 func (s *Server) GetAPIInventory(params operations.GetAPIInventoryParams) middleware.Responder {
 	var apiInventory []*models.APIInfo
 
