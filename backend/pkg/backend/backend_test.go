@@ -16,10 +16,19 @@
 package backend
 
 import (
+	"net/http"
 	"testing"
 
+	"github.com/go-openapi/spec"
+	"github.com/golang/mock/gomock"
+	"gotest.tools/assert"
+
 	"github.com/apiclarity/apiclarity/api/server/models"
+	_database "github.com/apiclarity/apiclarity/backend/pkg/database"
+	"github.com/apiclarity/apiclarity/backend/pkg/k8smonitor"
+	pluginsmodels "github.com/apiclarity/apiclarity/plugins/api/server/models"
 	_spec "github.com/apiclarity/speculator/pkg/spec"
+	_speculator "github.com/apiclarity/speculator/pkg/speculator"
 )
 
 func Test_isNonAPI(t *testing.T) {
@@ -269,6 +278,464 @@ func Test_getHighestPrioritySpecDiffType(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := getHighestPrioritySpecDiffType(tt.args.providedDiff, tt.args.reconstructedDiff); got != tt.want {
 				t.Errorf("getHighestPrioritySpecDiffType() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestBackend_handleHTTPTrace(t *testing.T) {
+	mockCtrlDatabase := gomock.NewController(t)
+	defer mockCtrlDatabase.Finish()
+	mockDatabase := _database.NewMockDatabase(mockCtrlDatabase)
+
+	mockCtrlAPIEventTable := gomock.NewController(t)
+	defer mockCtrlAPIEventTable.Finish()
+	mockAPIEventTable := _database.NewMockAPIEventsTable(mockCtrlAPIEventTable)
+
+	mockCtrlAPIInventoryTable := gomock.NewController(t)
+	defer mockCtrlAPIInventoryTable.Finish()
+	mockAPIInventoryTable := _database.NewMockAPIInventoryTable(mockCtrlAPIInventoryTable)
+
+	speculatorWithProvidedSpec := _speculator.CreateSpeculator(_speculator.Config{})
+	speculatorWithProvidedSpec.Specs[specKey] = _spec.CreateDefaultSpec(host, port, _spec.OperationGeneratorConfig{})
+	err := speculatorWithProvidedSpec.LoadProvidedSpec(specKey, []byte(providedSpec), map[string]string{})
+	assert.NilError(t, err)
+
+	speculatorWithApprovedSpec := _speculator.CreateSpeculator(_speculator.Config{})
+	speculatorWithApprovedSpec.Specs[specKey] = _spec.CreateDefaultSpec(host, port, _spec.OperationGeneratorConfig{})
+	ApprovedSpecReview := &_spec.ApprovedSpecReview{
+		PathToPathItem: map[string]*spec.PathItem{
+			"/api/1/foo": &_spec.NewTestPathItem().WithOperation(http.MethodPost, nil).PathItem,
+			"/api/2/foo": &_spec.NewTestPathItem().WithOperation(http.MethodGet, nil).PathItem,
+		},
+		PathItemsReview: []*_spec.ApprovedSpecReviewPathItem{
+			{
+				ReviewPathItem: _spec.ReviewPathItem{
+					ParameterizedPath: "/api/{param1}/foo",
+					Paths:             map[string]bool{"/api/1/foo": true, "/api/2/foo": true},
+				},
+			},
+		},
+	}
+	err = speculatorWithApprovedSpec.ApplyApprovedReview(specKey, ApprovedSpecReview)
+	assert.NilError(t, err)
+
+	type fields struct {
+		speculator              *_speculator.Speculator
+		monitor                 *k8smonitor.Monitor
+		dbHandler               _database.Database
+		expectDatabase          func(database *_database.MockDatabase)
+		expectAPIEventTable     func(apiEventTable *_database.MockAPIEventsTable)
+		expectAPIInventoryTable func(apiInventoryTable *_database.MockAPIInventoryTable)
+	}
+	type args struct {
+		trace *pluginsmodels.Telemetry
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "good run",
+			fields: fields{
+				speculator: _speculator.CreateSpeculator(_speculator.Config{}),
+				monitor:    nil, // TODO turn monitor into interface so we can use it in tests. for now we assume to run locally (no monitor)
+				dbHandler:  mockDatabase,
+				expectDatabase: func(database *_database.MockDatabase) {
+					database.EXPECT().APIInventoryTable().Return(mockAPIInventoryTable)
+					database.EXPECT().APIEventsTable().Return(mockAPIEventTable)
+				},
+				expectAPIInventoryTable: func(apiInventoryTable *_database.MockAPIInventoryTable) {
+					apiInventoryTable.EXPECT().FirstOrCreate(gomock.Any())
+				},
+				expectAPIEventTable: func(apiEventTable *_database.MockAPIEventsTable) {
+					apiEventTable.EXPECT().CreateAPIEvent(NewEventMatcher(createDefaultTestEvent().event))
+				},
+			},
+			args: args{
+				trace: &pluginsmodels.Telemetry{
+					DestinationAddress:   destinationAddress,
+					DestinationNamespace: "foo",
+					Request: &pluginsmodels.Request{
+						Common: &pluginsmodels.Common{
+							TruncatedBody: false,
+							Body:          []byte{},
+							Headers:       []*pluginsmodels.Header{},
+							Time:          0,
+							Version:       "1.1",
+						},
+						Host:   host,
+						Method: "GET",
+						Path:   "/test?foo=bar",
+					},
+					RequestID: "1",
+					Response: &pluginsmodels.Response{
+						Common: &pluginsmodels.Common{
+							TruncatedBody: false,
+							Body:          []byte{},
+							Headers:       []*pluginsmodels.Header{},
+							Time:          0,
+							Version:       "1.1",
+						},
+						StatusCode: "200",
+					},
+					Scheme:        "http",
+					SourceAddress: "2.2.2.2:80",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Host field is empty, get host from headers",
+			fields: fields{
+				speculator: _speculator.CreateSpeculator(_speculator.Config{}),
+				monitor:    nil,
+				dbHandler:  mockDatabase,
+				expectDatabase: func(database *_database.MockDatabase) {
+					database.EXPECT().APIInventoryTable().Return(mockAPIInventoryTable)
+					database.EXPECT().APIEventsTable().Return(mockAPIEventTable)
+				},
+				expectAPIInventoryTable: func(apiInventoryTable *_database.MockAPIInventoryTable) {
+					apiInventoryTable.EXPECT().FirstOrCreate(gomock.Any())
+				},
+				expectAPIEventTable: func(apiEventTable *_database.MockAPIEventsTable) {
+					apiEventTable.EXPECT().CreateAPIEvent(NewEventMatcher(createDefaultTestEvent().event))
+				},
+			},
+			args: args{
+				trace: &pluginsmodels.Telemetry{
+					DestinationAddress:   destinationAddress,
+					DestinationNamespace: "foo",
+					Request: &pluginsmodels.Request{
+						Common: &pluginsmodels.Common{
+							TruncatedBody: false,
+							Body:          []byte{},
+							Headers: []*pluginsmodels.Header{
+								{
+									Key:   "host",
+									Value: host,
+								},
+							},
+							Time:    0,
+							Version: "1.1",
+						},
+						Host:   "",
+						Method: "GET",
+						Path:   "/test?foo=bar",
+					},
+					RequestID: "1",
+					Response: &pluginsmodels.Response{
+						Common: &pluginsmodels.Common{
+							TruncatedBody: false,
+							Body:          []byte{},
+							Headers:       []*pluginsmodels.Header{},
+							Time:          0,
+							Version:       "1.1",
+						},
+						StatusCode: "200",
+					},
+					Scheme:        "http",
+					SourceAddress: "2.2.2.2:80",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "no host name found",
+			fields: fields{
+				speculator:              _speculator.CreateSpeculator(_speculator.Config{}),
+				monitor:                 nil,
+				dbHandler:               mockDatabase,
+				expectDatabase:          func(database *_database.MockDatabase) {},
+				expectAPIInventoryTable: func(apiInventoryTable *_database.MockAPIInventoryTable) {},
+				expectAPIEventTable:     func(apiEventTable *_database.MockAPIEventsTable) {},
+			},
+			args: args{
+				trace: &pluginsmodels.Telemetry{
+					DestinationAddress:   destinationAddress,
+					DestinationNamespace: "foo",
+					Request: &pluginsmodels.Request{
+						Common: &pluginsmodels.Common{
+							TruncatedBody: false,
+							Body:          []byte{},
+							Headers:       []*pluginsmodels.Header{},
+							Time:          0,
+							Version:       "1.1",
+						},
+						Host:   "",
+						Method: "GET",
+						Path:   "/test?foo=bar",
+					},
+					RequestID: "1",
+					Response: &pluginsmodels.Response{
+						Common: &pluginsmodels.Common{
+							TruncatedBody: false,
+							Body:          []byte{},
+							Headers:       []*pluginsmodels.Header{},
+							Time:          0,
+							Version:       "1.1",
+						},
+						StatusCode: "200",
+					},
+					Scheme:        "http",
+					SourceAddress: "2.2.2.2:80",
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid destination address",
+			fields: fields{
+				speculator:              _speculator.CreateSpeculator(_speculator.Config{}),
+				monitor:                 nil,
+				dbHandler:               mockDatabase,
+				expectDatabase:          func(database *_database.MockDatabase) {},
+				expectAPIInventoryTable: func(apiInventoryTable *_database.MockAPIInventoryTable) {},
+				expectAPIEventTable:     func(apiEventTable *_database.MockAPIEventsTable) {},
+			},
+			args: args{
+				trace: &pluginsmodels.Telemetry{
+					DestinationAddress:   "1.1.1.1",
+					DestinationNamespace: "foo",
+					Request: &pluginsmodels.Request{
+						Common: &pluginsmodels.Common{
+							TruncatedBody: false,
+							Body:          []byte{},
+							Headers:       []*pluginsmodels.Header{},
+							Time:          0,
+							Version:       "1.1",
+						},
+						Host:   host,
+						Method: "GET",
+						Path:   "/test?foo=bar",
+					},
+					RequestID: "1",
+					Response: &pluginsmodels.Response{
+						Common: &pluginsmodels.Common{
+							TruncatedBody: false,
+							Body:          []byte{},
+							Headers:       []*pluginsmodels.Header{},
+							Time:          0,
+							Version:       "1.1",
+						},
+						StatusCode: "200",
+					},
+					Scheme:        "http",
+					SourceAddress: "2.2.2.2:80",
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid source address",
+			fields: fields{
+				speculator:              _speculator.CreateSpeculator(_speculator.Config{}),
+				monitor:                 nil,
+				dbHandler:               mockDatabase,
+				expectDatabase:          func(database *_database.MockDatabase) {},
+				expectAPIInventoryTable: func(apiInventoryTable *_database.MockAPIInventoryTable) {},
+				expectAPIEventTable:     func(apiEventTable *_database.MockAPIEventsTable) {},
+			},
+			args: args{
+				trace: &pluginsmodels.Telemetry{
+					DestinationAddress:   destinationAddress,
+					DestinationNamespace: "foo",
+					Request: &pluginsmodels.Request{
+						Common: &pluginsmodels.Common{
+							TruncatedBody: false,
+							Body:          []byte{},
+							Headers:       []*pluginsmodels.Header{},
+							Time:          0,
+							Version:       "1.1",
+						},
+						Host:   host,
+						Method: "GET",
+						Path:   "/test?foo=bar",
+					},
+					RequestID: "1",
+					Response: &pluginsmodels.Response{
+						Common: &pluginsmodels.Common{
+							TruncatedBody: false,
+							Body:          []byte{},
+							Headers:       []*pluginsmodels.Header{},
+							Time:          0,
+							Version:       "1.1",
+						},
+						StatusCode: "200",
+					},
+					Scheme:        "http",
+					SourceAddress: "2.2.2.2",
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "non api",
+			fields: fields{
+				speculator: _speculator.CreateSpeculator(_speculator.Config{}),
+				monitor:    nil,
+				dbHandler:  mockDatabase,
+				expectDatabase: func(database *_database.MockDatabase) {
+					database.EXPECT().APIEventsTable().Return(mockAPIEventTable)
+				},
+				expectAPIInventoryTable: func(apiInventoryTable *_database.MockAPIInventoryTable) {},
+				expectAPIEventTable: func(apiEventTable *_database.MockAPIEventsTable) {
+					apiEventTable.EXPECT().CreateAPIEvent(NewEventMatcher(createDefaultTestEvent().WithIsNonAPI(true).event))
+				},
+			},
+			args: args{
+				trace: &pluginsmodels.Telemetry{
+					DestinationAddress:   destinationAddress,
+					DestinationNamespace: "foo",
+					Request: &pluginsmodels.Request{
+						Common: &pluginsmodels.Common{
+							TruncatedBody: false,
+							Body:          []byte{},
+							Headers:       []*pluginsmodels.Header{},
+							Time:          0,
+							Version:       "1.1",
+						},
+						Host:   host,
+						Method: "GET",
+						Path:   "/test?foo=bar",
+					},
+					RequestID: "1",
+					Response: &pluginsmodels.Response{
+						Common: &pluginsmodels.Common{
+							TruncatedBody: false,
+							Body:          []byte{},
+							Headers: []*pluginsmodels.Header{
+								{
+									Key:   contentTypeHeaderName,
+									Value: "xml",
+								},
+							},
+							Time:    0,
+							Version: "1.1",
+						},
+						StatusCode: "200",
+					},
+					Scheme:        "http",
+					SourceAddress: "2.2.2.2:80",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "has provided spec diff",
+			fields: fields{
+				speculator: speculatorWithProvidedSpec,
+				monitor:    nil,
+				dbHandler:  mockDatabase,
+				expectDatabase: func(database *_database.MockDatabase) {
+					database.EXPECT().APIInventoryTable().Return(mockAPIInventoryTable)
+					database.EXPECT().APIEventsTable().Return(mockAPIEventTable)
+				},
+				expectAPIInventoryTable: func(apiInventoryTable *_database.MockAPIInventoryTable) {
+					apiInventoryTable.EXPECT().FirstOrCreate(gomock.Any())
+				},
+				expectAPIEventTable: func(apiEventTable *_database.MockAPIEventsTable) {
+					apiEventTable.EXPECT().CreateAPIEvent(NewEventMatcher(createDefaultTestEvent().WithHasProvidedSpecDiff(true).WithSpecDiffType(models.DiffTypeSHADOWDIFF).event))
+				},
+			},
+			args: args{
+				trace: &pluginsmodels.Telemetry{
+					DestinationAddress:   destinationAddress,
+					DestinationNamespace: "foo",
+					Request: &pluginsmodels.Request{
+						Common: &pluginsmodels.Common{
+							TruncatedBody: false,
+							Body:          []byte{},
+							Headers:       []*pluginsmodels.Header{},
+							Time:          0,
+							Version:       "1.1",
+						},
+						Host:   host,
+						Method: "GET",
+						Path:   "/test?foo=bar",
+					},
+					RequestID: "1",
+					Response: &pluginsmodels.Response{
+						Common: &pluginsmodels.Common{
+							TruncatedBody: false,
+							Body:          []byte{},
+							Headers:       []*pluginsmodels.Header{},
+							Time:          0,
+							Version:       "1.1",
+						},
+						StatusCode: "200",
+					},
+					Scheme:        "http",
+					SourceAddress: "2.2.2.2:80",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "has reconstructed spec diff",
+			fields: fields{
+				speculator: speculatorWithApprovedSpec,
+				monitor:    nil,
+				dbHandler:  mockDatabase,
+				expectDatabase: func(database *_database.MockDatabase) {
+					database.EXPECT().APIInventoryTable().Return(mockAPIInventoryTable)
+					database.EXPECT().APIEventsTable().Return(mockAPIEventTable)
+				},
+				expectAPIInventoryTable: func(apiInventoryTable *_database.MockAPIInventoryTable) {
+					apiInventoryTable.EXPECT().FirstOrCreate(gomock.Any())
+				},
+				expectAPIEventTable: func(apiEventTable *_database.MockAPIEventsTable) {
+					apiEventTable.EXPECT().CreateAPIEvent(NewEventMatcher(createDefaultTestEvent().WithHasReconstructedSpecDiff(true).WithSpecDiffType(models.DiffTypeSHADOWDIFF).event))
+				},
+			},
+			args: args{
+				trace: &pluginsmodels.Telemetry{
+					DestinationAddress:   destinationAddress,
+					DestinationNamespace: "foo",
+					Request: &pluginsmodels.Request{
+						Common: &pluginsmodels.Common{
+							TruncatedBody: false,
+							Body:          []byte{},
+							Headers:       []*pluginsmodels.Header{},
+							Time:          0,
+							Version:       "1.1",
+						},
+						Host:   host,
+						Method: "GET",
+						Path:   "/test?foo=bar",
+					},
+					RequestID: "1",
+					Response: &pluginsmodels.Response{
+						Common: &pluginsmodels.Common{
+							TruncatedBody: false,
+							Body:          []byte{},
+							Headers:       []*pluginsmodels.Header{},
+							Time:          0,
+							Version:       "1.1",
+						},
+						StatusCode: "200",
+					},
+					Scheme:        "http",
+					SourceAddress: "2.2.2.2:80",
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		tt.fields.expectDatabase(mockDatabase)
+		tt.fields.expectAPIInventoryTable(mockAPIInventoryTable)
+		tt.fields.expectAPIEventTable(mockAPIEventTable)
+		t.Run(tt.name, func(t *testing.T) {
+			b := &Backend{
+				speculator: tt.fields.speculator,
+				monitor:    tt.fields.monitor,
+				dbHandler:  tt.fields.dbHandler,
+			}
+			if err := b.handleHTTPTrace(tt.args.trace); (err != nil) != tt.wantErr {
+				t.Errorf("handleHTTPTrace() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
