@@ -16,12 +16,12 @@
 package backend
 
 import (
-	"gotest.tools/assert"
 	"net/http"
 	"testing"
 
 	"github.com/go-openapi/spec"
 	"github.com/golang/mock/gomock"
+	"gotest.tools/assert"
 
 	"github.com/apiclarity/apiclarity/api/server/models"
 	_database "github.com/apiclarity/apiclarity/backend/pkg/database"

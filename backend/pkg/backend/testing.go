@@ -16,9 +16,10 @@
 package backend
 
 import (
+	"github.com/golang/mock/gomock"
+
 	"github.com/apiclarity/apiclarity/api/server/models"
 	_database "github.com/apiclarity/apiclarity/backend/pkg/database"
-	"github.com/golang/mock/gomock"
 )
 
 const (
@@ -26,6 +27,8 @@ const (
 	host               = "httpbin"
 	port               = "8080"
 	destinationAddress = "1.1.1.1:8080"
+	statusCode         = 200
+	destinationPort    = 8080
 )
 
 var providedSpec = `
@@ -156,16 +159,16 @@ type APIEventTest struct {
 func createDefaultTestEvent() *APIEventTest {
 	return &APIEventTest{
 		event: _database.APIEvent{
-			Method:                   "GET",
-			Path:                     "/test",
-			Query:                    "foo=bar",
-			StatusCode:               200,
-			SourceIP:                 "2.2.2.2",
-			DestinationIP:            "1.1.1.1",
-			DestinationPort:          8080,
-			SpecDiffType:             models.DiffTypeNODIFF,
-			HostSpecName:             host,
-			EventType:                models.APITypeINTERNAL,
+			Method:          "GET",
+			Path:            "/test",
+			Query:           "foo=bar",
+			StatusCode:      statusCode,
+			SourceIP:        "2.2.2.2",
+			DestinationIP:   "1.1.1.1",
+			DestinationPort: destinationPort,
+			SpecDiffType:    models.DiffTypeNODIFF,
+			HostSpecName:    host,
+			EventType:       models.APITypeINTERNAL,
 		},
 	}
 }
@@ -194,4 +197,3 @@ func (t *APIEventTest) WithHasReconstructedSpecDiff(hasReconstructedSpecDiff boo
 	t.event.HasReconstructedSpecDiff = hasReconstructedSpecDiff
 	return t
 }
-
