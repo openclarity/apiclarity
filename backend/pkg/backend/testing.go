@@ -149,6 +149,9 @@ func (m *eventMatcher) Matches(x interface{}) bool {
 	if event.HasProvidedSpecDiff != m.HasProvidedSpecDiff {
 		return false
 	}
+	if event.HasReconstructedSpecDiff != m.HasReconstructedSpecDiff {
+		return false
+	}
 	return true
 }
 
