@@ -5,34 +5,49 @@
 package database
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
-// MockDatabase is a mock of Database interface
+// MockDatabase is a mock of Database interface.
 type MockDatabase struct {
 	ctrl     *gomock.Controller
 	recorder *MockDatabaseMockRecorder
 }
 
-// MockDatabaseMockRecorder is the mock recorder for MockDatabase
+// MockDatabaseMockRecorder is the mock recorder for MockDatabase.
 type MockDatabaseMockRecorder struct {
 	mock *MockDatabase
 }
 
-// NewMockDatabase creates a new mock instance
+// NewMockDatabase creates a new mock instance.
 func NewMockDatabase(ctrl *gomock.Controller) *MockDatabase {
 	mock := &MockDatabase{ctrl: ctrl}
 	mock.recorder = &MockDatabaseMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockDatabase) EXPECT() *MockDatabaseMockRecorder {
 	return m.recorder
 }
 
-// APIEventsTable mocks base method
+// APIEventsAnnotationsTable mocks base method.
+func (m *MockDatabase) APIEventsAnnotationsTable() APIEventAnnotationTable {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "APIEventsAnnotationsTable")
+	ret0, _ := ret[0].(APIEventAnnotationTable)
+	return ret0
+}
+
+// APIEventsAnnotationsTable indicates an expected call of APIEventsAnnotationsTable.
+func (mr *MockDatabaseMockRecorder) APIEventsAnnotationsTable() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "APIEventsAnnotationsTable", reflect.TypeOf((*MockDatabase)(nil).APIEventsAnnotationsTable))
+}
+
+// APIEventsTable mocks base method.
 func (m *MockDatabase) APIEventsTable() APIEventsTable {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "APIEventsTable")
@@ -40,13 +55,27 @@ func (m *MockDatabase) APIEventsTable() APIEventsTable {
 	return ret0
 }
 
-// APIEventsTable indicates an expected call of APIEventsTable
+// APIEventsTable indicates an expected call of APIEventsTable.
 func (mr *MockDatabaseMockRecorder) APIEventsTable() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "APIEventsTable", reflect.TypeOf((*MockDatabase)(nil).APIEventsTable))
 }
 
-// APIInventoryTable mocks base method
+// APIInfoAnnotationsTable mocks base method.
+func (m *MockDatabase) APIInfoAnnotationsTable() APIAnnotationsTable {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "APIInfoAnnotationsTable")
+	ret0, _ := ret[0].(APIAnnotationsTable)
+	return ret0
+}
+
+// APIInfoAnnotationsTable indicates an expected call of APIInfoAnnotationsTable.
+func (mr *MockDatabaseMockRecorder) APIInfoAnnotationsTable() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "APIInfoAnnotationsTable", reflect.TypeOf((*MockDatabase)(nil).APIInfoAnnotationsTable))
+}
+
+// APIInventoryTable mocks base method.
 func (m *MockDatabase) APIInventoryTable() APIInventoryTable {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "APIInventoryTable")
@@ -54,13 +83,13 @@ func (m *MockDatabase) APIInventoryTable() APIInventoryTable {
 	return ret0
 }
 
-// APIInventoryTable indicates an expected call of APIInventoryTable
+// APIInventoryTable indicates an expected call of APIInventoryTable.
 func (mr *MockDatabaseMockRecorder) APIInventoryTable() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "APIInventoryTable", reflect.TypeOf((*MockDatabase)(nil).APIInventoryTable))
 }
 
-// ReviewTable mocks base method
+// ReviewTable mocks base method.
 func (m *MockDatabase) ReviewTable() ReviewTable {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReviewTable")
@@ -68,7 +97,7 @@ func (m *MockDatabase) ReviewTable() ReviewTable {
 	return ret0
 }
 
-// ReviewTable indicates an expected call of ReviewTable
+// ReviewTable indicates an expected call of ReviewTable.
 func (mr *MockDatabaseMockRecorder) ReviewTable() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReviewTable", reflect.TypeOf((*MockDatabase)(nil).ReviewTable))

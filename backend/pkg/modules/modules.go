@@ -28,10 +28,17 @@ import (
 )
 
 type (
-	Module          = core.Module
-	Annotation      = core.Annotation
-	BackendAccessor = core.BackendAccessor
-	Event           = core.Event
+	Module              = core.Module
+	MockModule          = core.MockModule
+	Annotation          = core.Annotation
+	BackendAccessor     = core.BackendAccessor
+	MockBackendAccessor = core.MockBackendAccessor
+	Event               = core.Event
+)
+
+var (
+	NewMockModule          = core.NewMockModule
+	NewMockBackendAccessor = core.NewMockBackendAccessor
 )
 
 func New(ctx context.Context, dbHandler *database.Handler, clientset kubernetes.Interface) Module {

@@ -36,6 +36,8 @@ type Event struct {
 	Telemetry *pluginsmodels.Telemetry
 }
 
+//go:generate $GOPATH/bin/mockgen -destination=./mock_modules.go -package=core github.com/apiclarity/apiclarity/backend/pkg/modules/internal/core Module,BackendAccessor
+
 // Module each APIClarity module needs to implement this interface.
 type Module interface {
 	Name() string
