@@ -55,7 +55,7 @@ type Backend struct {
 	stateBackupFileName string
 	monitor             *k8smonitor.Monitor
 	apiInventoryLock    sync.RWMutex
-	dbHandler           *_database.Handler
+	dbHandler           _database.Database
 	modules             modules.Module
 }
 

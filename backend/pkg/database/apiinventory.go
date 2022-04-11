@@ -58,6 +58,7 @@ type APIInfo struct {
 	Annotations []*APIInfoAnnotation `gorm:"foreignKey:APIID;references:ID"`
 }
 
+//go:generate $GOPATH/bin/mockgen -destination=./mock_apiinventory.go -package=database github.com/apiclarity/apiclarity/backend/pkg/database APIInventoryTable
 type APIInventoryTable interface {
 	GetAPIInventoryAndTotal(params operations.GetAPIInventoryParams) ([]APIInfo, int64, error)
 	GetAPISpecs(apiID uint32) (*APIInfo, error)

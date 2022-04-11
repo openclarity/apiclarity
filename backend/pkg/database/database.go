@@ -37,6 +37,7 @@ const (
 	DBDriverTypeLocal    = "LOCAL"
 )
 
+//go:generate $GOPATH/bin/mockgen -destination=./mock_database.go -package=database github.com/apiclarity/apiclarity/backend/pkg/database Database
 type Database interface {
 	APIEventsTable() APIEventsTable
 	APIInventoryTable() APIInventoryTable

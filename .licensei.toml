@@ -26,8 +26,7 @@ ignored = [
 
 [header]
 ignorePaths = ["api", "plugins/api"]
-ignoreFiles = ["*.gen.go"] # ignore generated files
-#ignoreFiles = ["zz_generated.*.go"]
+ignoreFiles = ["mock_*.go", "*.gen.go"]
 template = """// Copyright © :YEAR: Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //

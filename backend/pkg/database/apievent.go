@@ -105,6 +105,7 @@ type APIEvent struct {
 	Annotations []*APIEventAnnotation `gorm:"foreignKey:EventID;references:ID"`
 }
 
+//go:generate $GOPATH/bin/mockgen -destination=./mock_apievent.go -package=database github.com/apiclarity/apiclarity/backend/pkg/database APIEventsTable
 type APIEventsTable interface {
 	GetAPIEventsWithAnnotations(ctx context.Context, filters GetAPIEventsQuery) ([]*APIEvent, error)
 	GetAPIEventsAndTotal(params operations.GetAPIEventsParams) ([]APIEvent, int64, error)

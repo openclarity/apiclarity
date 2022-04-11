@@ -16,6 +16,7 @@ require (
 	github.com/go-openapi/spec v0.20.4
 	github.com/go-openapi/strfmt v0.21.0
 	github.com/go-openapi/validate v0.20.3
+	github.com/golang/mock v1.6.0
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.8.1
@@ -23,6 +24,7 @@ require (
 	gorm.io/driver/postgres v1.1.1
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.21.15
+	gotest.tools v2.2.0+incompatible
 	gotest.tools/v3 v3.0.3
 	k8s.io/api v0.22.2
 	k8s.io/apimachinery v0.22.2
@@ -113,7 +115,6 @@ require (
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	gotest.tools v2.2.0+incompatible // indirect
 	k8s.io/klog/v2 v2.9.0 // indirect
 	k8s.io/utils v0.0.0-20210819203725-bdf08cb9a70a // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.2 // indirect
