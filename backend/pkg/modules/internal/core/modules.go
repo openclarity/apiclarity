@@ -85,13 +85,17 @@ func (b *accessor) GetAPIInfo(ctx context.Context, apiID uint) (*database.APIInf
 }
 
 func (b *accessor) GetAPIEvents(ctx context.Context, filter database.GetAPIEventsQuery) ([]*database.APIEvent, error) {
-	return b.dbHandler.APIEventsTable().GetAPIEventsWithAnnotations(ctx, filter)
+	events, err := b.dbHandler.APIEventsTable().GetAPIEventsWithAnnotations(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get apievents with annotations: %w", err)
+	}
+	return events, nil
 }
 
 func (b *accessor) GetAPIEventAnnotation(ctx context.Context, modName string, eventID uint, name string) (*Annotation, error) {
 	ann, err := b.dbHandler.APIEventsAnnotationsTable().Get(ctx, modName, eventID, name)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to get apievent annotation: %w", err)
 	}
 	return &Annotation{Name: ann.Name, Annotation: ann.Annotation}, nil
 }
@@ -100,7 +104,7 @@ func (b *accessor) ListAPIEventAnnotations(ctx context.Context, modName string, 
 	var anns []*Annotation
 	dbAnnotations, err := b.dbHandler.APIEventsAnnotationsTable().List(ctx, modName, eventID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to list apievent annotations: %w", err)
 	}
 	for _, ann := range dbAnnotations {
 		anns = append(anns, &Annotation{Name: ann.Name, Annotation: ann.Annotation})
@@ -120,13 +124,16 @@ func (b *accessor) CreateAPIEventAnnotations(ctx context.Context, modName string
 		})
 	}
 
-	return b.dbHandler.APIEventsAnnotationsTable().Create(ctx, dbAnns...)
+	if err := b.dbHandler.APIEventsAnnotationsTable().Create(ctx, dbAnns...); err != nil {
+		return fmt.Errorf("unable to create apiinfo annotation: %w", err)
+	}
+	return nil
 }
 
 func (b *accessor) GetAPIInfoAnnotation(ctx context.Context, modName string, apiID uint, name string) (*Annotation, error) {
 	ann, err := b.dbHandler.APIInfoAnnotationsTable().Get(ctx, modName, apiID, name)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to get apiinfo annotation: %w", err)
 	}
 	return &Annotation{Name: ann.Name, Annotation: ann.Annotation}, nil
 }
@@ -134,7 +141,7 @@ func (b *accessor) GetAPIInfoAnnotation(ctx context.Context, modName string, api
 func (b *accessor) ListAPIInfoAnnotations(ctx context.Context, modName string, apiID uint) (annotations []*Annotation, err error) {
 	anns, err := b.dbHandler.APIInfoAnnotationsTable().List(ctx, modName, apiID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to list apiinfo annotation: %w", err)
 	}
 	for _, ann := range anns {
 		annotations = append(annotations, &Annotation{
@@ -142,7 +149,7 @@ func (b *accessor) ListAPIInfoAnnotations(ctx context.Context, modName string, a
 			Annotation: ann.Annotation,
 		})
 	}
-	return
+	return annotations, nil
 }
 
 func (b *accessor) StoreAPIInfoAnnotations(ctx context.Context, modName string, apiID uint, annotations ...Annotation) error {
@@ -157,9 +164,15 @@ func (b *accessor) StoreAPIInfoAnnotations(ctx context.Context, modName string, 
 		})
 	}
 
-	return b.dbHandler.APIInfoAnnotationsTable().UpdateOrCreate(ctx, dbAnns...)
+	if err := b.dbHandler.APIInfoAnnotationsTable().UpdateOrCreate(ctx, dbAnns...); err != nil {
+		return fmt.Errorf("unable to store apiinfo annotation: %w", err)
+	}
+	return nil
 }
 
 func (b *accessor) DeleteAPIInfoAnnotations(ctx context.Context, modName string, apiID uint, name ...string) error {
-	return b.dbHandler.APIInfoAnnotationsTable().Delete(ctx, modName, apiID, name...)
+	if err := b.dbHandler.APIInfoAnnotationsTable().Delete(ctx, modName, apiID, name...); err != nil {
+		return fmt.Errorf("unable to delete the apiinfo annotation: %w", err)
+	}
+	return nil
 }

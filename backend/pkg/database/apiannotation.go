@@ -25,7 +25,7 @@ import (
 
 const (
 	apiEventAnnotationsTableName = "api_annotations"
-	apiIdColumnName              = "api_id"
+	apiIDColumnName              = "api_id"
 	moduleNameColumnName         = "module_name"
 	annotationColumnName         = "annotation"
 )
@@ -56,7 +56,7 @@ func (APIInfoAnnotation) TableName() string {
 
 func (am *APIInfoAnnotationsTableHandler) UpdateOrCreate(ctx context.Context, annotations ...APIInfoAnnotation) error {
 	return am.tx.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: moduleNameColumnName}, {Name: apiIdColumnName}, {Name: nameColumnName}},
+		Columns:   []clause.Column{{Name: moduleNameColumnName}, {Name: apiIDColumnName}, {Name: nameColumnName}},
 		UpdateAll: true,
 	}).WithContext(ctx).Create(&annotations).Error
 }
@@ -65,7 +65,7 @@ func (am *APIInfoAnnotationsTableHandler) Get(ctx context.Context, modName strin
 	var model APIInfoAnnotation
 
 	if err := am.tx.Where(fmt.Sprintf("%s = ? AND %s = ? AND %s = ?",
-		moduleNameColumnName, apiIdColumnName, nameColumnName), modName, apiID, name).
+		moduleNameColumnName, apiIDColumnName, nameColumnName), modName, apiID, name).
 		WithContext(ctx).
 		First(&model).
 		Error; err != nil {
@@ -80,9 +80,9 @@ func (am *APIInfoAnnotationsTableHandler) List(ctx context.Context, modName stri
 
 	var t *gorm.DB
 	if modName == "" {
-		t = am.tx.Where(fmt.Sprintf("%s = ?", apiIdColumnName), apiID)
+		t = am.tx.Where(fmt.Sprintf("%s = ?", apiIDColumnName), apiID)
 	} else {
-		t = am.tx.Where(fmt.Sprintf("%s = ? AND %s = ?", moduleNameColumnName, apiIdColumnName), modName, apiID)
+		t = am.tx.Where(fmt.Sprintf("%s = ? AND %s = ?", moduleNameColumnName, apiIDColumnName), modName, apiID)
 	}
 	if err := t.WithContext(ctx).Find(&annotations).Error; err != nil {
 		return nil, err
@@ -93,7 +93,7 @@ func (am *APIInfoAnnotationsTableHandler) List(ctx context.Context, modName stri
 
 func (am *APIInfoAnnotationsTableHandler) Delete(ctx context.Context, modName string, apiID uint, names ...string) error {
 	return am.tx.Where(fmt.Sprintf("%s = ? AND %s = ? AND %s IN ?",
-		moduleNameColumnName, apiIdColumnName, nameColumnName), modName, apiID, names).
+		moduleNameColumnName, apiIDColumnName, nameColumnName), modName, apiID, names).
 		WithContext(ctx).
 		Delete(&APIInfoAnnotation{}).
 		Error

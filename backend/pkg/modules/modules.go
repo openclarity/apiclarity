@@ -22,6 +22,8 @@ import (
 
 	"github.com/apiclarity/apiclarity/backend/pkg/database"
 	"github.com/apiclarity/apiclarity/backend/pkg/modules/internal/core"
+
+	// Enables the demo module.
 	_ "github.com/apiclarity/apiclarity/backend/pkg/modules/internal/demo"
 )
 

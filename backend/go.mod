@@ -1,6 +1,6 @@
 module github.com/apiclarity/apiclarity/backend
 
-go 1.18
+go 1.17
 
 require (
 	github.com/apiclarity/apiclarity/api v0.0.0

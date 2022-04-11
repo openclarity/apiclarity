@@ -70,6 +70,7 @@ func (c *controller) PostAlertEventID(w http.ResponseWriter, r *http.Request, ev
 	httpResponse(w, "success")
 }
 
+//nolint:stylecheck,revive
 func (c *controller) GetApiApiID(w http.ResponseWriter, r *http.Request, apiID int) {
 	res, err := c.accessor.GetAPIInfo(r.Context(), uint(apiID))
 	if err != nil {
@@ -79,6 +80,7 @@ func (c *controller) GetApiApiID(w http.ResponseWriter, r *http.Request, apiID i
 	httpResponse(w, res)
 }
 
+//nolint:stylecheck,revive
 func (c *controller) GetApiApiIDAnnotationAnnotation(w http.ResponseWriter, r *http.Request, apiID int, annotation string) {
 	api, err := c.accessor.GetAPIInfoAnnotation(r.Context(), ModuleName, uint(apiID), annotation)
 	if err != nil {
@@ -88,6 +90,7 @@ func (c *controller) GetApiApiIDAnnotationAnnotation(w http.ResponseWriter, r *h
 	httpResponse(w, api)
 }
 
+//nolint:stylecheck,revive
 func (c *controller) DeleteApiApiIDAnnotationAnnotation(w http.ResponseWriter, r *http.Request, apiID int, annotation string) {
 	err := c.accessor.DeleteAPIInfoAnnotations(r.Context(), ModuleName, uint(apiID), annotation)
 	if err != nil {
@@ -97,6 +100,7 @@ func (c *controller) DeleteApiApiIDAnnotationAnnotation(w http.ResponseWriter, r
 	httpResponse(w, "success")
 }
 
+//nolint:stylecheck,revive
 func (c *controller) PostApiApiIDAnnotationAnnotation(w http.ResponseWriter, r *http.Request, apiID int, annotation string) {
 	type Data struct {
 		Data string `json:"data"`

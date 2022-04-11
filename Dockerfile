@@ -7,7 +7,7 @@ RUN npm i
 RUN npm run build
 
 
-FROM golang:1.18-alpine AS builder
+FROM golang:1.17.6-alpine AS builder
 
 RUN apk add --update --no-cache gcc g++
 

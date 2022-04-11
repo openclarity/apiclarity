@@ -203,39 +203,39 @@ func (a *APIEventsTableHandler) GetAPIEventsWithAnnotations(ctx context.Context,
 		tx = tx.Where(fmt.Sprintf("%s.%s = ?", apiEventTableName, idColumnName), *query.EventID)
 	}
 	if query.APIEventAnnotationFilters != nil {
-		var getInJsonMap func(key, value, extract string) string
+		var getInJSONMap func(key, value, extract string) string
 		var args []interface{}
 
 		switch tx.Dialector.(type) {
 		case *postgres.Dialector:
-			getInJsonMap = func(key, val, extract string) string {
+			getInJSONMap = func(key, val, extract string) string {
 				args = append(args, extract)
 				return fmt.Sprintf("jsonb_object_agg(coalesce(%s, ''), %s) -> ?", key, val)
 			}
 		case *sqlite.Dialector:
-			getInJsonMap = func(key, val, extract string) string {
+			getInJSONMap = func(key, val, extract string) string {
 				args = append(args, extract)
 				return fmt.Sprintf("json_extract(json_group_object(coalesce(%s, ''), %s), ?)", key, val)
 			}
 		}
 		var havingConditions []string
 		if query.APIEventAnnotationFilters.NameIs != nil {
-			havingConditions = append(havingConditions, getInJsonMap("ea."+nameColumnName, "true", *query.APIEventAnnotationFilters.NameIs)+" IS NOT NULL")
+			havingConditions = append(havingConditions, getInJSONMap("ea."+nameColumnName, "true", *query.APIEventAnnotationFilters.NameIs)+" IS NOT NULL")
 		}
 		if query.APIEventAnnotationFilters.ModuleNameIs != nil {
-			havingConditions = append(havingConditions, getInJsonMap("ea."+moduleNameColumnName, "true", *query.APIEventAnnotationFilters.ModuleNameIs)+" IS NOT NULL")
+			havingConditions = append(havingConditions, getInJSONMap("ea."+moduleNameColumnName, "true", *query.APIEventAnnotationFilters.ModuleNameIs)+" IS NOT NULL")
 		}
 		if query.APIEventAnnotationFilters.ValueIs != nil {
-			havingConditions = append(havingConditions, getInJsonMap("ea."+annotationColumnName, "true", *query.APIEventAnnotationFilters.ValueIs)+" IS NOT NULL")
+			havingConditions = append(havingConditions, getInJSONMap("ea."+annotationColumnName, "true", *query.APIEventAnnotationFilters.ValueIs)+" IS NOT NULL")
 		}
 		if query.APIEventAnnotationFilters.NameIsNot != nil {
-			havingConditions = append(havingConditions, getInJsonMap("ea."+nameColumnName, "true", *query.APIEventAnnotationFilters.NameIsNot)+" IS NULL")
+			havingConditions = append(havingConditions, getInJSONMap("ea."+nameColumnName, "true", *query.APIEventAnnotationFilters.NameIsNot)+" IS NULL")
 		}
 		if query.APIEventAnnotationFilters.ModuleNameIsNot != nil {
-			havingConditions = append(havingConditions, getInJsonMap("ea."+moduleNameColumnName, "true", *query.APIEventAnnotationFilters.ModuleNameIsNot)+" IS NULL")
+			havingConditions = append(havingConditions, getInJSONMap("ea."+moduleNameColumnName, "true", *query.APIEventAnnotationFilters.ModuleNameIsNot)+" IS NULL")
 		}
 		if query.APIEventAnnotationFilters.ValueIsNot != nil {
-			havingConditions = append(havingConditions, getInJsonMap("ea."+annotationColumnName, "true", *query.APIEventAnnotationFilters.ValueIsNot)+" IS NULL")
+			havingConditions = append(havingConditions, getInJSONMap("ea."+annotationColumnName, "true", *query.APIEventAnnotationFilters.ValueIsNot)+" IS NULL")
 		}
 		tx = tx.Joins(fmt.Sprintf("LEFT JOIN %s ea ON %s.%s = ea.%s ",
 			eventAnnotationsTableName, apiEventTableName, idColumnName, eventIDColumnName)).

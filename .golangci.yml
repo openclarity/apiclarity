@@ -54,13 +54,6 @@ linters:
     - testpackage
     - scopelint # deprecated
     - golint # deprecated
-    - gci
-    - nilnil
-    - errchkjson
-    - wrapcheck
-    - varnamelen
-    - revive
-    - ireturn
     - gochecknoinits
     # TODO:(fixme)
     - gocognit

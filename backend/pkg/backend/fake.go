@@ -99,7 +99,7 @@ func putProvidedSpecLocally(root string) {
 	putProvidedSpecLocallyImp(root, "petstorev2.json", 3)
 }
 
-func putProvidedSpecLocallyImp(root string, specfile string, apiId int) {
+func putProvidedSpecLocallyImp(root string, specfile string, apiID int) {
 	fileName := root + fmt.Sprintf("/../provided_spec/%v", specfile)
 
 	// initialize http client
@@ -121,7 +121,7 @@ func putProvidedSpecLocallyImp(root string, specfile string, apiId int) {
 	}
 
 	// set the HTTP method, url, and request body
-	req, err := http.NewRequestWithContext(context.TODO(), http.MethodPut, fmt.Sprintf("http://localhost:8080/api/apiInventory/%v/specs/providedSpec", apiId), bytes.NewBuffer(jsonBody))
+	req, err := http.NewRequestWithContext(context.TODO(), http.MethodPut, fmt.Sprintf("http://localhost:8080/api/apiInventory/%v/specs/providedSpec", apiID), bytes.NewBuffer(jsonBody))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create new request. %v", err))
 	}
