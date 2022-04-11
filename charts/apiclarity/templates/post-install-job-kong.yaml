@@ -20,7 +20,7 @@ rules:
 - apiGroups: ["configuration.konghq.com"]
   resources: ["kongplugins"]
   verbs: ["get", "list", "create", "patch"]
-{{- end -}}
+{{- end }}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -51,7 +51,7 @@ subjects:
   - kind: ServiceAccount
     name: {{ include "apiclarity.name" . }}-kong-post-install-job
     namespace: '{{ .Release.Namespace }}'
-{{- end -}}
+{{- end }}
 ---
 apiVersion: batch/v1
 kind: Job
@@ -94,10 +94,10 @@ spec:
           - /bin/bash
           - -c
           - "cd /tmp &&
-{{- if .Values.trafficSource.global.httpsProxy -}}
+{{- if .Values.trafficSource.global.httpsProxy }}
             git config --global https.proxy {{ .Values.trafficSource.global.httpsProxy }} &&
-{{- end }}
-{{- if .Values.trafficSource.global.httpProxy -}}
+{{- end -}}
+{{ if .Values.trafficSource.global.httpProxy }}
             git config --global http.proxy {{ .Values.trafficSource.global.httpProxy }} &&
 {{- end }}
             git clone -b {{ .Chart.AppVersion }} https://github.com/apiclarity/apiclarity.git &&
