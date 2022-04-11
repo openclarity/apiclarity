@@ -116,6 +116,11 @@ apiclarity-postgresql:
 ## APIClarity Traffic Source Values
 
 trafficSource:
+  global:
+    ## Proxy configuration for the traffic source post install jobs
+    httpsProxy: ""
+    httpProxy: ""
+
   envoyWasm:
     ## Enable Envoy wasm traffic source
     ##

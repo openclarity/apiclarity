@@ -81,6 +81,12 @@ spec:
           - /bin/bash
           - -c
           - "cd /tmp &&
+{{- if .Values.trafficSource.global.httpsProxy }}
+            git config --global https.proxy {{ .Values.trafficSource.global.httpsProxy }} &&
+{{- end }}
+{{- if .Values.trafficSource.global.httpProxy }}
+            git config --global http.proxy {{ .Values.trafficSource.global.httpProxy }} &&
+{{- end }}
             git clone -b {{ .Chart.AppVersion }} https://github.com/apiclarity/apiclarity.git --recurse-submodules &&
             cd apiclarity/wasm-filters &&
             WASM_FILTER_TRACE_BACKEND_ADDRESS={{ include "apiclarity.name" . }}.{{ .Release.Namespace }}.svc.cluster.local ./deploy.sh {{ join " " .Values.trafficSource.envoyWasm.namespaces }}"
