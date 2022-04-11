@@ -19,10 +19,16 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"os"
+	"path"
 	"time"
 
 	"k8s.io/client-go/kubernetes"
+
+	// Enables GCP authentication for connecting to the remote kubernetes cluster.
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 const ResyncPeriod = 1 * time.Minute
@@ -43,6 +49,29 @@ func CreateK8sClientset() (kubernetes.Interface, error) {
 		return nil, fmt.Errorf("failed to create a rest client: %v", err)
 	}
 
+	return clientset, nil
+}
+
+func CreateLocalK8sClientset() (kubernetes.Interface, error) {
+	var kubepath string
+	kubecfg, ok := os.LookupEnv("KUBECONFIG")
+	if ok {
+		kubepath = kubecfg
+	} else {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return nil, fmt.Errorf("failed getting the home directory: %w", err)
+		}
+		kubepath = path.Join(home, ".kube", "config")
+	}
+	config, err := clientcmd.BuildConfigFromFlags("", kubepath)
+	if err != nil {
+		return nil, fmt.Errorf("build config failed: %w", err)
+	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("create clientset failed: %w", err)
+	}
 	return clientset, nil
 }
 

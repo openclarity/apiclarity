@@ -54,6 +54,8 @@ type APIInfo struct {
 	ReconstructedSpecInfo string         `json:"reconstructedSpecInfo,omitempty" gorm:"column:reconstructed_spec_info" faker:"-"`
 	ProvidedSpec          string         `json:"providedSpec,omitempty" gorm:"column:provided_spec" faker:"-"`
 	ProvidedSpecInfo      string         `json:"providedSpecInfo,omitempty" gorm:"column:provided_spec_info" faker:"-"`
+
+	Annotations []*APIInfoAnnotation `gorm:"foreignKey:APIID;references:ID"`
 }
 
 //go:generate $GOPATH/bin/mockgen -destination=./mock_apiinventory.go -package=database github.com/apiclarity/apiclarity/backend/pkg/database APIInventoryTable

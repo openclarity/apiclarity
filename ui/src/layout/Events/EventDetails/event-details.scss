@@ -1,23 +1,54 @@
 @import 'utils/scss_variables.module.scss';
 
 .events-details-page {
-    .title-value-display-wrapper {
-        &.path-display,
-        &.query-display {
-            max-width: 600px;
+    .tabbed-container-wrapper {
+        display: flex;
+        .event-details-tab-container {
+            flex-grow: 1;
+            .page-container {
+                height: 100%;
+            }
         }
+    }
+    .title-value-display-wrapper {
         &.spec-display {
-            width: 600px;
-
             button {
                 font-size: 14px;
                 height: auto;
             }
         }
     }
+
+    .events-spec-wrapper {
+        position: relative;
+        min-height: 300px;
+        .spec-inner-tabs-wrapper {
+            display: flex;
+            align-items: center;
+            height: 50px;
+            padding: 0 20px;
+            background-color: $color-grey-off-white;
+            border: 1px solid  $color-grey-light;
+
+            .inner-tab-item {
+                margin-right: 40px;
+                font-size: 14px;
+                line-height: 16px;
+                color: $color-grey-dark;
+                cursor: pointer;
+
+                &.selected {
+                    color: $color-grey-black;
+                    font-weight: bold;
+                }
+            }
+        }
+    }
+
     .spec-diff-wrapper {
         position: relative;
         min-height: 300px;
+        padding: 20px;
 
         .spec-diff-titles-wrapper {
             display: flex;
@@ -29,6 +60,44 @@
 
             > div {
                 width: 50%;
+            }
+        }
+    }
+    .fixed-sidebar {
+        width: 295px;
+        min-width: 295px;
+        background-color: $color-grey-off-white;
+
+        .sidebar-heading {
+            height: 48px;
+            width: 100%;
+            border-bottom: 3px solid $color-grey-lighter;
+            .title {
+
+                display: inline-block;
+                text-decoration: none;
+                padding: 0 30px;
+                height: 100%;
+                font-size: 14px;
+                line-height: 19px;
+                letter-spacing: 0.30625px;
+                color: $color-grey-black;
+
+                > div {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100%;
+                }
+            }
+        }
+        .sidebar-content {
+            padding: 20px;
+            display: flex;
+            overflow-x: auto;
+
+            .title-value-display-wrapper {
+                min-width: 100px;
             }
         }
     }

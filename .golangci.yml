@@ -3,6 +3,8 @@ run:
     - api
     - ui
     - dist
+  skip-files:
+    - ".*\\.gen\\.go$"
   timeout: 5m
 
 linters-settings:
@@ -52,7 +54,6 @@ linters:
     - testpackage
     - scopelint # deprecated
     - golint # deprecated
-
     # TODO:(fixme)
     - gocognit
     - godox

@@ -6,6 +6,7 @@ import TabbedPageContainer from 'components/TabbedPageContainer';
 import Loader from 'components/Loader';
 import { useFetch } from 'hooks';
 import Specs from './Specs';
+import { getModules, MODULE_TYPES } from 'modules';
 
 const InventoryDetails = ({type}) => {
     const {path, url} = useRouteMatch();
@@ -24,13 +25,25 @@ const InventoryDetails = ({type}) => {
 
     const inventoryName = data.items[0].name;
 
+    const modules = getModules(MODULE_TYPES.INVENTORY_DETAILS);
+    const moduleTabs = modules.map((m) => {
+        return {
+            title: m.name,
+            linkTo: `${url}${m.endpoint}`,
+            to: `${path}${m.endpoint}`,
+            component: () => <m.component  {...{...data.items[0], inventoryId, type}}/>
+        };
+    });
+
+
     return (
         <div>
             <BackRouteButton title="API inventory" path={url.replace(`/${inventoryId}`, "")} />
             <Title>{inventoryName}</Title>
             <TabbedPageContainer
                 items={[
-                    {title: "Spec", linkTo: url, to: path, exact: true, component: () => <Specs inventoryId={inventoryId} inventoryName={inventoryName} />}
+                    {title: "Spec", linkTo: url, to: path, exact: true, component: () => <Specs inventoryId={inventoryId} inventoryName={inventoryName} />},
+                    ...moduleTabs
                 ]}
                 noContentMargin={true}
             />

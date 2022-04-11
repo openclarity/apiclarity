@@ -32,6 +32,8 @@ const (
 	StateBackupIntervalSec     = "STATE_BACKUP_INTERVAL_SEC"
 	DatabaseCleanerIntervalSec = "DATABASE_CLEANER_INTERVAL_SEC"
 	StateBackupFileName        = "STATE_BACKUP_FILE_NAME"
+	NoMonitorEnvVar            = "NO_K8S_MONITOR"
+	K8sLocalEnvVar             = "K8S_LOCAL"
 
 	DBNameEnvVar     = "DB_NAME"
 	DBUserEnvVar     = "DB_USER"
@@ -43,6 +45,8 @@ const (
 
 	ResponseHeadersToIgnore = "RESPONSE_HEADERS_TO_IGNORE"
 	RequestHeadersToIgnore  = "REQUEST_HEADERS_TO_IGNORE"
+
+	ModulesAssetsEnvVar = "MODULES_ASSETS"
 )
 
 type Config struct {
@@ -53,6 +57,7 @@ type Config struct {
 	DatabaseCleanerIntervalSec int
 	StateBackupFileName        string
 	SpeculatorConfig           _speculator.Config
+	K8sLocal                   bool
 
 	// database config
 	DatabaseDriver   string
@@ -74,6 +79,7 @@ func LoadConfig() (*Config, error) {
 	config.DatabaseCleanerIntervalSec = viper.GetInt(DatabaseCleanerIntervalSec)
 	config.StateBackupFileName = viper.GetString(StateBackupFileName)
 
+	config.K8sLocal = viper.GetBool(K8sLocalEnvVar)
 	config.DatabaseDriver = viper.GetString(DatabaseDriver)
 	config.DBPassword = viper.GetString(DBPasswordEnvVar)
 	config.DBUser = viper.GetString(DBUserEnvVar)

@@ -78,6 +78,8 @@ func (b *Backend) handleHTTPTraceFromFile(fileName string) error {
 		return fmt.Errorf("failed to read file: %v. %v", fileName, err)
 	}
 
+	ctx := context.Background()
+
 	var trace models2.Telemetry
 	if err := json.Unmarshal(byteValue, &trace); err != nil {
 		return fmt.Errorf("failed to unmarshal. %v", err)
@@ -85,14 +87,20 @@ func (b *Backend) handleHTTPTraceFromFile(fileName string) error {
 	if trace.Request == nil || trace.Request.Common == nil || trace.Response == nil || trace.Response.Common == nil {
 		return fmt.Errorf("failed to handle trace for file: %v. Bad format", fileName)
 	}
-	if err := b.handleHTTPTrace(&trace); err != nil {
+	if err := b.handleHTTPTrace(ctx, &trace); err != nil {
 		return fmt.Errorf("failed to handle trace for file: %v. %v", fileName, err)
 	}
 	return nil
 }
 
 func putProvidedSpecLocally(root string) {
-	fileName := root + "/../provided_spec/provided_spec.json"
+	putProvidedSpecLocallyImp(root, "provided_spec.json", 1)
+	putProvidedSpecLocallyImp(root, "petstorev2.json", 2)
+	putProvidedSpecLocallyImp(root, "petstorev2.json", 3)
+}
+
+func putProvidedSpecLocallyImp(root string, specfile string, apiID int) {
+	fileName := root + fmt.Sprintf("/../provided_spec/%v", specfile)
 
 	// initialize http client
 	client := &http.Client{}
@@ -113,7 +121,7 @@ func putProvidedSpecLocally(root string) {
 	}
 
 	// set the HTTP method, url, and request body
-	req, err := http.NewRequestWithContext(context.TODO(), http.MethodPut, "http://localhost:8080/api/apiInventory/1/specs/providedSpec", bytes.NewBuffer(jsonBody))
+	req, err := http.NewRequestWithContext(context.TODO(), http.MethodPut, fmt.Sprintf("http://localhost:8080/api/apiInventory/%v/specs/providedSpec", apiID), bytes.NewBuffer(jsonBody))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create new request. %v", err))
 	}

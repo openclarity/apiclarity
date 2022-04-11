@@ -16,6 +16,7 @@
 package backend
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -26,6 +27,7 @@ import (
 	"github.com/apiclarity/apiclarity/api/server/models"
 	_database "github.com/apiclarity/apiclarity/backend/pkg/database"
 	"github.com/apiclarity/apiclarity/backend/pkg/k8smonitor"
+	"github.com/apiclarity/apiclarity/backend/pkg/modules"
 	pluginsmodels "github.com/apiclarity/apiclarity/plugins/api/server/models"
 	_spec "github.com/apiclarity/speculator/pkg/spec"
 	_speculator "github.com/apiclarity/speculator/pkg/speculator"
@@ -295,6 +297,10 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 	mockCtrlAPIInventoryTable := gomock.NewController(t)
 	defer mockCtrlAPIInventoryTable.Finish()
 	mockAPIInventoryTable := _database.NewMockAPIInventoryTable(mockCtrlAPIInventoryTable)
+
+	mockCtrlModules := gomock.NewController(t)
+	defer mockCtrlModules.Finish()
+	mockModules := modules.NewMockModule(mockCtrlModules)
 
 	speculatorWithProvidedSpec := _speculator.CreateSpeculator(_speculator.Config{})
 	speculatorWithProvidedSpec.Specs[specKey] = _spec.CreateDefaultSpec(host, port, _spec.OperationGeneratorConfig{})
@@ -724,17 +730,21 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 			wantErr: false,
 		},
 	}
+	ctx := context.Background()
+
 	for _, tt := range tests {
 		tt.fields.expectDatabase(mockDatabase)
 		tt.fields.expectAPIInventoryTable(mockAPIInventoryTable)
 		tt.fields.expectAPIEventTable(mockAPIEventTable)
+		mockModules.EXPECT().EventNotify(ctx, gomock.Any()).AnyTimes()
 		t.Run(tt.name, func(t *testing.T) {
 			b := &Backend{
 				speculator: tt.fields.speculator,
 				monitor:    tt.fields.monitor,
 				dbHandler:  tt.fields.dbHandler,
+				modules:    mockModules,
 			}
-			if err := b.handleHTTPTrace(tt.args.trace); (err != nil) != tt.wantErr {
+			if err := b.handleHTTPTrace(ctx, tt.args.trace); (err != nil) != tt.wantErr {
 				t.Errorf("handleHTTPTrace() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

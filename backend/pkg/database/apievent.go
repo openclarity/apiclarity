@@ -16,11 +16,15 @@
 package database
 
 import (
+	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-openapi/strfmt"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
 	"github.com/apiclarity/apiclarity/api/server/models"
@@ -34,6 +38,7 @@ const (
 
 	// NOTE: when changing one of the column names change also the gorm label in APIEvent.
 	timeColumnName                 = "time"
+	requestTimeColumnName          = "request_time"
 	methodColumnName               = "method"
 	pathColumnName                 = "path"
 	providedPathIDColumnName       = "provided_path_id"
@@ -54,6 +59,8 @@ const (
 	eventTypeColumnName            = "event_type"
 )
 
+const alertAnnotation = "ALERT"
+
 var specDiffColumns = []string{newReconstructedSpecColumnName, oldReconstructedSpecColumnName, newProvidedSpecColumnName, oldProvidedSpecColumnName}
 
 type APIEvent struct {
@@ -63,6 +70,7 @@ type APIEvent struct {
 	// UpdatedAt time.Time
 
 	Time                     strfmt.DateTime   `json:"time" gorm:"column:time" faker:"-"`
+	RequestTime              strfmt.DateTime   `json:"requestTime" gorm:"column:request_time" faker:"-"`
 	Method                   models.HTTPMethod `json:"method,omitempty" gorm:"column:method" faker:"oneof: GET, PUT, POST, DELETE"`
 	Path                     string            `json:"path,omitempty" gorm:"column:path" faker:"oneof: /news, /customers, /jokes"`
 	ProvidedPathID           string            `json:"providedPathId,omitempty" gorm:"column:provided_path_id" faker:"-"`
@@ -93,10 +101,13 @@ type APIEvent struct {
 	APIInfoID uint `json:"apiInfoId,omitempty" gorm:"column:api_info_id" faker:"-"`
 	// We'll not always have a corresponding API info (e.g. non-API resources) so the type is needed also for the event
 	EventType models.APIType `json:"eventType,omitempty" gorm:"column:event_type" faker:"oneof: INTERNAL, EXTERNAL"`
+
+	Annotations []*APIEventAnnotation `gorm:"foreignKey:EventID;references:ID"`
 }
 
 //go:generate $GOPATH/bin/mockgen -destination=./mock_apievent.go -package=database github.com/apiclarity/apiclarity/backend/pkg/database APIEventsTable
 type APIEventsTable interface {
+	GetAPIEventsWithAnnotations(ctx context.Context, filters GetAPIEventsQuery) ([]*APIEvent, error)
 	GetAPIEventsAndTotal(params operations.GetAPIEventsParams) ([]APIEvent, int64, error)
 	GetAPIEvent(eventID uint32) (*APIEvent, error)
 	GetAPIEventReconstructedSpecDiff(eventID uint32) (*APIEvent, error)
@@ -107,6 +118,29 @@ type APIEventsTable interface {
 	GetDashboardAPIUsages(startTime, endTime time.Time, apiType APIUsageType) ([]*models.APIUsage, error)
 	CreateAPIEvent(event *APIEvent)
 	GroupByAPIInfo() ([]HostGroup, error)
+}
+
+type GetAPIEventsQuery struct {
+	EventID *uint32
+
+	Offset int
+	Limit  int
+	Order  string
+
+	APIEventsFilters          *APIEventsFilters
+	APIEventAnnotationFilters *APIEventAnnotationFilters
+}
+
+type APIEventAnnotationFilters struct {
+	NoAnnotations bool
+
+	ModuleNameIs *string
+	NameIs       *string
+	ValueIs      *string
+
+	ModuleNameIsNot *string
+	NameIsNot       *string
+	ValueIsNot      *string
 }
 
 type APIEventsTableHandler struct {
@@ -126,7 +160,8 @@ type APIEventsFilters struct {
 	DestinationIPIs       []string
 	DestinationPortIsNot  []string
 	DestinationPortIs     []string
-	EndTime               strfmt.DateTime
+	EndTime               *strfmt.DateTime
+	RequestEndTime        *strfmt.DateTime
 	ShowNonAPI            bool
 	HasSpecDiffIs         *bool
 	SpecDiffTypeIs        []string
@@ -145,7 +180,8 @@ type APIEventsFilters struct {
 	SpecIsNot             []string
 	SpecIs                []string
 	SpecStart             *string
-	StartTime             strfmt.DateTime
+	StartTime             *strfmt.DateTime
+	RequestStartTime      *strfmt.DateTime
 	StatusCodeGte         *string
 	StatusCodeIsNot       []string
 	StatusCodeIs          []string
@@ -153,6 +189,77 @@ type APIEventsFilters struct {
 }
 
 const dashboardTopAPIsNum = 5
+
+func (a *APIEventsTableHandler) GetAPIEventsWithAnnotations(ctx context.Context, query GetAPIEventsQuery) ([]*APIEvent, error) {
+	var events []*APIEvent
+	if query.Order == "" {
+		query.Order = timeColumnName
+	}
+
+	tx := a.tx
+	if query.APIEventsFilters != nil {
+		tx = a.setAPIEventsFilters(query.APIEventsFilters)
+	}
+	if query.EventID != nil {
+		tx = tx.Where(fmt.Sprintf("%s.%s = ?", apiEventTableName, idColumnName), *query.EventID)
+	}
+	if query.APIEventAnnotationFilters != nil {
+		var getInJSONMap func(key, value, extract string) string
+		var args []interface{}
+
+		switch tx.Dialector.(type) {
+		case *postgres.Dialector:
+			getInJSONMap = func(key, val, extract string) string {
+				args = append(args, extract)
+				return fmt.Sprintf("jsonb_object_agg(coalesce(%s, ''), %s) -> ?", key, val)
+			}
+		case *sqlite.Dialector:
+			getInJSONMap = func(key, val, extract string) string {
+				args = append(args, extract)
+				return fmt.Sprintf("json_extract(json_group_object(coalesce(%s, ''), %s), ?)", key, val)
+			}
+		}
+		var havingConditions []string
+		if query.APIEventAnnotationFilters.NameIs != nil {
+			havingConditions = append(havingConditions, getInJSONMap("ea."+nameColumnName, "true", *query.APIEventAnnotationFilters.NameIs)+" IS NOT NULL")
+		}
+		if query.APIEventAnnotationFilters.ModuleNameIs != nil {
+			havingConditions = append(havingConditions, getInJSONMap("ea."+moduleNameColumnName, "true", *query.APIEventAnnotationFilters.ModuleNameIs)+" IS NOT NULL")
+		}
+		if query.APIEventAnnotationFilters.ValueIs != nil {
+			havingConditions = append(havingConditions, getInJSONMap("ea."+annotationColumnName, "true", *query.APIEventAnnotationFilters.ValueIs)+" IS NOT NULL")
+		}
+		if query.APIEventAnnotationFilters.NameIsNot != nil {
+			havingConditions = append(havingConditions, getInJSONMap("ea."+nameColumnName, "true", *query.APIEventAnnotationFilters.NameIsNot)+" IS NULL")
+		}
+		if query.APIEventAnnotationFilters.ModuleNameIsNot != nil {
+			havingConditions = append(havingConditions, getInJSONMap("ea."+moduleNameColumnName, "true", *query.APIEventAnnotationFilters.ModuleNameIsNot)+" IS NULL")
+		}
+		if query.APIEventAnnotationFilters.ValueIsNot != nil {
+			havingConditions = append(havingConditions, getInJSONMap("ea."+annotationColumnName, "true", *query.APIEventAnnotationFilters.ValueIsNot)+" IS NULL")
+		}
+		tx = tx.Joins(fmt.Sprintf("LEFT JOIN %s ea ON %s.%s = ea.%s ",
+			eventAnnotationsTableName, apiEventTableName, idColumnName, eventIDColumnName)).
+			Group(fmt.Sprintf("%s.%s", apiEventTableName, idColumnName)).
+			Distinct()
+		if query.APIEventAnnotationFilters.NoAnnotations {
+			tx.Having(fmt.Sprintf("(%s) OR COUNT(ea) = 0",
+				strings.Join(havingConditions, " AND ")), args...)
+		} else {
+			tx.Having(strings.Join(havingConditions, " AND "), args...)
+		}
+	}
+
+	tx = tx.Preload("Annotations")
+	if err := tx.Offset(query.Offset).
+		Limit(query.Limit).
+		Order(fmt.Sprintf("%s DESC", query.Order)).
+		WithContext(ctx).
+		Find(&events).Error; err != nil {
+		return nil, err
+	}
+	return events, nil
+}
 
 func (a *APIEventsTableHandler) GroupByAPIInfo() ([]HostGroup, error) {
 	var results []HostGroup
@@ -198,7 +305,7 @@ func (APIEvent) TableName() string {
 }
 
 func APIEventFromDB(event *APIEvent) *models.APIEvent {
-	return &models.APIEvent{
+	e := &models.APIEvent{
 		APIInfoID:                uint32(event.APIInfoID),
 		APIType:                  event.EventType,
 		DestinationIP:            event.DestinationIP,
@@ -214,14 +321,24 @@ func APIEventFromDB(event *APIEvent) *models.APIEvent {
 		SpecDiffType:             &event.SpecDiffType,
 		StatusCode:               event.StatusCode,
 		Time:                     event.Time,
+		RequestTime:              event.RequestTime,
+		Alerts:                   []*models.ModuleAlert{},
 	}
+	for _, ann := range event.Annotations {
+		e.Alerts = append(e.Alerts, &models.ModuleAlert{
+			Alert:      models.AlertSeverityEnum(ann.Name),
+			ModuleName: ann.ModuleName,
+			Reason:     string(ann.Annotation),
+		})
+	}
+	return e
 }
 
 func (a *APIEventsTableHandler) CreateAPIEvent(event *APIEvent) {
 	if result := a.tx.Create(event); result.Error != nil {
 		log.Errorf("Failed to create event: %v", result.Error)
 	} else {
-		log.Infof("Event created %+v", event)
+		log.Debugf("Event created %+v", event)
 	}
 }
 
@@ -229,20 +346,33 @@ func (a *APIEventsTableHandler) GetAPIEventsAndTotal(params operations.GetAPIEve
 	var apiEvents []APIEvent
 	var count int64
 
-	tx := a.setAPIEventsFilters(getAPIEventsParamsToFilters(params), true)
+	tx := a.setAPIEventsFilters(getAPIEventsParamsToFilters(params))
+
 	// get total count item with the current filters
 	if err := tx.Count(&count).Error; err != nil {
 		return nil, 0, err
 	}
 
+	// if the user requests a filter on alert we need to join with the event_annotations table
+	// and do the filtering on the foreign table
+	if len(params.AlertIs) > 0 {
+		tx = tx.Joins(fmt.Sprintf("LEFT JOIN %s ea ON %s.%s = ea.%s",
+			eventAnnotationsTableName,
+			apiEventTableName, idColumnName,
+			eventIDColumnName)).
+			Where(fmt.Sprintf("ea.%s IN ?", annotationColumnName), params.AlertIs).
+			Distinct()
+	}
 	sortOrder, err := CreateSortOrder(params.SortKey, params.SortDir)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to create sort order: %v", err)
 	}
 
+	tx = tx.Scopes(Paginate(params.Page, params.PageSize)).
+		Preload("Annotations", fmt.Sprintf("%s = ?", nameColumnName), alertAnnotation)
+
 	// get specific page ordered items with the current filters
-	if err := tx.Scopes(Paginate(params.Page, params.PageSize)).
-		Order(sortOrder).
+	if err := tx.Order(sortOrder).
 		Omit(specDiffColumns...).
 		Find(&apiEvents).Error; err != nil {
 		return nil, 0, err
@@ -254,7 +384,9 @@ func (a *APIEventsTableHandler) GetAPIEventsAndTotal(params operations.GetAPIEve
 func (a *APIEventsTableHandler) GetAPIEvent(eventID uint32) (*APIEvent, error) {
 	var apiEvent APIEvent
 
-	if err := a.tx.Omit(specDiffColumns...).First(&apiEvent, eventID).Error; err != nil {
+	tx := a.tx
+	tx = tx.Preload("Annotations", fmt.Sprintf("%s = ?", nameColumnName), alertAnnotation)
+	if err := tx.Omit(specDiffColumns...).First(&apiEvent, eventID).Error; err != nil {
 		return nil, err
 	}
 
@@ -291,11 +423,13 @@ func (a *APIEventsTableHandler) GetAPIEventsLatestDiffs(latestDiffsNum int) ([]A
 	return latestDiffs, nil
 }
 
-func (a *APIEventsTableHandler) setAPIEventsFilters(filters *APIEventsFilters, shouldSetTimeFilters bool) *gorm.DB {
+func (a *APIEventsTableHandler) setAPIEventsFilters(filters *APIEventsFilters) *gorm.DB {
 	tx := a.tx
-	if shouldSetTimeFilters {
-		// time filter
-		tx = tx.Where(CreateTimeFilter(filters.StartTime, filters.EndTime))
+	if filters.StartTime != nil && filters.EndTime != nil {
+		tx = tx.Where(CreateTimeFilter(timeColumnName, *filters.StartTime, *filters.EndTime))
+	}
+	if filters.RequestStartTime != nil && filters.RequestEndTime != nil {
+		tx = tx.Where(CreateTimeFilter(requestTimeColumnName, *filters.RequestStartTime, *filters.RequestEndTime))
 	}
 
 	// methods filter
@@ -379,7 +513,7 @@ func getAPIUsageHitCountParamsToFilters(params operations.GetAPIUsageHitCountPar
 		DestinationIPIs:       params.DestinationIPIs,
 		DestinationPortIsNot:  params.DestinationPortIsNot,
 		DestinationPortIs:     params.DestinationPortIs,
-		EndTime:               params.EndTime,
+		EndTime:               &params.EndTime,
 		ShowNonAPI:            params.ShowNonAPI,
 		HasSpecDiffIs:         params.HasSpecDiffIs,
 		SpecDiffTypeIs:        params.SpecDiffTypeIs,
@@ -398,7 +532,7 @@ func getAPIUsageHitCountParamsToFilters(params operations.GetAPIUsageHitCountPar
 		SpecIsNot:             params.SpecIsNot,
 		SpecIs:                params.SpecIs,
 		SpecStart:             params.SpecStart,
-		StartTime:             params.StartTime,
+		StartTime:             &params.StartTime,
 		StatusCodeGte:         params.StatusCodeGte,
 		StatusCodeIsNot:       params.StatusCodeIsNot,
 		StatusCodeIs:          params.StatusCodeIs,
@@ -412,7 +546,7 @@ func getAPIEventsParamsToFilters(params operations.GetAPIEventsParams) *APIEvent
 		DestinationIPIs:      params.DestinationIPIs,
 		DestinationPortIsNot: params.DestinationPortIsNot,
 		DestinationPortIs:    params.DestinationPortIs,
-		EndTime:              params.EndTime,
+		EndTime:              &params.EndTime,
 		ShowNonAPI:           params.ShowNonAPI,
 		HasSpecDiffIs:        params.HasSpecDiffIs,
 		SpecDiffTypeIs:       params.SpecDiffTypeIs,
@@ -429,10 +563,20 @@ func getAPIEventsParamsToFilters(params operations.GetAPIEventsParams) *APIEvent
 		SpecIsNot:            params.SpecIsNot,
 		SpecIs:               params.SpecIs,
 		SpecStart:            params.SpecStart,
-		StartTime:            params.StartTime,
+		StartTime:            &params.StartTime,
 		StatusCodeGte:        params.StatusCodeGte,
 		StatusCodeIsNot:      params.StatusCodeIsNot,
 		StatusCodeIs:         params.StatusCodeIs,
 		StatusCodeLte:        params.StatusCodeLte,
 	}
+}
+
+func FilterIsNotInAnnotations(db *gorm.DB, column string, values []string) *gorm.DB {
+	if len(values) == 0 {
+		return db
+	}
+	return db.Where(fmt.Sprintf("(SELECT COUNT(%s) FROM %s WHERE %s = %s.%s AND %s IN ?) = 0",
+		idColumnName,
+		eventAnnotationsTableName,
+		eventIDColumnName, apiEventTableName, idColumnName, column), values)
 }

@@ -17,6 +17,8 @@ package k8smonitor
 
 import (
 	"fmt"
+
+	"k8s.io/client-go/kubernetes"
 )
 
 type Monitor struct {
@@ -24,11 +26,7 @@ type Monitor struct {
 	serviceMonitor *ServiceMonitor
 }
 
-func CreateMonitor() (*Monitor, error) {
-	clientset, err := CreateK8sClientset()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create K8s clientset: %v", err)
-	}
+func CreateMonitor(clientset kubernetes.Interface) (*Monitor, error) {
 	nodeMonitor, err := CreateNodeMonitor(clientset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a node monitor: %v", err)

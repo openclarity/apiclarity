@@ -127,6 +127,9 @@ func init() {
           },
           {
             "$ref": "#/parameters/specContainsFilter"
+          },
+          {
+            "$ref": "#/parameters/alertIsFilter"
           }
         ],
         "responses": {
@@ -699,6 +702,14 @@ func init() {
     }
   },
   "definitions": {
+    "AlertSeverityEnum": {
+      "description": "Level of alert",
+      "type": "string",
+      "enum": [
+        "ALERT_INFO",
+        "ALERT_WARN"
+      ]
+    },
     "ApiCount": {
       "type": "object",
       "properties": {
@@ -724,6 +735,12 @@ func init() {
     "ApiEvent": {
       "type": "object",
       "properties": {
+        "alerts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ModuleAlert"
+          }
+        },
         "apiInfoId": {
           "description": "hold the relevant api spec info id",
           "type": "integer",
@@ -761,6 +778,10 @@ func init() {
         },
         "query": {
           "type": "string"
+        },
+        "requestTime": {
+          "type": "string",
+          "format": "date-time"
         },
         "sourceIP": {
           "type": "string"
@@ -990,6 +1011,22 @@ func init() {
         }
       }
     },
+    "ModuleAlert": {
+      "type": "object",
+      "properties": {
+        "alert": {
+          "$ref": "#/definitions/AlertSeverityEnum"
+        },
+        "moduleName": {
+          "description": "Name of the module which created this alert",
+          "type": "string"
+        },
+        "reason": {
+          "description": "Optional description of reason of the alert",
+          "type": "string"
+        }
+      }
+    },
     "OpenApiSpecs": {
       "description": "An object representing the provided and reconstructed API specs",
       "type": "object",
@@ -1103,6 +1140,19 @@ func init() {
     }
   },
   "parameters": {
+    "alertIsFilter": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "ALERT_INFO",
+          "ALERT_WARN"
+        ],
+        "type": "string"
+      },
+      "description": "Alert Kind [ALERT_INFO or ALERT_WARN]",
+      "name": "alert[is]",
+      "in": "query"
+    },
     "apiEventSortKey": {
       "enum": [
         "time",
@@ -1758,6 +1808,19 @@ func init() {
               "type": "string"
             },
             "name": "spec[contains]",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "enum": [
+                "ALERT_INFO",
+                "ALERT_WARN"
+              ],
+              "type": "string"
+            },
+            "description": "Alert Kind [ALERT_INFO or ALERT_WARN]",
+            "name": "alert[is]",
             "in": "query"
           }
         ],
@@ -2644,6 +2707,14 @@ func init() {
     }
   },
   "definitions": {
+    "AlertSeverityEnum": {
+      "description": "Level of alert",
+      "type": "string",
+      "enum": [
+        "ALERT_INFO",
+        "ALERT_WARN"
+      ]
+    },
     "ApiCount": {
       "type": "object",
       "properties": {
@@ -2669,6 +2740,12 @@ func init() {
     "ApiEvent": {
       "type": "object",
       "properties": {
+        "alerts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ModuleAlert"
+          }
+        },
         "apiInfoId": {
           "description": "hold the relevant api spec info id",
           "type": "integer",
@@ -2706,6 +2783,10 @@ func init() {
         },
         "query": {
           "type": "string"
+        },
+        "requestTime": {
+          "type": "string",
+          "format": "date-time"
         },
         "sourceIP": {
           "type": "string"
@@ -2935,6 +3016,22 @@ func init() {
         }
       }
     },
+    "ModuleAlert": {
+      "type": "object",
+      "properties": {
+        "alert": {
+          "$ref": "#/definitions/AlertSeverityEnum"
+        },
+        "moduleName": {
+          "description": "Name of the module which created this alert",
+          "type": "string"
+        },
+        "reason": {
+          "description": "Optional description of reason of the alert",
+          "type": "string"
+        }
+      }
+    },
     "OpenApiSpecs": {
       "description": "An object representing the provided and reconstructed API specs",
       "type": "object",
@@ -3048,6 +3145,19 @@ func init() {
     }
   },
   "parameters": {
+    "alertIsFilter": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "ALERT_INFO",
+          "ALERT_WARN"
+        ],
+        "type": "string"
+      },
+      "description": "Alert Kind [ALERT_INFO or ALERT_WARN]",
+      "name": "alert[is]",
+      "in": "query"
+    },
     "apiEventSortKey": {
       "enum": [
         "time",

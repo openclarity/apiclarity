@@ -1,0 +1,167 @@
+openapi: 3.0.3
+info:
+  title: APIClarity BFLA
+  version: 0.0.1
+  description: APIClarity Plugin API
+paths:
+  /version:
+    get:
+      operationId: getVersion
+      summary: Get the version of this Plugin
+      description: Get the version of this Plugin
+      responses:
+        '200':
+          description: Version of the Plugin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+
+  /alert/{eventID}:
+    post:
+      parameters:
+        - name: eventID
+          required: true
+          schema:
+            type: integer
+          in: path
+        - name: type
+          required: true
+          in: query
+          schema:
+            type: string
+            enum:
+              - INFO
+              - WARN
+
+      responses:
+        '200':
+          description: set alert
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+
+  /event/{eventID}/annotation/{annotation}:
+    parameters:
+      - name: eventID
+        required: true
+        schema:
+          type: integer
+        in: path
+      - name: annotation
+        required: true
+        schema:
+          type: string
+        in: path
+
+    get:
+      responses:
+        '200':
+          description: get annotation
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data:
+                  type: string
+      responses:
+        '200':
+          description: get annotation
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+
+  /api/{apiID}/annotation/{annotation}:
+    parameters:
+      - name: apiID
+        required: true
+        schema:
+          type: integer
+        in: path
+      - name: annotation
+        required: true
+        schema:
+          type: string
+        in: path
+    get:
+      responses:
+        '200':
+          description: get annotation
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+    delete:
+      responses:
+        '200':
+          description: delete annotation
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                data:
+                  type: string
+
+      responses:
+        '200':
+          description: set annotation
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+
+  /events:
+    post:
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              additionalProperties: true
+
+      responses:
+        '200':
+          description: set alert
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+
+  /api/{apiID}:
+    get:
+      parameters:
+        - name: apiID
+          required: true
+          schema:
+            type: integer
+          in: path
+
+      responses:
+        '200':
+          description: set alert
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+
+components:
+  schemas:
+    Version:
+      type: 'object'
+      required: [version]
+      properties:
+        version:
+          type: 'string'

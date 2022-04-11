@@ -36,8 +36,8 @@ func Paginate(page, pageSize int64) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func CreateTimeFilter(startTime, endTime strfmt.DateTime) string {
-	return fmt.Sprintf("time BETWEEN '%v' AND '%v'", startTime, endTime)
+func CreateTimeFilter(columnName string, startTime, endTime strfmt.DateTime) string {
+	return fmt.Sprintf("%s BETWEEN '%v' AND '%v'", columnName, startTime, endTime)
 }
 
 func CreateSortOrder(sortKey string, sortDir *string) (string, error) {
@@ -99,6 +99,13 @@ func FilterIs(db *gorm.DB, column string, values []string) *gorm.DB {
 		return db
 	}
 	return db.Where(fmt.Sprintf("%s IN ?", column), values)
+}
+
+func FilterIsOrNull(db *gorm.DB, column string, values []string) *gorm.DB {
+	if len(values) == 0 {
+		return db
+	}
+	return db.Where(fmt.Sprintf("(%s IN ? OR %s IS NULL)", column, column), values)
 }
 
 func FilterIsNot(db *gorm.DB, column string, values []string) *gorm.DB {

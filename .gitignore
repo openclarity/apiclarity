@@ -5,3 +5,7 @@ plugins/gateway/kong/bin/*
 /bin/*
 *.gob
 goreleaser_artifacts/
+site/*
+.vscode/*
+backend/.vscode/*
+.DS_Store

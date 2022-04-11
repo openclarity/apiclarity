@@ -1,0 +1,21 @@
+@import 'utils/scss_variables.module.scss';
+
+.risk-tag-wrapper {
+    height: 20px;
+    font-weight: bold;
+    font-size: 9px;
+    line-height: 16px;
+    text-transform: uppercase;
+    padding: 2px 5px;
+    background-color: $color-grey;
+    display: inline-block;
+
+    &.warn {
+        background-color: $color-risk-high;
+        color: white;
+    }
+    &.info {
+        background-color: $color-risk-unknown;
+        color: white;
+    }
+}

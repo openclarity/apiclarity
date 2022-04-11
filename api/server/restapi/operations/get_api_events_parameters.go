@@ -41,6 +41,10 @@ type GetAPIEventsParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
+	/*Alert Kind [ALERT_INFO or ALERT_WARN]
+	  In: query
+	*/
+	AlertIs []string
 	/*
 	  In: query
 	*/
@@ -182,6 +186,11 @@ func (o *GetAPIEventsParams) BindRequest(r *http.Request, route *middleware.Matc
 	o.HTTPRequest = r
 
 	qs := runtime.Values(r.URL.Query())
+
+	qAlertIs, qhkAlertIs, _ := qs.GetOK("alert[is]")
+	if err := o.bindAlertIs(qAlertIs, qhkAlertIs, route.Formats); err != nil {
+		res = append(res, err)
+	}
 
 	qDestinationIPIsNot, qhkDestinationIPIsNot, _ := qs.GetOK("destinationIP[isNot]")
 	if err := o.bindDestinationIPIsNot(qDestinationIPIsNot, qhkDestinationIPIsNot, route.Formats); err != nil {
@@ -335,6 +344,37 @@ func (o *GetAPIEventsParams) BindRequest(r *http.Request, route *middleware.Matc
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+// bindAlertIs binds and validates array parameter AlertIs from query.
+//
+// Arrays are parsed according to CollectionFormat: "" (defaults to "csv" when empty).
+func (o *GetAPIEventsParams) bindAlertIs(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var qvAlertIs string
+	if len(rawData) > 0 {
+		qvAlertIs = rawData[len(rawData)-1]
+	}
+
+	// CollectionFormat:
+	alertIsIC := swag.SplitByFormat(qvAlertIs, "")
+	if len(alertIsIC) == 0 {
+		return nil
+	}
+
+	var alertIsIR []string
+	for i, alertIsIV := range alertIsIC {
+		alertIsI := alertIsIV
+
+		if err := validate.EnumCase(fmt.Sprintf("%s.%v", "alert[is]", i), "query", alertIsI, []interface{}{"ALERT_INFO", "ALERT_WARN"}, true); err != nil {
+			return err
+		}
+
+		alertIsIR = append(alertIsIR, alertIsI)
+	}
+
+	o.AlertIs = alertIsIR
+
 	return nil
 }
 

@@ -16,6 +16,7 @@
 package traces
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -29,7 +30,7 @@ import (
 	"github.com/apiclarity/apiclarity/plugins/api/server/restapi/operations"
 )
 
-type HandleTraceFunc func(trace *models.Telemetry) error
+type HandleTraceFunc func(ctx context.Context, trace *models.Telemetry) error
 
 type HTTPTracesServer struct {
 	traceHandleFunc HandleTraceFunc
@@ -83,7 +84,7 @@ func (s *HTTPTracesServer) Stop() {
 }
 
 func (s *HTTPTracesServer) PostTelemetry(params operations.PostTelemetryParams) middleware.Responder {
-	if err := s.traceHandleFunc(params.Body); err != nil {
+	if err := s.traceHandleFunc(params.HTTPRequest.Context(), params.Body); err != nil {
 		log.Errorf("Error from trace handling func: %v", err)
 		return operations.NewPostTelemetryDefault(http.StatusInternalServerError)
 	}

@@ -18,6 +18,9 @@ definitions:
       id:
         type: 'integer'
         format: 'uint32'
+      requestTime: 
+        type: 'string'
+        format: 'date-time'
       time:
         type: 'string'
         format: 'date-time'
@@ -51,6 +54,10 @@ definitions:
         format: 'uint32'
       apiType:
         $ref: '#/definitions/ApiType'
+      alerts:
+        type: 'array'
+        items:
+          $ref: '#/definitions/ModuleAlert'
 
   ApiEventSpecDiff:
     type: 'object'
@@ -315,6 +322,25 @@ definitions:
         items:
           $ref: '#/definitions/ReviewPathItem'
 
+  AlertSeverityEnum:
+    description: 'Level of alert'
+    type: 'string'
+    enum: &AlertSeverityEnum
+      - ALERT_INFO
+      - ALERT_WARN
+
+  ModuleAlert:
+    type: 'object'
+    properties:
+      moduleName:
+        description: 'Name of the module which created this alert'
+        type: 'string'
+      reason:
+        description: 'Optional description of reason of the alert'
+        type: 'string'
+      alert:
+        $ref: '#/definitions/AlertSeverityEnum'
+
 paths:
   /apiEvents:
     get:
@@ -350,6 +376,7 @@ paths:
         - $ref: '#/parameters/specStartsWithFilter'
         - $ref: '#/parameters/specEndsWithFilter'
         - $ref: '#/parameters/specContainsFilter'
+        - $ref: '#/parameters/alertIsFilter'
       responses:
         '200':
           description: 'Success'
@@ -1011,6 +1038,16 @@ parameters:
     name: 'hasReconstructedSpec[is]'
     in: 'query'
     type: 'boolean'
+    required: false
+
+  alertIsFilter:
+    name: 'alert[is]'
+    in: 'query'
+    type: 'array'
+    description: 'Alert Kind [ALERT_INFO or ALERT_WARN]'
+    items:
+      type: 'string'
+      enum: *AlertSeverityEnum
     required: false
 
   apiId:

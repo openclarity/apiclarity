@@ -32,6 +32,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/yaml"
 
 	"github.com/apiclarity/apiclarity/api/server/models"
@@ -39,6 +40,7 @@ import (
 	_database "github.com/apiclarity/apiclarity/backend/pkg/database"
 	"github.com/apiclarity/apiclarity/backend/pkg/healthz"
 	"github.com/apiclarity/apiclarity/backend/pkg/k8smonitor"
+	"github.com/apiclarity/apiclarity/backend/pkg/modules"
 	"github.com/apiclarity/apiclarity/backend/pkg/rest"
 	"github.com/apiclarity/apiclarity/backend/pkg/traces"
 	pluginsmodels "github.com/apiclarity/apiclarity/plugins/api/server/models"
@@ -54,15 +56,17 @@ type Backend struct {
 	monitor             *k8smonitor.Monitor
 	apiInventoryLock    sync.RWMutex
 	dbHandler           _database.Database
+	modules             modules.Module
 }
 
-func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, dbHandler *_database.Handler) *Backend {
+func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, dbHandler *_database.Handler, modules modules.Module) *Backend {
 	return &Backend{
 		speculator:          speculator,
 		stateBackupInterval: time.Second * time.Duration(config.StateBackupIntervalSec),
 		stateBackupFileName: config.StateBackupFileName,
 		monitor:             monitor,
 		dbHandler:           dbHandler,
+		modules:             modules,
 	}
 }
 
@@ -101,10 +105,22 @@ func Run() {
 	dbConfig := createDatabaseConfig(config)
 	dbHandler := _database.Init(dbConfig)
 	dbHandler.StartReviewTableCleaner(globalCtx, time.Duration(config.DatabaseCleanerIntervalSec)*time.Second)
+	var clientset kubernetes.Interface
+	if config.K8sLocal {
+		clientset, err = k8smonitor.CreateLocalK8sClientset()
+		if err != nil {
+			log.Fatalf("failed to create K8s clientset: %v", err)
+		}
+	} else if !viper.GetBool(_database.FakeTracesEnvVar) && !viper.GetBool(_database.FakeDataEnvVar) {
+		clientset, err = k8smonitor.CreateK8sClientset()
+		if err != nil {
+			log.Fatalf("failed to create K8s clientset: %v", err)
+		}
+	}
 
 	var monitor *k8smonitor.Monitor
-	if !viper.GetBool(_database.FakeTracesEnvVar) && !viper.GetBool(_database.FakeDataEnvVar) {
-		monitor, err = k8smonitor.CreateMonitor()
+	if !viper.GetBool(_config.NoMonitorEnvVar) && !viper.GetBool(_database.FakeTracesEnvVar) && !viper.GetBool(_database.FakeDataEnvVar) {
+		monitor, err = k8smonitor.CreateMonitor(clientset)
 		if err != nil {
 			log.Errorf("Failed to create a monitor: %v", err)
 			return
@@ -123,9 +139,10 @@ func Run() {
 		log.Infof("Using encoded speculator state")
 	}
 
-	backend := CreateBackend(config, monitor, speculator, dbHandler)
+	module := modules.New(globalCtx, dbHandler, clientset)
+	backend := CreateBackend(config, monitor, speculator, dbHandler, module)
 
-	restServer, err := rest.CreateRESTServer(config.BackendRestPort, speculator, dbHandler)
+	restServer, err := rest.CreateRESTServer(config.BackendRestPort, speculator, dbHandler, module)
 	if err != nil {
 		log.Fatalf("Failed to create REST server: %v", err)
 	}
@@ -186,7 +203,7 @@ func convertSpecDiffToEventDiff(diff *_spec.APIDiff) (originalRet, modifiedRet [
 	return originalRet, modifiedRet, nil
 }
 
-func (b *Backend) handleHTTPTrace(trace *pluginsmodels.Telemetry) error {
+func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Telemetry) error {
 	var reconstructedDiff *_spec.APIDiff
 	var providedDiff *_spec.APIDiff
 	var err error
@@ -280,6 +297,7 @@ func (b *Backend) handleHTTPTrace(trace *pluginsmodels.Telemetry) error {
 		APIInfoID:       apiInfo.ID,
 		Time:            strfmt.DateTime(time.Now().UTC()),
 		Method:          models.HTTPMethod(telemetry.Request.Method),
+		RequestTime:     strfmt.DateTime(time.UnixMilli(trace.Request.Common.Time).UTC()),
 		Path:            path,
 		Query:           query,
 		StatusCode:      int64(statusCode),
@@ -326,6 +344,8 @@ func (b *Backend) handleHTTPTrace(trace *pluginsmodels.Telemetry) error {
 	event.SpecDiffType = getHighestPrioritySpecDiffType(providedDiffType, reconstructedDiffType)
 
 	b.dbHandler.APIEventsTable().CreateAPIEvent(event)
+
+	b.modules.EventNotify(ctx, &modules.Event{APIEvent: event, Telemetry: trace})
 
 	return nil
 }

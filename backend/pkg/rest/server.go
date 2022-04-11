@@ -17,6 +17,7 @@ package rest
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime/middleware"
@@ -26,6 +27,7 @@ import (
 	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
 	"github.com/apiclarity/apiclarity/backend/pkg/common"
 	"github.com/apiclarity/apiclarity/backend/pkg/database"
+	"github.com/apiclarity/apiclarity/backend/pkg/modules"
 	_speculator "github.com/apiclarity/speculator/pkg/speculator"
 )
 
@@ -35,7 +37,7 @@ type Server struct {
 	speculator *_speculator.Speculator
 }
 
-func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *database.Handler) (*Server, error) {
+func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *database.Handler, modules modules.Module) (*Server, error) {
 	s := &Server{
 		speculator: speculator,
 		dbHandler:  dbHandler,
@@ -130,6 +132,13 @@ func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *d
 	server.ConfigureAPI()
 	server.Port = port
 
+	origHandler := server.GetHandler()
+	newHandler := http.NewServeMux()
+
+	// Enhance the default handler with modules apis handlers
+	newHandler.Handle("/api/modules/", modules.HTTPHandler())
+	newHandler.Handle("/", origHandler)
+	server.SetHandler(newHandler)
 	s.server = server
 
 	return s, nil

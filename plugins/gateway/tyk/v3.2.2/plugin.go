@@ -189,8 +189,7 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 
 // Will try to extract the namespace from the host name, and if not found, will use the namespace that the gateway is running in.
 func getDestinationNamespaceFromHost(host string) string {
-	sp := strings.Split(host, ".")
-	if len(sp) >= MinimumSeparatedHostSize {
+	if sp := strings.Split(host, "."); len(sp) >= MinimumSeparatedHostSize {
 		return sp[0]
 	}
 	return gatewayNamespace

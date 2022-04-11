@@ -13,8 +13,13 @@ const SpecDiff = ({url}) => {
             {loading ? <Loader /> :
                 <React.Fragment>
                     <div className="spec-diff-titles-wrapper">
-                        <div>Documented</div>
-                        <div>Detected</div>
+                        {!newSpec && !oldSpec ?
+                            <div>No Spec Available</div> :
+                            <React.Fragment>
+                                <div>Documented</div>
+                                <div>Detected</div>
+                            </React.Fragment>
+                        }
                     </div>
                     <ReactDiffViewer oldValue={oldSpec} newValue={newSpec} splitView={true} />
                 </React.Fragment>
