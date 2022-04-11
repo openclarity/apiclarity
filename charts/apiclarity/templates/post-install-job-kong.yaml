@@ -94,6 +94,12 @@ spec:
           - /bin/bash
           - -c
           - "cd /tmp &&
+{{- if .Values.trafficSource.global.httpsProxy -}}
+            git config --global https.proxy {{ .Values.trafficSource.global.httpsProxy }} &&
+{{- end }}
+{{- if .Values.trafficSource.global.httpProxy -}}
+            git config --global http.proxy {{ .Values.trafficSource.global.httpProxy }} &&
+{{- end }}
             git clone -b {{ .Chart.AppVersion }} https://github.com/apiclarity/apiclarity.git &&
             cd apiclarity &&
             ./plugins/gateway/kong/deploy/deploy.sh"
