@@ -180,11 +180,10 @@ func Test_createTelemetry(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx.SetDefinition(tt.args.req, &apiDefinition)
 			session := &user.SessionState{MetaData: map[string]interface{}{common.RequestTimeContextKey: tNow}}
 			ctx.SetSession(tt.args.req, session, false, false)
 
-			got, err := createTelemetry(tt.args.res, tt.args.req)
+			got, err := createTelemetry(tt.args.res, tt.args.req, &apiDefinition)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("createTelemetry() error = %v, wantErr %v", err, tt.wantErr)
 				return

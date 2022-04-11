@@ -43,6 +43,8 @@ func versionCommand(_ *cli.Context) {
 func main() {
 	viper.SetDefault(config.HealthCheckAddress, ":8081")
 	viper.SetDefault(config.HTTPTracesPort, "9000")
+	viper.SetDefault(config.HTTPTraceSamplingManagerPort, "9990")
+	viper.SetDefault(config.GRPCTraceSamplingManagerPort, "9991")
 	viper.SetDefault(config.BackendRestPort, "8080")
 	viper.SetDefault(config.StateBackupIntervalSec, "30")
 	viper.SetDefault(config.DatabaseCleanerIntervalSec, "30")

@@ -28,6 +28,9 @@ global:
     ##   GKE, AWS & OpenStack)
     # storageClass: ""
 
+  traceSampling:
+    enable: false
+
 ## End of Global Values
 #######################################################################################
 

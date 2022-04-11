@@ -30,6 +30,10 @@ spec:
               value: "12800"
             - name: UPSTREAM_TELEMETRY_HOST_NAME
               value: '{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:9000'
+            - name: TRACE_SAMPLING_HOST_NAME
+              value: '{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:9990'
+            - name: TRACE_SAMPLING_ENABLED
+              value: "{{ .Values.global.traceSampling.enable }}"
             - name: NAMESPACES_TO_TAP
               value: {{ join " " .Values.trafficSource.tap.namespaces }}
             - name: NODE_NAME
