@@ -54,7 +54,6 @@ linters:
     - testpackage
     - scopelint # deprecated
     - golint # deprecated
-    - gochecknoinits
     # TODO:(fixme)
     - gocognit
     - godox

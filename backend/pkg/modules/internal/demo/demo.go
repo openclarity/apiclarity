@@ -26,6 +26,7 @@ import (
 	"github.com/apiclarity/apiclarity/backend/pkg/modules/internal/core"
 )
 
+//lint:gochecknoinits
 func init() {
 	core.RegisterModule(newModule)
 }
