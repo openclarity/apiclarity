@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/apiclarity/apiclarity/api v0.0.0
 	github.com/apiclarity/apiclarity/plugins/api v0.0.0
-	github.com/apiclarity/speculator v0.0.5-0.20220217144620-974ad83e673f
+	github.com/apiclarity/speculator v0.0.5-0.20220413120542-ccc4675eda2e
 	github.com/bxcodec/faker/v3 v3.6.0
 	github.com/deepmap/oapi-codegen v1.9.1
 	github.com/getkin/kin-openapi v0.87.0
