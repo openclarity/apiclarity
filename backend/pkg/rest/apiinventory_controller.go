@@ -55,9 +55,8 @@ func (s *Server) PostAPIInventory(params operations.PostAPIInventoryParams) midd
 			Message: "Oops",
 		})
 	}
-	if err := s.speculator.InitSpec(params.Body.Name, strconv.Itoa(int(params.Body.Port))); err != nil {
-		log.Warnf("Spec was not initializedL %s", err)
-	}
+
+	_ = s.speculator.InitSpec(params.Body.Name, strconv.Itoa(int(params.Body.Port)))
 
 	return operations.NewPostAPIInventoryOK().WithPayload(_database.APIInfoFromDB(apiInfo))
 }
