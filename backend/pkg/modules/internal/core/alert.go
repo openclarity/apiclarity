@@ -22,11 +22,13 @@ type AlertSeverity int
 const (
 	AlertInfo AlertSeverity = iota
 	AlertWarn
+	AlertCrit
 )
 
 var (
 	AlertInfoAnn = Annotation{Name: AlertAnnotation, Annotation: []byte(AlertInfo.String())}
 	AlertWarnAnn = Annotation{Name: AlertAnnotation, Annotation: []byte(AlertWarn.String())}
+	AlertCritAnn = Annotation{Name: AlertAnnotation, Annotation: []byte(AlertCrit.String())}
 )
 
 func (es AlertSeverity) String() string {
@@ -35,6 +37,8 @@ func (es AlertSeverity) String() string {
 		return "ALERT_INFO"
 	case AlertWarn:
 		return "ALERT_WARN"
+	case AlertCrit:
+		return "ALERT_CRIT"
 	}
 	panic("undefined alert severity")
 }
