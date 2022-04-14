@@ -58,8 +58,8 @@ github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdko
 github.com/agnivade/levenshtein v1.0.1/go.mod h1:CURSv5d9Uaml+FovSIICkLbAUZ9S4RqaHDIsdSBg7lM=
 github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883/go.mod h1:rCTlJbsFo29Kk6CurOXKm700vrz8f0KW0JNfpkRJY/8=
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
-github.com/apiclarity/speculator v0.0.5-0.20220217144620-974ad83e673f h1:KcLb/dkWL50b04M44s5gtQzTZg0QQE1qBP8Mv8ah2VI=
-github.com/apiclarity/speculator v0.0.5-0.20220217144620-974ad83e673f/go.mod h1:2SGsxyqtg08O7FX0zdzY3ixvm/kCWU/xkY52yFEXIkY=
+github.com/apiclarity/speculator v0.0.5-0.20220413120542-ccc4675eda2e h1:sWhtvWCtsgPh8sninY21N5yoZjWSIdkSzI8RU3PtaHY=
+github.com/apiclarity/speculator v0.0.5-0.20220413120542-ccc4675eda2e/go.mod h1:2SGsxyqtg08O7FX0zdzY3ixvm/kCWU/xkY52yFEXIkY=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=

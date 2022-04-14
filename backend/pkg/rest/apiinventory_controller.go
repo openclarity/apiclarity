@@ -16,7 +16,9 @@
 package rest
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/go-openapi/runtime/middleware"
 	log "github.com/sirupsen/logrus"
@@ -27,6 +29,21 @@ import (
 )
 
 func (s *Server) PostAPIInventory(params operations.PostAPIInventoryParams) middleware.Responder {
+	if err := params.Body.APIType.Validate(nil); err != nil {
+		return operations.NewPostAPIInventoryDefault(http.StatusBadRequest).WithPayload(&models.APIResponse{
+			Message: fmt.Sprintf("apiType invalid: %q", err),
+		})
+	}
+	if params.Body.Name == "" {
+		return operations.NewPostAPIInventoryDefault(http.StatusBadRequest).WithPayload(&models.APIResponse{
+			Message: "please provide name",
+		})
+	}
+	if params.Body.Port < 1 {
+		return operations.NewPostAPIInventoryDefault(http.StatusBadRequest).WithPayload(&models.APIResponse{
+			Message: "please provide a valid port",
+		})
+	}
 	apiInfo := &_database.APIInfo{
 		Type: params.Body.APIType,
 		Name: params.Body.Name,
@@ -38,6 +55,8 @@ func (s *Server) PostAPIInventory(params operations.PostAPIInventoryParams) midd
 			Message: "Oops",
 		})
 	}
+
+	_ = s.speculator.InitSpec(params.Body.Name, strconv.Itoa(int(params.Body.Port)))
 
 	return operations.NewPostAPIInventoryOK().WithPayload(_database.APIInfoFromDB(apiInfo))
 }
