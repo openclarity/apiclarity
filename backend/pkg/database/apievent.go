@@ -243,7 +243,7 @@ func (a *APIEventsTableHandler) GetAPIEventsWithAnnotations(ctx context.Context,
 			Group(fmt.Sprintf("%s.%s", apiEventTableName, idColumnName)).
 			Distinct()
 		if query.APIEventAnnotationFilters.NoAnnotations {
-			tx.Having(fmt.Sprintf("(%s) OR COUNT(ea) = 0",
+			tx.Having(fmt.Sprintf("(%s) OR COUNT(ea.id) = 0",
 				strings.Join(havingConditions, " AND ")), args...)
 		} else {
 			tx.Having(strings.Join(havingConditions, " AND "), args...)
