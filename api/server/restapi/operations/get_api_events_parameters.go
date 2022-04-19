@@ -366,7 +366,7 @@ func (o *GetAPIEventsParams) bindAlertIs(rawData []string, hasKey bool, formats 
 	for i, alertIsIV := range alertIsIC {
 		alertIsI := alertIsIV
 
-		if err := validate.EnumCase(fmt.Sprintf("%s.%v", "alert[is]", i), "query", alertIsI, []interface{}{"ALERT_INFO", "ALERT_WARN"}, true); err != nil {
+		if err := validate.EnumCase(fmt.Sprintf("%s.%v", "alert[is]", i), "query", alertIsI, []interface{}{"ALERT_INFO", "ALERT_WARN", "ALERT_CRITICAL"}, true); err != nil {
 			return err
 		}
 
