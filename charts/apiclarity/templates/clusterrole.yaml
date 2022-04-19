@@ -6,10 +6,10 @@ metadata:
   labels:
     {{ include "apiclarity.labels" . }}
 rules:
-  - apiGroups: [""]
-    resources: ["nodes", "services", "pods"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["apps"]
-    resources: ["replicasets", "daemonsets", "deployments"]
-    verbs: ["get", "list", "watch"]
-  {{- end -}}
+- apiGroups: [""]
+  resources: ["nodes", "services", "pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["replicasets", "daemonsets", "deployments"]
+  verbs: ["get", "list", "watch"]
+{{- end -}}
