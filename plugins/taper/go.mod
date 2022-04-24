@@ -22,7 +22,7 @@ require (
 require (
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
-	github.com/apiclarity/trace-sampling-manager/api v0.0.0-20220411162149-37426ccbc8b8 // indirect
+	github.com/apiclarity/trace-sampling-manager/api v0.0.0-20220421083848-1303b9669327 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef // indirect
 	github.com/bradleyfalzon/tlsx v0.0.0-20170624122154-28fd0e59bac4 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect

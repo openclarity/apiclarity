@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/apiclarity/apiclarity/plugins/api v0.0.0
-	github.com/apiclarity/trace-sampling-manager/api v0.0.0-20220411162149-37426ccbc8b8
+	github.com/apiclarity/trace-sampling-manager/api v0.0.0-20220421083848-1303b9669327
 	github.com/go-openapi/runtime v0.21.0
 	github.com/go-openapi/strfmt v0.21.0
 	github.com/satori/go.uuid v1.2.0
