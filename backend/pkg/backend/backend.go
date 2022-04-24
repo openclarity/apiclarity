@@ -47,6 +47,7 @@ import (
 	_spec "github.com/apiclarity/speculator/pkg/spec"
 	_speculator "github.com/apiclarity/speculator/pkg/speculator"
 	_mimeutils "github.com/apiclarity/speculator/pkg/utils"
+	"github.com/apiclarity/trace-sampling-manager/manager/pkg/manager"
 )
 
 type Backend struct {
@@ -119,6 +120,7 @@ func Run() {
 	}
 
 	var monitor *k8smonitor.Monitor
+	var samplingManager *manager.Manager
 	if !viper.GetBool(_config.NoMonitorEnvVar) && !viper.GetBool(_database.FakeTracesEnvVar) && !viper.GetBool(_database.FakeDataEnvVar) {
 		monitor, err = k8smonitor.CreateMonitor(clientset)
 		if err != nil {
@@ -127,6 +129,21 @@ func Run() {
 		}
 		monitor.Start()
 		defer monitor.Stop()
+
+		if config.TraceSamplingEnabled {
+			samplingManager, err = manager.Create(clientset, &manager.Config{
+				RestServerPort: config.HTTPTraceSamplingManagerPort,
+				GRPCServerPort: config.GRPCTraceSamplingManagerPort,
+			})
+			if err != nil {
+				log.Errorf("Failed to create a trace sampling manager: %v", err)
+				return
+			}
+			if err := samplingManager.Start(errChan); err != nil {
+				log.Errorf("Failed to start trace sampling manager: %v", err)
+				return
+			}
+		}
 	} else if viper.GetBool(_database.FakeDataEnvVar) {
 		go dbHandler.CreateFakeData()
 	}

@@ -39,13 +39,15 @@ import (
 	"github.com/apiclarity/apiclarity/plugins/api/client/client/operations"
 	"github.com/apiclarity/apiclarity/plugins/api/client/models"
 	"github.com/apiclarity/apiclarity/plugins/common"
+	"github.com/apiclarity/apiclarity/plugins/common/trace_sampling_client"
 	"github.com/apiclarity/apiclarity/plugins/taper/config"
 	"github.com/apiclarity/apiclarity/plugins/taper/monitor"
 )
 
 type Agent struct {
-	podMonitor *monitor.PodMonitor
-	apiClient  *client.APIClarityPluginsTelemetriesAPI
+	podMonitor          *monitor.PodMonitor
+	apiClient           *client.APIClarityPluginsTelemetriesAPI
+	traceSamplingClient *trace_sampling_client.Client
 }
 
 func run(c *cli.Context) {
@@ -70,7 +72,7 @@ func run(c *cli.Context) {
 			RootCAFileName: common.CACertFile,
 		}
 	}
-	apiClient, err := common.NewAPIClient(runConfig.UpstreamAddress, tlsOptions)
+	apiClient, err := common.NewTelemetryAPIClient(runConfig.UpstreamAddress, tlsOptions)
 	if err != nil {
 		log.Errorf("Failed to create new api client: %v", err)
 		return
@@ -79,6 +81,15 @@ func run(c *cli.Context) {
 		apiClient: apiClient,
 	}
 
+	if runConfig.TraceSamplingEnabled {
+		TSM, err := trace_sampling_client.Create(false, runConfig.TraceSamplingManagerAddress, common.SamplingInterval)
+		if err != nil {
+			log.Errorf("Failed to create trace sampling client: %v", err)
+			return
+		}
+		TSM.Start()
+		agent.traceSamplingClient = TSM
+	}
 	// set mizu logger
 	logger.InitLoggerStderrOnly(runConfig.MizuLogLevel)
 
@@ -123,6 +134,11 @@ func (a *Agent) startReadOutputItems(ctx context.Context, outputItems chan *api.
 					log.Errorf("Failed to create telemetry: %v", err)
 					return
 				}
+				// TODO format host to host.namespace (or whatever format we will decide on for hosts)
+				if !a.shouldTrace(telemetry.Request.Host) {
+					log.Infof("Ignoring host: %v", telemetry.Request.Host)
+					return
+				}
 
 				params := operations.NewPostTelemetryParams().WithBody(telemetry)
 
@@ -135,6 +151,17 @@ func (a *Agent) startReadOutputItems(ctx context.Context, outputItems chan *api.
 			}()
 		}
 	}
+}
+
+func (a *Agent) shouldTrace(host string) bool {
+	if a.traceSamplingClient == nil {
+		return true
+	}
+	if a.traceSamplingClient.ShouldTrace(host) {
+		return true
+	}
+
+	return false
 }
 
 // for each connection we will get the pod to pod communication (maybe twice if they are on different nodes) and the pod to service communication.

@@ -21,6 +21,7 @@ linters-settings:
       - github.com/jensneuse/graphql-go-tools
       - github.com/up9inc/mizu/tap/api
       - github.com/up9inc/mizu/shared
+      - github.com/apiclarity/trace-sampling-manager/api
     # Allow local `replace` directives. Default is false.
     replace-local: true
   gosec:

@@ -34,6 +34,8 @@ var _ = flag.String(logutils.LogLevelFlag, logutils.LogLevelDefaultValue, loguti
 
 func main() {
 	viper.SetDefault(config.UpstreamAddressEnv, "apiclarity-apiclarity.apiclarity:9000")
+	viper.SetDefault(config.TraceSamplingManagerAddress, "apiclarity-apiclarity.apiclarity:9990")
+	viper.SetDefault(config.TraceSamplingEnabled, false)
 	viper.SetDefault(config.NamespacesToTapEnv, "default")
 	viper.SetDefault(config.EnableTLSEnv, false)
 	viper.SetDefault(config.TapLogLevelEnv, logging.INFO)

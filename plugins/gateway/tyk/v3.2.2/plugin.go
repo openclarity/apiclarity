@@ -38,6 +38,7 @@ import (
 	"github.com/apiclarity/apiclarity/plugins/api/client/client/operations"
 	"github.com/apiclarity/apiclarity/plugins/api/client/models"
 	"github.com/apiclarity/apiclarity/plugins/common"
+	"github.com/apiclarity/apiclarity/plugins/common/trace_sampling_client"
 )
 
 const (
@@ -47,17 +48,31 @@ const (
 var logger = log.Get()
 
 var (
-	host             string
-	gatewayNamespace string
-	enableTLS        bool
+	telemetryHost        string
+	gatewayNamespace     string
+	enableTLS            bool
+	traceSamplingHost    string
+	traceSamplingEnabled bool
+	TraceSamplingClient  *trace_sampling_client.Client
 )
 
 //nolint:gochecknoinits
 func init() {
-	host = os.Getenv("APICLARITY_HOST")
+	telemetryHost = os.Getenv("APICLARITY_HOST")
 	gatewayNamespace = os.Getenv("TYK_GATEWAY_NAMESPACE")
 	if os.Getenv("ENABLE_TLS") == "true" {
 		enableTLS = true
+	}
+	if os.Getenv("TRACE_SAMPLING_ENABLED") == "true" {
+		traceSamplingHost = os.Getenv("TRACE_SAMPLING_HOST_NAME")
+		traceSamplingClient, err := trace_sampling_client.Create(false, traceSamplingHost, common.SamplingInterval)
+		if err != nil {
+			logger.Errorf("Failed to create trace sampling client: %v", err)
+		} else {
+			traceSamplingEnabled = true
+			TraceSamplingClient = traceSamplingClient
+			TraceSamplingClient.Start()
+		}
 	}
 }
 
@@ -73,28 +88,35 @@ func PostGetAPIDefinition(_ http.ResponseWriter, r *http.Request) {
 		logger.Error("Failed to get api definition")
 		return
 	}
-	// set the apiDefinition since we dont get it in the response phase
-	ctx.SetDefinition(r, apiDefinition)
-
-	requestTime := time.Now().UTC().UnixNano() / int64(time.Millisecond) // UnixMilli supported only from go 1.17
 
 	session := ctx.GetSession(r)
-	if session == nil {
-		session = &user.SessionState{MetaData: map[string]interface{}{common.RequestTimeContextKey: requestTime}}
-	} else if session.MetaData == nil {
-		session.MetaData = map[string]interface{}{common.RequestTimeContextKey: requestTime}
-	} else {
-		session.MetaData[common.RequestTimeContextKey] = requestTime
-	}
-	// set request time on session metadata
+	session = setRequestTimeOnSession(session)
+
 	ctx.SetSession(r, session, false, false)
+
+	// set the apiDefinition since we dont get it in the response phase
+	ctx.SetDefinition(r, apiDefinition)
 }
 
 // Called during response phase.
 //nolint:deadcode
 func ResponseSendTelemetry(_ http.ResponseWriter, res *http.Response, req *http.Request) {
 	logger.Info("Handling telemetry")
-	telemetry, err := createTelemetry(res, req)
+
+	apiDefinition := ctx.GetDefinition(req)
+	if apiDefinition == nil {
+		logger.Error("Failed to get api definition")
+		return
+	}
+	if traceSamplingEnabled && TraceSamplingClient != nil {
+		host, _ := getHostAndPortFromTargetURL(apiDefinition.Proxy.TargetURL)
+		if !TraceSamplingClient.ShouldTrace(host) {
+			logger.Infof("Ignoring host: %v", host)
+			return
+		}
+	}
+
+	telemetry, err := createTelemetry(res, req, apiDefinition)
 	if err != nil {
 		logger.Errorf("Failed to create telemetry: %v", err)
 		return
@@ -106,7 +128,7 @@ func ResponseSendTelemetry(_ http.ResponseWriter, res *http.Response, req *http.
 			RootCAFileName: common.CACertFile,
 		}
 	}
-	apiClient, err := common.NewAPIClient(host, tlsOptions)
+	apiClient, err := common.NewTelemetryAPIClient(telemetryHost, tlsOptions)
 	if err != nil {
 		logger.Errorf("Failed to create new api client: %v", err)
 		return
@@ -121,12 +143,7 @@ func ResponseSendTelemetry(_ http.ResponseWriter, res *http.Response, req *http.
 	logger.Infof("Telemetry has been sent")
 }
 
-func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, error) {
-	apiDefinition := ctx.GetDefinition(req)
-	if apiDefinition == nil {
-		return nil, fmt.Errorf("failed to get api definition")
-	}
-
+func createTelemetry(res *http.Response, req *http.Request, apiDefinition *apidef.APIDefinition) (*models.Telemetry, error) {
 	metadata := ctx.GetSession(req).MetaData
 	requestTime, ok := metadata[common.RequestTimeContextKey].(int64)
 	if !ok {
@@ -185,6 +202,18 @@ func createTelemetry(res *http.Response, req *http.Request) (*models.Telemetry, 
 	}
 
 	return &telemetry, nil
+}
+
+func setRequestTimeOnSession(session *user.SessionState) *user.SessionState {
+	requestTime := time.Now().UTC().UnixNano() / int64(time.Millisecond) // UnixMilli supported only from go 1.17
+	if session == nil {
+		session = &user.SessionState{MetaData: map[string]interface{}{common.RequestTimeContextKey: requestTime}}
+	} else if session.MetaData == nil {
+		session.MetaData = map[string]interface{}{common.RequestTimeContextKey: requestTime}
+	} else {
+		session.MetaData[common.RequestTimeContextKey] = requestTime
+	}
+	return session
 }
 
 // Will try to extract the namespace from the host name, and if not found, will use the namespace that the gateway is running in.
