@@ -89,7 +89,7 @@ func (r *recovery) Resync(ctx context.Context, events chan *core.Event) (allEven
 			allEvents <- e
 		}
 
-		log.Infof("start live trasmission")
+		log.Debugf("start live transmission")
 		for {
 			select {
 			case event, ok := <-events:

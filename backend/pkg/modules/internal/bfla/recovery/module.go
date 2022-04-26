@@ -45,7 +45,6 @@ func ResyncedModule(wrappedModuleFactory core.ModuleFactory) core.ModuleFactory 
 					if !ok {
 						return
 					}
-					log.Infof("push old/new event: %d", event.APIEvent.ID)
 					go wrappedModule.EventNotify(ctx, event)
 				}
 			}

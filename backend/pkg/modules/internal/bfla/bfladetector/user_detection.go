@@ -17,10 +17,11 @@ package bfladetector
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/golang-jwt/jwt/v4"
 )
 
 func GetUserID(headers map[string]string) (*DetectedUser, error) {
@@ -47,24 +48,11 @@ func GetUserID(headers map[string]string) (*DetectedUser, error) {
 	}
 	if strings.HasPrefix(authz, "Bearer ") {
 		bearer := strings.TrimPrefix(authz, "Bearer ")
-		bearerParts := strings.Split(bearer, ".")
-
-		// nolint:gomnd
-		if len(bearerParts) == 3 { // is JWT
-			s, err := base64.URLEncoding.DecodeString(bearerParts[1])
-			if err != nil {
-				return nil, fmt.Errorf("unable to decode bearer token: %w", err)
-			}
-			data := struct {
-				Subject string `json:"sub"`
-			}{}
-			if err := json.Unmarshal(s, &data); err != nil {
-				return nil, fmt.Errorf("unable to unmarshal json jwt body: %w", err)
-			}
-			return &DetectedUser{Source: DetectedUserSourceJWT, ID: data.Subject}, nil
+		claims := &jwt.RegisteredClaims{}
+		if _, _, err := jwt.NewParser(jwt.WithoutClaimsValidation()).ParseUnverified(bearer, claims); err != nil {
+			return nil, fmt.Errorf("unsuported bearer token: %w", err)
 		}
-
-		return nil, ErrUnsupportedAuthScheme
+		return &DetectedUser{Source: DetectedUserSourceJWT, ID: claims.Subject}, nil
 	}
 	return nil, ErrUnsupportedAuthScheme
 }

@@ -26,6 +26,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/apiclarity/apiclarity/backend/pkg/database"
 	"github.com/apiclarity/apiclarity/backend/pkg/modules/internal/bfla/k8straceannotator"
 	"github.com/apiclarity/apiclarity/backend/pkg/modules/internal/bfla/recovery"
 	"github.com/apiclarity/apiclarity/backend/pkg/modules/internal/bfla/restapi"
@@ -45,12 +46,12 @@ const (
 
 var ErrUnsupportedAuthScheme = errors.New("unsupported auth scheme")
 
-func NewBFLADetector(ctx context.Context, learnTracesNr int, pathResolver PathResolver, eventAlerter EventAlerter, sp recovery.StatePersister) BFLADetector {
+func NewBFLADetector(ctx context.Context, learnTracesNr int, apiInfoProvider apiInfoProvider, eventAlerter EventAlerter, sp recovery.StatePersister) BFLADetector {
 	l := &learnAndDetectBFLA{
 		tracesCh:             make(chan *CompositeTrace),
 		commandsCh:           make(chan Command),
 		errCh:                make(chan error),
-		pathResolver:         pathResolver,
+		apiInfoProvider:      apiInfoProvider,
 		defaultTracesToLearn: learnTracesNr,
 		authzModelsMap:       recovery.NewPersistedMap(sp, AuthzModelAnnotationName, reflect.TypeOf(AuthorizationModel{})),
 		tracesCounterMap:     recovery.NewPersistedMap(sp, AuthzProcessedTracesAnnotationName, reflect.TypeOf(1)),
@@ -85,6 +86,10 @@ type BFLADetector interface {
 	ResetLearning(apiID uint, numberOfTraces int)
 	StartLearning(apiID uint, numberOfTraces int)
 	StopLearning(apiID uint)
+}
+
+type apiInfoProvider interface {
+	GetAPIInfo(ctx context.Context, apiID uint) (*database.APIInfo, error)
 }
 
 type Command interface{ isCommand() }
@@ -140,7 +145,7 @@ type learnAndDetectBFLA struct {
 	tracesCh             chan *CompositeTrace
 	commandsCh           chan Command
 	errCh                chan error
-	pathResolver         PathResolver
+	apiInfoProvider      apiInfoProvider
 	defaultTracesToLearn int
 
 	authzModelsMap   recovery.PersistedMap
@@ -196,19 +201,9 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 	defer runtimeRecover()
 	switch cmd := command.(type) {
 	case *MarkLegitimateCommand:
-		resolvedPath, specType := l.pathResolver.RezolvePath(ctx, cmd.apiID, cmd.path)
-		if specType == SpecTypeNone {
-			log.Warnf("Spec not present, cannot learn BFLA")
-			return nil
-		}
-		err = l.updateAuthorizationModel(resolvedPath, cmd.method, cmd.clientRef, cmd.apiID, cmd.detectedUser, true, true)
+		err = l.updateAuthorizationModel(cmd.path, cmd.method, cmd.clientRef, cmd.apiID, cmd.detectedUser, true, true)
 	case *MarkIllegitimateCommand:
-		resolvedPath, specType := l.pathResolver.RezolvePath(ctx, cmd.apiID, cmd.path)
-		if specType == SpecTypeNone {
-			log.Warnf("Spec not present, cannot learn BFLA")
-			return err
-		}
-		err = l.updateAuthorizationModel(resolvedPath, cmd.method, cmd.clientRef, cmd.apiID, cmd.detectedUser, false, true)
+		err = l.updateAuthorizationModel(cmd.path, cmd.method, cmd.clientRef, cmd.apiID, cmd.detectedUser, false, true)
 	case *StopLearningCommand:
 
 		counter, err := l.tracesCounterMap.Get(cmd.apiID)
@@ -273,8 +268,14 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	apiID := trace.APIEvent.APIInfoID
 	log.Infof("bfla received event: %d", apiID)
 	// load the model from store in case the it is not already present in memory or don't do anything if the model with id does not exist
-	resolvedPath, specType := l.pathResolver.RezolvePath(ctx, apiID, trace.APIEvent.Path)
-	if specType == SpecTypeNone {
+	apiInfo, err := l.apiInfoProvider.GetAPIInfo(ctx, apiID)
+	if err != nil {
+		return fmt.Errorf("unable to get api info: %w", err)
+	}
+	resolvedPath := ResolvePath(apiInfo, trace.APIEvent)
+
+	log.Info("apiInfo", apiInfo.ProvidedSpecInfo, trace.APIEvent.Path)
+	if SpecTypeFromAPIInfo(apiInfo) == SpecTypeNone {
 		return fmt.Errorf("spec not present cannot learn BFLA")
 	}
 	var tracesProcessed int
@@ -369,11 +370,11 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(path, method string, clien
 	}
 
 	audienceIndex, audience := op.Audience.Find(func(sa *SourceObject) bool {
-		if sa.External == external {
-			return true
+		if external {
+			return sa.External
 		}
-		if sa.External && !external {
-			return false
+		if sa.External {
+			return external
 		}
 		return sa.K8sObject.Uid == clientRef.Uid
 	})
@@ -442,46 +443,24 @@ func (l *learnAndDetectBFLA) isUnauthorized(path, method string, clientRef *k8st
 			op.Method == method
 	})
 	if op == nil {
-		log.Error("operation not found", err)
+		log.Error("operation not found: ", err)
 		return true
 	}
 	_, aud := op.Audience.Find(func(sa *SourceObject) bool {
-		if sa.External == external {
-			return true
+		if external {
+			return sa.External
 		}
-		if sa.External && !external {
-			return false
+		if sa.External {
+			return external
 		}
 		return sa.K8sObject.Uid == clientRef.Uid
 	})
 	if aud == nil {
-		log.Error("audience not found", err)
+		log.Error("audience not found: ", err)
 		return true
 	}
 
 	return !aud.Authorized
-}
-
-type GenericOpenapiSpec struct {
-	Paths map[string]*Path `yaml:"paths"`
-}
-
-type Path struct {
-	Ref         string                    `yaml:"$ref,omitempty"`
-	Summary     string                    `yaml:"summary,omitempty"`
-	Description string                    `yaml:"description,omitempty"`
-	Servers     interface{}               `yaml:"servers,omitempty"`
-	Operations  map[string]*HasParameters `yaml:",inline"`
-	Parameters  []*Parameter              `yaml:"parameters,omitempty"`
-}
-
-type HasParameters struct {
-	Parameters []*Parameter `yaml:"parameters,omitempty"`
-}
-
-type Parameter struct {
-	Name string `yaml:"name,omitempty"`
-	In   string `yaml:"in,omitempty"`
 }
 
 func (l *learnAndDetectBFLA) SendTrace(trace *CompositeTrace) {
@@ -543,4 +522,22 @@ func ResolveBFLAStatusInt(code int) restapi.BFLAStatus {
 	}
 
 	return restapi.BFLAStatusSUSPICIOUSHIGH
+}
+
+type SpecType uint
+
+const (
+	SpecTypeNone = iota
+	SpecTypeProvided
+	SpecTypeReconstructed
+)
+
+func SpecTypeFromAPIInfo(apiinfo *database.APIInfo) SpecType {
+	if apiinfo.HasProvidedSpec {
+		return SpecTypeProvided
+	}
+	if apiinfo.HasReconstructedSpec {
+		return SpecTypeReconstructed
+	}
+	return SpecTypeNone
 }

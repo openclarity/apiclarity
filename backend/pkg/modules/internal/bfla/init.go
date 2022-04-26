@@ -64,17 +64,13 @@ func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Modul
 		return nil, fmt.Errorf("failed to init bfla module: %w", err)
 	}
 
-	openapiProvider := bfladetector.NewBFLAOpenAPIProvider(accessor)
-	pathResolver := bfladetector.NewPathResolver(openapiProvider)
-
 	sp := recovery.NewStatePersister(ctx, accessor, bfladetector.ModuleName, persistenceInterval)
-	p.bflaDetector = bfladetector.NewBFLADetector(ctx, nrOfTracesToLearn, pathResolver, eventAlerter{accessor}, sp)
+	p.bflaDetector = bfladetector.NewBFLADetector(ctx, nrOfTracesToLearn, accessor, eventAlerter{accessor}, sp)
 
 	handler := &httpHandler{
-		bflaDetector:    p.bflaDetector,
-		openAPIProvider: openapiProvider,
-		pathResolver:    pathResolver,
-		accessor:        accessor,
+		bflaDetector: p.bflaDetector,
+		state:        sp,
+		accessor:     accessor,
 	}
 	p.httpHandler = restapi.HandlerWithOptions(handler, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + bfladetector.ModuleName})
 	return p, nil
@@ -101,12 +97,12 @@ func (e eventAlerter) SetEventAlert(ctx context.Context, modName string, eventID
 
 func (p *bfla) EventNotify(ctx context.Context, event *core.Event) {
 	if err := p.eventNotify(ctx, event); err != nil {
-		log.Errorf("EventNotify: %s", err)
+		log.Errorf("[BFLA] EventNotify: %s", err)
 	}
 }
 
 func (p *bfla) eventNotify(ctx context.Context, event *core.Event) (err error) {
-	log.Infof("[BFLA] received a new event for API(%v) Event(%v) ", event.APIEvent.APIInfoID, event.APIEvent.ID)
+	log.Debugf("[BFLA] received a new event for API(%v) Event(%v) ", event.APIEvent.APIInfoID, event.APIEvent.ID)
 	cmpTrace := &bfladetector.CompositeTrace{Event: event}
 	if cmpTrace.K8SDestination, cmpTrace.K8SSource, cmpTrace.DetectedUser, err = getBFLAAnnotations(ctx, p.accessor, event.APIEvent.ID); err != nil {
 		log.Errorf("unable to get bfla annotations: %s", err)
@@ -243,11 +239,9 @@ func (p *bfla) APIAnnotationNotify(modName string, apiID uint, ann *core.Annotat
 }
 
 type httpHandler struct {
-	state           recovery.StatePersister
-	bflaDetector    bfladetector.BFLADetector
-	openAPIProvider bfladetector.OpenAPIProvider
-	pathResolver    bfladetector.PathResolver
-	accessor        core.BackendAccessor
+	state        recovery.StatePersister
+	bflaDetector bfladetector.BFLADetector
+	accessor     core.BackendAccessor
 }
 
 func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID int) {
@@ -281,7 +275,12 @@ func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID in
 			IpAddress: user.IPAddress,
 		}
 	}
-	resolvedPath, specType := h.pathResolver.RezolvePath(r.Context(), event.APIInfoID, event.Path)
+	apiinfo, err := h.accessor.GetAPIInfo(r.Context(), event.APIInfoID)
+	if err != nil {
+		httpResponse(w, http.StatusInternalServerError, &restapi.ApiResponse{Message: err.Error()})
+		return
+	}
+	specType := bfladetector.SpecTypeFromAPIInfo(apiinfo)
 	if specType == bfladetector.SpecTypeNone {
 		e.BflaStatus = restapi.BFLAStatusNOSPEC
 		httpResponse(w, http.StatusOK, e)
@@ -293,18 +292,22 @@ func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID in
 		return
 	}
 
+	resolvedPath := bfladetector.ResolvePath(apiinfo, event)
+	log.Info("IsUnauthorized:", resolvedPath, string(event.Method), src, event.APIInfoID)
 	if h.bflaDetector.IsUnauthorized(resolvedPath, string(event.Method), src, event.APIInfoID, nil) {
 		e.BflaStatus = bfladetector.ResolveBFLAStatusInt(int(event.StatusCode))
+		log.Info("e.BflaStatus", e.BflaStatus)
 	}
 	httpResponse(w, http.StatusOK, e)
 }
 
 // nolint:stylecheck,revive
 func (h httpHandler) GetAuthorizationModelApiID(w http.ResponseWriter, r *http.Request, apiID int) {
-	_, specType, err := h.openAPIProvider.GetOpenAPI(r.Context(), uint(apiID))
+	apiinfo, err := h.accessor.GetAPIInfo(r.Context(), uint(apiID))
 	if err != nil {
 		log.Error("error getting openAPI spec")
 	}
+	specType := bfladetector.SpecTypeFromAPIInfo(apiinfo)
 	if specType == bfladetector.SpecTypeNone {
 		httpResponse(w, http.StatusOK, &restapi.AuthorizationModel{SpecType: ToRestapiSpecType(specType)})
 		return
@@ -494,19 +497,28 @@ func (h httpHandler) PutEventIdOperation(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
+	apiInfo, err := h.accessor.GetAPIInfo(r.Context(), apiEvent.APIInfoID)
+	if err != nil {
+		log.Error(err)
+		httpResponse(w, http.StatusBadRequest, &restapi.ApiResponse{
+			Message: err.Error(),
+		})
+		return
+	}
 	done := make(chan struct{})
 	ctx := r.Context()
 	go func() {
 		log.Infof("apply %s operation on trace=%d", operation, eventID)
+		resolvedPath := bfladetector.ResolvePath(apiInfo, apiEvent)
 		switch operation {
 		case restapi.OperationEnumApprove:
-			h.bflaDetector.ApproveTrace(apiEvent.Path, string(apiEvent.Method), src, apiEvent.APIInfoID, nil)
+			h.bflaDetector.ApproveTrace(resolvedPath, string(apiEvent.Method), src, apiEvent.APIInfoID, nil)
 		case restapi.OperationEnumDeny:
-			h.bflaDetector.DenyTrace(apiEvent.Path, string(apiEvent.Method), src, apiEvent.APIInfoID, nil)
+			h.bflaDetector.DenyTrace(resolvedPath, string(apiEvent.Method), src, apiEvent.APIInfoID, nil)
 		case restapi.OperationEnumApproveUser:
-			h.bflaDetector.ApproveTrace(apiEvent.Path, string(apiEvent.Method), src, apiEvent.APIInfoID, user)
+			h.bflaDetector.ApproveTrace(resolvedPath, string(apiEvent.Method), src, apiEvent.APIInfoID, user)
 		case restapi.OperationEnumDenyUser:
-			h.bflaDetector.DenyTrace(apiEvent.Path, string(apiEvent.Method), src, apiEvent.APIInfoID, user)
+			h.bflaDetector.DenyTrace(resolvedPath, string(apiEvent.Method), src, apiEvent.APIInfoID, user)
 		}
 		done <- struct{}{}
 	}()

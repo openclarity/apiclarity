@@ -2,16 +2,16 @@ openapi: 3.0.3
 info:
   title: APIClarity BFLA
   version: 0.0.1
-  description: APIClarity Plugin API
+  description: APIClarity Module API
 paths:
   /version:
     get:
       operationId: getVersion
-      summary: Get the version of this Plugin
-      description: Get the version of this Plugin
+      summary: Get the version of this Module
+      description: Get the version of this Module
       responses:
         '200':
-          description: Version of the Plugin
+          description: Version of the Module
           content:
             application/json:
               schema:
