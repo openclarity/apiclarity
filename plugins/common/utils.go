@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
@@ -32,12 +33,14 @@ import (
 
 	"github.com/apiclarity/apiclarity/plugins/api/client/client"
 	"github.com/apiclarity/apiclarity/plugins/api/client/models"
+	tracesamplingclient "github.com/apiclarity/trace-sampling-manager/api/client/client"
 )
 
 const (
 	MaxBodySize           = 1000 * 1000
 	RequestIDHeaderKey    = "X-Request-Id"
 	RequestTimeContextKey = "request_time"
+	SamplingInterval      = 10 * time.Second
 )
 
 func ReadBody(body io.ReadCloser) ([]byte, bool, error) {
@@ -91,7 +94,7 @@ type ClientTLSOptions struct {
 	RootCAFileName string
 }
 
-func NewAPIClient(host string, tlsOptions *ClientTLSOptions) (*client.APIClarityPluginsTelemetriesAPI, error) {
+func NewTelemetryAPIClient(host string, tlsOptions *ClientTLSOptions) (*client.APIClarityPluginsTelemetriesAPI, error) {
 	var clientTransport runtime.ClientTransport
 	var err error
 
@@ -105,6 +108,23 @@ func NewAPIClient(host string, tlsOptions *ClientTLSOptions) (*client.APIClarity
 	}
 
 	apiClient := client.New(clientTransport, strfmt.Default)
+	return apiClient, nil
+}
+
+func NewTraceSamplingAPIClient(host string, tlsOptions *ClientTLSOptions) (*tracesamplingclient.TraceSamplingManager, error) {
+	var clientTransport runtime.ClientTransport
+	var err error
+
+	if tlsOptions != nil {
+		clientTransport, err = createClientTransportTLS(host, tlsOptions)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create tls client transport: %v", err)
+		}
+	} else {
+		clientTransport = httptransport.New(host, client.DefaultBasePath, []string{"http"})
+	}
+
+	apiClient := tracesamplingclient.New(clientTransport, strfmt.Default)
 	return apiClient, nil
 }
 

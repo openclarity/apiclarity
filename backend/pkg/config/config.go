@@ -26,14 +26,17 @@ import (
 )
 
 const (
-	BackendRestPort            = "BACKEND_REST_PORT"
-	HTTPTracesPort             = "HTTP_TRACES_PORT"
-	HealthCheckAddress         = "HEALTH_CHECK_ADDRESS"
-	StateBackupIntervalSec     = "STATE_BACKUP_INTERVAL_SEC"
-	DatabaseCleanerIntervalSec = "DATABASE_CLEANER_INTERVAL_SEC"
-	StateBackupFileName        = "STATE_BACKUP_FILE_NAME"
-	NoMonitorEnvVar            = "NO_K8S_MONITOR"
-	K8sLocalEnvVar             = "K8S_LOCAL"
+	BackendRestPort              = "BACKEND_REST_PORT"
+	TraceSamplingEnabled         = "TRACE_SAMPLING_ENABLED"
+	HTTPTracesPort               = "HTTP_TRACES_PORT"
+	HTTPTraceSamplingManagerPort = "HTTP_TRACE_SAMPLING_MANAGER_PORT"
+	GRPCTraceSamplingManagerPort = "GRPC_TRACE_SAMPLING_MANAGER_PORT"
+	HealthCheckAddress           = "HEALTH_CHECK_ADDRESS"
+	StateBackupIntervalSec       = "STATE_BACKUP_INTERVAL_SEC"
+	DatabaseCleanerIntervalSec   = "DATABASE_CLEANER_INTERVAL_SEC"
+	StateBackupFileName          = "STATE_BACKUP_FILE_NAME"
+	NoMonitorEnvVar              = "NO_K8S_MONITOR"
+	K8sLocalEnvVar               = "K8S_LOCAL"
 
 	DBNameEnvVar     = "DB_NAME"
 	DBUserEnvVar     = "DB_USER"
@@ -59,6 +62,11 @@ type Config struct {
 	SpeculatorConfig           _speculator.Config
 	K8sLocal                   bool
 
+	// trace sampling config
+	HTTPTraceSamplingManagerPort int
+	GRPCTraceSamplingManagerPort int
+	TraceSamplingEnabled         bool
+
 	// database config
 	DatabaseDriver   string
 	DBName           string
@@ -74,6 +82,9 @@ func LoadConfig() (*Config, error) {
 
 	config.BackendRestPort = viper.GetInt(BackendRestPort)
 	config.HTTPTracesPort = viper.GetInt(HTTPTracesPort)
+	config.HTTPTraceSamplingManagerPort = viper.GetInt(HTTPTraceSamplingManagerPort)
+	config.GRPCTraceSamplingManagerPort = viper.GetInt(GRPCTraceSamplingManagerPort)
+	config.TraceSamplingEnabled = viper.GetBool(TraceSamplingEnabled)
 	config.HealthCheckAddress = viper.GetString(HealthCheckAddress)
 	config.StateBackupIntervalSec = viper.GetInt(StateBackupIntervalSec)
 	config.DatabaseCleanerIntervalSec = viper.GetInt(DatabaseCleanerIntervalSec)

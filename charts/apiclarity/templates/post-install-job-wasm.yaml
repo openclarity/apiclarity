@@ -77,6 +77,9 @@ spec:
         - name: kubectl
           image: "k8s.gcr.io/hyperkube:v1.16.12"
           imagePullPolicy: "IfNotPresent"
+          env:
+            - name: TRACE_SAMPLING_ENABLED
+              value: "{{ .Values.global.traceSampling.enable }}"
           command:
           - /bin/bash
           - -c

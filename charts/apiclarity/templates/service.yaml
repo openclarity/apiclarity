@@ -17,5 +17,13 @@ spec:
       port: 8080
       protocol: TCP
       targetPort: 8080
+    - name: http-trace-sampling-manager-server
+      port: 9990
+      protocol: TCP
+      targetPort: 9990
+    - name: grpc-trace-sampling-manager-server
+      port: 9991
+      protocol: TCP
+      targetPort: 9991
   selector:
     app: {{ include "apiclarity.name" . }}

@@ -90,6 +90,10 @@ spec:
               value: {{ .Values.trafficSource.kong.ingressNamespace }}
             - name: UPSTREAM_TELEMETRY_HOST_NAME
               value: '{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:9000'
+            - name: TRACE_SAMPLING_HOST_NAME
+              value: '{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:9990'
+            - name: TRACE_SAMPLING_ENABLED
+              value: "{{ .Values.global.traceSampling.enable }}"
           command:
           - /bin/bash
           - -c

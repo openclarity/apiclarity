@@ -50,6 +50,8 @@ spec:
                 configMapKeyRef:
                   name: '{{ include "apiclarity.name" . }}-headers-to-ignore-configmap'
                   key: request.headers
+            - name: TRACE_SAMPLING_ENABLED
+              value: "{{ .Values.global.traceSampling.enable }}"
             - name: DB_NAME
               value: {{ index .Values "apiclarity-postgresql" "postgresqlDatabase" }}
             - name: DB_HOST

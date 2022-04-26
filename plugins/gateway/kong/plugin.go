@@ -29,12 +29,19 @@ import (
 	"github.com/apiclarity/apiclarity/plugins/api/client/client/operations"
 	"github.com/apiclarity/apiclarity/plugins/api/client/models"
 	"github.com/apiclarity/apiclarity/plugins/common"
+	"github.com/apiclarity/apiclarity/plugins/common/trace_sampling_client"
+)
+
+var (
+	traceSamplingClient *trace_sampling_client.Client
+	telemetriesAPI      *client.APIClarityPluginsTelemetriesAPI
 )
 
 type Config struct {
-	EnableTLS bool   `json:"enable_tls"`
-	Host      string `json:"host"`
-	apiClient *client.APIClarityPluginsTelemetriesAPI
+	EnableTLS            bool   `json:"enable_tls"`
+	Host                 string `json:"host"`
+	TraceSamplingHost    string `json:"trace_sampling_host"`
+	TraceSamplingEnabled bool   `json:"trace_sampling_enabled"`
 }
 
 func New() interface{} {
@@ -42,6 +49,19 @@ func New() interface{} {
 }
 
 func (conf Config) Access(kong *pdk.PDK) {
+	if conf.TraceSamplingEnabled && traceSamplingClient == nil {
+		_ = kong.Log.Info("Creating trace sampling client")
+		// TODO tls will not work since trace sampling manager is not supporting it currently
+		traceSampling, err := trace_sampling_client.Create(false, conf.TraceSamplingHost, common.SamplingInterval)
+		if err != nil {
+			_ = kong.Log.Err(fmt.Sprintf("Failed to create trace sampling client: %v", err))
+		} else {
+			traceSamplingClient = traceSampling
+			traceSamplingClient.Start()
+		}
+	}
+
+	// set request time on shared context
 	if err := kong.Ctx.SetShared(common.RequestTimeContextKey, time.Now().UTC().UnixMilli()); err != nil {
 		_ = kong.Log.Err(fmt.Sprintf("Failed to set request time on shared context: %v", err))
 	}
@@ -49,19 +69,28 @@ func (conf Config) Access(kong *pdk.PDK) {
 
 func (conf Config) Response(kong *pdk.PDK) {
 	_ = kong.Log.Info("Handling telemetry")
-	if conf.apiClient == nil {
+	if conf.TraceSamplingEnabled {
+		shouldTrace, err := shouldTrace(kong)
+		if err != nil {
+			_ = kong.Log.Err(fmt.Sprintf("Failed to get should trace host: %v", err))
+		}
+		if !shouldTrace {
+			return
+		}
+	}
+	if telemetriesAPI == nil {
 		var tlsOptions *common.ClientTLSOptions
 		if conf.EnableTLS {
 			tlsOptions = &common.ClientTLSOptions{
 				RootCAFileName: common.CACertFile,
 			}
 		}
-		apiClient, err := common.NewAPIClient(conf.Host, tlsOptions)
+		apiClient, err := common.NewTelemetryAPIClient(conf.Host, tlsOptions)
 		if err != nil {
 			_ = kong.Log.Err(fmt.Sprintf("Failed to create new api client: %v", err))
 			return
 		}
-		conf.apiClient = apiClient
+		telemetriesAPI = apiClient
 	}
 	telemetry, err := createTelemetry(kong)
 	if err != nil {
@@ -71,12 +100,25 @@ func (conf Config) Response(kong *pdk.PDK) {
 
 	params := operations.NewPostTelemetryParams().WithBody(telemetry)
 
-	_, err = conf.apiClient.Operations.PostTelemetry(params)
+	_, err = telemetriesAPI.Operations.PostTelemetry(params)
 	if err != nil {
 		_ = kong.Log.Err(fmt.Sprintf("Failed to post telemetry: %v", err))
 		return
 	}
 	_ = kong.Log.Info(fmt.Sprintf("Telemetry has been sent: %v", telemetry))
+}
+
+func shouldTrace(kong *pdk.PDK) (bool, error) {
+	routedService, err := kong.Router.GetService()
+	if err != nil {
+		return false, fmt.Errorf("failed to get routed service: %v", err)
+	}
+	host, _ := parseHost(routedService.Host)
+	if traceSamplingClient.ShouldTrace(host) {
+		return true, nil
+	}
+	_ = kong.Log.Info("Ignoring host: %v", host)
+	return false, nil
 }
 
 const MaxBodySize = 1000 * 1000
