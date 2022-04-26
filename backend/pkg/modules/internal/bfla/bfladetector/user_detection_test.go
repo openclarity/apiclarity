@@ -16,13 +16,14 @@
 package bfladetector
 
 import (
+	"net/http"
 	"reflect"
 	"testing"
 )
 
 func TestGetUserID(t *testing.T) {
 	type args struct {
-		headers map[string]string
+		headers http.Header
 	}
 	tests := []struct {
 		name    string
@@ -32,8 +33,8 @@ func TestGetUserID(t *testing.T) {
 	}{{
 		name: "success jwt",
 		args: args{
-			headers: map[string]string{
-				"authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0MCJ9.Go08qgDIwwiCvcWQ9wA2O2-G4urRxGIbvRKGMRu5uyw",
+			headers: http.Header{
+				"authorization": {"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0MCJ9.Go08qgDIwwiCvcWQ9wA2O2-G4urRxGIbvRKGMRu5uyw"},
 			},
 		},
 		want: &DetectedUser{
@@ -44,8 +45,8 @@ func TestGetUserID(t *testing.T) {
 	}, {
 		name: "success kong x-customer-id",
 		args: args{
-			headers: map[string]string{
-				"x-customer-id": "test1",
+			headers: http.Header{
+				"x-customer-id": {"test1"},
 			},
 		},
 		want: &DetectedUser{
@@ -56,8 +57,8 @@ func TestGetUserID(t *testing.T) {
 	}, {
 		name: "success basic",
 		args: args{
-			headers: map[string]string{
-				"authorization": "Basic dGVzdDI6cGFzczEK",
+			headers: http.Header{
+				"authorization": {"Basic dGVzdDI6cGFzczEK"},
 			},
 		},
 		want: &DetectedUser{
@@ -68,15 +69,15 @@ func TestGetUserID(t *testing.T) {
 	}, {
 		name: "no user detected",
 		args: args{
-			headers: map[string]string{},
+			headers: http.Header{},
 		},
 		want:    nil,
 		wantErr: false,
 	}, {
 		name: "want error",
 		args: args{
-			headers: map[string]string{
-				"authorization": "Bearer 123123123",
+			headers: http.Header{
+				"authorization": {"Bearer 123123123"},
 			},
 		},
 		want:    nil,
