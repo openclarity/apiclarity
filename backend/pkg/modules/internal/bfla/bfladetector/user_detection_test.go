@@ -23,7 +23,7 @@ import (
 
 func TestGetUserID(t *testing.T) {
 	type args struct {
-		headers http.Header
+		headers map[string]string
 	}
 	tests := []struct {
 		name    string
@@ -33,8 +33,8 @@ func TestGetUserID(t *testing.T) {
 	}{{
 		name: "success jwt",
 		args: args{
-			headers: http.Header{
-				"authorization": {"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0MCJ9.Go08qgDIwwiCvcWQ9wA2O2-G4urRxGIbvRKGMRu5uyw"},
+			headers: map[string]string{
+				"authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0MCJ9.Go08qgDIwwiCvcWQ9wA2O2-G4urRxGIbvRKGMRu5uyw",
 			},
 		},
 		want: &DetectedUser{
@@ -45,8 +45,8 @@ func TestGetUserID(t *testing.T) {
 	}, {
 		name: "success kong x-customer-id",
 		args: args{
-			headers: http.Header{
-				"x-customer-id": {"test1"},
+			headers: map[string]string{
+				"x-customer-id": "test1",
 			},
 		},
 		want: &DetectedUser{
@@ -57,8 +57,8 @@ func TestGetUserID(t *testing.T) {
 	}, {
 		name: "success basic",
 		args: args{
-			headers: http.Header{
-				"authorization": {"Basic dGVzdDI6cGFzczEK"},
+			headers: map[string]string{
+				"authorization": "Basic dGVzdDI6cGFzczEK",
 			},
 		},
 		want: &DetectedUser{
@@ -69,15 +69,15 @@ func TestGetUserID(t *testing.T) {
 	}, {
 		name: "no user detected",
 		args: args{
-			headers: http.Header{},
+			headers: map[string]string{},
 		},
 		want:    nil,
 		wantErr: false,
 	}, {
 		name: "want error",
 		args: args{
-			headers: http.Header{
-				"authorization": {"Bearer 123123123"},
+			headers: map[string]string{
+				"authorization": "Bearer 123123123",
 			},
 		},
 		want:    nil,
@@ -85,7 +85,11 @@ func TestGetUserID(t *testing.T) {
 	}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetUserID(tt.args.headers)
+			httpHeaders := http.Header{}
+			for k, v := range tt.args.headers {
+				httpHeaders.Add(k, v)
+			}
+			got, err := GetUserID(httpHeaders)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetUserID() error = %v, wantErr %v", err, tt.wantErr)
 				return
