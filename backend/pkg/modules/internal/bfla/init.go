@@ -90,7 +90,7 @@ func (e eventAlerter) SetEventAlert(ctx context.Context, modName string, eventID
 		return fmt.Errorf("unexpected severity")
 	}
 	if err != nil {
-		return fmt.Errorf("error createing an alert: %w", err)
+		return fmt.Errorf("error creating an alert: %w", err)
 	}
 	return nil
 }
