@@ -66,20 +66,6 @@ func (s *Server) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPII
 		pathToPathID[path] = uuid.NewV4().String()
 	}
 
-	specInfo, err := createSpecInfo(params.Body.RawSpec, pathToPathID)
-	if err != nil {
-		log.Errorf("Failed to create spec info. %v", err)
-		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
-	}
-
-	// Save the provided spec in the DB without expanding the ref fields
-	if err = s.dbHandler.APIInventoryTable().PutAPISpec(uint(params.APIID), params.Body.RawSpec, specInfo, database.ProvidedSpecType); err != nil {
-		// TODO: need to handle errors
-		// https://github.com/go-gorm/gorm/blob/master/errors.go
-		log.Errorf("Failed to put provided API spec. %v", err)
-		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
-	}
-
 	// Expands the ref fields in the analyzed spec document
 	jsonSpecBytes, err = getExpandedSpec(analyzed)
 	if err != nil {
@@ -95,6 +81,20 @@ func (s *Server) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPII
 
 	// Since we don't have a mapping between events paths to the parametrized path,
 	// We will not set the old events with provided path IDs
+
+	specInfo, err := createSpecInfo(params.Body.RawSpec, pathToPathID)
+	if err != nil {
+		log.Errorf("Failed to create spec info. %v", err)
+		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
+	}
+
+	// Save the provided spec in the DB without expanding the ref fields
+	if err = s.dbHandler.APIInventoryTable().PutAPISpec(uint(params.APIID), params.Body.RawSpec, specInfo, database.ProvidedSpecType); err != nil {
+		// TODO: need to handle errors
+		// https://github.com/go-gorm/gorm/blob/master/errors.go
+		log.Errorf("Failed to put provided API spec. %v", err)
+		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
+	}
 
 	return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecCreated().
 		WithPayload(&models.RawSpec{RawSpec: params.Body.RawSpec})
