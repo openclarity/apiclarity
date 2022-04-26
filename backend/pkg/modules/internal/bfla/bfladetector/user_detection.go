@@ -19,17 +19,18 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v4"
 )
 
-func GetUserID(headers map[string]string) (*DetectedUser, error) {
-	if xcustomerID, ok := headers["x-customer-id"]; ok {
+func GetUserID(headers http.Header) (*DetectedUser, error) {
+	if xcustomerID := headers.Get("x-customer-id"); xcustomerID != "" {
 		return &DetectedUser{Source: DetectedUserSourceXConsumerIDHeader, ID: xcustomerID}, nil
 	}
-	authz, ok := headers["authorization"]
-	if !ok {
+	authz := headers.Get("authorization")
+	if authz == "" {
 		return nil, nil
 	}
 	if strings.HasPrefix(authz, "Basic ") {

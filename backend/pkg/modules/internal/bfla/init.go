@@ -130,7 +130,7 @@ func (p *bfla) addDetectedUser(ctx context.Context, cmpTrace *bfladetector.Compo
 		return nil
 	}
 
-	cmpTrace.DetectedUser, err = bfladetector.GetUserID(convertHeadersToMap(trace.Request.Common.Headers))
+	cmpTrace.DetectedUser, err = bfladetector.GetUserID(convertHttpHeadersToMap(trace.Request.Common.Headers))
 	if err != nil {
 		log.Error(err)
 	}
@@ -148,12 +148,12 @@ func (p *bfla) addDetectedUser(ctx context.Context, cmpTrace *bfladetector.Compo
 	return nil
 }
 
-func convertHeadersToMap(headers []*pluginsmodels.Header) map[string]string {
-	hmap := map[string]string{}
+func convertHttpHeadersToMap(headers []*pluginsmodels.Header) http.Header {
+	httpheaders := http.Header{}
 	for _, h := range headers {
-		hmap[h.Key] = h.Value
+		httpheaders.Add(h.Key, h.Value)
 	}
-	return hmap
+	return httpheaders
 }
 
 func (p *bfla) addK8sSource(ctx context.Context, cmpTrace *bfladetector.CompositeTrace, trace *pluginsmodels.Telemetry, eventID uint) error {

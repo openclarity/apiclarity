@@ -159,7 +159,7 @@ func (p *persister) persistAPIInfoAnnotations(ctx context.Context) error {
 			})
 		}
 		if len(anns) == 0 {
-			log.Infof("nothing to update for module=%s; apiID=%d", key.modName, key.apiID)
+			log.Debugf("nothing to update for module=%s; apiID=%d", key.modName, key.apiID)
 			continue
 		}
 		log.Debugf("store api info moduleName=%s apiID=%d", key.modName, key.apiID)
