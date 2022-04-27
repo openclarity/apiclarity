@@ -135,3 +135,8 @@ license-cache: bin/licensei ## Generate license cache
 
 .PHONY: check
 check: lint test ## Run tests and linters
+
+.PHONY: e2e
+e2e:
+	@echo "Running e2e tests ..."
+	cd e2e && go test .
