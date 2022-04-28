@@ -44,14 +44,24 @@ func InstallCurl() error {
 	return nil
 }
 
-func DescribeAPIClarityDeployments() {
+func DescribeAPIClarityDeployment() {
 	cmd := exec.Command("kubectl", "-n", "apiclarity", "describe", "deployments.apps", APIClarityDeploymentName)
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		println(err)
 	}
-	fmt.Printf("kubectl describe deployments.apps -n apiclarity apiclarity-apiclarity:\n %s", out)
+	fmt.Printf("kubectl describe deployments.apps -n apiclarity apiclarity-apiclarity:\n %s\n", out)
+}
+
+func DescribeAPIClarityPods() {
+	cmd := exec.Command("kubectl", "-n", "apiclarity", "describe", "pods")
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		println(err)
+	}
+	fmt.Printf("kubectl describe pods -n apiclarity:\n %s\n", out)
 }
 
 func LoadDockerImagesToCluster(cluster, tag string) error {

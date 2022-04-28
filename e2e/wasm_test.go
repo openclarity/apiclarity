@@ -117,7 +117,8 @@ func setupWasmTestEnv(stopCh chan struct{}) error {
 
 	println("waiting for apiclarity to run...")
 	if err := utils.WaitForAPIClarityPodRunning(k8sClient); err != nil {
-		utils.DescribeAPIClarityDeployments()
+		utils.DescribeAPIClarityDeployment()
+		utils.DescribeAPIClarityPods()
 		return fmt.Errorf("failed to wait for apiclarity pod to be running: %v", err)
 	}
 
