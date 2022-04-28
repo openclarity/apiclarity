@@ -18,7 +18,6 @@ package e2e
 import (
 	"context"
 	"fmt"
-	"os/exec"
 	"testing"
 	"time"
 
@@ -54,17 +53,8 @@ func TestWasm(t *testing.T) {
 	//}()
 	assert.NilError(t, setupWasmTestEnv(stopCh))
 
-	///// debug ////
-	cmd := exec.Command("kubectl", "-n", "test", "get", "pods")
-	out, err := cmd.CombinedOutput()
-	assert.NilError(t, err)
-	fmt.Printf("kubectl get pods -n test before sleep:\n %s\n", out)
+	// wait for httpbin and curl to be restarted after deployment patch. better way of doing it?
 	time.Sleep(60*time.Second)
-	cmd = exec.Command("kubectl", "-n", "test", "get", "pods")
-	out, err = cmd.CombinedOutput()
-	assert.NilError(t, err)
-	fmt.Printf("kubectl get pods -n test after sleep:\n %s\n", out)
-	///// debug ////
 
 	println("making telemetry from curl to httpbin...")
 	assert.NilError(t, utils.HttpReqFromCurlToHttpbin())

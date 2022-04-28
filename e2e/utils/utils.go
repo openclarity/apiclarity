@@ -44,28 +44,6 @@ func InstallCurl() error {
 	return nil
 }
 
-func DescribeAPIClarityDeployment() {
-	cmd := exec.Command("kubectl", "-n", "apiclarity", "describe", "deployments.apps", APIClarityDeploymentName)
-
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		fmt.Printf("Failed to execute command. %v, %s", err, out)
-		return
-	}
-	fmt.Printf("kubectl describe deployments.apps -n apiclarity apiclarity-apiclarity:\n %s\n", out)
-}
-
-func DescribeAPIClarityPods() {
-	cmd := exec.Command("kubectl", "-n", "apiclarity", "describe", "pods")
-
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		fmt.Printf("Failed to execute command. %v, %s", err, out)
-		return
-	}
-	fmt.Printf("kubectl describe pods -n apiclarity:\n %s\n", out)
-}
-
 func LoadDockerImagesToCluster(cluster, tag string) error {
 	if err := LoadDockerImageToCluster(cluster, fmt.Sprintf("ghcr.io/apiclarity/apiclarity:%v", tag)); err != nil {
 		return fmt.Errorf("failed to load docker image to cluster: %v", err)
@@ -159,17 +137,6 @@ func Int64Ptr(val int64) *int64 {
 
 // NON EXPORTED:
 
-func portForward(kind, namespace, name, hostPort, targetPort string, stopCh chan struct{}) (error, []byte) {
-	cmd := exec.Command("kubectl", "port-forward", "-n", namespace,
-		fmt.Sprintf("%s/%s", kind, name), fmt.Sprintf("%s:%s", hostPort, targetPort))
-
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return err, out
-	}
-	return nil, nil
-}
-
 //TODO use https://github.com/kubernetes-sigs/e2e-framework/tree/main/examples/wait_for_resources
 func WaitForAPIClarityPodRunning(client klient.Client) error {
 	podList := v1.PodList{}
@@ -192,4 +159,15 @@ func WaitForAPIClarityPodRunning(client klient.Client) error {
 			}
 		}
 	}
+}
+
+func portForward(kind, namespace, name, hostPort, targetPort string, stopCh chan struct{}) (error, []byte) {
+	cmd := exec.Command("kubectl", "port-forward", "-n", namespace,
+		fmt.Sprintf("%s/%s", kind, name), fmt.Sprintf("%s:%s", hostPort, targetPort))
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return err, out
+	}
+	return nil, nil
 }
