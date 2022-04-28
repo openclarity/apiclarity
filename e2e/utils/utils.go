@@ -44,6 +44,16 @@ func InstallCurl() error {
 	return nil
 }
 
+func DescribeAPIClarityDeployments() {
+	cmd := exec.Command("kubectl", "-n", "apiclarity", "describe", "deployments.apps", APIClarityDeploymentName)
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		println(err)
+	}
+	println(out)
+}
+
 func HttpReqFromCurlToHttpbin() error {
 	cmd := exec.Command("kubectl", "-n", "test", "exec", "-it", fmt.Sprintf("%s/%s", "service", "curl"), "-c", "curl", "--", "curl", "-H", "Content-Type: application/json", "httpbin.test.svc.cluster.local:80/get")
 

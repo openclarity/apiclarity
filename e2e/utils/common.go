@@ -17,6 +17,7 @@ package utils
 
 const (
 	APIClarityServiceName           = "apiclarity-apiclarity"
+	APIClarityDeploymentName           = "apiclarity-apiclarity"
 	APIClarityNamespace             = "apiclarity"
 	APIClarityHelmReleaseName       = "apiclarity"
 	APIClarityPortForwardHostPort   = "8089"
