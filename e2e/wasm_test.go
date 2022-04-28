@@ -58,14 +58,14 @@ func TestWasm(t *testing.T) {
 	cmd := exec.Command("kubectl", "-n", "test", "get", "pods")
 	out, err := cmd.CombinedOutput()
 	assert.NilError(t, err)
-	fmt.Printf("kubectl get pods -n test:\n %s\n", out)
-	cmd = exec.Command("kubectl", "-n", "test", "describe", "pods")
+	fmt.Printf("kubectl get pods -n test before sleep:\n %s\n", out)
+	time.Sleep(60*time.Second)
+	cmd = exec.Command("kubectl", "-n", "test", "get", "pods")
 	out, err = cmd.CombinedOutput()
 	assert.NilError(t, err)
-	fmt.Printf("kubectl describe pods -n test:\n %s\n", out)
+	fmt.Printf("kubectl get pods -n test after sleep:\n %s\n", out)
 	///// debug ////
 
-	time.Sleep(10*time.Second)
 	println("making telemetry from curl to httpbin...")
 	assert.NilError(t, utils.HttpReqFromCurlToHttpbin())
 
