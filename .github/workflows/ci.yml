@@ -40,6 +40,7 @@ jobs:
       run: |
         tag='${{ github.event.inputs.version }}'
         sed -i 's/latest/'"$tag"'/g' charts/apiclarity/values.yaml
+        cat charts/apiclarity/values.yaml
 
     - name: Run e2e tests
       run: make e2e
