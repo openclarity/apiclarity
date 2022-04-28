@@ -94,7 +94,7 @@ func LoadDockerImageToCluster(cluster, image string) error {
 }
 
 func HttpReqFromCurlToHttpbin() error {
-	cmd := exec.Command("kubectl", "-n", "test", "exec", "-it", fmt.Sprintf("%s/%s", "service", "curl"), "-c", "curl", "--", "curl", "-H", "Content-Type: application/json", "httpbin.test.svc.cluster.local:80/get")
+	cmd := exec.Command("kubectl", "-n", "test", "exec", "-i", fmt.Sprintf("%s/%s", "service", "curl"), "-c", "curl", "--", "curl", "-H", "Content-Type: application/json", "httpbin.test.svc.cluster.local:80/get")
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
