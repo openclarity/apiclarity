@@ -115,11 +115,10 @@ func setupWasmTestEnv(stopCh chan struct{}) error {
 		return fmt.Errorf("failed to install apiclarity: %v", err)
 	}
 
-	// hack for now. helm does not wait for apiclarity to be running.
 	println("waiting for apiclarity to run...")
 	if err := utils.WaitForAPIClarityPodRunning(k8sClient); err != nil {
 		utils.DescribeAPIClarityDeployments()
-		return fmt.Errorf("failed to wait for apiclarity pod to br running: %v", err)
+		return fmt.Errorf("failed to wait for apiclarity pod to be running: %v", err)
 	}
 
 	println("port-forward to apiclarity...")

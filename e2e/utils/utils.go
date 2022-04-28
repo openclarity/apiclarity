@@ -51,7 +51,7 @@ func DescribeAPIClarityDeployments() {
 	if err != nil {
 		println(err)
 	}
-	println(out)
+	fmt.Printf("kubectl describe deployments.apps -n apiclarity apiclarity-apiclarity:\n %s", out)
 }
 
 func HttpReqFromCurlToHttpbin() error {
