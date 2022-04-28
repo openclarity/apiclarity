@@ -17,6 +17,7 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"github.com/apiclarity/apiclarity/api/client/client"
 	"github.com/apiclarity/apiclarity/e2e/utils"
 	httptransport "github.com/go-openapi/runtime/client"
@@ -47,8 +48,16 @@ func TestMain(m *testing.M) {
 			println("Setup")
 			k8sClient = cfg.Client()
 
-			clientTransport := httptransport.New("localhost:" + utils.APIClarityPortForwardHostPort, client.DefaultBasePath, []string{"http"})
+			tag := os.Getenv("DOCKER_TAG")
 
+			println("DOCKER_TAG=", tag)
+
+			envfuncs.LoadDockerImageToCluster(kindClusterName, fmt.Sprintf("ghcr.io/apiclarity/apiclarity:%v", tag))
+			envfuncs.LoadDockerImageToCluster(kindClusterName, fmt.Sprintf("ghcr.io/apiclarity/kong-plugin:%v", tag))
+			envfuncs.LoadDockerImageToCluster(kindClusterName, fmt.Sprintf("ghcr.io/apiclarity/tyk-plugin-v3.2.2:%v", tag))
+			envfuncs.LoadDockerImageToCluster(kindClusterName, fmt.Sprintf("ghcr.io/apiclarity/passive-taper:%v", tag))
+
+			clientTransport := httptransport.New("localhost:" + utils.APIClarityPortForwardHostPort, client.DefaultBasePath, []string{"http"})
 			apiclarityAPI = client.New(clientTransport, strfmt.Default)
 
 			KubeconfigFile = cfg.KubeconfigFile()

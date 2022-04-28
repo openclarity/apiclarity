@@ -24,50 +24,56 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v2
 
-    - name: Check licenses
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: make license-check
-
-    - name: Run verification
-      run: make check
+#    - name: Check licenses
+#      env:
+#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      run: make license-check
+#
+#    - name: Run verification
+#      run: make check
 
     - name: Build Docker image
       run: make docker
 
+    - name: Replace version
+      id: replace_version
+      run: |
+        tag='${{ github.event.inputs.version }}'
+        sed -i 's/latest/'"$tag"'/g' charts/apiclarity/values.yaml
+
     - name: Run e2e tests
       run: make e2e
 
-  lint_chart:
-    name: Lint Helm Chart
-    runs-on: ubuntu-latest
-    steps:
-
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: "0"
-          submodules: true
-
-      - name: Replace version
-        id: replace_version
-        run: find . -type f -name "values.yaml" -o -name "Chart.yaml" |
-          xargs sed -i -e s/latest/v1.0.0-${{ github.sha }}/g
-
-      - name: Set up Helm
-        uses: azure/setup-helm@v1
-        with:
-          version: v3.4.0
-
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.7
-
-      - name: Set up chart-testing
-        uses: helm/chart-testing-action@v2.1.0
-
-      - name: Add Bitnami Repository
-        run: helm repo add bitnami https://charts.bitnami.com/bitnami
-
-      - name: Run chart-testing (lint)
-        run: ct lint --check-version-increment=false --validate-maintainers=false
+#  lint_chart:
+#    name: Lint Helm Chart
+#    runs-on: ubuntu-latest
+#    steps:
+#
+#      - name: Checkout code
+#        uses: actions/checkout@v2
+#        with:
+#          fetch-depth: "0"
+#          submodules: true
+#
+#      - name: Replace version
+#        id: replace_version
+#        run: find . -type f -name "values.yaml" -o -name "Chart.yaml" |
+#          xargs sed -i -e s/latest/v1.0.0-${{ github.sha }}/g
+#
+#      - name: Set up Helm
+#        uses: azure/setup-helm@v1
+#        with:
+#          version: v3.4.0
+#
+#      - uses: actions/setup-python@v2
+#        with:
+#          python-version: 3.7
+#
+#      - name: Set up chart-testing
+#        uses: helm/chart-testing-action@v2.1.0
+#
+#      - name: Add Bitnami Repository
+#        run: helm repo add bitnami https://charts.bitnami.com/bitnami
+#
+#      - name: Run chart-testing (lint)
+#        run: ct lint --check-version-increment=false --validate-maintainers=false

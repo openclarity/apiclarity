@@ -18,20 +18,21 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/apiclarity/apiclarity/e2e/utils"
 	"github.com/go-openapi/strfmt"
 	"gotest.tools/assert"
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/features"
 	"sigs.k8s.io/e2e-framework/third_party/helm"
-	"testing"
-	"time"
 
 	"github.com/apiclarity/apiclarity/api/client/client/operations"
 	"github.com/apiclarity/apiclarity/api/client/models"
 )
 
-var wantBodyApiInventory =  &operations.GetAPIInventoryOKBody{
+var wantBodyApiInventory = &operations.GetAPIInventoryOKBody{
 	Items: []*models.APIInfo{
 		{
 			HasProvidedSpec:      utils.BoolPtr(false),
@@ -58,9 +59,9 @@ func TestWasm(t *testing.T) {
 	f1 := features.New("telemetry event").
 		WithLabel("type", "event").
 		Assess("telemetry event exist in UI", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-			startTime, err := time.Parse("2006-01-02T15:04:05.000Z" ,"2021-04-26T11:35:49.775Z")
+			startTime, err := time.Parse("2006-01-02T15:04:05.000Z", "2021-04-26T11:35:49.775Z")
 			assert.NilError(t, err)
-			endTime, err := time.Parse("2006-01-02T15:04:05.000Z" ,"2030-04-26T11:35:49.775Z")
+			endTime, err := time.Parse("2006-01-02T15:04:05.000Z", "2030-04-26T11:35:49.775Z")
 			assert.NilError(t, err)
 
 			params := operations.NewGetAPIEventsParams().WithPage(0).WithPageSize(50).WithStartTime(strfmt.DateTime(startTime)).WithEndTime(strfmt.DateTime(endTime)).WithSortKey("time").WithShowNonAPI(false)
