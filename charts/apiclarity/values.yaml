@@ -46,7 +46,7 @@ apiclarity:
 
   ## Docker Image values.
   docker:
-    imageTag: "latest"
+    imageTag: "75b99f124ef9b0170a0b06f251a7abf6ec404b48"
     imagePullPolicy: Always
 
   ## Logging level (debug, info, warning, error, fatal, panic).
@@ -154,7 +154,7 @@ trafficSource:
 
     ## Docker Image values.
     docker:
-      imageTag: "latest"
+      imageTag: "75b99f124ef9b0170a0b06f251a7abf6ec404b48"
       imagePullPolicy: Always
 
   kong:

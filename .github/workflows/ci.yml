@@ -40,6 +40,7 @@ jobs:
       run: |
         tag=${{ github.sha }}
         sed -i 's/latest/'"$tag"'/g' charts/apiclarity/values.yaml
+        sed -i 's/Always/IfNotPresent/g' charts/apiclarity/values.yaml
         cat charts/apiclarity/values.yaml
 
     - name: Run e2e tests
