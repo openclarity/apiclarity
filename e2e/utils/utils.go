@@ -37,9 +37,9 @@ var IstioInjectionLabel = map[string]string{
 func InstallCurl() error {
 	cmd := exec.Command("kubectl", "-n", "test", "apply", "-f", "curl.yaml")
 
-	_, err := cmd.CombinedOutput()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to execute command. %v, %s", err, out)
 	}
 	return nil
 }
@@ -49,7 +49,8 @@ func DescribeAPIClarityDeployment() {
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		println(err)
+		fmt.Printf("Failed to execute command. %v, %s", err, out)
+		return
 	}
 	fmt.Printf("kubectl describe deployments.apps -n apiclarity apiclarity-apiclarity:\n %s\n", out)
 }
@@ -59,7 +60,8 @@ func DescribeAPIClarityPods() {
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		println(err)
+		fmt.Printf("Failed to execute command. %v, %s", err, out)
+		return
 	}
 	fmt.Printf("kubectl describe pods -n apiclarity:\n %s\n", out)
 }
@@ -94,9 +96,9 @@ func LoadDockerImageToCluster(cluster, image string) error {
 func HttpReqFromCurlToHttpbin() error {
 	cmd := exec.Command("kubectl", "-n", "test", "exec", "-it", fmt.Sprintf("%s/%s", "service", "curl"), "-c", "curl", "--", "curl", "-H", "Content-Type: application/json", "httpbin.test.svc.cluster.local:80/get")
 
-	_, err := cmd.CombinedOutput()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to execute command. %v, %s", err, out)
 	}
 	return nil
 }
@@ -120,7 +122,7 @@ func PortForwardToAPIClarity(stopCh chan struct{}) {
 	go func() {
 		err, out := portForward("service", APIClarityNamespace, APIClarityServiceName, APIClarityPortForwardHostPort, APIClarityPortForwardTargetPort, stopCh)
 		if err != nil {
-			println("port forward fail!. %s, %v", out, err)
+			fmt.Printf("port forward failed. %s. %v", out, err)
 			return
 		}
 	}()
