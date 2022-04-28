@@ -52,17 +52,9 @@ func TestMain(m *testing.M) {
 
 			println("DOCKER_TAG=", tag)
 
-			if err := utils.LoadDockerImageToCluster(kindClusterName, fmt.Sprintf("ghcr.io/apiclarity/apiclarity:%v", tag)); err != nil {
-				fmt.Printf("Failed to load docker image to cluster: %v", err)
-			}
-			if err := utils.LoadDockerImageToCluster(kindClusterName, fmt.Sprintf("ghcr.io/apiclarity/kong-plugin:%v", tag)); err != nil {
-				fmt.Printf("Failed to load docker image to cluster: %v", err)
-			}
-			if err := utils.LoadDockerImageToCluster(kindClusterName, fmt.Sprintf("ghcr.io/apiclarity/tyk-plugin-v3.2.2:%v", tag)); err != nil {
-				fmt.Printf("Failed to load docker image to cluster: %v", err)
-			}
-			if err := utils.LoadDockerImageToCluster(kindClusterName, fmt.Sprintf("ghcr.io/apiclarity/passive-taper:%v", tag)); err != nil {
-				fmt.Printf("Failed to load docker image to cluster: %v", err)
+			if err := utils.LoadDockerImagesToCluster(kindClusterName, tag); err != nil {
+				fmt.Printf("Failed to load docker images to cluster: %v", err)
+				return nil, err
 			}
 
 			clientTransport := httptransport.New("localhost:" + utils.APIClarityPortForwardHostPort, client.DefaultBasePath, []string{"http"})

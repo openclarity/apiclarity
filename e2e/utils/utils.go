@@ -54,12 +54,29 @@ func DescribeAPIClarityDeployments() {
 	fmt.Printf("kubectl describe deployments.apps -n apiclarity apiclarity-apiclarity:\n %s", out)
 }
 
-func LoadDockerImageToCluster(image, cluster string) error {
+func LoadDockerImagesToCluster(cluster, tag string) error {
+	if err := LoadDockerImageToCluster(cluster, fmt.Sprintf("ghcr.io/apiclarity/apiclarity:%v", tag)); err != nil {
+		return fmt.Errorf("failed to load docker image to cluster: %v", err)
+	}
+	if err := LoadDockerImageToCluster(cluster, fmt.Sprintf("ghcr.io/apiclarity/kong-plugin:%v", tag)); err != nil {
+		return fmt.Errorf("failed to load docker image to cluster: %v", err)
+	}
+	if err := LoadDockerImageToCluster(cluster, fmt.Sprintf("ghcr.io/apiclarity/tyk-plugin-v3.2.2:%v", tag)); err != nil {
+		return fmt.Errorf("failed to load docker image to cluster: %v", err)
+	}
+	if err := LoadDockerImageToCluster(cluster, fmt.Sprintf("ghcr.io/apiclarity/passive-taper:%v", tag)); err != nil {
+		return fmt.Errorf("failed to load docker image to cluster: %v", err)
+	}
+
+	return nil
+}
+
+func LoadDockerImageToCluster(cluster, image string) error {
 	cmd := exec.Command("kind", "load", "docker-image", image, "--name", cluster)
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("failed to execute command. %v, %v", err, out)
+		return fmt.Errorf("failed to execute command. %v, %s", err, out)
 	}
 	return nil
 }
