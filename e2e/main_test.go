@@ -52,10 +52,18 @@ func TestMain(m *testing.M) {
 
 			println("DOCKER_TAG=", tag)
 
-			envfuncs.LoadDockerImageToCluster(kindClusterName, fmt.Sprintf("ghcr.io/apiclarity/apiclarity:%v", tag))
-			envfuncs.LoadDockerImageToCluster(kindClusterName, fmt.Sprintf("ghcr.io/apiclarity/kong-plugin:%v", tag))
-			envfuncs.LoadDockerImageToCluster(kindClusterName, fmt.Sprintf("ghcr.io/apiclarity/tyk-plugin-v3.2.2:%v", tag))
-			envfuncs.LoadDockerImageToCluster(kindClusterName, fmt.Sprintf("ghcr.io/apiclarity/passive-taper:%v", tag))
+			if err := utils.LoadDockerImageToCluster(kindClusterName, fmt.Sprintf("ghcr.io/apiclarity/apiclarity:%v", tag)); err != nil {
+				fmt.Printf("Failed to load docker image to cluster: %v", err)
+			}
+			if err := utils.LoadDockerImageToCluster(kindClusterName, fmt.Sprintf("ghcr.io/apiclarity/kong-plugin:%v", tag)); err != nil {
+				fmt.Printf("Failed to load docker image to cluster: %v", err)
+			}
+			if err := utils.LoadDockerImageToCluster(kindClusterName, fmt.Sprintf("ghcr.io/apiclarity/tyk-plugin-v3.2.2:%v", tag)); err != nil {
+				fmt.Printf("Failed to load docker image to cluster: %v", err)
+			}
+			if err := utils.LoadDockerImageToCluster(kindClusterName, fmt.Sprintf("ghcr.io/apiclarity/passive-taper:%v", tag)); err != nil {
+				fmt.Printf("Failed to load docker image to cluster: %v", err)
+			}
 
 			clientTransport := httptransport.New("localhost:" + utils.APIClarityPortForwardHostPort, client.DefaultBasePath, []string{"http"})
 			apiclarityAPI = client.New(clientTransport, strfmt.Default)
@@ -71,7 +79,7 @@ func TestMain(m *testing.M) {
 			println("Finish")
 			return ctx, nil
 		},
-		envfuncs.DestroyKindCluster(kindClusterName),
+		//envfuncs.DestroyKindCluster(kindClusterName),
 	).BeforeEachTest(
 		func(ctx context.Context, _ *envconf.Config, _ *testing.T) (context.Context, error){
 			println("BeforeEachTest")

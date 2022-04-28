@@ -54,6 +54,16 @@ func DescribeAPIClarityDeployments() {
 	fmt.Printf("kubectl describe deployments.apps -n apiclarity apiclarity-apiclarity:\n %s", out)
 }
 
+func LoadDockerImageToCluster(image, cluster string) error {
+	cmd := exec.Command("kind", "load", "docker-image", image, "--name", cluster)
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to execute command. %v, %v", err, out)
+	}
+	return nil
+}
+
 func HttpReqFromCurlToHttpbin() error {
 	cmd := exec.Command("kubectl", "-n", "test", "exec", "-it", fmt.Sprintf("%s/%s", "service", "curl"), "-c", "curl", "--", "curl", "-H", "Content-Type: application/json", "httpbin.test.svc.cluster.local:80/get")
 
