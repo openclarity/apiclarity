@@ -18,6 +18,7 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"os/exec"
 	"testing"
 	"time"
 
@@ -52,6 +53,17 @@ func TestWasm(t *testing.T) {
 	//	time.Sleep(2 * time.Second)
 	//}()
 	assert.NilError(t, setupWasmTestEnv(stopCh))
+
+	///// debug ////
+	cmd := exec.Command("kubectl", "-n", "test", "get", "pods")
+	out, err := cmd.CombinedOutput()
+	assert.NilError(t, err)
+	fmt.Printf("kubectl get pods -n test:\n %s\n", out)
+	cmd = exec.Command("kubectl", "-n", "test", "describe", "pods")
+	out, err = cmd.CombinedOutput()
+	assert.NilError(t, err)
+	fmt.Printf("kubectl describe pods -n test:\n %s\n", out)
+	///// debug ////
 
 	println("making telemetry from curl to httpbin...")
 	assert.NilError(t, utils.HttpReqFromCurlToHttpbin())
