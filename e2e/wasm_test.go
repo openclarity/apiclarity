@@ -65,6 +65,7 @@ func TestWasm(t *testing.T) {
 	fmt.Printf("kubectl describe pods -n test:\n %s\n", out)
 	///// debug ////
 
+	time.Sleep(10*time.Second)
 	println("making telemetry from curl to httpbin...")
 	assert.NilError(t, utils.HttpReqFromCurlToHttpbin())
 

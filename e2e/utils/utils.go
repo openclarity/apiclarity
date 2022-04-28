@@ -100,6 +100,7 @@ func HttpReqFromCurlToHttpbin() error {
 	if err != nil {
 		return fmt.Errorf("failed to execute command. %v, %s", err, out)
 	}
+	fmt.Printf("response from httpbin: %s", out)
 	return nil
 }
 
