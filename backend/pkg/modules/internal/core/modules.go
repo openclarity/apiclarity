@@ -147,7 +147,7 @@ func (b *accessor) ListAPIInfoAnnotations(ctx context.Context, modName string, a
 	}
 	for _, ann := range anns {
 		annotations = append(annotations, &Annotation{
-			Name:       ann.ModuleName,
+			Name:       ann.Name,
 			Annotation: ann.Annotation,
 		})
 	}
