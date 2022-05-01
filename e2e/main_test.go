@@ -28,6 +28,7 @@ import (
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/envfuncs"
 	"testing"
+	"time"
 )
 
 var (
@@ -40,11 +41,17 @@ var (
 func TestMain(m *testing.M) {
 	testenv = env.New()
 	kindClusterName := envconf.RandomName("my-cluster", 16)
-	//	namespace := envconf.RandomName("myns", 16)
 
 	testenv.Setup(
+		func(ctx context.Context, cfg *envconf.Config) (context.Context, error){
+			timeNow := time.Now()
+			fmt.Printf("time before setting up kind: %v \n", timeNow)
+			return ctx, nil
+		},
 		envfuncs.CreateKindClusterWithConfig(kindClusterName, "kindest/node:v1.22.2", "kind-config.yaml"),
 		func(ctx context.Context, cfg *envconf.Config) (context.Context, error){
+			fmt.Printf("time after setting up kind: %v \n", time.Now())
+
 			println("Setup")
 			k8sClient = cfg.Client()
 
@@ -71,10 +78,11 @@ func TestMain(m *testing.M) {
 			println("Finish")
 			return ctx, nil
 		},
-		//envfuncs.DestroyKindCluster(kindClusterName),
+		envfuncs.DestroyKindCluster(kindClusterName),
 	).BeforeEachTest(
 		func(ctx context.Context, _ *envconf.Config, _ *testing.T) (context.Context, error){
 			println("BeforeEachTest")
+
 
 			return ctx, nil
 		},

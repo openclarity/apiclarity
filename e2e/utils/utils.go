@@ -44,6 +44,22 @@ func InstallCurl() error {
 	return nil
 }
 
+func InstallHttpbin(manager *helm.Manager) error {
+	// helm repo add --force-update matheusfm https://matheusfm.dev/charts
+	err := manager.RunRepo(helm.WithArgs("add", "--force-update", "matheusfm", "https://matheusfm.dev/charts"))
+	if err != nil {
+		return fmt.Errorf("failed to run helm repo add --force-update matheusfm https://matheusfm.dev/charts: %v", err)
+	}
+
+	// helm install httpbin matheusfm/httpbin -n test --wait
+	err = manager.RunInstall(helm.WithName("httpbin"), helm.WithChart("matheusfm/httpbin"),
+		helm.WithNamespace("test"), helm.WithArgs("--wait"))
+	if err != nil {
+		return fmt.Errorf("failed to run helm install httpbin matheusfm/httpbin  -n test --wait: %v", err)
+	}
+	return nil
+}
+
 func LoadDockerImagesToCluster(cluster, tag string) error {
 	if err := LoadDockerImageToCluster(cluster, fmt.Sprintf("ghcr.io/apiclarity/apiclarity:%v", tag)); err != nil {
 		return fmt.Errorf("failed to load docker image to cluster: %v", err)
@@ -135,8 +151,6 @@ func Int64Ptr(val int64) *int64 {
 	return &ret
 }
 
-// NON EXPORTED:
-
 //TODO use https://github.com/kubernetes-sigs/e2e-framework/tree/main/examples/wait_for_resources
 func WaitForAPIClarityPodRunning(client klient.Client) error {
 	podList := v1.PodList{}
@@ -160,6 +174,8 @@ func WaitForAPIClarityPodRunning(client klient.Client) error {
 		}
 	}
 }
+
+// NON EXPORTED:
 
 func portForward(kind, namespace, name, hostPort, targetPort string, stopCh chan struct{}) (error, []byte) {
 	cmd := exec.Command("kubectl", "port-forward", "-n", namespace,

@@ -35,8 +35,8 @@ jobs:
     - name: Build Docker image
       run: make docker
 
-    - name: Replace version
-      id: replace_version
+    - name: Edit values.yaml
+      id: edit_values
       run: |
         tag=${{ github.sha }}
         sed -i 's/latest/'"$tag"'/g' charts/apiclarity/values.yaml

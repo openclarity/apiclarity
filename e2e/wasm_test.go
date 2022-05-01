@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/apiclarity/apiclarity/e2e/utils"
-	"github.com/go-openapi/strfmt"
+
 	"gotest.tools/assert"
 	"sigs.k8s.io/e2e-framework/pkg/envconf"
 	"sigs.k8s.io/e2e-framework/pkg/features"
@@ -32,7 +32,7 @@ import (
 	"github.com/apiclarity/apiclarity/api/client/models"
 )
 
-var wantBodyApiInventory = &operations.GetAPIInventoryOKBody{
+var wantGetAPIInventoryOKBody = &operations.GetAPIInventoryOKBody{
 	Items: []*models.APIInfo{
 		{
 			HasProvidedSpec:      utils.BoolPtr(false),
@@ -59,30 +59,21 @@ func TestWasm(t *testing.T) {
 	println("making telemetry from curl to httpbin...")
 	assert.NilError(t, utils.HttpReqFromCurlToHttpbin())
 
+	// wait for database to be updated
+	time.Sleep(2*time.Second)
+
+
 	f1 := features.New("telemetry event").
 		WithLabel("type", "event").
-		Assess("telemetry event exist in UI", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-			startTime, err := time.Parse("2006-01-02T15:04:05.000Z", "2021-04-26T11:35:49.775Z")
-			assert.NilError(t, err)
-			endTime, err := time.Parse("2006-01-02T15:04:05.000Z", "2030-04-26T11:35:49.775Z")
-			assert.NilError(t, err)
-
-			params := operations.NewGetAPIEventsParams().WithPage(0).WithPageSize(50).WithStartTime(strfmt.DateTime(startTime)).WithEndTime(strfmt.DateTime(endTime)).WithSortKey("time").WithShowNonAPI(false)
-			res, err := apiclarityAPI.Operations.GetAPIEvents(params)
-			assert.NilError(t, err)
-			assert.Assert(t, *res.Payload.Total == 1)
-			// TODO assert payload items...
-
+		Assess("telemetry event exist in DB", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
+			utils.AssertGetAPIEvents(t, apiclarityAPI, nil)
 			return ctx
 		}).Feature()
 
 	f2 := features.New("spec").
 		WithLabel("type", "spec").
-		Assess("spec exist in UI", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-			params := operations.NewGetAPIInventoryParams().WithPage(0).WithPageSize(50).WithType(string(models.APITypeINTERNAL)).WithSortKey("name")
-			res, err := apiclarityAPI.Operations.GetAPIInventory(params)
-			assert.NilError(t, err)
-			assert.DeepEqual(t, res.Payload, wantBodyApiInventory)
+		Assess("spec exist in DB", func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
+			utils.AssertGetAPIInventory(t, apiclarityAPI, wantGetAPIInventoryOKBody)
 			return ctx
 		}).Feature()
 
@@ -105,7 +96,7 @@ func setupWasmTestEnv(stopCh chan struct{}) error {
 	}
 
 	println("deploying curl and httpbin to test namespace...")
-	if err := installHttpbin(helmManager); err != nil {
+	if err := utils.InstallHttpbin(helmManager); err != nil {
 		return fmt.Errorf("failed to install htpbin: %v", err)
 	}
 	if err := utils.InstallCurl(); err != nil {
@@ -153,22 +144,6 @@ func installIstio(manager *helm.Manager) error {
 		helm.WithNamespace(utils.IstioNamespace), helm.WithArgs("--wait"))
 	if err != nil {
 		return fmt.Errorf("failed to run helm install istiod istio/istiod -n istio-system --wait: %v", err)
-	}
-	return nil
-}
-
-func installHttpbin(manager *helm.Manager) error {
-	// helm repo add --force-update matheusfm https://matheusfm.dev/charts
-	err := manager.RunRepo(helm.WithArgs("add", "--force-update", "matheusfm", "https://matheusfm.dev/charts"))
-	if err != nil {
-		return fmt.Errorf("failed to run helm repo add --force-update matheusfm https://matheusfm.dev/charts: %v", err)
-	}
-
-	// helm install httpbin matheusfm/httpbin -n test --wait
-	err = manager.RunInstall(helm.WithName("httpbin"), helm.WithChart("matheusfm/httpbin"),
-		helm.WithNamespace("test"), helm.WithArgs("--wait"))
-	if err != nil {
-		return fmt.Errorf("failed to run helm install httpbin matheusfm/httpbin  -n test --wait: %v", err)
 	}
 	return nil
 }
