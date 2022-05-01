@@ -1,8 +1,8 @@
 apiVersion: v2
 name: apiclarity
-appVersion: latest
+appVersion: e2e
 description: Charts for APIClarity deployment. Reconstruct OpenAPI Specifications from real-time workload traffic seamlessly.
-version: latest
+version: v1.1
 home: https://apiclarity.io/
 icon: https://github.com/apiclarity/apiclarity/raw/master/API_clarity.svg
 sources:
