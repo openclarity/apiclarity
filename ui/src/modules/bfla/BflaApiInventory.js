@@ -6,10 +6,6 @@ import Tag from 'components/Tag';
 import Table from 'components/Table';
 import Arrow, { ARROW_NAMES } from 'components/Arrow';
 import Button from 'components/Button';
-import CloseButton from 'components/CloseButton';
-import TitleValueDisplay, { TitleValueDisplayRow } from 'components/TitleValueDisplay';
-import Icon, { ICON_NAMES } from 'components/Icon';
-import classnames from 'classnames';
 import MODULE_TYPES from '../MODULE_TYPES.js';
 import BflaInventoryModal from './BflaInventoryModal';
 import emptySelectImage from 'utils/images/select.svg';
@@ -17,24 +13,6 @@ import emptySelectImage from 'utils/images/select.svg';
 import collectionProgress from './collection.svg';
 
 import './bfla.scss';
-
-const SPEC_TAB_ITEMS = {
-    PROVIDED: {
-        value: "PROVIDED",
-        label: "Provided",
-        dataKey: "providedSpecDiff",
-        component: ({data, url, loading, refresh}) => <BflaTab data={data} url={url} loading={loading} refresh={refresh}/>,
-        urlSuffix: "providedBfla",
-    },
-    RECONSTRUCTED: {
-        value: "RECONSTRUCTED",
-        label: "Reconstructed",
-        dataKey: "reconstructedSpecDiff",
-        component: ({data, url, loading, refresh}) => <BflaTab data={data} url={url} loading={loading} refresh={refresh} />,
-        urlSuffix: "reconstructedBfla",
-    }
-};
-
 
 const NotSelected = ({title}) => (
     <div className="not-selected-wrapper">
@@ -63,7 +41,6 @@ const SelectedAuthClientDisplay = ({client, onBack, authorizeClient}) => {
         {
             Header: 'Type',
             id: 'type',
-            // accessor: 'source'
             Cell: ({row}) => {
                 const {source} = row.original;
                 return <Tag>{source}</Tag>;
@@ -73,7 +50,9 @@ const SelectedAuthClientDisplay = ({client, onBack, authorizeClient}) => {
         { Header: 'Name', id: 'name', accessor: 'id', width: 50 },
         { Header: 'IP', id: 'ip', accessor: 'ip_address' }
     ];
+
     const BackButtonTitle = `authorized clients/${name}`;
+
     return (
         <React.Fragment>
             <div className="client-action-wrapper">
@@ -82,13 +61,11 @@ const SelectedAuthClientDisplay = ({client, onBack, authorizeClient}) => {
             </div>
                 <div className="authorized-clients">
                     <Table
-
                         noResultsTitle={"this event"}
                         columns={columns}
                         data={{items: endUsers, total: endUsers.length}}
                         withPagination={false}
                     />
-
                 </div>
         </React.Fragment>
     );
@@ -113,16 +90,8 @@ const SelectedPathDisplay = ({data, url, onBack, refresh }) => {
         a.authorized ? authorizedClients.push({ ...a, id: idx }) : violatingClients.push(a);
     });
 
-    const deauthorizeClient = (client) => {
-        setSelectedClient(client);
-    };
-
     const authorizeClient = (client) => {
         setSelectedClient(client);
-    };
-
-    const updateClient = () => {
-        refresh();
     };
 
     const displayTitle = method && path;
@@ -166,7 +135,7 @@ const SelectedPathDisplay = ({data, url, onBack, refresh }) => {
                     method={method}
                     path={path}
                     onClose={() => setSelectedClient(null)}
-                    onSuccess={() => updateClient()}/>
+                    onSuccess={() => refresh()}/>
             }
         </div>
     );
@@ -207,16 +176,6 @@ const BflaTab = ({data, url, loading, refresh}) => {
     );
 
 };
-
-const InnerTabs = ({selected, items, onSelect}) => (
-    <div className="spec-inner-tabs-wrapper">
-        {
-            items.map(({value, label}) => (
-                <div key={value} className={classnames("inner-tab-item", {selected: selected === value})} onClick={() => onSelect(value)}>{label}</div>
-            ))
-        }
-    </div>
-);
 
 const collection_in_progress = {
     audience: [
@@ -261,8 +220,6 @@ const Learning = () => {
 };
 
 const BflaApiInventory = (props) => {
-    const [selectedTab, setSelectedTab] = useState(SPEC_TAB_ITEMS.PROVIDED.value);
-    const {component: TabContentComponent, urlSuffix} = SPEC_TAB_ITEMS[selectedTab] || {};
     const {id: apiId } = props;
     const authModelURL = `modules/bfla/authorizationModel/${apiId}`;
     const [{loading, data}, updateAuthModel] = useFetch(authModelURL);
@@ -271,7 +228,6 @@ const BflaApiInventory = (props) => {
         return <Loader />;
     }
     const {specType, learning} = data || {};
-    // const tabData = data.specType === SPEC_TAB_ITEMS[selectedTab].value ? data : {};
 
     let specTab;
     if (specType === 'NONE' || !specType) {
@@ -289,20 +245,6 @@ const BflaApiInventory = (props) => {
             }
         </div>
     );
-
-    // return (
-    //     <div className="bfla-inventory-wrapper">
-    //         {loading ? <Loader /> :
-    //             <React.Fragment>
-    //                 <InnerTabs selected={selectedTab} items={Object.values(SPEC_TAB_ITEMS)} onSelect={selected => setSelectedTab(selected)} />
-    //                 {/* <TabContentComponent url={`modules/bfla/authorizationModel/${apiId}`} /> */}
-    //                 {specTab ||
-    //                  <TabContentComponent data={tabData} url={authModelURL} loading={loading} refresh={updateAuthModel} />
-    //                 }
-    //             </React.Fragment>
-    //     }
-    //     </div>
-    // );
 };
 
 const bflaApiInventory = {

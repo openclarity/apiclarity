@@ -64,49 +64,48 @@ const BflaStatus = ({bflaStatus, sourceName}) => {
     const {value} = BFLA_STATUS_TYPES_MAP[bflaStatus] || {};
 
     let statusText;
-    if (value === LEGITIMATE.value) {
-        statusText = <div className="bfla-status-text">This API call seems legitimate.</div>;
-    }
-    if (value === SUSPICIOUS_HIGH.value) {
-        statusText = <div className="bfla-status-text">
-                         The pod {sourceName} made this call to the API.
-                         This looks suspicious, as it would represent a violation of the current authorization model.  The API server correctly rejected the call
-                     </div>;
-    }
-
-    if (value === SUSPICIOUS_MEDIUM.value) {
-        statusText = <div className="bfla-status-text">
-                         The pod {sourceName} made this call to the API. This looks suspicious, as it represents a violation of the current authorization model. Moreover, the API server accepted the call, which implies a possible Broken Function Level Authorisation. Please verify authorisation implementation in the API server.
-                     </div>;
-    }
-
-    if (value === LEARNING.value) {
-        statusText = <div className="bfla-status-text">
-                         Data collection in progress.
-                     </div>;
+    switch (value) {
+        case LEGITIMATE.value:
+            statusText = 'This API call seems legitimate.';
+            break;
+        case SUSPICIOUS_HIGH.value:
+            statusText = `The pod ${sourceName} made this call to the API. This looks suspicious, as it would represent a violation of the current authorization model.  The API server correctly rejected the call`;
+            break;
+        case SUSPICIOUS_MEDIUM.value:
+            statusText = `The pod ${sourceName} made this call to the API. This looks suspicious, as it represents a violation of the current authorization model. Moreover, the API server accepted the call, which implies a possible Broken Function Level Authorisation. Please verify authorisation implementation in the API server.`;
+            break;
+        case LEARNING.value:
+            statusText = 'Data collection in progress.';
+            break;
+        case NO_SPEC.value:
+            statusText = 'Please either provide a spec or reconstruct one in order to enable BFLA detection for this API.';
+            break;
+        default:
+            statusText = '';
     }
 
-    if (value === NO_SPEC.value) {
-        statusText = <div className="bfla-status-text">
-                         Please either provide a spec or reconstruct one in order to enable BFLA detection for this API.
-                     </div>;
-    }
+    const isSuspicious = (value === SUSPICIOUS_HIGH.value || value === SUSPICIOUS_MEDIUM.value);
 
-    let bflaStatusMesage =
-        <TitleValueDisplay
-            className="bfla-status"
-            title={<div className="bfla-status-title"> <span>Broken Function Level Authorization Alert:</span> <BflaStatusIcon bflaStatusType={bflaStatus} /> </div>}>
-                {statusText}
-        </TitleValueDisplay>;
-
-    if (value === LEGITIMATE.value || value === LEARNING.value || value === NO_SPEC.value) {
-        bflaStatusMesage = <div className="bfla-status bfla-status-title">
-                               {statusText}{value !== NO_SPEC.value && <BflaStatusIcon bflaStatusType={bflaStatus} />}
-        </div>;
+    if (isSuspicious) {
+        return (
+            <TitleValueDisplay
+                className="bfla-status"
+                title={
+                    <div className="bfla-status-title">
+                        <span>Broken Function Level Authorization Alert:</span>
+                        <BflaStatusIcon bflaStatusType={bflaStatus} />
+                    </div>
+                }>
+                <div className="bfla-status-text">{statusText}</div>
+            </TitleValueDisplay>
+        );
     }
 
     return (
-        bflaStatusMesage
+        <div className="bfla-status bfla-status-title">
+            <div className="bfla-status-text">{statusText}</div>
+            {value !== NO_SPEC.value && <BflaStatusIcon bflaStatusType={bflaStatus} />}
+        </div>
     );
 };
 
