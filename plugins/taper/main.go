@@ -25,8 +25,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/urfave/cli"
 
-	"github.com/apiclarity/apiclarity/plugins/taper/config"
-	"github.com/apiclarity/apiclarity/plugins/taper/version"
+	"github.com/openclarity/apiclarity/plugins/taper/config"
+	"github.com/openclarity/apiclarity/plugins/taper/version"
 )
 
 // We need to set this here since mizu code is using a global flags to define the flags, otherwise it will not work.

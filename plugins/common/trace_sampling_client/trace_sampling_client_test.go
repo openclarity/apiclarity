@@ -16,7 +16,7 @@
 package trace_sampling_client
 
 import (
-	"github.com/apiclarity/trace-sampling-manager/api/client/client"
+	"github.com/openclarity/trace-sampling-manager/api/client/client"
 	"gotest.tools/assert"
 	"sync"
 	"testing"
@@ -34,17 +34,17 @@ func TestTraceSamplingManager_setHosts(t1 *testing.T) {
 		hosts []string
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
+		name      string
+		fields    fields
+		args      args
 		wantHosts map[string]bool
 	}{
 		{
-			name:   "set on empty",
+			name: "set on empty",
 			fields: fields{
 				Hosts: map[string]bool{},
 			},
-			args:   args{
+			args: args{
 				hosts: []string{"host1", "host2"},
 			},
 			wantHosts: map[string]bool{
@@ -53,13 +53,13 @@ func TestTraceSamplingManager_setHosts(t1 *testing.T) {
 			},
 		},
 		{
-			name:   "set on existing",
+			name: "set on existing",
 			fields: fields{
 				Hosts: map[string]bool{
 					"host3": true,
 				},
 			},
-			args:   args{
+			args: args{
 				hosts: []string{"host1", "host2"},
 			},
 			wantHosts: map[string]bool{
@@ -71,7 +71,7 @@ func TestTraceSamplingManager_setHosts(t1 *testing.T) {
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t *testing.T) {
 			tsm := &Client{
-				Hosts:                      tt.fields.Hosts,
+				Hosts: tt.fields.Hosts,
 			}
 			tsm.setHosts(tt.args.hosts)
 			assert.DeepEqual(t, tt.wantHosts, tsm.Hosts)
@@ -96,7 +96,7 @@ func TestTraceSamplingManager_ShouldTrace(t1 *testing.T) {
 		want   bool
 	}{
 		{
-			name:   "should trace",
+			name: "should trace",
 			fields: fields{
 				Hosts: map[string]bool{
 					"host1": true,
@@ -104,13 +104,13 @@ func TestTraceSamplingManager_ShouldTrace(t1 *testing.T) {
 					"host3": true,
 				},
 			},
-			args:   args{
+			args: args{
 				host: "host1",
 			},
-			want:   true,
+			want: true,
 		},
 		{
-			name:   "should not trace",
+			name: "should not trace",
 			fields: fields{
 				Hosts: map[string]bool{
 					"host1": true,
@@ -118,40 +118,40 @@ func TestTraceSamplingManager_ShouldTrace(t1 *testing.T) {
 					"host3": true,
 				},
 			},
-			args:   args{
+			args: args{
 				host: "host4",
 			},
-			want:   false,
+			want: false,
 		},
 		{
-			name:   "should trace by wildcard",
+			name: "should trace by wildcard",
 			fields: fields{
 				Hosts: map[string]bool{
 					"host1": true,
 					"host2": true,
-					"*": true,
+					"*":     true,
 				},
 			},
-			args:   args{
+			args: args{
 				host: "host4",
 			},
-			want:   true,
+			want: true,
 		},
 		{
-			name:   "should not trace - empty list",
+			name: "should not trace - empty list",
 			fields: fields{
 				Hosts: map[string]bool{},
 			},
-			args:   args{
+			args: args{
 				host: "host4",
 			},
-			want:   false,
+			want: false,
 		},
 	}
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
 			t := &Client{
-				Hosts:                      tt.fields.Hosts,
+				Hosts: tt.fields.Hosts,
 			}
 			if got := t.ShouldTrace(tt.args.host); got != tt.want {
 				t1.Errorf("ShouldTrace() = %v, want %v", got, tt.want)

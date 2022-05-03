@@ -22,8 +22,8 @@ import (
 	"github.com/go-openapi/strfmt"
 	"gorm.io/gorm"
 
-	"github.com/apiclarity/apiclarity/api/server/models"
-	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
+	"github.com/openclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/api/server/restapi/operations"
 )
 
 type APIUsageType string

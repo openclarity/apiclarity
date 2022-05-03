@@ -20,7 +20,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/apiclarity/apiclarity/backend/pkg/common"
+	"github.com/openclarity/apiclarity/backend/pkg/common"
 )
 
 type Server struct {

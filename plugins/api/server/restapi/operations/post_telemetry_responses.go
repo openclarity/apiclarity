@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"github.com/apiclarity/apiclarity/plugins/api/server/models"
+	"github.com/openclarity/apiclarity/plugins/api/server/models"
 )
 
 // PostTelemetryOKCode is the HTTP code returned for type PostTelemetryOK

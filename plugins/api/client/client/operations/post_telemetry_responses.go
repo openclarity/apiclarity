@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/apiclarity/apiclarity/plugins/api/client/models"
+	"github.com/openclarity/apiclarity/plugins/api/client/models"
 )
 
 // PostTelemetryReader is a Reader for the PostTelemetry structure.

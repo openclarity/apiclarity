@@ -7,7 +7,7 @@ SHELL=/bin/bash
 
 # Project variables
 BINARY_NAME ?= apiclarity
-DOCKER_REGISTRY ?= ghcr.io/apiclarity
+DOCKER_REGISTRY ?= ghcr.io/openclarity
 VERSION ?= $(shell git rev-parse HEAD)
 DOCKER_IMAGE ?= $(DOCKER_REGISTRY)/$(BINARY_NAME)
 DOCKER_TAG ?= ${VERSION}

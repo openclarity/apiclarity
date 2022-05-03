@@ -1,4 +1,4 @@
-module github.com/apiclarity/apiclarity/plugins/taper/extensions/http
+module github.com/openclarity/apiclarity/plugins/taper/extensions/http
 
 go 1.17
 

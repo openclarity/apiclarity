@@ -22,8 +22,8 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/apiclarity/apiclarity/backend/pkg/database"
-	pluginsmodels "github.com/apiclarity/apiclarity/plugins/api/server/models"
+	"github.com/openclarity/apiclarity/backend/pkg/database"
+	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
 )
 
 type Annotation struct {
@@ -36,7 +36,7 @@ type Event struct {
 	Telemetry *pluginsmodels.Telemetry
 }
 
-//go:generate $GOPATH/bin/mockgen -destination=./mock_modules.go -package=core github.com/apiclarity/apiclarity/backend/pkg/modules/internal/core Module,BackendAccessor
+//go:generate $GOPATH/bin/mockgen -destination=./mock_modules.go -package=core github.com/openclarity/apiclarity/backend/pkg/modules/internal/core Module,BackendAccessor
 
 // Module each APIClarity module needs to implement this interface.
 type Module interface {

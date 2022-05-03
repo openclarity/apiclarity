@@ -26,7 +26,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/rs/cors"
 
-	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
+	"github.com/openclarity/apiclarity/api/server/restapi/operations"
 )
 
 //go:generate swagger generate server --target ../../server --name APIClarityAPIs --spec ../../swagger.yaml --principal interface{}
