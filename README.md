@@ -39,18 +39,24 @@ APIClarity supports integrating with the following traffic sources. Install APIC
   See the [Official installation instructions](https://istio.io/latest/docs/setup/getting-started/#install)
   for more information.
 
+* Tap via a DaemonSet
+  * [Integration instructions](https://github.com/openclarity/apiclarity/tree/master/plugins/taper)
+
 * Kong API Gateway
-  * [Integration instructions](https://github.com/apiclarity/apiclarity/tree/master/plugins/gateway/kong)
+  * [Integration instructions](https://github.com/openclarity/apiclarity/tree/master/plugins/gateway/kong)
 
 * Tyk API Gateway
-  * [Integration instructions](https://github.com/apiclarity/apiclarity/tree/master/plugins/gateway/tyk)
+  * [Integration instructions](https://github.com/openclarity/apiclarity/tree/master/plugins/gateway/tyk)
+
+The integrations (plugins) for the supported traffic sources above are located in the [plugins directory within the codebase](https://github.com/openclarity/apiclarity/tree/master/plugins) and implement the [plugins API](https://github.com/openclarity/apiclarity/tree/master/plugins/api) to export the API events to APIClarity. To enable and configure the supported traffic sources, please check the ```trafficSource:``` section in [Helm values](https://github.com/openclarity/apiclarity/blob/master/charts/apiclarity/values.yaml).
+Contributions of integrations with additional traffic sources are more than welcome!
 
 ### Install APIClarity in a K8s cluster using Helm:
 
 1. Add Helm repo
 
    ```shell
-   helm repo add apiclarity https://apiclarity.github.io/apiclarity
+   helm repo add apiclarity https://openclarity.github.io/apiclarity
    ```
 2. Save APIClarity default chart values
     ```shell
@@ -76,8 +82,8 @@ APIClarity supports integrating with the following traffic sources. Install APIC
 
 ## Configurations
 
-The file [values.yaml](https://github.com/apiclarity/apiclarity/blob/master/charts/apiclarity/values.yaml) is used to deploy and configure APIClarity on your cluster via Helm.
-[This ConfigMap](https://github.com/apiclarity/apiclarity/blob/master/charts/apiclarity/templates/configmap.yaml) is used to define the list of headers to ignore when reconstructing the spec.
+The file [values.yaml](https://github.com/openclarity/apiclarity/blob/master/charts/apiclarity/values.yaml) is used to deploy and configure APIClarity on your cluster via Helm.
+[This ConfigMap](https://github.com/openclarity/apiclarity/blob/master/charts/apiclarity/templates/configmap.yaml) is used to define the list of headers to ignore when reconstructing the spec.
 
 ## Testing with a demo application
 
@@ -122,9 +128,9 @@ To deploy the Sock Shop Demo, follow these steps:
 Build and push the image to your repo:
 
 ```shell
-DOCKER_IMAGE=<your docker registry>/apiclarity/apiclarity DOCKER_TAG=<your tag> make push-docker
+DOCKER_IMAGE=<your docker registry>/apiclarity DOCKER_TAG=<your tag> make push-docker
 ```
-Update [values.yaml](https://github.com/apiclarity/apiclarity/blob/master/charts/apiclarity/values.yaml) accordingly.
+Update [values.yaml](https://github.com/openclarity/apiclarity/blob/master/charts/apiclarity/values.yaml) accordingly.
 
 ## Running locally with demo data
 
@@ -141,7 +147,11 @@ Update [values.yaml](https://github.com/apiclarity/apiclarity/blob/master/charts
    ```
 
 3. Run backend and frontend locally using demo data:
-
+   
+   Note: You might need to delete the old local state file and local db:
+   ```shell
+   rm state.gob; rm db.db
+   ```
    ```shell
    DATABASE_DRIVER=LOCAL FAKE_TRACES=true FAKE_TRACES_PATH=./backend/pkg/test/trace_files \
    ENABLE_DB_INFO_LOGS=true ./backend/bin/backend run
