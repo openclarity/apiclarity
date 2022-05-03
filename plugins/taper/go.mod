@@ -1,11 +1,11 @@
-module github.com/apiclarity/apiclarity/plugins/taper
+module github.com/openclarity/apiclarity/plugins/taper
 
 go 1.17
 
 require (
 	github.com/Portshift/go-utils v0.0.0-20211213074910-dd69e9ff3e27
-	github.com/apiclarity/apiclarity/plugins/api v0.0.0
-	github.com/apiclarity/apiclarity/plugins/common v0.0.0
+	github.com/openclarity/apiclarity/plugins/api v0.0.0
+	github.com/openclarity/apiclarity/plugins/common v0.0.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.9.1-0.20211209175822-a785a79f2240
@@ -22,7 +22,7 @@ require (
 require (
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
-	github.com/apiclarity/trace-sampling-manager/api v0.0.0-20220421083848-1303b9669327 // indirect
+	github.com/openclarity/trace-sampling-manager/api v0.0.0-20220421083848-1303b9669327 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef // indirect
 	github.com/bradleyfalzon/tlsx v0.0.0-20170624122154-28fd0e59bac4 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
@@ -95,7 +95,7 @@ replace github.com/up9inc/mizu/tap/api v0.0.0 => github.com/up9inc/mizu/tap/api 
 replace github.com/up9inc/mizu/shared v0.0.0 => github.com/up9inc/mizu/shared v0.0.0-20211107103142-4badaadcc134
 
 // nolint:gomoddirectives
-replace github.com/apiclarity/apiclarity/plugins/api v0.0.0 => ./../api
+replace github.com/openclarity/apiclarity/plugins/api v0.0.0 => ./../api
 
 // nolint:gomoddirectives
-replace github.com/apiclarity/apiclarity/plugins/common v0.0.0 => ../common
+replace github.com/openclarity/apiclarity/plugins/common v0.0.0 => ../common

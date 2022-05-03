@@ -22,9 +22,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
-	"github.com/apiclarity/apiclarity/api/server/restapi"
-	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
-	_database "github.com/apiclarity/apiclarity/backend/pkg/database"
+	"github.com/openclarity/apiclarity/api/server/restapi"
+	"github.com/openclarity/apiclarity/api/server/restapi/operations"
+	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 )
 
 const (

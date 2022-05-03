@@ -1,5 +1,5 @@
 # Project variables
-DOCKER_REGISTRY ?= ghcr.io/apiclarity
+DOCKER_REGISTRY ?= ghcr.io/openclarity
 VERSION ?= $(shell git rev-parse HEAD)
 DOCKER_TAG ?= ${VERSION}
 TYK_VERSION ?= v3.2.2
@@ -18,13 +18,13 @@ docker-taper:
 .PHONY: docker-tyk
 docker-tyk:
 	@(cd gateway/tyk/${TYK_VERSION} && \
-	go mod edit -replace github.com/apiclarity/apiclarity/plugins/api@v0.0.0=./../api && \
-	go mod edit -replace github.com/apiclarity/apiclarity/plugins/common@v0.0.0=./../common && \
+	go mod edit -replace github.com/openclarity/apiclarity/plugins/api@v0.0.0=./../api && \
+	go mod edit -replace github.com/openclarity/apiclarity/plugins/common@v0.0.0=./../common && \
 	 cd -)
 	@DOCKER_BUILDKIT=1 docker build -t ${DOCKER_REGISTRY}/tyk-plugin-${TYK_VERSION}:${DOCKER_TAG} --file Dockerfile.tyk.${TYK_VERSION} .
 	@(cd gateway/tyk/${TYK_VERSION} && \
-	go mod edit -replace github.com/apiclarity/apiclarity/plugins/api@v0.0.0=./../../../api && \
-	go mod edit -replace github.com/apiclarity/apiclarity/plugins/common@v0.0.0=./../../../common && \
+	go mod edit -replace github.com/openclarity/apiclarity/plugins/api@v0.0.0=./../../../api && \
+	go mod edit -replace github.com/openclarity/apiclarity/plugins/common@v0.0.0=./../../../common && \
 	 cd -)
 
 .PHONY: push-docker

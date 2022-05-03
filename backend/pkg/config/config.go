@@ -21,8 +21,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
-	_spec "github.com/apiclarity/speculator/pkg/spec"
-	_speculator "github.com/apiclarity/speculator/pkg/speculator"
+	_spec "github.com/openclarity/speculator/pkg/spec"
+	_speculator "github.com/openclarity/speculator/pkg/speculator"
 )
 
 const (

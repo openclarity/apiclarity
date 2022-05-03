@@ -15,7 +15,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/validate"
 
-	"github.com/apiclarity/apiclarity/plugins/api/server/models"
+	"github.com/openclarity/apiclarity/plugins/api/server/models"
 )
 
 // NewPostTelemetryParams creates a new PostTelemetryParams object

@@ -18,8 +18,8 @@ package backend
 import (
 	"github.com/golang/mock/gomock"
 
-	"github.com/apiclarity/apiclarity/api/server/models"
-	_database "github.com/apiclarity/apiclarity/backend/pkg/database"
+	"github.com/openclarity/apiclarity/api/server/models"
+	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 )
 
 const (

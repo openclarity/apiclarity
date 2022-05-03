@@ -31,9 +31,9 @@ import (
 	"github.com/go-openapi/strfmt"
 	uuid "github.com/satori/go.uuid"
 
-	"github.com/apiclarity/apiclarity/plugins/api/client/client"
-	"github.com/apiclarity/apiclarity/plugins/api/client/models"
-	tracesamplingclient "github.com/apiclarity/trace-sampling-manager/api/client/client"
+	"github.com/openclarity/apiclarity/plugins/api/client/client"
+	"github.com/openclarity/apiclarity/plugins/api/client/models"
+	tracesamplingclient "github.com/openclarity/trace-sampling-manager/api/client/client"
 )
 
 const (

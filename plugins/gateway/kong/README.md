@@ -50,7 +50,7 @@ If you just want to try it out with a demo application, and you don't have kong 
     ```   
 5. Deploy APIClarity Kong Plugin:
     ```shell
-       cd ~/go/src/github.com/apiclarity/apiclarity/plugins/gateway/kong
+       cd ~/go/src/github.com/openclarity/apiclarity/plugins/gateway/kong
        
        KONG_GATEWAY_DEPLOYMENT_NAME=ingress-kong \
        KONG_GATEWAY_DEPLOYMENT_NAMESPACE=kong \

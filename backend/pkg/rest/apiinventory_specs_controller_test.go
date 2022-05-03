@@ -21,8 +21,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/apiclarity/apiclarity/api/server/models"
-	"github.com/apiclarity/apiclarity/backend/pkg/test"
+	"github.com/openclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/backend/pkg/test"
 )
 
 func Test_createTagsListFromRawSpec(t *testing.T) {

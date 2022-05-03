@@ -25,7 +25,7 @@ spec:
         - cp
         - /plugins/tyk-plugin.so
         - /plugin/.
-        image: ghcr.io/apiclarity/tyk-plugin-v3.2.2:latest
+        image: ghcr.io/openclarity/tyk-plugin-v3.2.2:latest
         imagePullPolicy: Always
         name: apiclarity-tyk-plugin-injector
         volumeMounts:

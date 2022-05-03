@@ -10,7 +10,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 
-	"github.com/apiclarity/apiclarity/plugins/api/server/restapi/operations"
+	"github.com/openclarity/apiclarity/plugins/api/server/restapi/operations"
 )
 
 //go:generate swagger generate server --target ../../server --name APIClarityPluginsTelemetriesAPI --spec ../../swagger.yaml --principal interface{}

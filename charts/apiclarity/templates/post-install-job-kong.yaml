@@ -104,7 +104,7 @@ spec:
 {{- if .Values.trafficSource.global.httpProxy }}
             git config --global http.proxy {{ .Values.trafficSource.global.httpProxy }} &&
 {{- end }}
-            git clone -b {{ .Chart.AppVersion }} https://github.com/apiclarity/apiclarity.git &&
+            git clone -b {{ .Chart.AppVersion }} https://github.com/openclarity/apiclarity.git &&
             cd apiclarity &&
             ./plugins/gateway/kong/deploy/deploy.sh"
       restartPolicy: Never

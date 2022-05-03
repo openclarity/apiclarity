@@ -22,7 +22,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apiclarity/apiclarity/plugins/api/client/models"
+	"github.com/openclarity/apiclarity/plugins/api/client/models"
 )
 
 func Test_GetPathWithQuery(t *testing.T) {

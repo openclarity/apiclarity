@@ -29,10 +29,10 @@ import (
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/apiclarity/apiclarity/api/server/models"
-	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
-	"github.com/apiclarity/apiclarity/backend/pkg/database"
-	"github.com/apiclarity/speculator/pkg/speculator"
+	"github.com/openclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/api/server/restapi/operations"
+	"github.com/openclarity/apiclarity/backend/pkg/database"
+	"github.com/openclarity/speculator/pkg/speculator"
 )
 
 func (s *Server) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPIInventoryAPIIDSpecsProvidedSpecParams) middleware.Responder {

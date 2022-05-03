@@ -22,9 +22,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/apiclarity/apiclarity/plugins/common"
-	"github.com/apiclarity/trace-sampling-manager/api/client/client"
-	"github.com/apiclarity/trace-sampling-manager/api/client/client/operations"
+	"github.com/openclarity/apiclarity/plugins/common"
+	"github.com/openclarity/trace-sampling-manager/api/client/client"
+	"github.com/openclarity/trace-sampling-manager/api/client/client/operations"
 )
 
 type Client struct {

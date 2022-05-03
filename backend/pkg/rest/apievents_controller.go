@@ -21,9 +21,9 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/apiclarity/apiclarity/api/server/models"
-	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
-	_database "github.com/apiclarity/apiclarity/backend/pkg/database"
+	"github.com/openclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/api/server/restapi/operations"
+	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 )
 
 func (s *Server) GetAPIEvents(params operations.GetAPIEventsParams) middleware.Responder {
