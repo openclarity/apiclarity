@@ -13,7 +13,9 @@ require (
 	github.com/go-openapi/spec v0.20.4
 	github.com/go-openapi/strfmt v0.21.0
 	github.com/go-openapi/validate v0.20.3
+	github.com/golang-jwt/jwt/v4 v4.4.1
 	github.com/golang/mock v1.6.0
+	github.com/google/go-cmp v0.5.5
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/openclarity/apiclarity/api v0.0.0
 	github.com/openclarity/apiclarity/plugins/api v0.0.0
@@ -33,11 +35,6 @@ require (
 	k8s.io/apimachinery v0.23.5
 	k8s.io/client-go v0.23.5
 	sigs.k8s.io/yaml v1.2.0
-)
-
-require (
-	github.com/golang-jwt/jwt/v4 v4.4.1
-	github.com/google/go-cmp v0.5.5
 )
 
 require (
