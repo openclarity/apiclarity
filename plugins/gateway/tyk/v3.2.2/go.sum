@@ -527,7 +527,7 @@ github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7J
 github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
 github.com/onsi/gomega v1.10.2 h1:aY/nuoWlKJud2J6U0E3NWsjlg+0GtwXxgEqthRdzlcs=
 github.com/onsi/gomega v1.10.2/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
-github.com/openclarity/trace-sampling-manager/api v0.0.0-20220503091058-2730f5ebad2c h1:B0jjNEWpwX0fblBak14A5sMHTkA9OnUQs0gP89/PoCs=
+github.com/openclarity/trace-sampling-manager/api v0.0.0-20220503091058-2730f5ebad2c h1:05Yo4yesB2dOmvUcCfq90BFD1lvqhX1WNUnlVjVaY54=
 github.com/openclarity/trace-sampling-manager/api v0.0.0-20220503091058-2730f5ebad2c/go.mod h1:yw7gPOl7tMaCSoJA+iQ4dTqQEFO19za94A0QKGb9eZM=
 github.com/opentracing/basictracer-go v1.0.0/go.mod h1:QfBfYuafItcjQuMwinw9GhYKwFXS9KnPs5lxoYwgW74=
 github.com/opentracing/opentracing-go v1.0.2/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
