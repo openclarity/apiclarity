@@ -26,11 +26,11 @@ import (
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 
+	speculatorspec "github.com/openclarity/speculator/pkg/spec"
+	"github.com/openclarity/speculator/pkg/speculator"
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
-	speculatorspec "github.com/openclarity/speculator/pkg/spec"
-	"github.com/openclarity/speculator/pkg/speculator"
 )
 
 func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAPIInventoryReviewIDApprovedReviewParams) middleware.Responder {

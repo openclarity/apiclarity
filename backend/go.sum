@@ -60,12 +60,6 @@ github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdko
 github.com/agnivade/levenshtein v1.0.1/go.mod h1:CURSv5d9Uaml+FovSIICkLbAUZ9S4RqaHDIsdSBg7lM=
 github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883/go.mod h1:rCTlJbsFo29Kk6CurOXKm700vrz8f0KW0JNfpkRJY/8=
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
-github.com/openclarity/speculator v0.0.5-0.20220413120542-ccc4675eda2e h1:sWhtvWCtsgPh8sninY21N5yoZjWSIdkSzI8RU3PtaHY=
-github.com/openclarity/speculator v0.0.5-0.20220413120542-ccc4675eda2e/go.mod h1:2SGsxyqtg08O7FX0zdzY3ixvm/kCWU/xkY52yFEXIkY=
-github.com/openclarity/trace-sampling-manager/api v0.0.0-20220421083848-1303b9669327 h1:E3i9tNE88rxUhfUTcI73CKzfUD32jJhNVWTO5h9ESew=
-github.com/openclarity/trace-sampling-manager/api v0.0.0-20220421083848-1303b9669327/go.mod h1:Gl9aK8ODx0tnds2GjNIWJM+38Mwjn4g9Vx4SdKZIG7I=
-github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220421083848-1303b9669327 h1:OSe0FG5DFdMJad2OAHUQ6zQVzT3dxXnxq9SLFp7A0P0=
-github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220421083848-1303b9669327/go.mod h1:Z4xwq0NikJe043yv71kn7+uNt2fffObYocQ94rBXRrc=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
@@ -300,7 +294,10 @@ github.com/gofrs/uuid v4.0.0+incompatible h1:1SD/1F5pU8p29ybwgQSwpQk+mwdRrXCYuPh
 github.com/gofrs/uuid v4.0.0+incompatible/go.mod h1:b2aQJv3Z4Fp6yNu3cdSllBxTCLRxnplIgP/c0N/04lM=
 github.com/gogo/protobuf v1.3.2 h1:Ov1cvc58UF3b5XjBnZv7+opcTcQFZebYjWzi34vdm4Q=
 github.com/gogo/protobuf v1.3.2/go.mod h1:P1XiOD3dCwIKUDQYPy72D8LYyHL2YPYrpS2s69NZV8Q=
+github.com/golang-jwt/jwt v3.2.2+incompatible h1:IfV12K8xAKAnZqdXVzCZ+TOjboZ2keLg81eXfW3O+oY=
 github.com/golang-jwt/jwt v3.2.2+incompatible/go.mod h1:8pz2t5EyA70fFQQSrl6XZXzqecmYZeUEB8OUGHkxJ+I=
+github.com/golang-jwt/jwt/v4 v4.4.1 h1:pC5DB52sCeK48Wlb9oPcdhnjkz1TKt1D/P7WKJ0kUcQ=
+github.com/golang-jwt/jwt/v4 v4.4.1/go.mod h1:m21LjoU+eqJr34lmDMbreY2eSTRJ1cv77w39/MY0Ch0=
 github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b/go.mod h1:SBH7ygxi8pfUlaOkMMuAQtPIUF8ecWP5IEl/CR7VP2Q=
 github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=
 github.com/golang/groupcache v0.0.0-20191227052852-215e87163ea7/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=
@@ -591,6 +588,12 @@ github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7J
 github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
 github.com/onsi/gomega v1.14.0 h1:ep6kpPVwmr/nTbklSx2nrLNSIO62DoYAhnPNIMhK8gI=
 github.com/onsi/gomega v1.14.0/go.mod h1:cIuvLEne0aoVhAgh/O6ac0Op8WWw9H6eYCriF+tEHG0=
+github.com/openclarity/speculator v0.0.5-0.20220503044644-20658d3fa3c2 h1:urgvD+HON4loKaKrpTA+rBxM6VxxrAhhlCJheR4Gdb8=
+github.com/openclarity/speculator v0.0.5-0.20220503044644-20658d3fa3c2/go.mod h1:xcPdaFVzJ09ibrZGzjq29rZkstjsOdhgf4E9ydBfG8k=
+github.com/openclarity/trace-sampling-manager/api v0.0.0-20220503045200-32921254272a h1:B0jjNEWpwX0fblBak14A5sMHTkA9OnUQs0gP89/PoCs=
+github.com/openclarity/trace-sampling-manager/api v0.0.0-20220503045200-32921254272a/go.mod h1:yw7gPOl7tMaCSoJA+iQ4dTqQEFO19za94A0QKGb9eZM=
+github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220503045200-32921254272a h1:VsEc8IsWc5veB/HVN667xw2738Bi0cja/iUD60PbwIY=
+github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220503045200-32921254272a/go.mod h1:uCFl1Z5wNl6ms+0TBV6JWbL/YstmsJC78Y1aXGH3KMI=
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pborman/uuid v1.2.0/go.mod h1:X/NO0urCmaxf9VXbdlT7C2Yzkj2IKimNn4k+gtPdI/k=

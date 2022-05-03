@@ -3,10 +3,6 @@ module github.com/openclarity/apiclarity/backend
 go 1.17
 
 require (
-	github.com/openclarity/apiclarity/api v0.0.0
-	github.com/openclarity/apiclarity/plugins/api v0.0.0
-	github.com/openclarity/speculator v0.0.5-0.20220413120542-ccc4675eda2e
-	github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220421083848-1303b9669327
 	github.com/bxcodec/faker/v3 v3.6.0
 	github.com/deepmap/oapi-codegen v1.9.1
 	github.com/getkin/kin-openapi v0.87.0
@@ -19,6 +15,10 @@ require (
 	github.com/go-openapi/validate v0.20.3
 	github.com/golang/mock v1.6.0
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/openclarity/apiclarity/api v0.0.0
+	github.com/openclarity/apiclarity/plugins/api v0.0.0
+	github.com/openclarity/speculator v0.0.5-0.20220503044644-20658d3fa3c2
+	github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220503045200-32921254272a
 	github.com/rs/cors v1.8.0 // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.8.1
@@ -40,7 +40,6 @@ require (
 	github.com/Portshift/go-utils v0.0.0-20220421083203-89265d8a6487 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
-	github.com/openclarity/trace-sampling-manager/api v0.0.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -54,6 +53,7 @@ require (
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang-jwt/jwt/v4 v4.4.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
@@ -84,6 +84,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
+	github.com/openclarity/trace-sampling-manager/api v0.0.0 // indirect
 	github.com/pelletier/go-toml v1.9.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/russross/blackfriday/v2 v2.0.1 // indirect
@@ -127,7 +128,7 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 )
 
-replace github.com/openclarity/trace-sampling-manager/api v0.0.0 => github.com/openclarity/trace-sampling-manager/api v0.0.0-20220421083848-1303b9669327
+replace github.com/openclarity/trace-sampling-manager/api v0.0.0 => github.com/openclarity/trace-sampling-manager/api v0.0.0-20220503045200-32921254272a
 
 replace github.com/openclarity/apiclarity/api v0.0.0 => ./../api
 

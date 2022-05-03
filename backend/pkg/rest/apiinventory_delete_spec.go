@@ -22,10 +22,10 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/openclarity/speculator/pkg/speculator"
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
-	"github.com/openclarity/speculator/pkg/speculator"
 )
 
 func (s *Server) DeleteAPIInventoryAPIIDSpecsProvidedSpec(params operations.DeleteAPIInventoryAPIIDSpecsProvidedSpecParams) middleware.Responder {

@@ -24,13 +24,13 @@ import (
 	"github.com/golang/mock/gomock"
 	"gotest.tools/assert"
 
+	_spec "github.com/openclarity/speculator/pkg/spec"
+	_speculator "github.com/openclarity/speculator/pkg/speculator"
 	"github.com/openclarity/apiclarity/api/server/models"
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/k8smonitor"
 	"github.com/openclarity/apiclarity/backend/pkg/modules"
 	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
-	_spec "github.com/openclarity/speculator/pkg/spec"
-	_speculator "github.com/openclarity/speculator/pkg/speculator"
 )
 
 func Test_isNonAPI(t *testing.T) {
