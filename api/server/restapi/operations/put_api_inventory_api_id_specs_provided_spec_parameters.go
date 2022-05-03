@@ -17,7 +17,7 @@ import (
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 
-	"github.com/apiclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/api/server/models"
 )
 
 // NewPutAPIInventoryAPIIDSpecsProvidedSpecParams creates a new PutAPIInventoryAPIIDSpecsProvidedSpecParams object

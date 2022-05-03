@@ -35,13 +35,13 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/urfave/cli"
 
-	"github.com/apiclarity/apiclarity/plugins/api/client/client"
-	"github.com/apiclarity/apiclarity/plugins/api/client/client/operations"
-	"github.com/apiclarity/apiclarity/plugins/api/client/models"
-	"github.com/apiclarity/apiclarity/plugins/common"
-	"github.com/apiclarity/apiclarity/plugins/common/trace_sampling_client"
-	"github.com/apiclarity/apiclarity/plugins/taper/config"
-	"github.com/apiclarity/apiclarity/plugins/taper/monitor"
+	"github.com/openclarity/apiclarity/plugins/api/client/client"
+	"github.com/openclarity/apiclarity/plugins/api/client/client/operations"
+	"github.com/openclarity/apiclarity/plugins/api/client/models"
+	"github.com/openclarity/apiclarity/plugins/common"
+	"github.com/openclarity/apiclarity/plugins/common/trace_sampling_client"
+	"github.com/openclarity/apiclarity/plugins/taper/config"
+	"github.com/openclarity/apiclarity/plugins/taper/monitor"
 )
 
 type Agent struct {

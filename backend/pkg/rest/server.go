@@ -23,12 +23,12 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/apiclarity/apiclarity/api/server/restapi"
-	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
-	"github.com/apiclarity/apiclarity/backend/pkg/common"
-	"github.com/apiclarity/apiclarity/backend/pkg/database"
-	"github.com/apiclarity/apiclarity/backend/pkg/modules"
-	_speculator "github.com/apiclarity/speculator/pkg/speculator"
+	"github.com/openclarity/apiclarity/api/server/restapi"
+	"github.com/openclarity/apiclarity/api/server/restapi/operations"
+	"github.com/openclarity/apiclarity/backend/pkg/common"
+	"github.com/openclarity/apiclarity/backend/pkg/database"
+	"github.com/openclarity/apiclarity/backend/pkg/modules"
+	_speculator "github.com/openclarity/speculator/pkg/speculator"
 )
 
 type Server struct {

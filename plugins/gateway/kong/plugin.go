@@ -25,11 +25,11 @@ import (
 	"github.com/Kong/go-pdk/server"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/apiclarity/apiclarity/plugins/api/client/client"
-	"github.com/apiclarity/apiclarity/plugins/api/client/client/operations"
-	"github.com/apiclarity/apiclarity/plugins/api/client/models"
-	"github.com/apiclarity/apiclarity/plugins/common"
-	"github.com/apiclarity/apiclarity/plugins/common/trace_sampling_client"
+	"github.com/openclarity/apiclarity/plugins/api/client/client"
+	"github.com/openclarity/apiclarity/plugins/api/client/client/operations"
+	"github.com/openclarity/apiclarity/plugins/api/client/models"
+	"github.com/openclarity/apiclarity/plugins/common"
+	"github.com/openclarity/apiclarity/plugins/common/trace_sampling_client"
 )
 
 var (

@@ -19,7 +19,7 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/apiclarity/apiclarity/backend/pkg/modules/internal/bfla/k8straceannotator"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/k8straceannotator"
 )
 
 type Operation struct {

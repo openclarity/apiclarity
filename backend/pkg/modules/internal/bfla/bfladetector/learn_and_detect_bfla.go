@@ -26,11 +26,11 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/apiclarity/apiclarity/backend/pkg/database"
-	"github.com/apiclarity/apiclarity/backend/pkg/modules/internal/bfla/k8straceannotator"
-	"github.com/apiclarity/apiclarity/backend/pkg/modules/internal/bfla/recovery"
-	"github.com/apiclarity/apiclarity/backend/pkg/modules/internal/bfla/restapi"
-	"github.com/apiclarity/apiclarity/backend/pkg/modules/internal/core"
+	"github.com/openclarity/apiclarity/backend/pkg/database"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/k8straceannotator"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/recovery"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/restapi"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 )
 
 const (

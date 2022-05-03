@@ -27,10 +27,10 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"github.com/apiclarity/apiclarity/api/server/models"
-	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
-	"github.com/apiclarity/apiclarity/backend/pkg/utils"
-	speculatorspec "github.com/apiclarity/speculator/pkg/spec"
+	"github.com/openclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/api/server/restapi/operations"
+	"github.com/openclarity/apiclarity/backend/pkg/utils"
+	speculatorspec "github.com/openclarity/speculator/pkg/spec"
 )
 
 const (
@@ -105,7 +105,7 @@ type APIEvent struct {
 	Annotations []*APIEventAnnotation `gorm:"foreignKey:EventID;references:ID"`
 }
 
-//go:generate $GOPATH/bin/mockgen -destination=./mock_apievent.go -package=database github.com/apiclarity/apiclarity/backend/pkg/database APIEventsTable
+//go:generate $GOPATH/bin/mockgen -destination=./mock_apievent.go -package=database github.com/openclarity/apiclarity/backend/pkg/database APIEventsTable
 type APIEventsTable interface {
 	GetAPIEventsWithAnnotations(ctx context.Context, filters GetAPIEventsQuery) ([]*APIEvent, error)
 	GetAPIEventsAndTotal(params operations.GetAPIEventsParams) ([]APIEvent, int64, error)

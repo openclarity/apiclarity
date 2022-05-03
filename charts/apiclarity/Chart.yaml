@@ -4,9 +4,9 @@ appVersion: latest
 description: Charts for APIClarity deployment. Reconstruct OpenAPI Specifications from real-time workload traffic seamlessly.
 version: latest
 home: https://apiclarity.io/
-icon: https://github.com/apiclarity/apiclarity/raw/master/API_clarity.svg
+icon: https://github.com/openclarity/apiclarity/raw/master/API_clarity.svg
 sources:
-  - https://github.com/apiclarity/apiclarity
+  - https://github.com/openclarity/apiclarity
 maintainers:
   - name: API Clarity
     url: https://apiclarity.io

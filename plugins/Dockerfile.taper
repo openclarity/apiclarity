@@ -18,7 +18,7 @@ RUN go mod download
 ARG VERSION
 COPY taper .
 RUN go build -ldflags="-s -w \
-     -X 'github.com/apiclarity/apiclarity/plugins/taper/version.Version=${VERSION}'" -o agent .
+     -X 'github.com/openclarity/apiclarity/plugins/taper/version.Version=${VERSION}'" -o agent .
 
 WORKDIR /plugins/taper/extensions/http
 

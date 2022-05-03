@@ -107,7 +107,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          tags: ghcr.io/apiclarity/apiclarity:${{ github.event.inputs.version }}
+          tags: ghcr.io/openclarity/apiclarity:${{ github.event.inputs.version }}
           file: Dockerfile
           push: true
           cache-from: type=local,src=/tmp/.buildx-cache
@@ -121,7 +121,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: plugins
-          tags: ghcr.io/apiclarity/kong-plugin:${{ github.event.inputs.version }}
+          tags: ghcr.io/openclarity/kong-plugin:${{ github.event.inputs.version }}
           file: plugins/Dockerfile.kong
           push: true
           cache-from: type=local,src=/tmp/.buildx-cache
@@ -131,14 +131,14 @@ jobs:
         id: tyk-dep
         run: |
           cd plugins/gateway/tyk/v3.2.2
-          go mod edit -replace github.com/apiclarity/apiclarity/plugins/api@v0.0.0=./../api
-          go mod edit -replace github.com/apiclarity/apiclarity/plugins/common@v0.0.0=./../common
+          go mod edit -replace github.com/openclarity/apiclarity/plugins/api@v0.0.0=./../api
+          go mod edit -replace github.com/openclarity/apiclarity/plugins/common@v0.0.0=./../common
 
       - name: Build and Push Tyk plugin
         uses: docker/build-push-action@v2
         with:
           context: plugins
-          tags: ghcr.io/apiclarity/tyk-plugin-v3.2.2:${{ github.event.inputs.version }}
+          tags: ghcr.io/openclarity/tyk-plugin-v3.2.2:${{ github.event.inputs.version }}
           file: plugins/Dockerfile.tyk.v3.2.2
           push: true
           cache-from: type=local,src=/tmp/.buildx-cache
@@ -152,7 +152,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: plugins
-          tags: ghcr.io/apiclarity/passive-taper:${{ github.event.inputs.version }}
+          tags: ghcr.io/openclarity/passive-taper:${{ github.event.inputs.version }}
           file: plugins/Dockerfile.taper
           push: true
           cache-from: type=local,src=/tmp/.buildx-cache

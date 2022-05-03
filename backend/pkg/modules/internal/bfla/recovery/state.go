@@ -28,7 +28,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
-	"github.com/apiclarity/apiclarity/backend/pkg/modules/internal/core"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 )
 
 type SetState func(state interface{})

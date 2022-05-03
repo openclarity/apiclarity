@@ -22,7 +22,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"gorm.io/gorm"
 
-	"github.com/apiclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/api/server/models"
 )
 
 func FieldInTable(table, field string) string {

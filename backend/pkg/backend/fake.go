@@ -29,8 +29,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/apiclarity/apiclarity/api/server/models"
-	models2 "github.com/apiclarity/apiclarity/plugins/api/server/models"
+	"github.com/openclarity/apiclarity/api/server/models"
+	models2 "github.com/openclarity/apiclarity/plugins/api/server/models"
 )
 
 func (b *Backend) startSendingFakeTraces() {

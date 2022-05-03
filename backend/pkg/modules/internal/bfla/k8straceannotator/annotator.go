@@ -23,7 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	pluginsmodels "github.com/apiclarity/apiclarity/plugins/api/server/models"
+	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
 )
 
 type K8sObjectRef struct {

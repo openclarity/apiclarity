@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-openapi/runtime"
 
-	"github.com/apiclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/api/server/models"
 )
 
 // GetAPIEventsEventIDReconstructedSpecDiffOKCode is the HTTP code returned for type GetAPIEventsEventIDReconstructedSpecDiffOK

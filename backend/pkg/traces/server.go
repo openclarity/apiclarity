@@ -24,10 +24,10 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/apiclarity/apiclarity/backend/pkg/common"
-	"github.com/apiclarity/apiclarity/plugins/api/server/models"
-	"github.com/apiclarity/apiclarity/plugins/api/server/restapi"
-	"github.com/apiclarity/apiclarity/plugins/api/server/restapi/operations"
+	"github.com/openclarity/apiclarity/backend/pkg/common"
+	"github.com/openclarity/apiclarity/plugins/api/server/models"
+	"github.com/openclarity/apiclarity/plugins/api/server/restapi"
+	"github.com/openclarity/apiclarity/plugins/api/server/restapi/operations"
 )
 
 type HandleTraceFunc func(ctx context.Context, trace *models.Telemetry) error

@@ -20,14 +20,14 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/apiclarity/apiclarity/backend/pkg/database"
+	"github.com/openclarity/apiclarity/backend/pkg/database"
 
 	// Enables the bfla module.
-	_ "github.com/apiclarity/apiclarity/backend/pkg/modules/internal/bfla"
-	"github.com/apiclarity/apiclarity/backend/pkg/modules/internal/core"
+	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 
 	// Enables the demo module.
-	_ "github.com/apiclarity/apiclarity/backend/pkg/modules/internal/demo"
+	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/demo"
 )
 
 type (

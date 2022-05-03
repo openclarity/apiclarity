@@ -16,7 +16,7 @@ import (
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 
-	"github.com/apiclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/api/server/models"
 )
 
 // GetAPIInventoryHandlerFunc turns a function with the right signature into a get API inventory handler

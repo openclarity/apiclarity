@@ -18,7 +18,7 @@ package main
 import (
 	"testing"
 
-	"github.com/apiclarity/apiclarity/plugins/common/trace_sampling_client"
+	"github.com/openclarity/apiclarity/plugins/common/trace_sampling_client"
 )
 
 func TestAgent_shouldTrace(t *testing.T) {

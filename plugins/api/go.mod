@@ -1,4 +1,4 @@
-module github.com/apiclarity/apiclarity/plugins/api
+module github.com/openclarity/apiclarity/plugins/api
 
 go 1.16
 

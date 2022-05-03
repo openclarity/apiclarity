@@ -20,8 +20,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/apiclarity/apiclarity/api/server/models"
-	"github.com/apiclarity/apiclarity/backend/pkg/database"
+	"github.com/openclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/backend/pkg/database"
 )
 
 func ResolvePath(apiInfo *database.APIInfo, event *database.APIEvent) (urlpath string) {

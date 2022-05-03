@@ -35,7 +35,7 @@ import (
 	"k8s.io/client-go/restmapper"
 	"k8s.io/client-go/tools/cache"
 
-	pluginsmodels "github.com/apiclarity/apiclarity/plugins/api/server/models"
+	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
 )
 
 func NewK8SAnnotatedK8STelemetry(trace *pluginsmodels.Telemetry, src, dest runtime.Object) *K8SAnnotatedK8STelemetry {

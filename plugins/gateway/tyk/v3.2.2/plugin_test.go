@@ -28,8 +28,8 @@ import (
 	"github.com/TykTechnologies/tyk/ctx"
 	"github.com/TykTechnologies/tyk/user"
 
-	"github.com/apiclarity/apiclarity/plugins/api/client/models"
-	"github.com/apiclarity/apiclarity/plugins/common"
+	"github.com/openclarity/apiclarity/plugins/api/client/models"
+	"github.com/openclarity/apiclarity/plugins/common"
 )
 
 func Test_getHostAndPortFromTargetURL(t *testing.T) {

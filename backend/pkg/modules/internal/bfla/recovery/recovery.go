@@ -21,8 +21,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/apiclarity/apiclarity/backend/pkg/database"
-	"github.com/apiclarity/apiclarity/backend/pkg/modules/internal/core"
+	"github.com/openclarity/apiclarity/backend/pkg/database"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 )
 
 const (

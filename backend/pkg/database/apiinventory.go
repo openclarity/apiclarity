@@ -21,8 +21,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
-	"github.com/apiclarity/apiclarity/api/server/models"
-	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
+	"github.com/openclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/api/server/restapi/operations"
 )
 
 const (
@@ -58,7 +58,7 @@ type APIInfo struct {
 	Annotations []*APIInfoAnnotation `gorm:"foreignKey:APIID;references:ID"`
 }
 
-//go:generate $GOPATH/bin/mockgen -destination=./mock_apiinventory.go -package=database github.com/apiclarity/apiclarity/backend/pkg/database APIInventoryTable
+//go:generate $GOPATH/bin/mockgen -destination=./mock_apiinventory.go -package=database github.com/openclarity/apiclarity/backend/pkg/database APIInventoryTable
 type APIInventoryTable interface {
 	GetAPIInventoryAndTotal(params operations.GetAPIInventoryParams) ([]APIInfo, int64, error)
 	GetAPISpecs(apiID uint32) (*APIInfo, error)

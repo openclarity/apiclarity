@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/validate"
 
-	"github.com/apiclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/api/server/models"
 )
 
 // NewPostAPIInventoryParams creates a new PostAPIInventoryParams object

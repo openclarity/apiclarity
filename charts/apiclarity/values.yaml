@@ -11,7 +11,7 @@ global:
   docker:
     ## Configure registry
     ##
-    registry: "ghcr.io/apiclarity"
+    registry: "ghcr.io/openclarity"
 
   ## Whether or not persistence is enabled
   ##

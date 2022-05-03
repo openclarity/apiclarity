@@ -25,8 +25,8 @@ import (
 	"github.com/go-openapi/strfmt"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/apiclarity/apiclarity/api/server/models"
-	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
+	"github.com/openclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/api/server/restapi/operations"
 )
 
 const defaultTagName = "default-tag"

@@ -20,7 +20,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/apiclarity/apiclarity/backend/pkg/modules/internal/core"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 )
 
 func ResyncedModule(wrappedModuleFactory core.ModuleFactory) core.ModuleFactory {

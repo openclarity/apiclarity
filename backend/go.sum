@@ -60,12 +60,6 @@ github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdko
 github.com/agnivade/levenshtein v1.0.1/go.mod h1:CURSv5d9Uaml+FovSIICkLbAUZ9S4RqaHDIsdSBg7lM=
 github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883/go.mod h1:rCTlJbsFo29Kk6CurOXKm700vrz8f0KW0JNfpkRJY/8=
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
-github.com/apiclarity/speculator v0.0.5-0.20220413120542-ccc4675eda2e h1:sWhtvWCtsgPh8sninY21N5yoZjWSIdkSzI8RU3PtaHY=
-github.com/apiclarity/speculator v0.0.5-0.20220413120542-ccc4675eda2e/go.mod h1:2SGsxyqtg08O7FX0zdzY3ixvm/kCWU/xkY52yFEXIkY=
-github.com/apiclarity/trace-sampling-manager/api v0.0.0-20220421083848-1303b9669327 h1:E3i9tNE88rxUhfUTcI73CKzfUD32jJhNVWTO5h9ESew=
-github.com/apiclarity/trace-sampling-manager/api v0.0.0-20220421083848-1303b9669327/go.mod h1:Gl9aK8ODx0tnds2GjNIWJM+38Mwjn4g9Vx4SdKZIG7I=
-github.com/apiclarity/trace-sampling-manager/manager v0.0.0-20220421083848-1303b9669327 h1:OSe0FG5DFdMJad2OAHUQ6zQVzT3dxXnxq9SLFp7A0P0=
-github.com/apiclarity/trace-sampling-manager/manager v0.0.0-20220421083848-1303b9669327/go.mod h1:Z4xwq0NikJe043yv71kn7+uNt2fffObYocQ94rBXRrc=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
@@ -594,6 +588,12 @@ github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7J
 github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
 github.com/onsi/gomega v1.14.0 h1:ep6kpPVwmr/nTbklSx2nrLNSIO62DoYAhnPNIMhK8gI=
 github.com/onsi/gomega v1.14.0/go.mod h1:cIuvLEne0aoVhAgh/O6ac0Op8WWw9H6eYCriF+tEHG0=
+github.com/openclarity/speculator v0.0.5 h1:tjazqsVGWZ0rrfx4bS/kpcMehu4btHRcbSPaOJKdqwo=
+github.com/openclarity/speculator v0.0.5/go.mod h1:xcPdaFVzJ09ibrZGzjq29rZkstjsOdhgf4E9ydBfG8k=
+github.com/openclarity/trace-sampling-manager/api v0.0.0-20220503091058-2730f5ebad2c h1:05Yo4yesB2dOmvUcCfq90BFD1lvqhX1WNUnlVjVaY54=
+github.com/openclarity/trace-sampling-manager/api v0.0.0-20220503091058-2730f5ebad2c/go.mod h1:yw7gPOl7tMaCSoJA+iQ4dTqQEFO19za94A0QKGb9eZM=
+github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220503091058-2730f5ebad2c h1:TpAnMFRtSCX/w5I5GS3Y/1HfPSROju2qtcbaQ/+x8qs=
+github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220503091058-2730f5ebad2c/go.mod h1:uCFl1Z5wNl6ms+0TBV6JWbL/YstmsJC78Y1aXGH3KMI=
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pborman/uuid v1.2.0/go.mod h1:X/NO0urCmaxf9VXbdlT7C2Yzkj2IKimNn4k+gtPdI/k=

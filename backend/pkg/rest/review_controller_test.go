@@ -23,8 +23,8 @@ import (
 
 	oapispec "github.com/go-openapi/spec"
 
-	"github.com/apiclarity/apiclarity/api/server/models"
-	speculatorspec "github.com/apiclarity/speculator/pkg/spec"
+	"github.com/openclarity/apiclarity/api/server/models"
+	speculatorspec "github.com/openclarity/speculator/pkg/spec"
 )
 
 func Test_createModelsReviewPathItem(t *testing.T) {

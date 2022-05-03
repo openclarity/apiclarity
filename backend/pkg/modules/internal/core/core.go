@@ -24,7 +24,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/apiclarity/apiclarity/backend/pkg/config"
+	"github.com/openclarity/apiclarity/backend/pkg/config"
 )
 
 const BaseHTTPPath = "/api/modules"

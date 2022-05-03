@@ -21,8 +21,8 @@ import (
 
 	"github.com/go-openapi/strfmt"
 
-	"github.com/apiclarity/apiclarity/api/server/models"
-	"github.com/apiclarity/apiclarity/backend/pkg/database"
+	"github.com/openclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/backend/pkg/database"
 )
 
 func Test_getModelsSpecDiffTime(t *testing.T) {

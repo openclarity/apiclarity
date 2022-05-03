@@ -21,8 +21,8 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/apiclarity/apiclarity/api/server/models"
-	"github.com/apiclarity/apiclarity/api/server/restapi/operations"
+	"github.com/openclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/api/server/restapi/operations"
 )
 
 func (s *Server) GetAPIUsageHitCount(params operations.GetAPIUsageHitCountParams) middleware.Responder {
