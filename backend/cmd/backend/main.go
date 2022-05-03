@@ -23,11 +23,11 @@ import (
 	"github.com/spf13/viper"
 	"github.com/urfave/cli"
 
-	log_utils "github.com/openclarity/speculator/pkg/utils/log"
 	"github.com/openclarity/apiclarity/backend/pkg/backend"
 	"github.com/openclarity/apiclarity/backend/pkg/config"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/version"
+	log_utils "github.com/openclarity/speculator/pkg/utils/log"
 )
 
 func run(c *cli.Context) {

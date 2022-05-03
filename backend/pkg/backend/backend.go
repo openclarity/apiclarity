@@ -35,10 +35,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/yaml"
 
-	_spec "github.com/openclarity/speculator/pkg/spec"
-	_speculator "github.com/openclarity/speculator/pkg/speculator"
-	_mimeutils "github.com/openclarity/speculator/pkg/utils"
-	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
 	"github.com/openclarity/apiclarity/api/server/models"
 	_config "github.com/openclarity/apiclarity/backend/pkg/config"
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
@@ -48,6 +44,10 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/rest"
 	"github.com/openclarity/apiclarity/backend/pkg/traces"
 	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
+	_spec "github.com/openclarity/speculator/pkg/spec"
+	_speculator "github.com/openclarity/speculator/pkg/speculator"
+	_mimeutils "github.com/openclarity/speculator/pkg/utils"
+	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
 )
 
 type Backend struct {

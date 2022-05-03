@@ -27,10 +27,10 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	speculatorspec "github.com/openclarity/speculator/pkg/spec"
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
 	"github.com/openclarity/apiclarity/backend/pkg/utils"
+	speculatorspec "github.com/openclarity/speculator/pkg/spec"
 )
 
 const (

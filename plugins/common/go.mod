@@ -3,10 +3,10 @@ module github.com/openclarity/apiclarity/plugins/common
 go 1.17
 
 require (
-	github.com/openclarity/apiclarity/plugins/api v0.0.0
-	github.com/openclarity/trace-sampling-manager/api v0.0.0-20220421083848-1303b9669327
 	github.com/go-openapi/runtime v0.21.0
 	github.com/go-openapi/strfmt v0.21.0
+	github.com/openclarity/apiclarity/plugins/api v0.0.0
+	github.com/openclarity/trace-sampling-manager/api v0.0.0-20220503045200-32921254272a
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.4.2
 	gotest.tools v2.2.0+incompatible
