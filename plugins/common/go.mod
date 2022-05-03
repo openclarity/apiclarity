@@ -6,7 +6,7 @@ require (
 	github.com/go-openapi/runtime v0.21.0
 	github.com/go-openapi/strfmt v0.21.0
 	github.com/openclarity/apiclarity/plugins/api v0.0.0
-	github.com/openclarity/trace-sampling-manager/api v0.0.0-20220503045200-32921254272a
+	github.com/openclarity/trace-sampling-manager/api v0.0.0-20220503091058-2730f5ebad2c
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.4.2
 	gotest.tools v2.2.0+incompatible

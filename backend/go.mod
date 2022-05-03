@@ -17,8 +17,8 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/openclarity/apiclarity/api v0.0.0
 	github.com/openclarity/apiclarity/plugins/api v0.0.0
-	github.com/openclarity/speculator v0.0.5-0.20220503044644-20658d3fa3c2
-	github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220503045200-32921254272a
+	github.com/openclarity/speculator v0.0.5
+	github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220503091058-2730f5ebad2c
 	github.com/rs/cors v1.8.0 // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.8.1
@@ -128,7 +128,7 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 )
 
-replace github.com/openclarity/trace-sampling-manager/api v0.0.0 => github.com/openclarity/trace-sampling-manager/api v0.0.0-20220503045200-32921254272a
+replace github.com/openclarity/trace-sampling-manager/api v0.0.0 => github.com/openclarity/trace-sampling-manager/api v0.0.0-20220503091058-2730f5ebad2c
 
 replace github.com/openclarity/apiclarity/api v0.0.0 => ./../api
 
