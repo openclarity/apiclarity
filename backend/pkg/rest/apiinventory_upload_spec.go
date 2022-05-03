@@ -93,6 +93,10 @@ func (s *Server) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPII
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
 		log.Errorf("Failed to put provided API spec. %v", err)
+		if s.unsetProvidedSpec(params.APIID) != nil {
+			// We cannot do much more here while trying to gracefully recovery from a store to DB error.
+			log.Errorf("Failed to remove provided spec from the system: %v", err)
+		}
 		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
 	}
 
@@ -123,6 +127,19 @@ func (s *Server) loadProvidedSpec(apiID uint32, jsonSpec []byte, pathToPathID ma
 
 	if err := s.speculator.LoadProvidedSpec(specKey, jsonSpec, pathToPathID); err != nil {
 		return fmt.Errorf("failed to load provided spec: %v", err)
+	}
+
+	return nil
+}
+
+func (s *Server) unsetProvidedSpec(apiID uint32) error {
+	specKey, err := s.getSpecKey(apiID)
+	if err != nil {
+		return fmt.Errorf("failed to get spec key: %v", err)
+	}
+
+	if err := s.speculator.UnsetProvidedSpec(specKey); err != nil {
+		return fmt.Errorf("failed to unset provided spec: %w", err)
 	}
 
 	return nil
