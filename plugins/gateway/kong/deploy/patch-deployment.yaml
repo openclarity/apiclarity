@@ -23,7 +23,7 @@ spec:
         - cp
         - /kong-plugin
         - /plugin/.
-        image: ghcr.io/openclarity/kong-plugin:latest
+        image: ghcr.io/openclarity/kong-plugin:v0.11.0
         imagePullPolicy: Always
         name: apiclarity-kong-plugin-injector
         volumeMounts:
