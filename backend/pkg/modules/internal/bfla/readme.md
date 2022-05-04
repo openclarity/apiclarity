@@ -13,8 +13,9 @@ The process consists of two phases
 The learning phase begins as soon as a user uploads or reconstructs a spec for a given API.
 by default the learning lasts for 100 API calls (for an API), the learning can be stopped reset or prolonged for a longer period.
 
-(Orders) -> POST /v1/checkout -> (Payment): This call is detected during the learning phase
 ![img.png](../../assets/bfla/images/img_1.png)
+
+**(Orders) -> POST /v1/checkout -> (Payment)**: This call is registered during the learning phase.
 
 ## Detection
 Once the learning phase has ended, the detection phase begins. 
@@ -22,9 +23,11 @@ During the detection phase all the API calls that do not comply with the authori
 If the call was rejected by the api the warning will have a lower severity, however if the API accepted the unexpected call and returned a 2xx status code it will have a higher severity (check fig1 and fig2).
 
 ![img_2.png](../../assets/bfla/images/img_2.png)
+
 **(Booking) -> POST /v1/checkout (2xx) -> (Payment)**: This call was not registered in the authorization model during the learning phase so the BFLA module will raise a warning. And since the response has a 2xx status code the warning has a high severity.
 
 ![img_3.png](../../assets/bfla/images/img_3.png)
+
 **(Booking) -> POST /v1/checkout (4xx) -> (Payment)**: This call was not registered in the authorization model during the learning phase so the BFLA module will raise a warning. The warning has a lower severity because the API rejected this call.
 
 ## Module interaction
