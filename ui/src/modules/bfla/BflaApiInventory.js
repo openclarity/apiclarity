@@ -14,6 +14,9 @@ import collectionProgress from './collection.svg';
 
 import './bfla.scss';
 
+const DATA_COLLECTION_IN_PROGRESS_TITLE = 'Data collection in progress...';
+const CLIENT_TYPE_EXTERNAL = 'EXTERNAL';
+
 const NotSelected = ({title}) => (
     <div className="not-selected-wrapper">
         <div className="not-selected-title">{title}</div>
@@ -34,7 +37,7 @@ const MethodTitle = ({method, path}) => (
 
 const SelectedAuthClientDisplay = ({client, onBack, authorizeClient}) => {
     const {external, k8s_object, end_users} = client || {};
-    const name = external ? "EXTERNAL" : k8s_object.name || {};
+    const name = external ? CLIENT_TYPE_EXTERNAL : k8s_object.name || {};
     const endUsers = end_users || [];
 
     const columns = [
@@ -61,7 +64,7 @@ const SelectedAuthClientDisplay = ({client, onBack, authorizeClient}) => {
             </div>
                 <div className="authorized-clients">
                     <Table
-                        noResultsTitle={"this event"}
+                        noResultsTitle="this event"
                         columns={columns}
                         data={{items: endUsers, total: endUsers.length}}
                         withPagination={false}
@@ -107,7 +110,7 @@ const SelectedPathDisplay = ({data, url, onBack, refresh }) => {
                             <ListDisplay
                                 items={authorizedClients}
                                 itemDisplay={({ k8s_object, external }) => <div className="client-list-item-title">{
-                                    external? "EXTERNAL" :k8s_object.name
+                                    external? CLIENT_TYPE_EXTERNAL :k8s_object.name
                                 }</div>}
                                 selectedId={!!selectedAuthClient ? selectedAuthClient.id : null}
                                 onSelect={(client) => setSelectedAuthClient(client)}
@@ -118,8 +121,8 @@ const SelectedPathDisplay = ({data, url, onBack, refresh }) => {
                         <div className="violating-clients">
                             <div className="clients-list-title">List of violating clients</div>
                             {violatingClients.map((c) => {
-                                return <div className="client-list-item-wrapper" key={c.external ? "EXTERNAL": c.k8s_object.name}>
-                                    <div className="client-list-item-title">{c.external ? "EXTERNAL": c.k8s_object.name}</div>
+                                return <div className="client-list-item-wrapper" key={c.external ? CLIENT_TYPE_EXTERNAL: c.k8s_object.name}>
+                                    <div className="client-list-item-title">{c.external ? CLIENT_TYPE_EXTERNAL: c.k8s_object.name}</div>
                                     <Button className="button-add" onClick={() => authorizeClient(c)}>Authorize</Button>
                                 </div>;
                             })}
@@ -144,7 +147,7 @@ const SelectedPathDisplay = ({data, url, onBack, refresh }) => {
 const DataCollectionInProgress = ({title}) => (
         <div className="in-progress-wrapper">
             <div className="in-progress-title">{title}</div>
-            <img src={collectionProgress} alt="data collection in progress" />
+            <img src={collectionProgress} alt={DATA_COLLECTION_IN_PROGRESS_TITLE} />
         </div>
 );
 
@@ -177,23 +180,21 @@ const BflaTab = ({data, url, loading, refresh}) => {
 
 };
 
-const collection_in_progress = {
+const EMPTY_CLIENT_ITEM = {
+    authorized: true,
+    k8s_object: {
+        name: 'TBD'
+    },
+    method: '',
+    path: ''
+};
+
+const COLLECTION_IN_PROGRESS = {
     audience: [
+        EMPTY_CLIENT_ITEM,
         {
-            authorized: true,
-            k8s_object: {
-                name: 'TBD'
-            },
-            method: '',
-            path: ''
-        },
-        {
-            authorized: false,
-            k8s_object: {
-                name: 'TBD'
-            },
-            method: '',
-            path: ''
+            ...EMPTY_CLIENT_ITEM,
+            ...{ authorized: false }
         }
     ]
 };
@@ -202,17 +203,17 @@ const NoSpec = () => {
     return (
         <NotSelected title="Upload a spec or reconstruct one in order to enable BFLA detection for this API."/>
     );
-}
+};
 
 const Learning = () => {
     return (
         <div className="spec-display-wrapper">
             <div className="select-pane">
-                <DataCollectionInProgress title="Data collection in progress..." />
+                <DataCollectionInProgress title={DATA_COLLECTION_IN_PROGRESS_TITLE} />
             </div>
             <div className="display-pane">
                 <div className="in-progress-overlay">
-                    <SelectedPathDisplay data={collection_in_progress} />
+                    <SelectedPathDisplay data={COLLECTION_IN_PROGRESS} />
                 </div>
             </div>
         </div>

@@ -4,7 +4,7 @@ import Loader from 'components/Loader';
 import Button from 'components/Button';
 import TitleValueDisplay, { TitleValueDisplayRow } from 'components/TitleValueDisplay';
 import BflaStatusIcon, {BFLA_STATUS_TYPES_MAP} from './BflaStatusIcon';
-import BflaModal from './BflaModal';
+import BflaModal, {MODAL_ACTION_TYPE} from './BflaModal';
 import MODULE_TYPES from '../MODULE_TYPES.js';
 import bflaApiInventory from './BflaApiInventory';
 
@@ -51,7 +51,7 @@ const BflaPlugin = (props) => {
             {showBflaModal &&
                 <BflaModal
                     eventId={eventId}
-                    type={bflaStatus === BFLA_STATUS_TYPES_MAP.LEGITIMATE.value ? 'deny' : 'approve' }
+                    type={bflaStatus === BFLA_STATUS_TYPES_MAP.LEGITIMATE.value ? MODAL_ACTION_TYPE.DENY : MODAL_ACTION_TYPE.APPROVE}
                     onClose={() => setShowBflaModal(false)}
                     onSuccess={() => updateBflaEvent()}/>
             }

@@ -1,10 +1,6 @@
-// Import your modules here
-// import demoModule from './demoModule';
 import MODULE_TYPES from './MODULE_TYPES';
-
 import { bfla, bflaApiInventory } from './bfla';
 
-// Add your module to the modules array: const modules = [module1, module2, ...];
 const modules = [
     bfla, bflaApiInventory
 ];
