@@ -13,13 +13,13 @@ require (
 	github.com/go-openapi/spec v0.20.4
 	github.com/go-openapi/strfmt v0.21.0
 	github.com/go-openapi/validate v0.20.3
-	github.com/golang-jwt/jwt/v4 v4.4.1
 	github.com/golang/mock v1.6.0
-	github.com/google/go-cmp v0.5.5
+	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/openclarity/apiclarity/api v0.0.0
 	github.com/openclarity/apiclarity/plugins/api v0.0.0
 	github.com/openclarity/speculator v0.0.5
 	github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220503091058-2730f5ebad2c
+	github.com/rs/cors v1.8.0 // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.8.1
@@ -53,7 +53,9 @@ require (
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang-jwt/jwt/v4 v4.4.1
 	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/google/go-cmp v0.5.5
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/uuid v1.2.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
@@ -75,7 +77,6 @@ require (
 	github.com/labstack/echo/v4 v4.6.3 // indirect
 	github.com/labstack/gommon v0.3.1 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
-	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.11 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-sqlite3 v1.14.5 // indirect
@@ -86,7 +87,6 @@ require (
 	github.com/openclarity/trace-sampling-manager/api v0.0.0 // indirect
 	github.com/pelletier/go-toml v1.9.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/rs/cors v1.8.0 // indirect
 	github.com/russross/blackfriday/v2 v2.0.1 // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
