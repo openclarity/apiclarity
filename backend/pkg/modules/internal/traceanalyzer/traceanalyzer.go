@@ -30,7 +30,6 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/config"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
-
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/guessableid"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/nlid"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/sensitive"
@@ -87,7 +86,7 @@ type traceAnalyzer struct {
 
 	ignoreFindings map[string]bool
 
-	guessableId   *guessableid.GuessableAnalyzer
+	guessableID   *guessableid.GuessableAnalyzer
 	nlid          *nlid.NLID
 	weakBasicAuth *weakbasicauth.WeakBasicAuth
 	weakJWT       *weakjwt.WeakJWT
@@ -125,7 +124,7 @@ func newTraceAnalyzer(ctx context.Context, accessor core.BackendAccessor) (core.
 		return nil, fmt.Errorf("unable to read list of sensitive keywords: %w", err)
 	}
 
-	p.guessableId = guessableid.NewGuessableAnalyzer(guessableid.MaxParamHistory)
+	p.guessableID = guessableid.NewGuessableAnalyzer(guessableid.MaxParamHistory)
 	p.nlid = nlid.NewNLID(nlid.NLIDRingBufferSize)
 	p.weakBasicAuth = weakbasicauth.NewWeakBasicAuth(passwordList)
 	p.weakJWT = weakjwt.NewWeakJWT(weakKeyList, sensitiveKeywords)
@@ -205,17 +204,17 @@ func (p *traceAnalyzer) EventNotify(ctx context.Context, e *core.Event) {
 	eventAnns := []core.Annotation{}
 	apiAnns := []core.Annotation{}
 
-	wbaEventAnns, wbaApiAnns := p.weakBasicAuth.Analyze(trace)
+	wbaEventAnns, wbaAPIAnns := p.weakBasicAuth.Analyze(trace)
 	eventAnns = append(eventAnns, wbaEventAnns...)
-	apiAnns = append(apiAnns, wbaApiAnns...)
+	apiAnns = append(apiAnns, wbaAPIAnns...)
 
-	wjtEventAnns, wjtApiAnns := p.weakJWT.Analyze(trace)
+	wjtEventAnns, wjtAPIAnns := p.weakJWT.Analyze(trace)
 	eventAnns = append(eventAnns, wjtEventAnns...)
-	apiAnns = append(apiAnns, wjtApiAnns...)
+	apiAnns = append(apiAnns, wjtAPIAnns...)
 
-	sensEventAnns, sensApiAnns := p.sensitive.Analyze(trace)
+	sensEventAnns, sensAPIAnns := p.sensitive.Analyze(trace)
 	eventAnns = append(eventAnns, sensEventAnns...)
-	apiAnns = append(apiAnns, sensApiAnns...)
+	apiAnns = append(apiAnns, sensAPIAnns...)
 
 	// If the status code starts with 2, it means that the request has been
 	// accepted, hence, the parameters were accepted as well. So, we can look at
@@ -230,7 +229,7 @@ func (p *traceAnalyzer) EventNotify(ctx context.Context, e *core.Event) {
 
 		// Check for guessable IDs
 		for pName, pValue := range pathParams {
-			if guessable, reason := p.guessableId.IsGuessableParam("", pName, pValue); guessable {
+			if guessable, reason := p.guessableID.IsGuessableParam("", pName, pValue); guessable {
 				f := ParameterFinding{Location: specPath, Method: string(event.Method), Name: pName, Value: pValue, Reason: reason}
 				bytes, err := json.Marshal(f)
 				if err == nil {
@@ -262,21 +261,19 @@ func (p *traceAnalyzer) EventNotify(ctx context.Context, e *core.Event) {
 		}
 	}
 
-	filteredApiAnns := []core.Annotation{}
+	filteredAPIAnns := []core.Annotation{}
 	for _, a := range apiAnns {
 		if !p.ignoreFindings[a.Name] {
-			filteredApiAnns = append(filteredApiAnns, a)
+			filteredAPIAnns = append(filteredAPIAnns, a)
 		}
 	}
-	if len(filteredApiAnns) > 0 {
-		if err := p.accessor.StoreAPIInfoAnnotations(ctx, p.Name(), event.APIInfoID, filteredApiAnns...); err != nil {
+	if len(filteredAPIAnns) > 0 {
+		if err := p.accessor.StoreAPIInfoAnnotations(ctx, p.Name(), event.APIInfoID, filteredAPIAnns...); err != nil {
 			log.Error(err)
 		}
 	}
 
 	p.setAlertSeverity(ctx, event.ID, filteredEventAnns)
-
-	return
 }
 
 func (p *traceAnalyzer) EventAnnotationNotify(modName string, eventID uint, ann core.Annotation) error {
@@ -291,16 +288,19 @@ func (p *traceAnalyzer) setAlertSeverity(ctx context.Context, eventID uint, anns
 	for _, a := range anns {
 		f := getEventDescription(a)
 		if f.Alert != nil {
-			p.accessor.CreateAPIEventAnnotations(ctx, p.Name(), eventID, *f.Alert) // TODO handle error
-			break
+			if err := p.accessor.CreateAPIEventAnnotations(ctx, p.Name(), eventID, *f.Alert); err != nil {
+				log.Error(err)
+			} else {
+				break
+			}
 		}
 	}
 }
 
-func getAPISpecsInfo(accessor core.BackendAccessor, ctx context.Context, apiID uint) (*models.OpenAPISpecs, error) {
+func getAPISpecsInfo(ctx context.Context, accessor core.BackendAccessor, apiID uint) (*models.OpenAPISpecs, error) {
 	apiInfo, err := accessor.GetAPIInfo(ctx, apiID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to get specification API '%d' for %w", apiID, err)
 	}
 
 	specsInfo := &models.OpenAPISpecs{}
@@ -325,24 +325,23 @@ func getAPISpecsInfo(accessor core.BackendAccessor, ctx context.Context, apiID u
 
 // XXX There are too many parameters to this function. It needs refactoring.
 func (p *traceAnalyzer) getParams(ctx context.Context, event *database.APIEvent) (specPath string, pathParams map[string]string, queryParams map[string]string, headerParams map[string]string, bodyParams map[string]string) {
-	pathParams = make(map[string]string, 0)
-	queryParams = make(map[string]string, 0)
-	headerParams = make(map[string]string, 0)
-	bodyParams = make(map[string]string, 0)
-
-	specInfo, err := getAPISpecsInfo(p.accessor, ctx, event.APIInfoID)
+	specInfo, err := getAPISpecsInfo(ctx, p.accessor, event.APIInfoID)
 	if err != nil {
-		return
+		return "", nil, nil, nil, nil
 	}
 
-	var spec *models.SpecInfo = nil
+	pathParams = make(map[string]string)
+	queryParams = make(map[string]string)
+	headerParams = make(map[string]string)
+	bodyParams = make(map[string]string)
+
+	var spec *models.SpecInfo
 	// Prefer reconstructed spec
 	if specInfo.ReconstructedSpec != nil {
 		spec = specInfo.ReconstructedSpec
 	} else if specInfo.ProvidedSpec != nil {
 		spec = specInfo.ProvidedSpec
 	}
-	spec = specInfo.ProvidedSpec // XXX To remove
 
 	if spec != nil {
 		for _, t := range specInfo.ProvidedSpec.Tags {
@@ -357,7 +356,7 @@ func (p *traceAnalyzer) getParams(ctx context.Context, event *database.APIEvent)
 		}
 	}
 
-	return
+	return specPath, pathParams, queryParams, headerParams, bodyParams
 }
 
 type httpHandler struct {
@@ -387,7 +386,10 @@ func (h httpHandler) GetEventAnnotations(w http.ResponseWriter, r *http.Request,
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(result)
+	if err := json.NewEncoder(w).Encode(result); err != nil {
+		log.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func (h httpHandler) GetAPIAnnotations(w http.ResponseWriter, r *http.Request, apiID int64) {
@@ -412,7 +414,10 @@ func (h httpHandler) GetAPIAnnotations(w http.ResponseWriter, r *http.Request, a
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(result)
+	if err := json.NewEncoder(w).Encode(result); err != nil {
+		log.Error(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func (h httpHandler) DeleteAPIAnnotations(w http.ResponseWriter, r *http.Request, apiID int64, params DeleteAPIAnnotationsParams) {
@@ -425,6 +430,7 @@ func (h httpHandler) DeleteAPIAnnotations(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusNoContent)
 }
 
+//nolint:gochecknoinits
 func init() {
 	core.RegisterModule(newTraceAnalyzer)
 }

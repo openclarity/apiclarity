@@ -37,9 +37,12 @@ const (
 )
 
 const (
+	//nolint:gosec
 	KindShortPassword = "BASIC_AUTH_SHORT_PASSWORD"
+	//nolint:gosec
 	KindKnownPassword = "BASIC_AUTH_KNOWN_PASSWORD"
-	KindSamePassword  = "BASIC_AUTH_SAME_PASSWORD"
+	//nolint:gosec
+	KindSamePassword = "BASIC_AUTH_SAME_PASSWORD"
 )
 
 // Extracts the Basic Authentication token from the Query.
@@ -60,6 +63,7 @@ func findBasicAuthToken(trace *models.Telemetry) (user, password string, found b
 		return "", "", false
 	}
 	splitAuth := bytes.Split(decodedAuth, []byte{':'})
+	//nolint:gomnd
 	if len(splitAuth) != 2 {
 		return "", "", false
 	}
@@ -75,7 +79,7 @@ type userPassword struct {
 type WeakBasicAuth struct {
 	shortPasswordLen int
 	knownPasswordsAC ahocorasick.AhoCorasick
-	usedCredentials  map[userPassword]map[utils.Api]bool
+	usedCredentials  map[userPassword]map[utils.API]bool
 }
 
 func NewWeakBasicAuth(knownPasswords []string) *WeakBasicAuth {
@@ -89,7 +93,7 @@ func NewWeakBasicAuth(knownPasswords []string) *WeakBasicAuth {
 	return &WeakBasicAuth{
 		shortPasswordLen: ShortPasswordLen,
 		knownPasswordsAC: acBuilder.Build(knownPasswords),
-		usedCredentials:  make(map[userPassword]map[utils.Api]bool),
+		usedCredentials:  make(map[userPassword]map[utils.API]bool),
 	}
 }
 
@@ -116,13 +120,13 @@ func (w *WeakBasicAuth) analyzeKnownPassword(password string) (anns []core.Annot
 	return anns
 }
 
-func (w *WeakBasicAuth) analyzeSameCreds(api utils.Api, user string, password string) (anns []core.Annotation) {
+func (w *WeakBasicAuth) analyzeSameCreds(api utils.API, user string, password string) (anns []core.Annotation) {
 	up := userPassword{user, password}
 
 	apis, ok := w.usedCredentials[up]
 	if !ok {
 		// Nobody else is using this user/password, create a new entry
-		w.usedCredentials[up] = make(map[utils.Api]bool)
+		w.usedCredentials[up] = make(map[utils.API]bool)
 		w.usedCredentials[up][api] = true
 	} else if !apis[api] {
 		// There is already at least one other Api using this user/password
@@ -136,9 +140,8 @@ func (w *WeakBasicAuth) analyzeSameCreds(api utils.Api, user string, password st
 			Name:       KindSamePassword,
 			Annotation: []byte(fmt.Sprintf("%s:%s,%s", user, password, strings.Join(listOfAPIs, ","))),
 		})
-	} else {
-		// This api was already added here, no need to report an observation
 	}
+	// Else this api was already added here, no need to report an observation.
 
 	return anns
 }

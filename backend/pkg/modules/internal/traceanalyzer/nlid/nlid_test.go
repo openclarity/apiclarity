@@ -53,7 +53,8 @@ type testCase struct {
 	wanted     []core.Annotation
 }
 
-func testTestCases(testCases []testCase, t *testing.T) {
+func checkTC(t *testing.T, testCases []testCase) {
+	t.Helper()
 	analyzer := NewNLID(NLIDRingBufferSize)
 
 	trace := pluginmodels.Telemetry{}
@@ -106,7 +107,7 @@ func TestNLIDHeaders(t *testing.T) {
 		{host: "example.com", headersReq: []*pluginmodels.Header{{Key: "blabla", Value: "user_id_23654"}, {Key: "test", Value: "YYYYYYYY"}}, headersRes: []*pluginmodels.Header{}, wanted: []core.Annotation{{Name: "NLID", Annotation: []byte("user_id_23654")}}},
 	}
 
-	testTestCases(testcases, t)
+	checkTC(t, testcases)
 }
 
 func TestNLIDQueryParams(t *testing.T) {
@@ -118,7 +119,7 @@ func TestNLIDQueryParams(t *testing.T) {
 		{host: "example.com", path: "/test", headersReq: []*pluginmodels.Header{{Key: "test", Value: "BBBbbbBBBb"}}, wanted: []core.Annotation{{Name: "NLID", Annotation: []byte("BBBbbbBBBb")}}},
 	}
 
-	testTestCases(testCases, t)
+	checkTC(t, testCases)
 }
 
 func TestNLIDBody(t *testing.T) {
@@ -178,5 +179,5 @@ func TestNLIDBody(t *testing.T) {
 		{host: "example.com", path: "/test4", headersReq: []*pluginmodels.Header{{Key: "param", Value: "blablabla"}}, wanted: []core.Annotation{}},
 	}
 
-	testTestCases(testCases, t)
+	checkTC(t, testCases)
 }

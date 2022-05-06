@@ -48,13 +48,13 @@ type Reason map[string]interface{}
 
 type NLID struct {
 	historySize   int
-	paramsHistory map[utils.Api]*ring.Ring
+	paramsHistory map[utils.API]*ring.Ring
 }
 
 func NewNLID(historySize int) *NLID {
 	return &NLID{
 		historySize:   historySize,
-		paramsHistory: make(map[utils.Api]*ring.Ring, 0),
+		paramsHistory: make(map[utils.API]*ring.Ring),
 	}
 }
 
@@ -273,7 +273,7 @@ func maybeID(key string, value string) bool {
 	return true
 }
 
-func getAPI(trace pluginsmodels.Telemetry) utils.Api {
+func getAPI(trace pluginsmodels.Telemetry) utils.API {
 	api := trace.Request.Host
 
 	return api

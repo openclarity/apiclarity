@@ -30,7 +30,7 @@ func sameAnns(got []core.Annotation, expected []core.Annotation) bool {
 	for _, eo := range expected { // For each wanted observation
 		found := false
 		for _, o := range got { // Check if it's in the result
-			if eo.Name == o.Name && bytes.Compare(eo.Annotation, o.Annotation) == 0 {
+			if eo.Name == o.Name && bytes.Equal(eo.Annotation, o.Annotation) {
 				found = true
 				break
 			}

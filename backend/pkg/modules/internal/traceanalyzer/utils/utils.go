@@ -36,7 +36,7 @@ func isPathParam(segment string) bool {
 }
 
 func GetPathParams(specPath string, opPath string) map[string]string {
-	result := make(map[string]string, 0)
+	result := make(map[string]string)
 
 	specSegs := strings.Split(specPath, pathSep)
 	opSegs := strings.Split(opPath, pathSep)
@@ -62,7 +62,7 @@ func WalkFiles(root string) ([]string, error) {
 		return nil
 	})
 	if err != nil {
-		return files, err
+		return files, fmt.Errorf("error while iterating over files in '%s' directory: %w", root, err)
 	}
 
 	return files, nil
@@ -91,4 +91,4 @@ func FindHeader(headers []*_models.Header, headerName string) (index int, found 
 	return -1, false
 }
 
-type Api = string
+type API = string

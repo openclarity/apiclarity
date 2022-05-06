@@ -195,7 +195,7 @@ func (p *paramHistory) distance() float32 {
 			// prod *= sMatrix[i][j]
 		}
 	}
-
+	//nolint:gomnd
 	nbLowerMatrix := float64(p.maxHistory) * (float64(p.maxHistory) - 1.0) / 2.0
 	ratioToMax := float64(sum) / nbLowerMatrix
 

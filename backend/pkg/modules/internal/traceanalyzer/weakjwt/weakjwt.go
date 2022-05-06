@@ -37,11 +37,12 @@ const (
 )
 
 const (
-	JWTNoAlgField                = "JWT_NO_ALG_FIELD"
-	JWTAlgFieldNone              = "JWT_ALG_FIELD_NONE"
-	JWTNotRecommendedAlg         = "JWT_NOT_RECOMMENDED_ALG"
-	JWTNoExpireClaim             = "JWT_NO_EXPIRE_CLAIM"
-	JWTExpTooFar                 = "JWT_EXP_TOO_FAR"
+	JWTNoAlgField        = "JWT_NO_ALG_FIELD"
+	JWTAlgFieldNone      = "JWT_ALG_FIELD_NONE"
+	JWTNotRecommendedAlg = "JWT_NOT_RECOMMENDED_ALG"
+	JWTNoExpireClaim     = "JWT_NO_EXPIRE_CLAIM"
+	JWTExpTooFar         = "JWT_EXP_TOO_FAR"
+	//nolint:gosec
 	JWTWeakSymetricSecret        = "JWT_WEAK_SYMETRIC_SECRET"
 	JWTSensitiveContentInHeaders = "JWT_SENSITIVE_CONTENT_IN_HEADERS"
 	JWTSensitiveContentInClaims  = "JWT_SENSITIVE_CONTENT_IN_CLAIMS"
@@ -71,7 +72,8 @@ func findJWTToken(trace *models.Telemetry) (*jwt.Token, []core.Annotation) {
 		}
 		token, _, err := parser.ParseUnverified(splitValue[1], jwt.MapClaims{})
 		if err != nil {
-			if err.(*jwt.ValidationError).Errors == jwt.ValidationErrorUnverifiable {
+			var verr *jwt.ValidationError
+			if errors.As(err, &verr) && verr.Errors&jwt.ValidationErrorUnverifiable != 0 {
 				anns = append(anns, core.Annotation{Name: JWTNoAlgField})
 			}
 			return nil, anns
@@ -184,6 +186,7 @@ func (w *WeakJWT) analyzeSig(token *jwt.Token) []core.Annotation {
 	}
 
 	parts := strings.Split(token.Raw, ".")
+	//nolint:gomnd
 	if len(parts) != 3 {
 		// XXX WE MUST LOG SOMETHING, THIS SHOULD NOT HAPPEN
 		return anns
@@ -243,10 +246,7 @@ func (w *WeakJWT) analyzeSensitive(token *jwt.Token) []core.Annotation {
 	return anns
 }
 
-func (w *WeakJWT) Analyze(trace *models.Telemetry) ([]core.Annotation, []core.Annotation) {
-	eventAnns := []core.Annotation{}
-	apiAnns := []core.Annotation{}
-
+func (w *WeakJWT) Analyze(trace *models.Telemetry) (eventAnns []core.Annotation, apiAnns []core.Annotation) {
 	JWTToken, eventAnns := findJWTToken(trace)
 	if JWTToken != nil {
 		eventAnns = append(eventAnns, w.analyzeAlg(JWTToken)...)
