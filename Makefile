@@ -34,17 +34,17 @@ ui: ## Build UI
 .PHONY: backend
 backend: ## Build Backend
 	@(echo "Building Backend ..." )
-	@(cd backend && go build -o bin/backend cmd/backend/main.go && ls -l bin/)
+	@(cd backend && go build --tags=json1 -o bin/backend cmd/backend/main.go && ls -l bin/)
 
 .PHONY: backend_linux
 backend_linux: ## Build Backend Linux
 	@(echo "Building Backend linux..." )
-	@(cd backend && GOOS=linux go build -o bin/backend_linux cmd/backend/main.go && ls -l bin/)
+	@(cd backend && GOOS=linux go build --tags=json1 -o bin/backend_linux cmd/backend/main.go && ls -l bin/)
 
 .PHONY: backend_test
 backend_test: ## Build Backend test
 	@(echo "Building Backend test ..." )
-	@(cd backend && go build -o bin/backend_test cmd/test/main.go && ls -l bin/)
+	@(cd backend && go build --tags=json1 -o bin/backend_test cmd/test/main.go && ls -l bin/)
 
 .PHONY: api
 api: ## Generating API code

@@ -9,8 +9,8 @@ import (
 	http "net/http"
 	reflect "reflect"
 
-	database "github.com/openclarity/apiclarity/backend/pkg/database"
 	gomock "github.com/golang/mock/gomock"
+	database "github.com/openclarity/apiclarity/backend/pkg/database"
 	kubernetes "k8s.io/client-go/kubernetes"
 )
 

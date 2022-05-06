@@ -7,9 +7,9 @@ package database
 import (
 	reflect "reflect"
 
+	gomock "github.com/golang/mock/gomock"
 	models "github.com/openclarity/apiclarity/api/server/models"
 	operations "github.com/openclarity/apiclarity/api/server/restapi/operations"
-	gomock "github.com/golang/mock/gomock"
 )
 
 // MockAPIInventoryTable is a mock of APIInventoryTable interface.

@@ -9,10 +9,10 @@ import (
 	reflect "reflect"
 	time "time"
 
+	gomock "github.com/golang/mock/gomock"
 	models "github.com/openclarity/apiclarity/api/server/models"
 	operations "github.com/openclarity/apiclarity/api/server/restapi/operations"
 	spec "github.com/openclarity/speculator/pkg/spec"
-	gomock "github.com/golang/mock/gomock"
 )
 
 // MockAPIEventsTable is a mock of APIEventsTable interface.

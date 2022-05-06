@@ -1,0 +1,349 @@
+openapi: 3.0.3
+info:
+  title: APIClarity BFLA
+  version: 0.0.1
+  description: APIClarity Module API
+paths:
+  /version:
+    get:
+      operationId: getVersion
+      summary: Get the version of this Module
+      description: Get the version of this Module
+      responses:
+        '200':
+          description: Version of the Module
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+
+  /authorizationModel/{apiID}:
+    get:
+      parameters:
+        - in: path
+          schema:
+            type: integer
+          required: true
+          name: apiID
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/AuthorizationModel'
+        default:
+          description: "Error response"
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /authorizationModel/{apiID}/approve:
+    put:
+      parameters:
+        - in: path
+          name: apiID
+          schema:
+            type: integer
+        - in: query
+          name: method
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: path
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: k8sClientUid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          description: "Error response"
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /authorizationModel/{apiID}/deny:
+    put:
+      parameters:
+        - in: path
+          name: apiID
+          schema:
+            type: integer
+        - in: query
+          name: method
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: path
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: k8sClientUid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          description: "Error response"
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /authorizationModel/{apiID}/learning/start:
+    put:
+      parameters:
+        - in: path
+          name: apiID
+          schema:
+            type: integer
+        - in: query
+          name: nr_traces
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          description: "Error response"
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /authorizationModel/{apiID}/learning/reset:
+    put:
+      parameters:
+        - in: path
+          name: apiID
+          schema:
+            type: integer
+        - in: query
+          name: nr_traces
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          description: "Error response"
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /authorizationModel/{apiID}/learning/stop:
+    put:
+      parameters:
+        - in: path
+          name: apiID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          description: "Error response"
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /event/{id}:
+    get:
+      operationId: get_event
+      parameters:
+        - name: id
+          in: path
+          schema:
+            type: integer
+          required: true
+      summary: Get the event with the annotations and bfla status
+      responses:
+        '200':
+          description: API Event with annotations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIEventAnnotations'
+
+  /event/{id}/{operation}:
+    put:
+      parameters:
+        - in: path
+          schema:
+            type: integer
+          required: true
+          name: id
+        - in: path
+          required: true
+          name: operation
+          schema:
+            $ref: '#/components/schemas/OperationEnum'
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          description: "Error response"
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+components:
+  schemas:
+    APIEventAnnotations:
+      required: [bflaStatus, external]
+      properties:
+        external:
+          type: boolean
+        destinationK8sObject:
+          $ref: '#/components/schemas/K8sObjectRef'
+        sourceK8sObject:
+          $ref: '#/components/schemas/K8sObjectRef'
+        bflaStatus:
+          $ref: '#/components/schemas/BFLAStatus'
+        detectedUser:
+          $ref: '#/components/schemas/DetectedUser'
+
+    DetectedUser:
+      required: [id, source, ip_address]
+      properties:
+        id:
+          type: string
+        source:
+          type: string
+          enum:
+            - JWT
+            - BASIC
+            - KONG_X_CONSUMER_ID
+        ip_address:
+          type: string
+
+    K8sObjectRef:
+      type: object
+      required: [uid, kind, name, namespace, apiVersion]
+      properties:
+        uid:
+          type: string
+        kind:
+          type: string
+        name:
+          type: string
+        namespace:
+          type: string
+        apiVersion:
+          type: string
+
+    BFLAStatus:
+      type: string
+      enum:
+        - NO_SPEC
+        - LEARNING
+        - LEGITIMATE
+        - SUSPICIOUS_MEDIUM
+        - SUSPICIOUS_HIGH
+
+    AuthorizationModelAudience:
+      type: object
+      required: [end_users, authorized, external]
+      properties:
+        authorized:
+          type: boolean
+        external:
+          type: boolean
+        end_users:
+          type: array
+          items:
+            $ref: '#/components/schemas/DetectedUser'
+        k8s_object:
+          $ref: '#/components/schemas/K8sObjectRef'
+
+    AuthorizationModelOperation:
+      type: object
+      required: [path, method, audience]
+      properties:
+        path:
+          type: string
+        method:
+          type: string
+        audience:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorizationModelAudience'
+    SpecType:
+      type: string
+      enum:
+        - NONE
+        - PROVIDED
+        - RECONSTRUCTED
+
+    AuthorizationModel:
+      type: object
+      required: [specType, operations, learning]
+      properties:
+        specType:
+          $ref: '#/components/schemas/SpecType'
+        learning:
+          type: boolean
+        operations:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorizationModelOperation'
+
+    OperationEnum:
+      type: string
+      enum:
+        - approve
+        - deny
+        - approve_user
+        - deny_user
+
+    ApiResponse:
+      description: 'An object that is return in all cases of failures.'
+      type: 'object'
+      required: [message]
+      properties:
+        message:
+          type: 'string'
+    Version:
+      type: 'object'
+      required: [version]
+      properties:
+        version:
+          type: 'string'

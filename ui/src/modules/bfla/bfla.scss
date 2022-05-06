@@ -1,0 +1,186 @@
+@import 'utils/scss_variables.module.scss';
+
+$content-margin: 30px;
+
+// .title-value-display-wrapper {
+    .bfla-status {
+        width: 100%;
+        padding: 10px;
+        background-color: $color-blue-light;
+    }
+    .bfla-status-title {
+        display: flex;
+        align-items: center;
+        > span {
+            margin-right: 10px;
+        }
+    }
+
+    .bfla-status-text {
+        margin-right: 10px;
+        font-size: 12px;
+    }
+
+    .bfla-inventory-wrapper {
+        position: relative;
+        min-height: 300px;
+        .spec-inner-tabs-wrapper {
+            display: flex;
+            align-items: center;
+            height: 50px;
+            padding: 0 20px;
+            background-color: $color-grey-off-white;
+            border: 1px solid  $color-grey-light;
+
+            .inner-tab-item {
+                margin-right: 40px;
+                font-size: 14px;
+                line-height: 16px;
+                color: $color-grey-dark;
+                cursor: pointer;
+
+                &.selected {
+                    color: $color-grey-black;
+                    font-weight: bold;
+                }
+            }
+        }
+
+        .not-selected-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px;
+
+            .not-selected-title {
+                font-size: 18px;
+                line-height: 22px;
+                color: $color-main;
+                margin-bottom: 60px;
+                text-align: center;
+            }
+        }
+
+        .in-progress-overlay {
+            background-color: white;
+            width: 100%;
+            height: 100%;
+            opacity: 0.2;
+            pointer-events: none;
+        }
+        .in-progress-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px;
+
+            .in-progress-title {
+                font-size: 18px;
+                line-height: 22px;
+                color: $color-main;
+            }
+        }
+
+        .spec-display-wrapper {
+            min-height: 340px;
+            display: flex;
+            overflow: hidden;
+
+            .select-pane {
+                width: 33%;
+                border-right: 1px solid $color-grey-light;
+
+                .tag-wrapper {
+                    margin-right: 20px;
+                }
+            }
+            .display-pane {
+                flex-grow: 1;
+                padding: 8px 20px 20px 20px;
+
+                .tag-selected-wrapper {
+                    .tag-selected-methods-list {
+                        display: flex;
+                        > div {
+                            min-width: 368px;
+                        }
+
+                        .authorized-clients {
+                            margin-right: 100px;
+                        }
+                        .clients-list-title {
+                            color: $color-main;
+                            font-weight: bold;
+                            font-size: 14px;
+                            line-height: 14px;
+                            margin: 25px 0 0 0;
+                            padding: 15px 0;
+                            border-bottom: 1px solid $color-grey-light;
+
+                        }
+                        .client-list-item-wrapper {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            /* margin-left: 30px; */
+                            padding: 10px;
+                            border-bottom: 1px solid $color-grey-light;
+
+                            .client-list-item-title {
+                                font-size:14px;
+                                line-height: 18px;
+                            }
+
+                        }
+                        .list-display-wrapper .method-item-title .tag-wrapper {
+                            width: 100px;
+                        }
+                    }
+                }
+                .selected-method-wrapper {
+                    .method-item-title .tag-wrapper {
+                        margin-right: 20px;
+                    }
+                }
+                .selected-back-header {
+                    display: flex;
+                    align-items: center;
+                    color: $color-main;
+                    border-bottom: 1px solid $color-grey-light;
+                    /* margin: 0 $content-margin; */
+                    /* padding: 20px 0; */
+                    padding-bottom: 10px;
+
+                    .arrow-icon {
+                        margin-right: 20px;
+                    }
+                    .method-item-title {
+                        .tag-wrapper {
+                            margin-right: 20px;
+                        }
+                    }
+                }
+                .button-add, .button-remove {
+                    height: 26px;
+                }
+                .button-add {
+                    padding: 0 20px;
+                    color: white;
+                    background-color: $color-main;
+                }
+                .client-action-wrapper {
+                    display: flex;
+                    justify-content: space-between;
+                    border-bottom: 1px solid $color-grey-light;
+                    padding-bottom: 10px;
+                    .selected-back-header {
+                        border-bottom: unset;
+                        padding-bottom: 0;
+                    }
+
+                }
+            }
+        }
+    }
+
+// }
