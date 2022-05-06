@@ -11,7 +11,7 @@ The process consists of two phases
 
 ## Learning
 The learning phase begins as soon as a user uploads or reconstructs a spec for a given API.
-by default the learning lasts for 100 API calls (for an API), the learning can be stopped reset or prolonged for a longer period.
+By default, the learning lasts for 100 API calls (for an API), the learning can be stopped, reset or prolonged for a longer period.
 
 ![img.png](../../assets/bfla/images/img_1.png)
 
@@ -19,8 +19,8 @@ by default the learning lasts for 100 API calls (for an API), the learning can b
 
 ## Detection
 Once the learning phase has ended, the detection phase begins. 
-During the detection phase all the API calls that do not comply with the authorization model will be marked as warnings.
-If the call was rejected by the api the warning will have a lower severity, however if the API accepted the unexpected call and returned a 2xx status code it will have a higher severity (check fig1 and fig2).
+During the detection phase, all the API calls that do not comply with the authorization model will be marked as warnings.
+If the call was rejected by the API the warning will have a lower severity, however if the API accepted the unexpected call and returned a 2xx status code it will have a higher severity (check fig1 and fig2).
 
 ![img_2.png](../../assets/bfla/images/img_2.png)
 
@@ -33,13 +33,22 @@ If the call was rejected by the api the warning will have a lower severity, howe
 ## Module interaction
 
 In case of a false positive, meaning that a certain service interaction was wrongly marked as legitimate, 
-the user can mark it as illegitimate and if service interaction was wrongly marked as illegitimate, the user can mark it as legitimate
+the user can mark it as illegitimate and if service interaction was wrongly marked as illegitimate, the user can mark it as legitimate.
 
-The user can also stop stat and reset learning.
+The user can also stop, start, and reset learning.
 
 List of all operations for tuning the authorization model:
  1. Mark event as legitimate.  
- 2. Mark event as illegitimate
- 3. Stop learning
- 4. Start learning
- 5. Reset learning
+ 2. Mark event as illegitimate.
+ 3. Stop learning.
+ 4. Start learning.
+ 5. Reset learning.
+
+## Principal detection
+Principal is the actor that makes the API call.
+We detect the principal by matching known authorization protocols on the event headers.
+
+Supported protocols:
+1. Basic auth: The principal ID is the username from the `base64(username:password)` formula.
+2. JWT: The principal ID is the Subject claim in the body.
+3. X-Customer-ID header: The Principal ID is given by the Kong gateway when using authorization plugins.
