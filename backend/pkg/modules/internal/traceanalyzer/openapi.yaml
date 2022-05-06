@@ -1,0 +1,96 @@
+openapi: 3.0.3
+info:
+  title: APIClarity PluginB
+  version: 0.0.1
+  description: APIClarity PluginA API
+paths:
+  /eventAnnotations/{eventID}:
+    get:
+      operationId: GetEventAnnotations
+      summary: Get Annotations for an event
+      description: Get Trace Analyzer Annotations for a specific event
+      parameters:
+        - name: eventID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Annotation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Annotations'
+  /apiAnnotations/{apiID}:
+    get:
+      operationId: GetAPIAnnotations
+      summary: Get Annotations for an API
+      description: Get Trace Analyzer Annotations for a specific API
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Annotation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Annotations'
+    delete:
+      operationId: DeleteAPIAnnotations
+      summary: Delete Annotations for an API
+      description: Get Trace Analyzer Annotations for a specific API
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: name
+          required: true
+          schema:
+            type: string
+          description: name of the annotation
+      responses:
+        '204':
+          description: Successful deletion
+
+components:
+  schemas:
+    Annotation:
+      type: object
+      properties:
+        name:
+          type: string
+        annotation:
+          type: string
+        severity:
+          type: string
+        kind:
+          type: string
+      required:
+        - id
+        - name
+        - annotation
+        - severity
+        - kind
+    Annotations:
+      type: object
+      required:
+        - total
+      properties:
+        total:
+          type: 'integer'
+          description: 'Total event annotations count'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Annotation'
