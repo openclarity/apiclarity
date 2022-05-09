@@ -100,3 +100,7 @@ TRACE_ANALYZER_SENSITIVE_KEYWORDS_FILENAMES
 TRACE_ANALYZER_IGNORE_FINDINGS
 : Comma separated list of findings that must be ignored.
 `TRACE_ANALYZER_IGNORE_FINDINGS=JWT_SENSITIVE_CONTENT_IN_CLAIMS,JWT_WEAK_SYMETRIC_SECRET`
+
+## Credits
+
+Example dictionnary files of known password are part of https://github.com/danielmiessler/SecLists
