@@ -707,7 +707,8 @@ func init() {
       "type": "string",
       "enum": [
         "ALERT_INFO",
-        "ALERT_WARN"
+        "ALERT_WARN",
+        "ALERT_CRITICAL"
       ]
     },
     "ApiCount": {
@@ -1145,7 +1146,8 @@ func init() {
       "items": {
         "enum": [
           "ALERT_INFO",
-          "ALERT_WARN"
+          "ALERT_WARN",
+          "ALERT_CRITICAL"
         ],
         "type": "string"
       },
@@ -1815,7 +1817,8 @@ func init() {
             "items": {
               "enum": [
                 "ALERT_INFO",
-                "ALERT_WARN"
+                "ALERT_WARN",
+                "ALERT_CRITICAL"
               ],
               "type": "string"
             },
@@ -2712,7 +2715,8 @@ func init() {
       "type": "string",
       "enum": [
         "ALERT_INFO",
-        "ALERT_WARN"
+        "ALERT_WARN",
+        "ALERT_CRITICAL"
       ]
     },
     "ApiCount": {
@@ -3150,7 +3154,8 @@ func init() {
       "items": {
         "enum": [
           "ALERT_INFO",
-          "ALERT_WARN"
+          "ALERT_WARN",
+          "ALERT_CRITICAL"
         ],
         "type": "string"
       },

@@ -86,6 +86,8 @@ func (e eventAlerter) SetEventAlert(ctx context.Context, modName string, eventID
 		err = e.accessor.CreateAPIEventAnnotations(ctx, modName, eventID, core.AlertInfoAnn)
 	case core.AlertWarn:
 		err = e.accessor.CreateAPIEventAnnotations(ctx, modName, eventID, core.AlertWarnAnn)
+	case core.AlertCritical:
+		err = e.accessor.CreateAPIEventAnnotations(ctx, modName, eventID, core.AlertCriticalAnn)
 	default:
 		return fmt.Errorf("unexpected severity")
 	}

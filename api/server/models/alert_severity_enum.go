@@ -31,6 +31,9 @@ const (
 
 	// AlertSeverityEnumALERTWARN captures enum value "ALERT_WARN"
 	AlertSeverityEnumALERTWARN AlertSeverityEnum = "ALERT_WARN"
+
+	// AlertSeverityEnumALERTCRITICAL captures enum value "ALERT_CRITICAL"
+	AlertSeverityEnumALERTCRITICAL AlertSeverityEnum = "ALERT_CRITICAL"
 )
 
 // for schema
@@ -38,7 +41,7 @@ var alertSeverityEnumEnum []interface{}
 
 func init() {
 	var res []AlertSeverityEnum
-	if err := json.Unmarshal([]byte(`["ALERT_INFO","ALERT_WARN"]`), &res); err != nil {
+	if err := json.Unmarshal([]byte(`["ALERT_INFO","ALERT_WARN","ALERT_CRITICAL"]`), &res); err != nil {
 		panic(err)
 	}
 	for _, v := range res {
