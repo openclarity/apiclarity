@@ -1,6 +1,6 @@
 - id: core-001
   description: Find 'password' keyword in flow data
-  regex: '([pP][aA][sS][sS][wW][oO][rR][dD])'
+  regex: '(?i)password'
   searchIn:   # Allowed values: RequestBody, ResponseBody, RequestHeaders, ResponseHeaders
     - RequestBody
     - ResponseBody
@@ -9,14 +9,14 @@
 
 - id: core-002
   description: HTTP Headers contains information about backend
-  regex: '([Xx]-[Pp][Oo][Ww][Ee][Rr][Ee][Dd]-[Bb][Yy][\s]*:)'
+  regex: '(?i)x-powered-by'
   searchIn:
     - RequestHeaders
     - ResponseHeaders
 
 - id: core-003
   description: HTTP Headers contains information about running server
-  regex: '([Ss][Ee][Rr][Vv][Ee][Rr][\s]*:)'
+  regex: '(?i)server'
   searchIn:
     - RequestHeaders
     - ResponseHeaders
