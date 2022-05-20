@@ -61,7 +61,7 @@ https://github.com/google/re2/wiki/Syntax for more information.
 
 ### Guessable ID
 
-This analyzer aims at finding Identifiers that seems guessable.
+This analyzer aims at finding identifiers that seem guessable.
 
 For example, if an attacker sees that identifiers for a kind of object is
 "0001", "0002", "0003" ... they can easily try to guess identifiers.

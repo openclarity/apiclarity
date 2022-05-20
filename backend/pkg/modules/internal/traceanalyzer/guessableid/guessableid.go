@@ -155,15 +155,13 @@ func (p *paramHistory) compressionRatio() float32 {
 
 	compressedLen := buf.Len() - gzipHeaderLen
 
-	// fmt.Printf("=== Original Length: %d, Compressed: %d ===", len(b), compressedLen)
-
 	return float32(len(b)) / float32(compressedLen)
 }
 
 func (p *paramHistory) distance() float32 {
 	sMatrix := make([][]float32, p.maxHistory)
 	for i := range sMatrix {
-		sMatrix[i] = make([]float32, p.maxHistory) // XXX: Optimize creation the triangular matrix should be pre instantiated in the paramHistory struct
+		sMatrix[i] = make([]float32, p.maxHistory) // TODO: Optimize creation the triangular matrix should be pre instantiated in the paramHistory struct
 	}
 	for i, pi := range p.history {
 		for j, pj := range p.history {
@@ -180,10 +178,7 @@ func (p *paramHistory) distance() float32 {
 		}
 	}
 
-	// Frobenius Norm
 	var sum float32
-	// var sqSum float32
-	// var prod float32 = 1.0
 	for i := range sMatrix {
 		for j := range sMatrix[i] {
 			if i == j {
@@ -191,8 +186,6 @@ func (p *paramHistory) distance() float32 {
 				break
 			}
 			sum += sMatrix[i][j]
-			// sqSum += sMatrix[i][j] * sMatrix[i][j]
-			// prod *= sMatrix[i][j]
 		}
 	}
 	//nolint:gomnd

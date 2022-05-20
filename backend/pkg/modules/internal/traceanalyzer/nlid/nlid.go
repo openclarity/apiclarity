@@ -173,7 +173,7 @@ func (n *NLID) learnIDs(trace pluginsmodels.Telemetry) {
 	}
 	// - Learn Response Body parameters
 	if !trace.Response.Common.TruncatedBody && len(trace.Response.Common.Body) > 0 {
-		if err = getBodyParams(&params, trace.Response.Common.Body); nil != err {
+		if err = getBodyParams(params, trace.Response.Common.Body); nil != err {
 			// Log the problem, but continue anyway, it's not blocking.
 			log.Debugf("unable to get parameters from body: %v", err)
 		}
@@ -190,7 +190,7 @@ func (n *NLID) skipTrace(trace *pluginsmodels.Telemetry) bool {
 	return false
 }
 
-func getBodyParams(params *params, body []byte) error {
+func getBodyParams(params params, body []byte) error {
 	var parsed interface{}
 
 	// We deserialize the JSON object this way because json.Unmarshal doesn't
@@ -207,7 +207,7 @@ func getBodyParams(params *params, body []byte) error {
 	return nil
 }
 
-func getDecodedBodyParams(o *map[string]bool, val interface{}, prefix string) {
+func getDecodedBodyParams(o params, val interface{}, prefix string) {
 	switch val := val.(type) {
 	case bool:
 		// Nothing, it's not interresting
@@ -217,14 +217,12 @@ func getDecodedBodyParams(o *map[string]bool, val interface{}, prefix string) {
 		if n, err := val.Int64(); err == nil {
 			s := fmt.Sprintf("%d", n)
 			if maybeID(prefix, s) {
-				(*o)[s] = true
+				(o)[s] = true
 			}
-			// } else if _, err := val.Float64(); err == nil {
-			// } else {
 		}
 	case string:
 		if maybeID(prefix, val) {
-			(*o)[val] = true
+			(o)[val] = true
 		}
 	case []interface{}:
 		for i, v := range val {
