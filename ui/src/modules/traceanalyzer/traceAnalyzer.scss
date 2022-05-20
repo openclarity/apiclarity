@@ -1,0 +1,64 @@
+@import 'utils/scss_variables.module.scss';
+
+table {
+    border-collapse: collapse;
+}
+.finding-details-wrapper {
+    padding: 20px 0;
+
+    .findings-actions-wrapper {
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .finding-details-table {
+        width: 100%;
+
+        thead {
+            font-weight: bold;
+            font-size: 9px;
+            text-transform: uppercase;
+            color: $color-main;
+            border-bottom: 1px solid $color-main;
+
+            th {
+                padding: 10px;
+            }
+        }
+        tbody {
+            font-size: 11px;
+
+            td {
+                border: 1px solid $color-grey-light;
+                border-top: none;
+                padding: 20px;
+            }
+        }
+        .critical {
+            color: $color-error-dark;
+        }
+        .high {
+            color: $color-error;
+        }
+        .medium {
+            color: $color-warning-dark;
+        }
+        .low {
+            color: $color-warning;
+        }
+    }
+}
+
+.trace-analysis-wrapper {
+    padding: 20px;
+
+    .review-actions-wrapper {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .risk-tag-wrapper {
+        color: white;
+    }
+}

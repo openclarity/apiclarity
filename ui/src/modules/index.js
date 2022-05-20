@@ -1,8 +1,11 @@
 import MODULE_TYPES from './MODULE_TYPES';
 import { bfla, bflaApiInventory } from './bfla';
+import { pluginEventDetails as taEventDetails, pluginAPIDetails as taAPIDetails } from './traceanalyzer';
 
 const modules = [
-    bfla, bflaApiInventory
+    bfla, bflaApiInventory,
+    taEventDetails, taAPIDetails,
+    // demoModule
 ];
 
 

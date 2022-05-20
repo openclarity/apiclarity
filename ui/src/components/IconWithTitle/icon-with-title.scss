@@ -1,0 +1,35 @@
+@import 'utils/scss_variables.module.scss';
+
+.icon-container {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px;
+    white-space: nowrap;
+
+    .icon-title {
+        float: left;
+        margin-left: 5px;
+        font-weight: bold;
+        font-size: 10px;
+        line-height: 22px;
+    }
+    .arrow-icon {
+        margin: 0 5px 4px 10px;
+    }
+    &:not(.disabled) {
+        .icon {
+            color: $color-main;
+        }
+    }
+    &.disabled {
+        cursor: not-allowed;
+
+        .icon,
+        .icon-title {
+            color: $color-grey;
+        }
+    }
+    &.clickable {
+        cursor: pointer;
+    }
+}
