@@ -80,6 +80,19 @@ Contributions of integrations with additional traffic sources are more than welc
 4. Open APIClarity UI in the browser: <http://localhost:9999/>
 5. Generate some traffic in the traced applications and check the APIClarity UI :)
 
+### Uninstall APIClarity from a K8s cluster using Helm:
+
+1. Helm uninstall
+   ```shell
+   helm uninstall apiclarity -n apiclarity
+   ```
+2. Clean resources
+
+    By default Helm will not remove the PVCs and PVs for the StatefulSets. Run the following command to delete them all:
+
+    ```shell
+    kubectl delete pvc -l app.kubernetes.io/instance=apiclarity -n apiclarity
+    ```
 ## Configurations
 
 The file [values.yaml](https://github.com/openclarity/apiclarity/blob/master/charts/apiclarity/values.yaml) is used to deploy and configure APIClarity on your cluster via Helm.
