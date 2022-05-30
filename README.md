@@ -105,21 +105,20 @@ To deploy the Sock Shop Demo, follow these steps:
    ```
 
 3. Deploy APIClarity in the `sock-shop` namespace (e.g. Istio service-mesh traffic source):
-
+   ```shell
+   helm repo add apiclarity https://openclarity.github.io/apiclarity
+   ```
    ```shell
    helm install --set 'trafficSource.envoyWasm.enabled=true' --set 'trafficSource.envoyWasm.namespaces={sock-shop}' --create-namespace apiclarity apiclarity/apiclarity -n apiclarity
    ```
 
-4. Find the NodePort to access the Sock Shop Demo App
+4. Port forward to Sock Shop's front-end service to access the Sock Shop Demo App:
 
    ```shell
-   $ kubectl describe svc front-end -n sock-shop
-   [...]
-   NodePort:                 <unset>  30001/TCP
-   [...]
+   kubectl port-forward -n sock-shop svc/front-end 7777:80
    ```
 
-   Use this port together with your node IP to access the demo webshop and run
+   Open the Sock Shop Demo App UI in the browser (<http://localhost:7777/>) and run
    some transactions to generate data to review on the APIClarity dashboard.
 
 ## Building
