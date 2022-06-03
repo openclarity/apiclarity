@@ -1,0 +1,541 @@
+openapi: 3.0.3
+info:
+  title: APIClarity PluginFuzzer
+  version: 0.0.1
+  description: APIClarity PluginFuzzer API
+paths:
+  /version:
+    get:
+      operationId: getVersion
+      summary: Get the version of this Plugin
+      description: Get the version of this Plugin
+      responses:
+        '200':
+          description: Version of the Plugin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+  /state:
+    get:
+      operationId: getState
+      summary: Get the current running state of this module
+      description: Get useful informations about the current running state of the testing module
+      responses:
+        '200':
+          description: Current testing module running state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestingModuleState'
+  /fuzz/{apiId}:
+    get:
+      operationId: fuzzTarget
+      summary: Fuzz a Target
+      description: Fuzz a Target
+      parameters:
+        - name: apiId
+          in: path
+          description: ID of the API
+          required: true
+          schema:
+            type: integer
+            format: uint32
+        - name: service
+          in: query
+          description: service for the service to test
+          required: false
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: type of auth
+          required: false
+          schema:
+            type: string
+        - name: username
+          in: query
+          description: username
+          required: false
+          schema:
+            type: string
+        - name: password
+          in: query
+          description: password
+          required: false
+          schema:
+            type: string
+        - name: key
+          in: query
+          description: key
+          required: false
+          schema:
+            type: string
+        - name: value
+          in: query
+          description: value for key
+          required: false
+          schema:
+            type: string
+        - name: token
+          in: query
+          description: token
+          required: false
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Successful Response
+        '404':
+          description: Service not found
+          schema:
+            type: 'string'
+        '400':
+          description: Bad formated namespace
+          schema:
+            type: 'string'
+
+  /updateStatus/{apiId}:
+    parameters:
+      - name: apiId
+        in: path
+        description: ID of the API
+        required: true
+        schema:
+          type: integer
+          format: uint32
+    get:
+      operationId: GetUpdateStatus
+      summary: Update status for an API under fuzzing
+      description: Retreive Update status for an API under fuzzing
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FuzzingStatusAndReport'
+          description: Raw Finding Bundle
+    post: 
+      operationId: PostUpdateStatus
+      summary: Update status for an API under fuzzing
+      description: Provide the Update status for an API under fuzzing
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FuzzingStatusAndReport'
+        required: true
+      responses:
+        '204':
+          description: Successful Response
+
+  /rawfindings/{apiId}:
+    parameters:
+      - name: apiId
+        in: path
+        description: ID of the API
+        required: true
+        schema:
+          type: integer
+          format: uint32
+    get:
+      operationId: GetRawfindings
+      summary: Retreive list of findings for an API
+      description: Receive list of findings for an API
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RawFindingsBundle'
+          description: Raw Finding Bundle
+    post: 
+      operationId: PostRawfindings
+      summary: Receive list of raw findings for an API
+      description: Receive list of raw findings for an API
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RawFindingsBundle'
+        required: true
+      responses:
+        '204':
+          description: Successful Response
+
+  /findings/{apiId}:
+    get:
+      operationId: GetFindings
+      summary: Retreive list of findings for an API
+      description: Receive list of findings for an API
+      parameters:
+        - name: apiId
+          in: path
+          description: ID of the API
+          required: true
+          schema:
+            type: integer
+            format: uint32
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Findings'
+          description: List of Findings
+
+  /tests/{apiId}:
+    get:
+      operationId: GetTests
+      summary: Retreive the list of tests for an API, without details
+      description: Retreive the list of tests for an API, without details
+      parameters:
+        - name: apiId
+          in: path
+          description: ID of the API
+          required: true
+          schema:
+            type: integer
+            format: uint32
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tests'
+          description: List of tests
+
+  /report/{apiId}/{timestamp}:
+    get:
+      operationId: GetReport
+      summary: Retreive the list of tests for an API
+      description: Retreive the list of tests for an API
+      parameters:
+        - name: apiId
+          in: path
+          description: ID of the API
+          required: true
+          schema:
+            type: integer
+            format: uint32
+        - name: timestamp
+          in: path
+          description: Timestamp of the start of the test
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestWithReport'
+          description: List of tests
+
+  /annotatedspec/{apiId}:
+    get:
+      operationId: GetAnnotatedSpec
+      summary: Retreive the annotated spec for an API if any, Not Found otherwise
+      description: Retreive the annotated spec for an API
+      parameters:
+        - name: apiId
+          in: path
+          description: ID of the API
+          required: true
+          schema:
+            type: integer
+            format: uint32
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: 'spec in json format'
+                type: 'object'
+          description: List of tests
+        '404':
+          description: 'Spec not found'
+          schema:
+            type: 'string'
+
+components:
+  schemas:
+
+    Version:
+      type: 'object'
+      required: [version]
+      properties:
+        version:
+          type: 'string'
+
+    TestingModuleState:
+      type: object
+      required: [version, APIsInCache]
+      properties:
+        version:
+          type: string
+        APIsInCache:
+          type: integer
+          
+    FuzzingStatus:
+      description: An enumeration.
+      enum:
+        - DONE
+        - ERROR
+        - IN_PROGRESS
+      title: FuzzingStatus
+      type: string
+
+    RawFindingsSource:
+      description: An enumeration.
+      enum:
+        - BITSIGHT
+        - TALOS
+        - OPENDNS
+        - OAS_ANALYSER
+        - GRPC_ANALYZER
+        - OAS_TRACE_ANALYZER
+        - API_FUZZER
+      title: RawFindingsSource
+      type: string
+
+    ScoreExitStatusEnum:
+      description: An enumeration.
+      enum:
+        - SUCCESS
+        - NETWORK_FAILURE
+        - TOO_LONG
+        - PARSE_ERROR
+        - GENERIC_FAILURE
+      title: ScoreExitStatusEnum
+      type: string
+
+    FuzzingReportPath:
+      description: Current fuzzer report
+      properties:
+        result:
+          type: integer
+        uri:
+          type: string
+        verb:
+          type: string
+        payload:
+          type: string
+        response:
+          type: string
+      title: FuzzingReportPath
+      type: object
+    
+    FuzzingReportItem:
+      description: Current fuzzer report
+      properties:
+        name:
+          type: string
+        source:
+          type: string
+        status:
+          type: string
+        description:
+          type: string
+        testType:
+          type: string
+        paths:
+          items:
+            $ref: '#/components/schemas/FuzzingReportPath'
+          title: Paths
+          description: List of paths that has been fuzzed
+          type: array
+        findings:
+          items:
+            $ref: '#/components/schemas/RawFindings'
+          title: Paths
+          description: List of paths that has been fuzzed
+          type: array
+
+      title: FuzzingReportItem
+      type: object
+      
+    FuzzingStatusAndReport:
+      description: fuzzing status and reporting
+      properties:
+        status:
+          $ref: '#/components/schemas/FuzzingStatus'
+        report:
+          additionalProperties:
+            $ref: '#/components/schemas/FuzzingReportItem'
+          title: Report
+          type: object
+          description: List of report item
+
+        progress:
+          type: integer
+      title: FuzzingStatusAndReport
+      type: object
+      required:
+        - status
+        - report
+        - progress
+
+    RawFindingsSeverity:
+      properties:
+        severity:
+          type: string
+
+    RawFindings:
+      properties:
+        namespace:
+          type: string
+        location:
+          type: array
+          items:
+            type: string
+          title: Paths location
+          description: location string token
+        type:
+          type: string
+        description:
+          type: string
+        request:
+          $ref: '#/components/schemas/RawFindingsSeverity'
+        additionalInfo:
+          type: string
+      title: RawFindings
+      type: object
+
+    RawFindingsBundle:
+      properties:
+        data:
+          description: Opaque data structure for the raw finding
+          title: Data
+          type: string
+        source:
+          $ref: '#/components/schemas/RawFindingsSource'
+        status:
+          $ref: '#/components/schemas/ScoreExitStatusEnum'
+          description: Exit status of the scoring process
+        status_message:
+          description: Message giving details about the exist status
+          title: Status Message
+          type: string
+        timestamp:
+          description: Raw finding timestamp format= date-time
+          title: Timestamp
+          type: string
+      required:
+        - status
+        - timestamp
+        - source
+        - data
+      title: RawFindingsBundle
+      type: object
+
+    Findings:
+      title: Findings
+      type: object
+      properties:
+        items:
+          title: Items
+          type: array
+          items:
+            $ref: '#/components/schemas/Finding'
+        total:
+          description: Nb of items, used for pagination
+          title: Total
+          type: integer
+
+    Finding:
+      title: Finding
+      type: object
+      properties:
+        name:
+          description: Name of the finding
+          title: Name
+          type: string
+        description:
+          description: description of the finding
+          title: Description
+          type: string
+        risk:
+          description: risk of the finding
+          title: Risk
+          type: string
+
+    Tests:
+      title: Tests
+      type: object
+      properties:
+        items:
+          title: Items
+          type: array
+          items:
+            $ref: '#/components/schemas/Test'
+        total:
+          description: Nb of items, used for pagination
+          title: Total
+          type: integer
+
+    Vulnerabilities:
+      description: risk of the finding
+      title: Risk
+      type: object
+      properties:
+        total:
+          description: Total of vuln
+          title: Total
+          type: integer
+        critical:
+          description: Total of vuln
+          title: Critical
+          type: integer
+        high:
+          description: Total of vuln
+          title: High
+          type: integer
+        medium:
+          description: Total of vuln
+          title: Medium
+          type: integer
+        low:
+          description: Total of vuln
+          title: Low
+          type: integer
+
+    Test:
+      title: Test
+      type: object
+      properties:
+        starttime:
+          description: Timestamp of the start of the test
+          title: Start time
+          type: integer
+          format: int64
+        progress:
+          description: Progress of the test
+          maximum: 100.0
+          minimum: 0.0
+          title: Description
+          type: integer
+        vulnerabilities:
+          $ref: '#/components/schemas/Vulnerabilities'
+
+    TestWithReport:
+      title: Test
+      type: object
+      properties:
+        starttime:
+          description: Timestamp of the start of the test
+          title: Start time
+          type: integer
+          format: int64
+        progress:
+          description: Progress of the test
+          maximum: 100.0
+          minimum: 0.0
+          title: Description
+          type: integer
+        vulnerabilities:
+          $ref: '#/components/schemas/Vulnerabilities'
+        report:
+          $ref: '#/components/schemas/FuzzingStatusAndReport'
+

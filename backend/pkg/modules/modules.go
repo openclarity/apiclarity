@@ -29,6 +29,9 @@ import (
 	// Enables the demo module.
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/demo"
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer"
+	
+	// Enables the fuzzer module.
+	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer"
 )
 
 type (

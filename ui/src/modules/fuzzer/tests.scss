@@ -1,0 +1,265 @@
+@import 'utils/scss_variables.module.scss';
+
+$content-margin: 30px;
+
+.horizontal-box-layout {
+    display: flex;
+    line-height: 16px;
+    /* font-size: 11px; */
+
+    .vulnerability-count {
+        margin-left: 5px;
+    }
+    .vulnerability-count-total {
+        min-width: 65px;
+    }
+    .vulnerability-item {
+        display: flex;
+        align-items: center;
+        margin-right: 15px;
+
+        .critical {
+            color: $color-error-dark;
+        }
+        .high {
+            color: $color-error;
+        }
+        .medium {
+            color: $color-warning-dark;
+        }
+        .low {
+            color: $color-warning;
+        }
+    }
+}
+.horizontal-spacer-large {
+    width: 25px
+}
+.horizontal-spacer-small {
+    width: 10px
+}
+
+.btn-start-fuzz{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    padding-left: 10px;
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+.risk-tag-color{
+    color: #000000;
+}
+.alert-icon{
+    color: red;
+    margin-right: 10px;
+}
+.fuzzing-line-loader {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    width: 100%;
+    align-items: center;
+}
+.fuzzing-line-loader-progress{
+    font-size: 12px;
+    width: 50px;
+    line-height: 7px;
+    margin: 0 10px;
+}
+.fuzzing-done-check {
+    color: #38CDA0;
+    margin: 0 10px;
+}
+
+.start-fuzz-label {
+    padding-top: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+.start-fuzz-text-field, input {
+    color: $color-grey-black;
+    border: 1px solid $color-grey-light;
+    border-radius: 2px;
+    padding: 2px 8px;
+    box-sizing: border-box;
+    outline: none;
+    font-size: 12px;
+    line-height: 18px;
+    font-family: CiscoSansTT;
+    background-color: white;
+}
+
+.do-fuzz-confirmation-modal {
+    .testing-dropdown-title, .input-title {
+        font-weight: bold;
+        margin-top: 30px;
+        margin-bottom: 4px;
+    }
+
+    .auth-input {
+        width: 100%;
+        height: 38px;
+    }
+}
+
+.inventory-details-spec-wrapper {
+    position: relative;
+    min-height: 300px;
+
+    .test-table-wrapper, .findings-table-wrapper {
+        margin: 0 $content-margin;
+    }
+
+
+    .findings-table-wrapper
+    .findings-actions-wrapper {
+        display: flex;
+        justify-content: flex-end;
+        margin: 15px 0;
+    }
+
+    .test-table-wrapper
+    .tests-actions-wrapper {
+        display: flex;
+        justify-content: space-between;
+        margin: 15px 0;
+    }
+
+    .spec-inner-tabs-wrapper {
+        display: flex;
+        align-items: center;
+        height: 50px;
+        padding: 0 20px;
+        background-color: $color-grey-off-white;
+        border: 1px solid  $color-grey-light;
+
+        .inner-tab-item {
+            text-decoration: none;
+            margin-right: 40px;
+            font-size: 14px;
+            line-height: 16px;
+            color: $color-grey-dark;
+            cursor: pointer;
+            &.active:not(.disabled) {
+                color: $color-grey-black;
+                font-weight: bold;
+            }
+
+            &.selected {
+                color: $color-grey-black;
+                font-weight: bold;
+            }
+        }
+    }
+    .not-selected-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 30px;
+
+        .not-selected-title {
+            font-size: 18px;
+            line-height: 22px;
+            color: $color-main;
+            margin-bottom: 60px;
+            text-align: center;
+
+            button,
+            a {
+                font-size: 18px;
+                line-height: 18px;
+                height: auto;
+                color: $color-main;
+            }
+        }
+    }
+
+    .back-route-button {
+        margin: 0;
+        padding: 22px 0 12px 0;
+        .arrow-icon {
+            margin-right: 15px;
+        }
+    }
+
+    .selected-back-header {
+        display: flex;
+        align-items: center;
+        color: $color-main;
+        // border-bottom: 1px solid $color-grey-light;
+        margin: 0 $content-margin;
+        padding: 22px 0 12px 0;
+
+        .arrow-icon {
+            margin-right: 15px;
+        }
+    }
+    .spec-display-wrapper {
+        min-height: 340px;
+        display: flex;
+        overflow: hidden;
+
+        .select-pane {
+            width: 33%;
+            border-right: 1px solid $color-grey-light;
+
+
+        }
+        .display-pane {
+            flex-grow: 1;
+            padding: 0 20px;
+
+            .tag-selected-wrapper {
+                .tag-selected-methods-list {
+                    .methods-list-title {
+                        font-weight: bold;
+                        font-size: 14px;
+                        line-height: 14px;
+                        margin: 40px 0 15px $content-margin;
+                    }
+                    .list-display-wrapper .method-item-title .tag-wrapper {
+                        width: 100px;
+                    }
+                }
+            }
+            .selected-method-wrapper {
+                .method-item-title .tag-wrapper {
+                    margin-right: 20px;
+                }
+            }
+            .findings-actions-wrapper {
+                justify-content: space-between;
+            }
+            .label-wrapper {
+                display: flex;
+            }
+            .header-label {
+                display: flex;
+                align-items: center;
+                height: 21px;
+                min-width: 217px;
+                margin-right: 15px;
+                color: $color-main;
+                background-color: $color-blue-light;
+                font-size: 11px;
+                line-height: 16px;
+                padding: 0 8px;
+                border-radius: 37px;
+                border: 1px solid rgba($color-main, 0.05);
+            }
+            .selected-back-header {
+                display: flex;
+                align-items: center;
+                color: $color-main;
+                border-bottom: 1px solid $color-grey-light;
+                margin: 0 $content-margin;
+                padding: 20px 0;
+
+                .arrow-icon {
+                    margin-right: 20px;
+                }
+            }
+        }
+    }
+}

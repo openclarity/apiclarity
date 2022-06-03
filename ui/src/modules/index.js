@@ -1,10 +1,12 @@
 import MODULE_TYPES from './MODULE_TYPES';
 import { bfla, bflaApiInventory } from './bfla';
+import { pluginAPIDetails as fuzzerAPIDetails } from './fuzzer';
 import { pluginEventDetails as taEventDetails, pluginAPIDetails as taAPIDetails } from './traceanalyzer';
 
 const modules = [
     bfla, bflaApiInventory,
     taEventDetails, taAPIDetails,
+    fuzzerAPIDetails,
     // demoModule
 ];
 
