@@ -44,7 +44,7 @@ func DetectedUserSourceFromString(s string) DetectedUserSource {
 	case "KONG_X_CONSUMER_ID":
 		return DetectedUserSourceXConsumerIDHeader
 	}
-	return 0
+	return DetectedUserSourceUnknown
 }
 
 type DetectedUserSource int32
@@ -78,6 +78,8 @@ func (d DetectedUserSource) String() string {
 		return "BASIC"
 	case DetectedUserSourceXConsumerIDHeader:
 		return "KONG_X_CONSUMER_ID"
+	case DetectedUserSourceUnknown:
+		return ""
 	default:
 		return ""
 	}
