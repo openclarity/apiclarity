@@ -384,11 +384,6 @@ func FromRestapiAuthorizationModel(am *restapi.AuthorizationModel) bfladetector.
 				Authorized:    aud.Authorized,
 				External:      aud.External,
 				K8sObject:     (*k8straceannotator.K8sObjectRef)(aud.K8sObject),
-				StatusCode:    int64(aud.StatusCode),
-				WarningStatus: aud.WarningStatus,
-			}
-			if aud.LastTime != nil {
-				resAud.LastTime = *aud.LastTime
 			}
 			for _, user := range aud.EndUsers {
 				resAud.EndUsers = append(resAud.EndUsers, &bfladetector.DetectedUser{
