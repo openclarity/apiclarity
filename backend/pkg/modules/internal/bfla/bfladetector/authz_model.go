@@ -78,8 +78,9 @@ func (d DetectedUserSource) String() string {
 		return "BASIC"
 	case DetectedUserSourceXConsumerIDHeader:
 		return "KONG_X_CONSUMER_ID"
+	default:
+		return ""
 	}
-	return ""
 }
 
 type EndUsers []*DetectedUser

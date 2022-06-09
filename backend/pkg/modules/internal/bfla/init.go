@@ -337,7 +337,7 @@ func (h httpHandler) PostAuthorizationModelApiID(w http.ResponseWriter, r *http.
 func (h httpHandler) GetAuthorizationModelApiID(w http.ResponseWriter, r *http.Request, apiID int) {
 	apiinfo, err := h.accessor.GetAPIInfo(r.Context(), uint(apiID))
 	if err != nil {
-		log.Error("error getting openAPI spec")	
+		log.Error("error getting openAPI spec")
 	}
 	specType := bfladetector.SpecTypeFromAPIInfo(apiinfo)
 	if specType == bfladetector.SpecTypeNone {
@@ -381,9 +381,9 @@ func FromRestapiAuthorizationModel(am *restapi.AuthorizationModel) bfladetector.
 		resOp := &bfladetector.Operation{Method: o.Method, Path: o.Path}
 		for _, aud := range o.Audience {
 			resAud := &bfladetector.SourceObject{
-				Authorized:    aud.Authorized,
-				External:      aud.External,
-				K8sObject:     (*k8straceannotator.K8sObjectRef)(aud.K8sObject),
+				Authorized: aud.Authorized,
+				External:   aud.External,
+				K8sObject:  (*k8straceannotator.K8sObjectRef)(aud.K8sObject),
 			}
 			for _, user := range aud.EndUsers {
 				resAud.EndUsers = append(resAud.EndUsers, &bfladetector.DetectedUser{
