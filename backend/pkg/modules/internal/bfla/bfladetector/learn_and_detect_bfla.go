@@ -83,9 +83,12 @@ type BFLADetector interface {
 
 	ApproveTrace(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser)
 	DenyTrace(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser)
+
 	ResetLearning(apiID uint, numberOfTraces int)
 	StartLearning(apiID uint, numberOfTraces int)
 	StopLearning(apiID uint)
+
+	ProvideAuthzModel(apiID uint, am AuthorizationModel)
 }
 
 type apiInfoProvider interface {
@@ -124,11 +127,17 @@ type MarkIllegitimateCommand struct {
 	apiID        uint
 }
 
-func (a *StopLearningCommand) isCommand()     {}
-func (a *StartLearningCommand) isCommand()    {}
-func (a *ResetLearningCommand) isCommand()    {}
-func (a *MarkLegitimateCommand) isCommand()   {}
-func (a *MarkIllegitimateCommand) isCommand() {}
+type ProvideAuthzModelCommand struct {
+	apiID      uint
+	authzModel AuthorizationModel
+}
+
+func (a *StopLearningCommand) isCommand()      {}
+func (a *StartLearningCommand) isCommand()     {}
+func (a *ResetLearningCommand) isCommand()     {}
+func (a *MarkLegitimateCommand) isCommand()    {}
+func (a *MarkIllegitimateCommand) isCommand()  {}
+func (a *ProvideAuthzModelCommand) isCommand() {}
 
 type EventOperation struct {
 	Path        string
@@ -205,7 +214,6 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 	case *MarkIllegitimateCommand:
 		err = l.updateAuthorizationModel(cmd.path, cmd.method, cmd.clientRef, cmd.apiID, cmd.detectedUser, false, true)
 	case *StopLearningCommand:
-
 		counter, err := l.tracesCounterMap.Get(cmd.apiID)
 		if err != nil {
 			return fmt.Errorf("unable to get state traces counter: %w", err)
@@ -249,6 +257,25 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 			return fmt.Errorf("unable to get authz model state: %w", err)
 		}
 		authzModel.Set(AuthorizationModel{})
+
+	case *ProvideAuthzModelCommand:
+		pv, err := l.authzModelsMap.Get(cmd.apiID)
+		if err != nil {
+			return fmt.Errorf("unable to get state traces to learn: %w", err)
+		}
+		pv.Set(cmd.authzModel)
+
+		// stop learning
+		counter, err := l.tracesCounterMap.Get(cmd.apiID)
+		if err != nil {
+			return fmt.Errorf("unable to get state traces counter: %w", err)
+		}
+
+		toLearn, err := l.tracesToLearnMap.Get(cmd.apiID)
+		if err != nil {
+			return fmt.Errorf("unable to get state traces to learn: %w", err)
+		}
+		toLearn.Set(counter.Get())
 	}
 	if err != nil {
 		return fmt.Errorf("error when trying to update the authz model: %w", err)
@@ -507,6 +534,13 @@ func (l *learnAndDetectBFLA) StartLearning(apiID uint, numberOfTraces int) {
 	}
 }
 
+func (l *learnAndDetectBFLA) ProvideAuthzModel(apiID uint, am AuthorizationModel) {
+	l.commandsCh <- &ProvideAuthzModelCommand{
+		apiID:      apiID,
+		authzModel: am,
+	}
+}
+
 func ResolveBFLAStatus(statusCode string) restapi.BFLAStatus {
 	code, err := strconv.Atoi(statusCode)
 	if err == nil {
@@ -533,6 +567,9 @@ const (
 )
 
 func SpecTypeFromAPIInfo(apiinfo *database.APIInfo) SpecType {
+	if apiinfo == nil {
+		return SpecTypeNone
+	}
 	if apiinfo.HasProvidedSpec {
 		return SpecTypeProvided
 	}

@@ -35,10 +35,23 @@ type SourceObject struct {
 	Authorized bool                            `json:"authorized"`
 }
 
+func DetectedUserSourceFromString(s string) DetectedUserSource {
+	switch s {
+	case "JWT":
+		return DetectedUserSourceJWT
+	case "BASIC":
+		return DetectedUserSourceBasic
+	case "KONG_X_CONSUMER_ID":
+		return DetectedUserSourceXConsumerIDHeader
+	}
+	return 0
+}
+
 type DetectedUserSource int32
 
 const (
-	DetectedUserSourceJWT = iota
+	DetectedUserSourceUnknown DetectedUserSource = iota
+	DetectedUserSourceJWT
 	DetectedUserSourceBasic
 	DetectedUserSourceXConsumerIDHeader
 )
@@ -47,14 +60,7 @@ func (d *DetectedUserSource) UnmarshalJSON(b []byte) error {
 	buff := bytes.NewBuffer(b)
 	srcName := ""
 	fmt.Fscanf(buff, "%q", &srcName)
-	switch srcName {
-	case "JWT":
-		*d = DetectedUserSourceJWT
-	case "BASIC":
-		*d = DetectedUserSourceBasic
-	case "KONG_X_CONSUMER_ID":
-		*d = DetectedUserSourceXConsumerIDHeader
-	}
+	*d = DetectedUserSourceFromString(srcName)
 	return nil
 }
 

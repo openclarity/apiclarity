@@ -18,6 +18,31 @@ paths:
                 $ref: '#/components/schemas/Version'
 
   /authorizationModel/{apiID}:
+    post:
+      parameters:
+        - in: path
+          schema:
+            type: integer
+          required: true
+          name: apiID
+      requestBody:
+        content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/AuthorizationModel'
+      responses:
+        '201':
+          description: 'Success'
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        default:
+          description: "Error response"
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
     get:
       parameters:
         - in: path

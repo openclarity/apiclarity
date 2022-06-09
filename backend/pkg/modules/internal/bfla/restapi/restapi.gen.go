@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/deepmap/oapi-codegen/pkg/runtime"
 	"github.com/getkin/kin-openapi/openapi3"
@@ -66,6 +67,7 @@ type APIEventAnnotations struct {
 	DestinationK8sObject *K8sObjectRef `json:"destinationK8sObject,omitempty"`
 	DetectedUser         *DetectedUser `json:"detectedUser,omitempty"`
 	External             bool          `json:"external"`
+	MismatchedScopes     bool          `json:"mismatchedScopes"`
 	SourceK8sObject      *K8sObjectRef `json:"sourceK8sObject,omitempty"`
 }
 
@@ -83,10 +85,13 @@ type AuthorizationModel struct {
 
 // AuthorizationModelAudience defines model for AuthorizationModelAudience.
 type AuthorizationModelAudience struct {
-	Authorized bool           `json:"authorized"`
-	EndUsers   []DetectedUser `json:"end_users"`
-	External   bool           `json:"external"`
-	K8sObject  *K8sObjectRef  `json:"k8s_object,omitempty"`
+	Authorized    bool           `json:"authorized"`
+	EndUsers      []DetectedUser `json:"end_users"`
+	External      bool           `json:"external"`
+	K8sObject     *K8sObjectRef  `json:"k8s_object,omitempty"`
+	LastTime      *time.Time     `json:"lastTime,omitempty"`
+	StatusCode    int            `json:"statusCode"`
+	WarningStatus BFLAStatus     `json:"warningStatus"`
 }
 
 // AuthorizationModelOperation defines model for AuthorizationModelOperation.
@@ -129,6 +134,9 @@ type Version struct {
 	Version string `json:"version"`
 }
 
+// PostAuthorizationModelApiIDJSONBody defines parameters for PostAuthorizationModelApiID.
+type PostAuthorizationModelApiIDJSONBody AuthorizationModel
+
 // PutAuthorizationModelApiIDApproveParams defines parameters for PutAuthorizationModelApiIDApprove.
 type PutAuthorizationModelApiIDApproveParams struct {
 	Method       string `json:"method"`
@@ -153,11 +161,17 @@ type PutAuthorizationModelApiIDLearningStartParams struct {
 	NrTraces int `json:"nr_traces"`
 }
 
+// PostAuthorizationModelApiIDJSONRequestBody defines body for PostAuthorizationModelApiID for application/json ContentType.
+type PostAuthorizationModelApiIDJSONRequestBody PostAuthorizationModelApiIDJSONBody
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 
 	// (GET /authorizationModel/{apiID})
 	GetAuthorizationModelApiID(w http.ResponseWriter, r *http.Request, apiID int)
+
+	// (POST /authorizationModel/{apiID})
+	PostAuthorizationModelApiID(w http.ResponseWriter, r *http.Request, apiID int)
 
 	// (PUT /authorizationModel/{apiID}/approve)
 	PutAuthorizationModelApiIDApprove(w http.ResponseWriter, r *http.Request, apiID int, params PutAuthorizationModelApiIDApproveParams)
@@ -210,6 +224,32 @@ func (siw *ServerInterfaceWrapper) GetAuthorizationModelApiID(w http.ResponseWri
 
 	var handler = func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetAuthorizationModelApiID(w, r, apiID)
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler(w, r.WithContext(ctx))
+}
+
+// PostAuthorizationModelApiID operation middleware
+func (siw *ServerInterfaceWrapper) PostAuthorizationModelApiID(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID int
+
+	err = runtime.BindStyledParameter("simple", false, "apiID", chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	var handler = func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostAuthorizationModelApiID(w, r, apiID)
 	}
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -666,6 +706,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/authorizationModel/{apiID}", wrapper.GetAuthorizationModelApiID)
 	})
 	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/authorizationModel/{apiID}", wrapper.PostAuthorizationModelApiID)
+	})
+	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/authorizationModel/{apiID}/approve", wrapper.PutAuthorizationModelApiIDApprove)
 	})
 	r.Group(func(r chi.Router) {
@@ -696,26 +739,27 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+xY3W7jNhN9FYLfd0nEafdm4TutrWbVXf/AstMCi8BgpHHMjUxqSSqta/jdC1KSRdm0",
-	"42ySol3kKpY4PDNz5sxQ4QYnYpULDlwr3N1glSxhRe3PYByFD8B1wLnQVDPB7etcihykZmCfbhcZjTXV",
-	"hX36v4QF7uL/dRrQToXY+fDL56Cy3BKcgtKMW9RP79Xo9isk+jGEneEEFiWGhkRDOlMgH9vbd223BMOf",
-	"GiSnmdmn1zngLr4VIgPKzaoShUzgOwPbEizhW8EkpLj7xWXIcXuzJTjI2QRULrgC4yEFlUiWG0pwFwcc",
-	"CYuJ9JJqxBSSoAvJEeOIZhlKqAKFxAItKMsKCeoCk73arEApegdOikpLxu8OQqwNb0htWLo2VASFXgrJ",
-	"/rKlGogUskMRZEAlN8BeMo1lIx+mYfWoVg6djmoQg1j5oFLStS1XDsnUvjsNG9d2+wTsAFrRkiax85gJ",
-	"ipQBT+CQIVrZGnc+joCn80KBPJ+ifUHvc3Ja4Pfv1Vw8X9tN2MRN0dX5WcQ11fUw13D6ndrZlcVD0wr0",
-	"UqSeFiE4p3r5eO9Yqx0OaeL1Ze7MwO4GAy9WBmI4msfjsIcJ/hwGk2E0vLI/r6JpNAimISY4nsXjqBeN",
-	"ZvF8EPaj2aD97mN09dHx16TQ35uQbWqZP2+Wz2maSlDKu1zORjf+X3+bYoI/BHFkcvg0Gl7Nf5/3RsN4",
-	"Nggn86jvCW2PRGaYq4BbAZgx2VLgoT5ydg1SVdo5iPaecX+WnK7g6ILKaeJfLbyk7aVT2Hys68qRC0vc",
-	"mH0q2XVDaAluiKZ5LsWDQUiBry2QfWF7sHpb/vaJIXamZCO9odHXeDK6jvphHxM8CU3lppNZbxr2vTgO",
-	"3e1SPBytwx4/D0eTN5aML4TnPBxHvYxKptdoINIiAxSMI0ywZjqD9rrpMkyacPDlxeXFT9VRxGnOcBe/",
-	"u7i8eIfLJrfBd+jB3OhsaM6i/tYs34GdlLvTIUpxF1+B9kwbs8ciS7oCbWf6lw1mJpBqWJTaw7SybKjR",
-	"sgBSfYM5NDKu4c6M+e2NsS4/GWzUP19emj+J4Bq4Lvshz1hiw+l8VWU1GsCnDc6yHu06xEWSmM60Cwta",
-	"ZPrlAnC+hzyeQymFRNKx2JJTZevU7WKEWnjKNy6OlS/YNdr5VTxRNVJt/FaAXDc7d2fGowJo+siPVEX0",
-	"bJz796qXMeB6xp4W16vq8rQs/kOCtFP76Wrsl8P+TYpvUnwxKdb/2XQkqPJoe6IoP1cAE7v/ddXJ5VxL",
-	"moD6Fx2WP54SlKbyOUqI7f43JfwIShD5s4Qg8pfSwVvldpWDB+C6s2HpyX9I7JXtWeyfd67+Q6Xw3DV7",
-	"iAnGEbJ26A+ml4i2rAlWxWpF5bokAuklIGiMzaOzAVGeottFRpGqLqXbHHc2O2q3p3rBhhOlzQ3Wa1BP",
-	"vCjC8Xkc7BTt7ZuGt25zus25zKharb2rVlhlh8QC6SVT1eWEe5Fcd2Z9b/KKHNcuPFleu3FCHaa/a47k",
-	"ZJj5OwAA//+E60MNMBoAAA==",
+	"H4sIAAAAAAAC/+xZ33PiNhD+VzxqH9WQ673c8OYAzbkXfgyGtDM3GUaxl6CLLTmSnCtl+N87kg2WjSDk",
+	"1/Umk6eAtdr99ttvV45YoYinGWfAlETtFZLRAlJiPvqjoHcPTPmMcUUU5cw8zgTPQCgK5tv1PCGhIio3",
+	"334VMEdt9EurctoqPbbO/rjwS8s1RjFIRZnx+uWTHF5/g0g95GFrOIZ54UNBpCCeShAP7e3atmuM4B8F",
+	"gpFE71PLDFAbXXOeAGF6NaUyJSpaQBxGPCsy3bWSPBcRPBH+GiMBdzkVEKP2V5tHC5wDydUaIz+jY5AZ",
+	"ZxJ00BhkJGimuURt5DOPmzCeWhDlUekJULlgHmUeSRIvIhKkx+fenNAkFyBPEG4UNQUpyQ1YWUslKLvZ",
+	"Qb0xvMIbwyK0ZsfP1YIL+q+pcZ/HkOyqJwEimHbs5FdbVrqjCtIHRbYbdLhxoj2WMYgQZGkqmEE0Mc8O",
+	"uw03dk0Ctg5qaHGV2HHM+HlMgUWwyxApbXU4F0fA4lkuQRxPUbMTmpwc7ozbT3LGn9StCZFqQlOT45yL",
+	"lCjURjFR8JvST3FTahhJ0w8dHttKpEzBTYH8e8Hx48dPo4gVh9jmu9aHFpZm4ONKXOnQUeOq+k9U+VZA",
+	"joKmoBY8djQzRhlRi4e73Fht/eAKrytzi+f2CgHLU+1iMJyFo14HYXTR88eDYHBuPp4Hk6DvT3oIo3Aa",
+	"joJOMJyGs36vG0z79Wefg/PPVrwqhW7jEKhTS91502xG4liAlM7lYrDb+P/8a4IwOvPDQOfwZTg4n/09",
+	"6wwH4bTfG8+CrgNag0SqmSsd1wDogV7rlV19ZPQShCy1s4P2ljJ3loyksHdBZiRyr+ZO0hrp5CYfE7oM",
+	"ZLvFNmaXSrbd0DMEV0STLBP8XnuIgS2NI/PANGj5tPjsEkNozfNKegOtr9F4eBl0e12E0binKzcZTzuT",
+	"Xtfpx6K7Xor7vXVo8HO/N3ltSdmcO07uUdBJiKBq6fV5nCfg+aNAD0aqEqiv6y5DuIKDTk9OTz6UhyYj",
+	"GUVt9PHk9OQjKprcgG+RnbnRWpGMBt21Xr4BM9O351gQozY6B+WYNnqP8SxICsqcPl9XiGog5bAotIdI",
+	"aVlRo0QOuHzNdI319ZW2Ll5uDOrfT0/1n4gzBUwV/ZAlNDJwWt9kUY3K4eMGZ1GPeh3CPIp0Z5qFOckT",
+	"9XIArDc3R+SeEFx4omaRcemoy4jL/6UwdzlIdcbj5SvXZL2jgg8/qgg/U/nX+FDXtjbTUs+p3KWSfJ9I",
+	"/O2cPV4rB7SBy413OYhltXP7yvCgzKox6vZUInq2n9tPspNQYGpKH4frVcfSmxGkObQfr8Zucda/S/Fd",
+	"ii8mxc2/4C0BsnizeaQoL0oHY7P/ddXJxEwJEoH8id6V3p4SpCLiOUoIzf53JbwFJfDsWULg2Uvp4L1y",
+	"28rBPTDVWtH44P+j5keJo9g/7lz9QaVw/JriIMYfBZ6x875TtfBIzRojmacpEcuCCE8twIPKWH+1NniE",
+	"xd71PCGerO49LY5bqy2160O9YOAEcXWB+RrUY6cXbsXc7+wQ7fWLpvdus7rNussqW62+a6Ow0s7jc08t",
+	"qCzvpuxfPDadubk2e0WONyEcWV7aOGED0901e3LSzPwXAAD//9YIQOUSHQAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
