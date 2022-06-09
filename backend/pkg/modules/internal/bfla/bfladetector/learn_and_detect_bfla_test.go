@@ -353,7 +353,7 @@ func Test_learnAndDetectBFLA_ApproveTrace(t *testing.T) {
 					Path:   "/carts/{id}/merge",
 					Audience: bfladetector.Audience{{
 						K8sObject:  newClientRef("frontend"),
-						EndUsers:   bfladetector.EndUsers{{ID: "user1"}},
+						EndUsers:   bfladetector.EndUsers{{ID: "user1", Source: bfladetector.DetectedUserSourceJWT}},
 						Authorized: true,
 					}},
 				}},
