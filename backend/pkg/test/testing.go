@@ -20,28 +20,24 @@ import (
 	"net/http"
 	"testing"
 
-	oapi_spec "github.com/go-openapi/spec"
+	oapi_spec "github.com/getkin/kin-openapi/openapi3"
 	"gotest.tools/v3/assert"
 )
 
 type Spec struct {
-	Spec *oapi_spec.Swagger
+	Spec *oapi_spec.T
 }
 
 func NewTestSpec() *Spec {
 	return &Spec{
-		Spec: &oapi_spec.Swagger{
-			SwaggerProps: oapi_spec.SwaggerProps{
-				Paths: &oapi_spec.Paths{
-					Paths: map[string]oapi_spec.PathItem{},
-				},
-			},
+		Spec: &oapi_spec.T{
+			Paths: map[string]*oapi_spec.PathItem{},
 		},
 	}
 }
 
-func (ts *Spec) WithPathItem(path string, pathItem oapi_spec.PathItem) *Spec {
-	ts.Spec.Paths.Paths[path] = pathItem
+func (ts *Spec) WithPathItem(path string, pathItem *oapi_spec.PathItem) *Spec {
+	ts.Spec.Paths[path] = pathItem
 	return ts
 }
 
@@ -53,14 +49,12 @@ func (ts *Spec) String(t *testing.T) string {
 }
 
 type PathItem struct {
-	PathItem oapi_spec.PathItem
+	PathItem *oapi_spec.PathItem
 }
 
 func NewTestPathItem() *PathItem {
 	return &PathItem{
-		PathItem: oapi_spec.PathItem{
-			PathItemProps: oapi_spec.PathItemProps{},
-		},
+		PathItem: &oapi_spec.PathItem{},
 	}
 }
 
@@ -90,9 +84,7 @@ type Operation struct {
 
 func NewTestOperation() *Operation {
 	return &Operation{
-		Op: &oapi_spec.Operation{
-			OperationProps: oapi_spec.OperationProps{},
-		},
+		Op: &oapi_spec.Operation{},
 	}
 }
 

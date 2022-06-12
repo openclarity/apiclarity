@@ -17,10 +17,12 @@ package backend
 
 import (
 	"context"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"net/http"
 	"testing"
 
-	"github.com/go-openapi/spec"
+	openapi2 "github.com/getkin/kin-openapi/openapi2"
+	spec "github.com/getkin/kin-openapi/openapi3"
 	"github.com/golang/mock/gomock"
 	"gotest.tools/assert"
 
@@ -302,17 +304,21 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 	defer mockCtrlModules.Finish()
 	mockModules := modules.NewMockModule(mockCtrlModules)
 
+	op := spec.NewOperation()
+	op.Responses = spec.NewResponses()
+	op.Responses["202"] = &spec.ResponseRef{Value: spec.NewResponse().WithDescription("response")}
+
 	speculatorWithProvidedSpec := _speculator.CreateSpeculator(_speculator.Config{})
-	speculatorWithProvidedSpec.Specs[specKey] = _spec.CreateDefaultSpec(host, port, _spec.OperationGeneratorConfig{})
-	err := speculatorWithProvidedSpec.LoadProvidedSpec(specKey, []byte(providedSpec), map[string]string{})
+	speculatorWithProvidedSpec.Specs[testSpecKey] = _spec.CreateDefaultSpec(host, port, _spec.OperationGeneratorConfig{})
+	err := speculatorWithProvidedSpec.LoadProvidedSpec(testSpecKey, []byte(providedSpecV3), map[string]string{})
 	assert.NilError(t, err)
 
 	speculatorWithApprovedSpec := _speculator.CreateSpeculator(_speculator.Config{})
-	speculatorWithApprovedSpec.Specs[specKey] = _spec.CreateDefaultSpec(host, port, _spec.OperationGeneratorConfig{})
+	speculatorWithApprovedSpec.Specs[testSpecKey] = _spec.CreateDefaultSpec(host, port, _spec.OperationGeneratorConfig{})
 	ApprovedSpecReview := &_spec.ApprovedSpecReview{
 		PathToPathItem: map[string]*spec.PathItem{
-			"/api/1/foo": &_spec.NewTestPathItem().WithOperation(http.MethodPost, nil).PathItem,
-			"/api/2/foo": &_spec.NewTestPathItem().WithOperation(http.MethodGet, nil).PathItem,
+			"/api/1/foo": &_spec.NewTestPathItem().WithOperation(http.MethodPost, op).PathItem,
+			"/api/2/foo": &_spec.NewTestPathItem().WithOperation(http.MethodGet, op).PathItem,
 		},
 		PathItemsReview: []*_spec.ApprovedSpecReviewPathItem{
 			{
@@ -323,7 +329,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 			},
 		},
 	}
-	err = speculatorWithApprovedSpec.ApplyApprovedReview(specKey, ApprovedSpecReview)
+	err = speculatorWithApprovedSpec.ApplyApprovedReview(testSpecKey, ApprovedSpecReview, _spec.OASv2)
 	assert.NilError(t, err)
 
 	type fields struct {
@@ -747,6 +753,119 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 			if err := b.handleHTTPTrace(ctx, tt.args.trace); (err != nil) != tt.wantErr {
 				t.Errorf("handleHTTPTrace() error = %v, wantErr %v", err, tt.wantErr)
 			}
+		})
+	}
+}
+
+func Test_getPathItemForVersion(t *testing.T) {
+	type args struct {
+		v3PathItem *spec.PathItem
+		version    _spec.OASVersion
+	}
+	tests := []struct {
+		name string
+		args args
+		want interface{}
+	}{
+		{
+			name: "v2",
+			args: args{
+				v3PathItem: &spec.PathItem{
+					Get: &spec.Operation{
+						Responses: spec.Responses{
+							"200": &spec.ResponseRef{
+								Value: spec.NewResponse().
+									WithJSONSchemaRef(&spec.SchemaRef{
+										Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
+									},
+									),
+							},
+						},
+					},
+				},
+				version: _spec.OASv2,
+			},
+			want: &openapi2.PathItem{
+				Get: &openapi2.Operation{
+					Responses: map[string]*openapi2.Response{
+						"200": {
+							Schema: &spec.SchemaRef{
+								Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "v3",
+			args: args{
+				v3PathItem: &spec.PathItem{
+					Get: &spec.Operation{
+						Responses: spec.Responses{
+							"200": &spec.ResponseRef{
+								Value: spec.NewResponse().
+									WithJSONSchemaRef(&spec.SchemaRef{
+										Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
+									},
+									),
+							},
+						},
+					},
+				},
+				version: _spec.OASv3,
+			},
+			want: &spec.PathItem{
+				Get: &spec.Operation{
+					Responses: spec.Responses{
+						"200": &spec.ResponseRef{
+							Value: spec.NewResponse().
+								WithJSONSchemaRef(&spec.SchemaRef{
+									Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
+								},
+								),
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "unknown",
+			args: args{
+				v3PathItem: &spec.PathItem{
+					Get: &spec.Operation{
+						Responses: spec.Responses{
+							"200": &spec.ResponseRef{
+								Value: spec.NewResponse().
+									WithJSONSchemaRef(&spec.SchemaRef{
+										Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
+									},
+									),
+							},
+						},
+					},
+				},
+				version: _spec.Unknown,
+			},
+			want: &spec.PathItem{
+				Get: &spec.Operation{
+					Responses: spec.Responses{
+						"200": &spec.ResponseRef{
+							Value: spec.NewResponse().
+								WithJSONSchemaRef(&spec.SchemaRef{
+									Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
+								},
+								),
+						},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := getPathItemForVersion(tt.args.v3PathItem, tt.args.version)
+			assert.DeepEqual(t, got, tt.want, cmpopts.IgnoreUnexported(spec.Schema{}))
 		})
 	}
 }
