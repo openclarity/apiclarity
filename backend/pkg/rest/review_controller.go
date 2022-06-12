@@ -21,8 +21,8 @@ import (
 	"net/http"
 	"strconv"
 
+	spec "github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/spec"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 
@@ -49,9 +49,12 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
 	}
 
+	// TODO: get from the API
+	specVersion := speculatorspec.OASv2
+
 	approvedReview := createApprovedReviewForSpeculator(params.Body, pathToPathItem)
 	// apply approved review to the speculator
-	if err := s.speculator.ApplyApprovedReview(speculator.SpecKey(review.SpecKey), approvedReview); err != nil {
+	if err := s.speculator.ApplyApprovedReview(speculator.SpecKey(review.SpecKey), approvedReview, specVersion); err != nil {
 		errMsg := fmt.Sprintf("Failed to apply the approved review. %v", err)
 		log.Error(errMsg)
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
@@ -70,7 +73,7 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 		log.Errorf("Failed to find spec with specKey: %v", review.SpecKey)
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
 	}
-	oapSpec, err := reviewSpec.GenerateOASJson()
+	oapSpec, err := reviewSpec.GenerateOASJson(specVersion)
 	if err != nil {
 		log.Errorf("Failed to generate Open API Spec. %v", err)
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)

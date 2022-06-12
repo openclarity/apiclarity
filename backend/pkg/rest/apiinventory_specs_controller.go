@@ -19,14 +19,14 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/go-openapi/loads"
+	spec "github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/spec"
 	"github.com/go-openapi/strfmt"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
+	speculatorspec "github.com/openclarity/speculator/pkg/spec"
 )
 
 const defaultTagName = "default-tag"
@@ -63,13 +63,12 @@ func createTagsListFromRawSpec(rawSpec string, pathToPathID map[string]string) (
 
 	tagListMap := map[string][]*models.MethodAndPath{}
 
-	analyzed, err := loads.Analyzed([]byte(rawSpec), "")
+	doc, _, err := speculatorspec.LoadAndValidateRawJSONSpec([]byte(rawSpec))
 	if err != nil {
 		return nil, fmt.Errorf("failed to analyze spec: %v. %v", rawSpec, err)
 	}
-	analyzedSpec := analyzed.Spec()
 
-	for path, pathItem := range analyzedSpec.Paths.Paths {
+	for path, pathItem := range doc.Paths {
 		pathID := pathToPathID[path]
 		addOperationToTagList(pathItem.Get, models.HTTPMethodGET, path, pathID, tagListMap)
 		addOperationToTagList(pathItem.Put, models.HTTPMethodPUT, path, pathID, tagListMap)
