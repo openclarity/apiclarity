@@ -7,7 +7,7 @@ import { useFetch, FETCH_METHODS, usePrevious } from 'hooks';
 import ListDisplay from 'components/ListDisplay';
 import Button from 'components/Button';
 import Arrow, { ARROW_NAMES } from 'components/Arrow';
-import Tag from 'components/Tag';
+import MethodTag from 'components/MethodTag';
 import Loader from 'components/Loader';
 import Modal from 'components/Modal';
 import BoldText from 'components/BoldText';
@@ -34,7 +34,7 @@ const BackHeader = ({title, onBack}) => (
 );
 
 const MethodTitle = ({method, path}) => (
-    <div className="method-item-title"><Tag>{method}</Tag><span>{path}</span></div>
+    <div className="method-item-title"><MethodTag method={method} /><span>{path}</span></div>
 );
 
 const SelectedMethodDisplay = ({method, path, pathId, specType, inventoryName, onBack}) => (

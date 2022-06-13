@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useHistory, useRouteMatch } from 'react-router-dom';
 import Table, { utils } from 'components/Table';
-import Tag from 'components/Tag';
+import MethodTag from 'components/MethodTag';
 import StatusIndicator from 'components/StatusIndicator';
 import RiskTag from 'components/RiskTag';
 import SpecDiffIcon, { SPEC_DIFF_TYPES_MAP } from 'components/SpecDiffIcon';
@@ -23,7 +23,7 @@ const EventsTable = ({filters, refreshTimestamp}) => {
                 const {method} = row.original;
 
                 return (
-                    <Tag>{method}</Tag>
+                    <MethodTag method={method} />
                 )
             },
             canSort: true,

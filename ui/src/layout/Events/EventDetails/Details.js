@@ -2,7 +2,7 @@ import React from 'react';
 import { useHistory } from 'react-router-dom';
 import TitleValueDisplay, { TitleValueDisplayRow } from 'components/TitleValueDisplay';
 import StatusIndicator from 'components/StatusIndicator';
-import Tag from 'components/Tag';
+import MethodTag from 'components/MethodTag';
 import Button from 'components/Button';
 
 const Details = ({data}) => {
@@ -13,7 +13,7 @@ const Details = ({data}) => {
     return (
         <div>
             <TitleValueDisplayRow>
-                <TitleValueDisplay title="Method"><Tag>{method}</Tag></TitleValueDisplay>
+                <TitleValueDisplay title="Method"><MethodTag method={method} /></TitleValueDisplay>
                 <TitleValueDisplay title="Status code"><StatusIndicator title={statusCode} isError={statusCode >= 400} /></TitleValueDisplay>
             </TitleValueDisplayRow>
             <TitleValueDisplayRow>
