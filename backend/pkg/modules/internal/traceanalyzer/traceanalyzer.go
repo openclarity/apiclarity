@@ -336,17 +336,20 @@ func (p *traceAnalyzer) getParams(ctx context.Context, event *database.APIEvent)
 	bodyParams = make(map[string]string)
 
 	var spec *models.SpecInfo
+	var eventPathID string
 	// Prefer reconstructed spec
 	if specInfo.ReconstructedSpec != nil {
 		spec = specInfo.ReconstructedSpec
+		eventPathID = event.ReconstructedPathID
 	} else if specInfo.ProvidedSpec != nil {
 		spec = specInfo.ProvidedSpec
+		eventPathID = event.ProvidedPathID
 	}
 
 	if spec != nil {
-		for _, t := range specInfo.ProvidedSpec.Tags {
+		for _, t := range spec.Tags {
 			for _, path := range t.MethodAndPathList {
-				if path.PathID.String() == event.ProvidedPathID && path.Method == event.Method {
+				if path.PathID.String() == eventPathID && path.Method == event.Method {
 					specPath = path.Path
 					pathParams = utils.GetPathParams(path.Path, event.Path)
 					// XXX Need to get other parameters
