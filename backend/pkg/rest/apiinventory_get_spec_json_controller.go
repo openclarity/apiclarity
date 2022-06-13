@@ -18,11 +18,11 @@ package rest
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ghodss/yaml"
 	"net/http"
 
 	"github.com/getkin/kin-openapi/openapi2"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/ghodss/yaml"
 	"github.com/go-openapi/runtime/middleware"
 	log "github.com/sirupsen/logrus"
 
@@ -88,12 +88,13 @@ func (s *Server) getAPISwaggerJSON(apiID uint32, typ swaggerType) (interface{}, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert provided spec into json: %s. %v", specToReturn, err)
 	}
-	
+
 	oasVersion, err := speculatorspec.GetJsonSpecVersion(specToReturn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get spec version: %v", err)
 	}
 
+	// nolint:exhaustive
 	switch oasVersion {
 	case speculatorspec.OASv2:
 		var doc openapi2.T

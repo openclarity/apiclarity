@@ -121,7 +121,7 @@ func getReviewSpecVersion(version string) speculatorspec.OASVersion {
 	case models.ApprovedReviewOasVersionOASv2Dot0:
 		return speculatorspec.OASv2
 	default:
-		// Default to v2 for backward compatability until full support in the UI.
+		// Default to v2 for backward compatibility until full support in the UI.
 		return speculatorspec.OASv2
 	}
 }
