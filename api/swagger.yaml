@@ -314,9 +314,20 @@ definitions:
         items:
           $ref: '#/definitions/HttpMethod'
 
+  OASVersion:
+    description: 'OpenAPI specification version'
+    type: 'string'
+    enum: &OASVersion
+      - OASv2.0
+      - OASv3.0
+
   ApprovedReview:
     type: 'object'
     properties:
+      oasVersion:
+        description: 'OpenAPI specification version to use when saving the approved spec'
+        type: 'string'
+        enum: *OASVersion
       reviewPathItems:
         type: 'array'
         items:

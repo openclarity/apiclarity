@@ -951,6 +951,14 @@ func init() {
     "ApprovedReview": {
       "type": "object",
       "properties": {
+        "oasVersion": {
+          "description": "OpenAPI version to use when saving the approved spec",
+          "type": "string",
+          "enum": [
+            "OASv2.0",
+            "OASv3.0"
+          ]
+        },
         "reviewPathItems": {
           "type": "array",
           "items": {
@@ -1027,6 +1035,14 @@ func init() {
           "type": "string"
         }
       }
+    },
+    "OASVersion": {
+      "description": "OpenAPI version",
+      "type": "string",
+      "enum": [
+        "OASv2.0",
+        "OASv3.0"
+      ]
     },
     "OpenApiSpecs": {
       "description": "An object representing the provided and reconstructed API specs",
@@ -2959,6 +2975,14 @@ func init() {
     "ApprovedReview": {
       "type": "object",
       "properties": {
+        "oasVersion": {
+          "description": "OpenAPI version to use when saving the approved spec",
+          "type": "string",
+          "enum": [
+            "OASv2.0",
+            "OASv3.0"
+          ]
+        },
         "reviewPathItems": {
           "type": "array",
           "items": {
@@ -3035,6 +3059,14 @@ func init() {
           "type": "string"
         }
       }
+    },
+    "OASVersion": {
+      "description": "OpenAPI version",
+      "type": "string",
+      "enum": [
+        "OASv2.0",
+        "OASv3.0"
+      ]
     },
     "OpenApiSpecs": {
       "description": "An object representing the provided and reconstructed API specs",

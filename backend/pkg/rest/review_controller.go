@@ -49,8 +49,7 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
 	}
 
-	// TODO: get from the API
-	specVersion := speculatorspec.OASv2
+	specVersion := getReviewSpecVersion(params.Body.OasVersion)
 
 	approvedReview := createApprovedReviewForSpeculator(params.Body, pathToPathItem)
 	// apply approved review to the speculator
@@ -113,6 +112,18 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 	return operations.NewPostAPIInventoryReviewIDApprovedReviewOK().WithPayload(&models.SuccessResponse{
 		Message: "Success",
 	})
+}
+
+func getReviewSpecVersion(version string) speculatorspec.OASVersion {
+	switch version {
+	case models.ApprovedReviewOasVersionOASv3Dot0:
+		return speculatorspec.OASv3
+	case models.ApprovedReviewOasVersionOASv2Dot0:
+		return speculatorspec.OASv2
+	default:
+		// Default to v2 for backward compatability until full support in the UI.
+		return speculatorspec.OASv2
+	}
 }
 
 func getPathToPathIDMap(review *speculatorspec.ApprovedSpecReview) map[string]string {
