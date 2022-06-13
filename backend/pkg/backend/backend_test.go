@@ -17,13 +17,13 @@ package backend
 
 import (
 	"context"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"net/http"
 	"testing"
 
-	openapi2 "github.com/getkin/kin-openapi/openapi2"
+	"github.com/getkin/kin-openapi/openapi2"
 	spec "github.com/getkin/kin-openapi/openapi3"
 	"github.com/golang/mock/gomock"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"gotest.tools/assert"
 
 	"github.com/openclarity/apiclarity/api/server/models"

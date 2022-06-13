@@ -238,8 +238,10 @@ func getPathItemForVersion(v3PathItem *spec.PathItem, version _spec.OASVersion) 
 		return v2PathItem
 	case _spec.OASv3:
 		return v3PathItem
+	case _spec.Unknown:
+		log.Warnf("Unknown spec version, using v3. version=%v", version)
 	default:
-		log.Warnf("Unkown spec version, using v3. version=%v", version)
+		log.Warnf("Unknown spec version, using v3. version=%v", version)
 	}
 
 	return v3PathItem
