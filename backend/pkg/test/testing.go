@@ -31,8 +31,26 @@ type Spec struct {
 func NewTestSpec() *Spec {
 	return &Spec{
 		Spec: &oapi_spec.T{
-			Paths: map[string]*oapi_spec.PathItem{},
+			OpenAPI: "3.0.3",
+			Info:    createDefaultSwaggerInfo(),
+			Paths:   map[string]*oapi_spec.PathItem{},
 		},
+	}
+}
+
+func createDefaultSwaggerInfo() *oapi_spec.Info {
+	return &oapi_spec.Info{
+		Description:    "This is a generated Open API Spec",
+		Title:          "Swagger",
+		TermsOfService: "https://swagger.io/terms/",
+		Contact: &oapi_spec.Contact{
+			Email: "apiteam@swagger.io",
+		},
+		License: &oapi_spec.License{
+			Name: "Apache 2.0",
+			URL:  "https://www.apache.org/licenses/LICENSE-2.0.html",
+		},
+		Version: "1.0.0",
 	}
 }
 
@@ -84,7 +102,9 @@ type Operation struct {
 
 func NewTestOperation() *Operation {
 	return &Operation{
-		Op: &oapi_spec.Operation{},
+		Op: &oapi_spec.Operation{
+			Responses: oapi_spec.NewResponses(),
+		},
 	}
 }
 
