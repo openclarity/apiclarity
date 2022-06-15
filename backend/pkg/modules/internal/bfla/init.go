@@ -35,7 +35,6 @@ import (
 )
 
 const (
-	nrOfTracesToLearn   = 100
 	moduleVersion       = "0.0.0"
 	persistenceInterval = 5 * time.Second
 )
@@ -65,7 +64,7 @@ func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Modul
 	}
 
 	sp := recovery.NewStatePersister(ctx, accessor, bfladetector.ModuleName, persistenceInterval)
-	p.bflaDetector = bfladetector.NewBFLADetector(ctx, nrOfTracesToLearn, accessor, eventAlerter{accessor}, sp)
+	p.bflaDetector = bfladetector.NewBFLADetector(ctx, accessor, eventAlerter{accessor}, sp)
 
 	handler := &httpHandler{
 		bflaDetector: p.bflaDetector,
@@ -419,7 +418,11 @@ func (h httpHandler) PutAuthorizationModelApiIDLearningReset(w http.ResponseWrit
 	ctx := r.Context()
 	go func() {
 		log.Infof("reset learning api=%d", apiID)
-		h.bflaDetector.ResetLearning(uint(apiID), params.NrTraces)
+		if params.NrTraces == nil {
+			h.bflaDetector.ResetLearning(uint(apiID), -1)
+		} else {
+			h.bflaDetector.ResetLearning(uint(apiID), *params.NrTraces)
+		}
 		done <- struct{}{}
 	}()
 
@@ -440,7 +443,11 @@ func (h httpHandler) PutAuthorizationModelApiIDLearningStart(w http.ResponseWrit
 	ctx := r.Context()
 	go func() {
 		log.Infof("start learning api=%d", apiID)
-		h.bflaDetector.StartLearning(uint(apiID), params.NrTraces)
+		if params.NrTraces == nil {
+			h.bflaDetector.StartLearning(uint(apiID), -1)
+		} else {
+			h.bflaDetector.StartLearning(uint(apiID), *params.NrTraces)
+		}
 		done <- struct{}{}
 	}()
 

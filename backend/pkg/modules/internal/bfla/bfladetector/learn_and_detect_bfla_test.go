@@ -75,7 +75,6 @@ func getAPIInfoWithTags(path string) *database.APIInfo {
 func initBFLADetector(ctrl *gomock.Controller, backendAccessor *core.MockBackendAccessor, storedAuthModels map[uint]bfladetector.AuthorizationModel, storedTracesProcessed, storedTracesToLearn map[uint]int) bfladetector.BFLADetector {
 	var (
 		ctx            = context.Background()
-		learnTracesNr  = 100
 		eventAlerter   = bfladetector.NewMockEventAlerter(ctrl)
 		statePersister = recovery.NewMockStatePersister(ctrl)
 	)
@@ -116,7 +115,7 @@ func initBFLADetector(ctrl *gomock.Controller, backendAccessor *core.MockBackend
 	}).AnyTimes()
 	backendAccessor.EXPECT().CreateAPIEventAnnotations(ctx, gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	backendAccessor.EXPECT().GetAPIInfoAnnotation(ctx, gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	return bfladetector.NewBFLADetector(ctx, learnTracesNr, backendAccessor, eventAlerter, statePersister)
+	return bfladetector.NewBFLADetector(ctx, backendAccessor, eventAlerter, statePersister)
 }
 
 func Test_learnAndDetectBFLA_BuildAuthzModel(t *testing.T) {
@@ -153,6 +152,9 @@ func Test_learnAndDetectBFLA_BuildAuthzModel(t *testing.T) {
 	}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			detector.StartLearning(mapID2name["user"], 100)
+			detector.StartLearning(mapID2name["catalogue"], 100)
+			detector.StartLearning(mapID2name["carts"], 100)
 			for _, trace := range tt.traces {
 				backendAccessor.EXPECT().GetAPIInfo(context.TODO(), gomock.Any()).DoAndReturn(func(ctx context.Context, apiID uint) (*database.APIInfo, error) {
 					return getAPIInfoWithTags(trace.resolvedPath), nil

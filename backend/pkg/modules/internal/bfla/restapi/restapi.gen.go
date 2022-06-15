@@ -145,12 +145,12 @@ type PutAuthorizationModelApiIDDenyParams struct {
 
 // PutAuthorizationModelApiIDLearningResetParams defines parameters for PutAuthorizationModelApiIDLearningReset.
 type PutAuthorizationModelApiIDLearningResetParams struct {
-	NrTraces int `json:"nr_traces"`
+	NrTraces *int `json:"nr_traces,omitempty"`
 }
 
 // PutAuthorizationModelApiIDLearningStartParams defines parameters for PutAuthorizationModelApiIDLearningStart.
 type PutAuthorizationModelApiIDLearningStartParams struct {
-	NrTraces int `json:"nr_traces"`
+	NrTraces *int `json:"nr_traces,omitempty"`
 }
 
 // ServerInterface represents all server handlers.
@@ -379,15 +379,12 @@ func (siw *ServerInterfaceWrapper) PutAuthorizationModelApiIDLearningReset(w htt
 	// Parameter object where we will unmarshal all parameters from the context
 	var params PutAuthorizationModelApiIDLearningResetParams
 
-	// ------------- Required query parameter "nr_traces" -------------
+	// ------------- Optional query parameter "nr_traces" -------------
 	if paramValue := r.URL.Query().Get("nr_traces"); paramValue != "" {
 
-	} else {
-		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "nr_traces"})
-		return
 	}
 
-	err = runtime.BindQueryParameter("form", true, true, "nr_traces", r.URL.Query(), &params.NrTraces)
+	err = runtime.BindQueryParameter("form", true, false, "nr_traces", r.URL.Query(), &params.NrTraces)
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "nr_traces", Err: err})
 		return
@@ -422,15 +419,12 @@ func (siw *ServerInterfaceWrapper) PutAuthorizationModelApiIDLearningStart(w htt
 	// Parameter object where we will unmarshal all parameters from the context
 	var params PutAuthorizationModelApiIDLearningStartParams
 
-	// ------------- Required query parameter "nr_traces" -------------
+	// ------------- Optional query parameter "nr_traces" -------------
 	if paramValue := r.URL.Query().Get("nr_traces"); paramValue != "" {
 
-	} else {
-		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "nr_traces"})
-		return
 	}
 
-	err = runtime.BindQueryParameter("form", true, true, "nr_traces", r.URL.Query(), &params.NrTraces)
+	err = runtime.BindQueryParameter("form", true, false, "nr_traces", r.URL.Query(), &params.NrTraces)
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "nr_traces", Err: err})
 		return
@@ -696,26 +690,26 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+xY3W7jNhN9FYLfd0nEafdm4TutrWbVXf/AstMCi8BgpHHMjUxqSSqta/jdC1KSRdm0",
-	"42ySol3kKpY4PDNz5sxQ4QYnYpULDlwr3N1glSxhRe3PYByFD8B1wLnQVDPB7etcihykZmCfbhcZjTXV",
-	"hX36v4QF7uL/dRrQToXY+fDL56Cy3BKcgtKMW9RP79Xo9isk+jGEneEEFiWGhkRDOlMgH9vbd223BMOf",
-	"GiSnmdmn1zngLr4VIgPKzaoShUzgOwPbEizhW8EkpLj7xWXIcXuzJTjI2QRULrgC4yEFlUiWG0pwFwcc",
-	"CYuJ9JJqxBSSoAvJEeOIZhlKqAKFxAItKMsKCeoCk73arEApegdOikpLxu8OQqwNb0htWLo2VASFXgrJ",
-	"/rKlGogUskMRZEAlN8BeMo1lIx+mYfWoVg6djmoQg1j5oFLStS1XDsnUvjsNG9d2+wTsAFrRkiax85gJ",
-	"ipQBT+CQIVrZGnc+joCn80KBPJ+ifUHvc3Ja4Pfv1Vw8X9tN2MRN0dX5WcQ11fUw13D6ndrZlcVD0wr0",
-	"UqSeFiE4p3r5eO9Yqx0OaeL1Ze7MwO4GAy9WBmI4msfjsIcJ/hwGk2E0vLI/r6JpNAimISY4nsXjqBeN",
-	"ZvF8EPaj2aD97mN09dHx16TQ35uQbWqZP2+Wz2maSlDKu1zORjf+X3+bYoI/BHFkcvg0Gl7Nf5/3RsN4",
-	"Nggn86jvCW2PRGaYq4BbAZgx2VLgoT5ydg1SVdo5iPaecX+WnK7g6ILKaeJfLbyk7aVT2Hys68qRC0vc",
-	"mH0q2XVDaAluiKZ5LsWDQUiBry2QfWF7sHpb/vaJIXamZCO9odHXeDK6jvphHxM8CU3lppNZbxr2vTgO",
-	"3e1SPBytwx4/D0eTN5aML4TnPBxHvYxKptdoINIiAxSMI0ywZjqD9rrpMkyacPDlxeXFT9VRxGnOcBe/",
-	"u7i8eIfLJrfBd+jB3OhsaM6i/tYs34GdlLvTIUpxF1+B9kwbs8ciS7oCbWf6lw1mJpBqWJTaw7SybKjR",
-	"sgBSfYM5NDKu4c6M+e2NsS4/GWzUP19emj+J4Bq4Lvshz1hiw+l8VWU1GsCnDc6yHu06xEWSmM60Cwta",
-	"ZPrlAnC+hzyeQymFRNKx2JJTZevU7WKEWnjKNy6OlS/YNdr5VTxRNVJt/FaAXDc7d2fGowJo+siPVEX0",
-	"bJz796qXMeB6xp4W16vq8rQs/kOCtFP76Wrsl8P+TYpvUnwxKdb/2XQkqPJoe6IoP1cAE7v/ddXJ5VxL",
-	"moD6Fx2WP54SlKbyOUqI7f43JfwIShD5s4Qg8pfSwVvldpWDB+C6s2HpyX9I7JXtWeyfd67+Q6Xw3DV7",
-	"iAnGEbJ26A+ml4i2rAlWxWpF5bokAuklIGiMzaOzAVGeottFRpGqLqXbHHc2O2q3p3rBhhOlzQ3Wa1BP",
-	"vCjC8Xkc7BTt7ZuGt25zus25zKharb2rVlhlh8QC6SVT1eWEe5Fcd2Z9b/KKHNcuPFleu3FCHaa/a47k",
-	"ZJj5OwAA//+E60MNMBoAAA==",
+	"H4sIAAAAAAAC/+xYX3Pithf9Khr9fo+akHZfdnjzgpt1d/kzGNLO7GQYxb4EbYzkleS0lOG7dyTbWAZB",
+	"yCZpZzt5CthXR/eec+4V0QYnYpULDlwr3N1glSxhRe3HYByFD8B1wLnQVDPB7eNcihykZmC/3S4yGmuq",
+	"C/vt/xIWuIv/12lAOxVi58Mvn4MqcktwCkozblE/vVej26+Q6McQdoETWJQYGhIN6UyBfGxt343dEgx/",
+	"apCcZmadXueAu/hWiAwoN2+VKGQC35nYlmAJ3womIcXdLy5DzrY3W4KDnE1A5YIrMDukoBLJckMJ7uKA",
+	"I2ExkV5SjZhCEnQhOWIc0SxDCVWgkFigBWVZIUFdYLKnzQqUonfglKi0ZPzuIMU68IbUgeXWhoqg0Esh",
+	"2V9WqoFIITs0QQZUcgPsJdNENvZhGlaPeuVw01ENYhCrPaiUdG3lyiGZ2menYeM6bp+AHUArW9IUdh4z",
+	"QZEy4AkcMkSrWLOdjyPg6bxQIM+naN/Q+5ycNvj9ezUXz/d2kzZxS3R9fhZxjboe5hpOv9M7O1k8NK1A",
+	"L0XqaRGCc6qXj/eOjdrhkCZfX+XODOxuMPBiZSCGo3k8DnuY4M9hMBlGwyv78SqaRoNgGmKC41k8jnrR",
+	"aBbPB2E/mg3azz5GVx+d/ZoS+nsTsk0t89fN8jlNUwlKeV+Xs9HN/9ffppjgD0EcmRo+jYZX89/nvdEw",
+	"ng3CyTzqe1LbI5EZ5irgVgJmTLYceOiPnF2DVJV3DrK9Z9xfJacrOPpC5TTxvy28pO2VU9h67NbVRi4s",
+	"cXP2uWTXDaEluCGa5rkUDwYhBb62QPaB7cHqafnZZ4bYmZKN9YbGX+PJ6Drqh31M8CQ0yk0ns9407Htx",
+	"HLrbUjwc1WGPn4ejxZtIxhfCcx6Oo15GJdNrNBBpkQEKxhEmWDOdQfu96TJMmnTw5cXlxU/VUcRpznAX",
+	"v7u4vHiHyya3yXfowdzobGjOov7WvL4DOyl3p0OU4i6+Au2ZNmaNRZZ0BdrO9C8bzEwi1bAovYdpFdlQ",
+	"o2UBpPoN5tDIuIY7M+a3Nya6/Mlgs/758tL8SQTXwHXZD3nGEptO56sq1WgAnzY4Sz3aOsRFkpjOtC8W",
+	"tMj0yyXg/B7y7BxKKSSSTsSWnJKtU7eLMWrhkW9cHJMv2DXa+SqeUI1UC78VINfNyt2Z8agBmj7yI1UZ",
+	"PRvn/r3qZQy4nrGn5fWqvjxtix/IkHZqP92N/XLYv1nxzYovZsX6P5uOBFUebU805ecKYGLXv647uZxr",
+	"SRNQ+N87HP97yitN5XOUj+36N+V/ROVF/izhRf5Sur8pt1MOHoDrzoalJ//hsFeyZ7F/3rn5D0nhuUv2",
+	"EBOMI2Tj0B9MLxFtRROsitWKynVJBNJLQNAEm6/OAkR5im4XGUWqunRuc9zZ7KjdnuoFm06UNjdUr0E9",
+	"8aIIZ8/jYKdob98kvHWb023OZUXVau1VtcOqOCQWSC+Zqi4f3IviujPre5FX5LjewlPltZsn1Gn6u+ZI",
+	"TYaZvwMAAP//DtRVFRAaAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

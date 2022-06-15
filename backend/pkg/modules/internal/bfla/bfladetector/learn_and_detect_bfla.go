@@ -46,19 +46,17 @@ const (
 
 var ErrUnsupportedAuthScheme = errors.New("unsupported auth scheme")
 
-func NewBFLADetector(ctx context.Context, learnTracesNr int, apiInfoProvider apiInfoProvider, eventAlerter EventAlerter, sp recovery.StatePersister) BFLADetector {
+func NewBFLADetector(ctx context.Context, apiInfoProvider apiInfoProvider, eventAlerter EventAlerter, sp recovery.StatePersister) BFLADetector {
 	l := &learnAndDetectBFLA{
-		tracesCh:             make(chan *CompositeTrace),
-		commandsCh:           make(chan Command),
-		errCh:                make(chan error),
-		apiInfoProvider:      apiInfoProvider,
-		defaultTracesToLearn: learnTracesNr,
-		authzModelsMap:       recovery.NewPersistedMap(sp, AuthzModelAnnotationName, reflect.TypeOf(AuthorizationModel{})),
-		tracesCounterMap:     recovery.NewPersistedMap(sp, AuthzProcessedTracesAnnotationName, reflect.TypeOf(1)),
-		tracesToLearnMap:     recovery.NewPersistedMap(sp, AuthzTracesToLearnAnnotationName, reflect.TypeOf(1)),
-		statePersister:       sp,
-		eventAlerter:         eventAlerter,
-		mu:                   &sync.RWMutex{},
+		tracesCh:         make(chan *CompositeTrace),
+		commandsCh:       make(chan Command),
+		errCh:            make(chan error),
+		apiInfoProvider:  apiInfoProvider,
+		authzModelsMap:   recovery.NewPersistedMap(sp, AuthzModelAnnotationName, reflect.TypeOf(AuthorizationModel{})),
+		tracesCounterMap: recovery.NewPersistedMap(sp, AuthzProcessedTracesAnnotationName, reflect.TypeOf(1)),
+		statePersister:   sp,
+		eventAlerter:     eventAlerter,
+		mu:               &sync.RWMutex{},
 	}
 	go func() {
 		for {
@@ -142,15 +140,13 @@ type EventAlerter interface {
 }
 
 type learnAndDetectBFLA struct {
-	tracesCh             chan *CompositeTrace
-	commandsCh           chan Command
-	errCh                chan error
-	apiInfoProvider      apiInfoProvider
-	defaultTracesToLearn int
+	tracesCh        chan *CompositeTrace
+	commandsCh      chan Command
+	errCh           chan error
+	apiInfoProvider apiInfoProvider
 
 	authzModelsMap   recovery.PersistedMap
 	tracesCounterMap recovery.PersistedMap
-	tracesToLearnMap recovery.PersistedMap
 
 	statePersister recovery.StatePersister
 
@@ -205,43 +201,29 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 	case *MarkIllegitimateCommand:
 		err = l.updateAuthorizationModel(cmd.path, cmd.method, cmd.clientRef, cmd.apiID, cmd.detectedUser, false, true)
 	case *StopLearningCommand:
-
 		counter, err := l.tracesCounterMap.Get(cmd.apiID)
 		if err != nil {
 			return fmt.Errorf("unable to get state traces counter: %w", err)
 		}
 
-		toLearn, err := l.tracesToLearnMap.Get(cmd.apiID)
-		if err != nil {
-			return fmt.Errorf("unable to get state traces to learn: %w", err)
-		}
-		toLearn.Set(counter.Get())
+		counter.Set(0)
 	case *StartLearningCommand:
-		tracesProcessed, err := l.tracesCounterMap.Get(cmd.apiID)
+		tracesToProcess, err := l.tracesCounterMap.Get(cmd.apiID)
 		if err != nil {
 			return fmt.Errorf("unable to get state traces counter: %w", err)
 		}
-		if tracesProcessed.Get().(int) < l.tracesToLearn(cmd.apiID) {
-			log.Info("won't start learning, because the learning has already started")
+		if _, ok := l.mustLearn(cmd.apiID); ok {
+			log.Warn("won't start learning, because the learning has already started")
 			return nil
 		}
-		toLearn, err := l.tracesToLearnMap.Get(cmd.apiID)
-		if err != nil {
-			return fmt.Errorf("unable to get state traces to learn: %w", err)
-		}
-		toLearn.Set(l.tracesToLearn(cmd.apiID) + cmd.numberOfTraces)
-	case *ResetLearningCommand:
-		toLearn, err := l.tracesToLearnMap.Get(cmd.apiID)
-		if err != nil {
-			return fmt.Errorf("unable to get state traces to learn: %w", err)
-		}
-		toLearn.Set(cmd.numberOfTraces)
 
+		tracesToProcess.Set(cmd.numberOfTraces)
+	case *ResetLearningCommand:
 		counter, err := l.tracesCounterMap.Get(cmd.apiID)
 		if err != nil {
 			return fmt.Errorf("unable to get state traces counter: %w", err)
 		}
-		counter.Set(0)
+		counter.Set(cmd.numberOfTraces)
 
 		// Set existing auth model to empty
 		authzModel, err := l.authzModelsMap.Get(cmd.apiID)
@@ -286,8 +268,8 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		tracesProcessed, _ = tracesProcessedEntry.Get().(int)
 	}
 
-	if tracesProcessed < l.tracesToLearn(apiID) {
-		log.Infof("api %d; processed: %d; traces to learn: %d", trace.APIEvent.APIInfoID, tracesProcessed, l.defaultTracesToLearn)
+	if decrement, ok := l.mustLearn(apiID); ok {
+		log.Debugf("api %d; processed: %d", trace.APIEvent.APIInfoID, tracesProcessed)
 		// to still learn
 		err := l.updateAuthorizationModel(resolvedPath, string(trace.APIEvent.Method),
 			trace.K8SSource, trace.APIEvent.APIInfoID, trace.DetectedUser, true, false)
@@ -295,8 +277,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			return err
 		}
 
-		tracesProcessed++
-		tracesProcessedEntry.Set(tracesProcessed)
+		decrement()
 		return nil
 	}
 	if err := l.updateAuthorizationModel(resolvedPath, string(trace.APIEvent.Method), trace.K8SSource, trace.APIEvent.APIInfoID, trace.DetectedUser, false, false); err != nil {
@@ -318,16 +299,21 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	return nil
 }
 
-func (l *learnAndDetectBFLA) tracesToLearn(apiID uint) int {
-	tracesToLearn, err := l.tracesToLearnMap.Get(apiID)
+func (l *learnAndDetectBFLA) mustLearn(apiID uint) (decrementFn func(), ok bool) {
+	tracesToLearn, err := l.tracesCounterMap.Get(apiID)
 	if err != nil {
-		log.Error(err)
-		return l.defaultTracesToLearn
+		log.Error("load traces to learn error: ", err)
+		return nil, false
 	}
-	if tracesToLearn.Exists() {
-		return tracesToLearn.Get().(int)
+
+	tracesInt := tracesToLearn.Get().(int)
+	if !tracesToLearn.Exists() {
+		return nil, false
 	}
-	return l.defaultTracesToLearn
+	return func() {
+		tracesInt--
+		tracesToLearn.Set(tracesInt)
+	}, tracesInt > 0 || tracesInt == -1
 }
 
 func (l *learnAndDetectBFLA) updateAuthorizationModel(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser, authorize, updateAuthorized bool) error {
@@ -412,15 +398,8 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(path, method string, clien
 }
 
 func (l *learnAndDetectBFLA) IsLearning(apiID uint) bool {
-	tracesProcessed, err := l.tracesCounterMap.Get(apiID)
-	if err != nil {
-		log.Error("load traces error: ", err)
-		return true
-	}
-	if tracesProcessed.Get().(int) < l.tracesToLearn(apiID) {
-		return true
-	}
-	return false
+	_, ok := l.mustLearn(apiID)
+	return ok
 }
 
 func (l *learnAndDetectBFLA) IsUnauthorized(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser) bool {
@@ -488,6 +467,10 @@ func (l *learnAndDetectBFLA) DenyTrace(path, method string, clientRef *k8stracea
 }
 
 func (l *learnAndDetectBFLA) ResetLearning(apiID uint, numberOfTraces int) {
+	if numberOfTraces < -1 {
+		log.Error("value %v not allowed", numberOfTraces)
+		return
+	}
 	l.commandsCh <- &ResetLearningCommand{
 		apiID:          apiID,
 		numberOfTraces: numberOfTraces,
@@ -501,6 +484,10 @@ func (l *learnAndDetectBFLA) StopLearning(apiID uint) {
 }
 
 func (l *learnAndDetectBFLA) StartLearning(apiID uint, numberOfTraces int) {
+	if numberOfTraces < -1 {
+		log.Error("value %v not allowed", numberOfTraces)
+		return
+	}
 	l.commandsCh <- &StartLearningCommand{
 		apiID:          apiID,
 		numberOfTraces: numberOfTraces,
