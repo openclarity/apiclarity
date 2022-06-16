@@ -312,11 +312,12 @@ func (h httpHandler) PostAuthorizationModelApiID(w http.ResponseWriter, r *http.
 	case <-ctx.Done():
 		httpResponse(w, http.StatusCreated, &restapi.ApiResponse{Message: fmt.Sprintf("the request took too long: %s", ctx.Err())})
 	default:
-		apiinfo, err := h.accessor.GetAPIInfo(r.Context(), uint(apiID))
-		if err != nil {
+		specType := bfladetector.SpecTypeNone
+		if apiinfo, err := h.accessor.GetAPIInfo(r.Context(), uint(apiID)); err != nil {
 			log.Error("error getting openAPI spec")
+		} else {
+			specType = bfladetector.SpecTypeFromAPIInfo(apiinfo)
 		}
-		specType := bfladetector.SpecTypeFromAPIInfo(apiinfo)
 		if specType == bfladetector.SpecTypeNone {
 			httpResponse(w, http.StatusOK, &restapi.ApiResponse{Message: "Spec not found, please either provide or reconstruct an api spec"})
 			return

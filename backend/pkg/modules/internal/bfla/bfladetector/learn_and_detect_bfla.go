@@ -561,15 +561,12 @@ func ResolveBFLAStatusInt(code int) restapi.BFLAStatus {
 type SpecType uint
 
 const (
-	SpecTypeNone = iota
+	SpecTypeNone SpecType = iota
 	SpecTypeProvided
 	SpecTypeReconstructed
 )
 
 func SpecTypeFromAPIInfo(apiinfo *database.APIInfo) SpecType {
-	if apiinfo == nil {
-		return SpecTypeNone
-	}
 	if apiinfo.HasProvidedSpec {
 		return SpecTypeProvided
 	}
