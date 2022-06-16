@@ -341,6 +341,53 @@ func init() {
         }
       }
     },
+    "/apiInventory/apiId/{host}/{port}": {
+      "get": {
+        "summary": "Get apiId from host and port",
+        "parameters": [
+          {
+            "$ref": "#/parameters/host"
+          },
+          {
+            "$ref": "#/parameters/port"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "description": "api id",
+              "type": "integer",
+              "format": "uint32"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/apiInventory/{apiId}/apiInfo": {
+      "get": {
+        "summary": "Get apiId from host and port",
+        "parameters": [
+          {
+            "$ref": "#/parameters/apiId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ApiInfo"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
     "/apiInventory/{apiId}/provided_swagger.json": {
       "get": {
         "summary": "Get provided API spec json file",
@@ -1300,6 +1347,13 @@ func init() {
       "name": "hasSpecDiff[is]",
       "in": "query"
     },
+    "host": {
+      "type": "string",
+      "description": "api host name",
+      "name": "host",
+      "in": "path",
+      "required": true
+    },
     "methodIsFilter": {
       "type": "array",
       "items": {
@@ -1368,6 +1422,13 @@ func init() {
       "type": "string",
       "name": "path[start]",
       "in": "query"
+    },
+    "port": {
+      "type": "string",
+      "description": "api port",
+      "name": "port",
+      "in": "path",
+      "required": true
     },
     "portIsFilter": {
       "type": "array",
@@ -2108,6 +2169,71 @@ func init() {
             "schema": {
               "$ref": "#/definitions/ApiInfoWithType"
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ApiInfo"
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/apiInventory/apiId/{host}/{port}": {
+      "get": {
+        "summary": "Get apiId from host and port",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "api host name",
+            "name": "host",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "api port",
+            "name": "port",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "description": "api id",
+              "type": "integer",
+              "format": "uint32"
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/apiInventory/{apiId}/apiInfo": {
+      "get": {
+        "summary": "Get apiId from host and port",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "uint32",
+            "name": "apiId",
+            "in": "path",
+            "required": true
           }
         ],
         "responses": {
@@ -3308,6 +3434,13 @@ func init() {
       "name": "hasSpecDiff[is]",
       "in": "query"
     },
+    "host": {
+      "type": "string",
+      "description": "api host name",
+      "name": "host",
+      "in": "path",
+      "required": true
+    },
     "methodIsFilter": {
       "type": "array",
       "items": {
@@ -3376,6 +3509,13 @@ func init() {
       "type": "string",
       "name": "path[start]",
       "in": "query"
+    },
+    "port": {
+      "type": "string",
+      "description": "api port",
+      "name": "port",
+      "in": "path",
+      "required": true
     },
     "portIsFilter": {
       "type": "array",

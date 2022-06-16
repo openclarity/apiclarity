@@ -618,6 +618,35 @@ paths:
         default:
           $ref: '#/responses/UnknownError'
 
+  /apiInventory/{apiId}/apiInfo:
+    get:
+      summary: 'Get apiId from host and port'
+      parameters:
+        - $ref: '#/parameters/apiId'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/ApiInfo'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /apiInventory/apiId/{host}/{port}:
+    get:
+      summary: 'Get apiId from host and port'
+      parameters:
+        - $ref: '#/parameters/host'
+        - $ref: '#/parameters/port'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            description: 'api id'
+            type: 'integer'
+            format: 'uint32'
+        default:
+          $ref: '#/responses/UnknownError'
+
   /apiInventory/{apiId}/provided_swagger.json:
     get:
       summary: 'Get provided API spec json file'
@@ -1063,6 +1092,20 @@ parameters:
     in: 'path'
     type: 'integer'
     format: 'uint32'
+    required: true
+
+  port:
+    name: 'port'
+    description: 'api port'
+    in: 'path'
+    type: 'string'
+    required: true
+
+  host:
+    name: 'host'
+    description: 'api host name'
+    in: 'path'
+    type: 'string'
     required: true
 
 responses:

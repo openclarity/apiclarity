@@ -148,6 +148,32 @@ func createPathMap(apiEventPathAndMethods []*models.APIEventPathAndMethods) map[
 	return ret
 }
 
+func (s *Server) GetAPIInventoryAPIIDHostPort(params operations.GetAPIInventoryAPIIDHostPortParams) middleware.Responder {
+	apiID, err := s.dbHandler.APIInventoryTable().GetAPIID(params.Host, params.Port)
+	if err != nil {
+		log.Errorf("Failed to get API ID: %v", err)
+		return operations.NewGetAPIInventoryAPIIDHostPortDefault(http.StatusInternalServerError)
+	}
+
+	return operations.NewGetAPIInventoryAPIIDHostPortOK().WithPayload(uint32(apiID))
+}
+
+func (s *Server) GetAPIInventoryAPIIDAPIInfo(params operations.GetAPIInventoryAPIIDAPIInfoParams) middleware.Responder {
+	apiInfo, err := s.dbHandler.APIInventoryTable().GetAPISpecs(params.APIID)
+	if err != nil {
+		log.Errorf("Failed to get API specs: %v", err)
+		return operations.NewGetAPIInventoryAPIIDAPIInfoDefault(http.StatusInternalServerError)
+	}
+
+	return operations.NewGetAPIInventoryAPIIDAPIInfoOK().WithPayload(&models.APIInfo{
+		HasProvidedSpec:      &apiInfo.HasProvidedSpec,
+		HasReconstructedSpec: &apiInfo.HasReconstructedSpec,
+		ID:                   uint32(apiInfo.ID),
+		Name:                 apiInfo.Name,
+		Port:                 apiInfo.Port,
+	})
+}
+
 func (s *Server) GetAPIInventoryAPIIDSuggestedReview(params operations.GetAPIInventoryAPIIDSuggestedReviewParams) middleware.Responder {
 	// get api data from db
 	apiInfo := database.APIInfo{}

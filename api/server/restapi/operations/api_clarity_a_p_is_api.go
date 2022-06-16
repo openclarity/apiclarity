@@ -63,6 +63,12 @@ func NewAPIClarityAPIsAPI(spec *loads.Document) *APIClarityAPIsAPI {
 		GetAPIInventoryHandler: GetAPIInventoryHandlerFunc(func(params GetAPIInventoryParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetAPIInventory has not yet been implemented")
 		}),
+		GetAPIInventoryAPIIDAPIInfoHandler: GetAPIInventoryAPIIDAPIInfoHandlerFunc(func(params GetAPIInventoryAPIIDAPIInfoParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetAPIInventoryAPIIDAPIInfo has not yet been implemented")
+		}),
+		GetAPIInventoryAPIIDHostPortHandler: GetAPIInventoryAPIIDHostPortHandlerFunc(func(params GetAPIInventoryAPIIDHostPortParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetAPIInventoryAPIIDHostPort has not yet been implemented")
+		}),
 		GetAPIInventoryAPIIDProvidedSwaggerJSONHandler: GetAPIInventoryAPIIDProvidedSwaggerJSONHandlerFunc(func(params GetAPIInventoryAPIIDProvidedSwaggerJSONParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetAPIInventoryAPIIDProvidedSwaggerJSON has not yet been implemented")
 		}),
@@ -146,6 +152,10 @@ type APIClarityAPIsAPI struct {
 	GetAPIEventsEventIDReconstructedSpecDiffHandler GetAPIEventsEventIDReconstructedSpecDiffHandler
 	// GetAPIInventoryHandler sets the operation handler for the get API inventory operation
 	GetAPIInventoryHandler GetAPIInventoryHandler
+	// GetAPIInventoryAPIIDAPIInfoHandler sets the operation handler for the get API inventory API ID API info operation
+	GetAPIInventoryAPIIDAPIInfoHandler GetAPIInventoryAPIIDAPIInfoHandler
+	// GetAPIInventoryAPIIDHostPortHandler sets the operation handler for the get API inventory API ID host port operation
+	GetAPIInventoryAPIIDHostPortHandler GetAPIInventoryAPIIDHostPortHandler
 	// GetAPIInventoryAPIIDProvidedSwaggerJSONHandler sets the operation handler for the get API inventory API ID provided swagger JSON operation
 	GetAPIInventoryAPIIDProvidedSwaggerJSONHandler GetAPIInventoryAPIIDProvidedSwaggerJSONHandler
 	// GetAPIInventoryAPIIDReconstructedSwaggerJSONHandler sets the operation handler for the get API inventory API ID reconstructed swagger JSON operation
@@ -265,6 +275,12 @@ func (o *APIClarityAPIsAPI) Validate() error {
 	}
 	if o.GetAPIInventoryHandler == nil {
 		unregistered = append(unregistered, "GetAPIInventoryHandler")
+	}
+	if o.GetAPIInventoryAPIIDAPIInfoHandler == nil {
+		unregistered = append(unregistered, "GetAPIInventoryAPIIDAPIInfoHandler")
+	}
+	if o.GetAPIInventoryAPIIDHostPortHandler == nil {
+		unregistered = append(unregistered, "GetAPIInventoryAPIIDHostPortHandler")
 	}
 	if o.GetAPIInventoryAPIIDProvidedSwaggerJSONHandler == nil {
 		unregistered = append(unregistered, "GetAPIInventoryAPIIDProvidedSwaggerJSONHandler")
@@ -415,6 +431,14 @@ func (o *APIClarityAPIsAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/apiInventory"] = NewGetAPIInventory(o.context, o.GetAPIInventoryHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/apiInventory/{apiId}/apiInfo"] = NewGetAPIInventoryAPIIDAPIInfo(o.context, o.GetAPIInventoryAPIIDAPIInfoHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/apiInventory/apiId/{host}/{port}"] = NewGetAPIInventoryAPIIDHostPort(o.context, o.GetAPIInventoryAPIIDHostPortHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
