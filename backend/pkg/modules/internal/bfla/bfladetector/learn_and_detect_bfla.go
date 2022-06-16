@@ -306,7 +306,7 @@ func (l *learnAndDetectBFLA) mustLearn(apiID uint) (decrementFn func(), ok bool)
 		return nil, false
 	}
 
-	tracesInt := tracesToLearn.Get().(int)
+	tracesInt, _ := tracesToLearn.Get().(int)
 	if !tracesToLearn.Exists() {
 		return nil, false
 	}
@@ -468,11 +468,11 @@ func (l *learnAndDetectBFLA) DenyTrace(path, method string, clientRef *k8stracea
 
 func (l *learnAndDetectBFLA) ResetLearning(apiID uint, numberOfTraces int) {
 	if numberOfTraces < -1 {
-		log.Error("value %v not allowed", numberOfTraces)
+		log.Errorf("value %v not allowed", numberOfTraces)
 		return
 	}
 	l.commandsCh <- &ResetLearningCommand{
-		apiID:          apiID,
+		apiID:           apiID,
 		numberOfTraces: numberOfTraces,
 	}
 }
@@ -485,7 +485,7 @@ func (l *learnAndDetectBFLA) StopLearning(apiID uint) {
 
 func (l *learnAndDetectBFLA) StartLearning(apiID uint, numberOfTraces int) {
 	if numberOfTraces < -1 {
-		log.Error("value %v not allowed", numberOfTraces)
+		log.Errorf("value %v not allowed", numberOfTraces)
 		return
 	}
 	l.commandsCh <- &StartLearningCommand{
