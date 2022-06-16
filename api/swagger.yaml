@@ -620,7 +620,7 @@ paths:
 
   /apiInventory/{apiId}/apiInfo:
     get:
-      summary: 'Get apiId from host and port'
+      summary: 'Get api info from apiId'
       parameters:
         - $ref: '#/parameters/apiId'
       responses:
@@ -631,7 +631,7 @@ paths:
         default:
           $ref: '#/responses/UnknownError'
 
-  /apiInventory/apiId/{host}/{port}:
+  /apiInventory/apiId/fromHostAndPort:
     get:
       summary: 'Get apiId from host and port'
       parameters:
@@ -1070,6 +1070,20 @@ parameters:
     type: 'boolean'
     required: false
 
+  port:
+    name: 'port'
+    description: 'api port'
+    in: 'query'
+    type: 'string'
+    required: true
+
+  host:
+    name: 'host'
+    description: 'api host name'
+    in: 'query'
+    type: 'string'
+    required: true
+
   alertIsFilter:
     name: 'alert[is]'
     in: 'query'
@@ -1092,20 +1106,6 @@ parameters:
     in: 'path'
     type: 'integer'
     format: 'uint32'
-    required: true
-
-  port:
-    name: 'port'
-    description: 'api port'
-    in: 'path'
-    type: 'string'
-    required: true
-
-  host:
-    name: 'host'
-    description: 'api host name'
-    in: 'path'
-    type: 'string'
     required: true
 
 responses:

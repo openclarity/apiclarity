@@ -31,7 +31,7 @@ func NewGetAPIInventoryAPIIDAPIInfo(ctx *middleware.Context, handler GetAPIInven
 
 /* GetAPIInventoryAPIIDAPIInfo swagger:route GET /apiInventory/{apiId}/apiInfo getApiInventoryApiIdApiInfo
 
-Get apiId from host and port
+Get api info from api id
 
 */
 type GetAPIInventoryAPIIDAPIInfo struct {

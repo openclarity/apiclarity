@@ -341,7 +341,7 @@ func init() {
         }
       }
     },
-    "/apiInventory/apiId/{host}/{port}": {
+    "/apiInventory/apiId/fromHostAndPort": {
       "get": {
         "summary": "Get apiId from host and port",
         "parameters": [
@@ -369,7 +369,7 @@ func init() {
     },
     "/apiInventory/{apiId}/apiInfo": {
       "get": {
-        "summary": "Get apiId from host and port",
+        "summary": "Get api info from api id",
         "parameters": [
           {
             "$ref": "#/parameters/apiId"
@@ -1351,7 +1351,7 @@ func init() {
       "type": "string",
       "description": "api host name",
       "name": "host",
-      "in": "path",
+      "in": "query",
       "required": true
     },
     "methodIsFilter": {
@@ -1427,7 +1427,7 @@ func init() {
       "type": "string",
       "description": "api port",
       "name": "port",
-      "in": "path",
+      "in": "query",
       "required": true
     },
     "portIsFilter": {
@@ -2187,7 +2187,7 @@ func init() {
         }
       }
     },
-    "/apiInventory/apiId/{host}/{port}": {
+    "/apiInventory/apiId/fromHostAndPort": {
       "get": {
         "summary": "Get apiId from host and port",
         "parameters": [
@@ -2195,14 +2195,14 @@ func init() {
             "type": "string",
             "description": "api host name",
             "name": "host",
-            "in": "path",
+            "in": "query",
             "required": true
           },
           {
             "type": "string",
             "description": "api port",
             "name": "port",
-            "in": "path",
+            "in": "query",
             "required": true
           }
         ],
@@ -2226,7 +2226,7 @@ func init() {
     },
     "/apiInventory/{apiId}/apiInfo": {
       "get": {
-        "summary": "Get apiId from host and port",
+        "summary": "Get api info from api id",
         "parameters": [
           {
             "type": "integer",
@@ -3438,7 +3438,7 @@ func init() {
       "type": "string",
       "description": "api host name",
       "name": "host",
-      "in": "path",
+      "in": "query",
       "required": true
     },
     "methodIsFilter": {
@@ -3514,7 +3514,7 @@ func init() {
       "type": "string",
       "description": "api port",
       "name": "port",
-      "in": "path",
+      "in": "query",
       "required": true
     },
     "portIsFilter": {
