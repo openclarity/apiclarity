@@ -6,7 +6,7 @@ import Tag from 'components/Tag';
 import Table from 'components/Table';
 import Arrow, { ARROW_NAMES } from 'components/Arrow';
 import Button from 'components/Button';
-import MODULE_TYPES from '../MODULE_TYPES.js';
+import { MODULE_TYPES } from '../MODULE_TYPES.js';
 import BflaInventoryModal from './BflaInventoryModal';
 import emptySelectImage from 'utils/images/select.svg';
 

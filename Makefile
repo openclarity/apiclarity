@@ -13,7 +13,7 @@ DOCKER_IMAGE ?= $(DOCKER_REGISTRY)/$(BINARY_NAME)
 DOCKER_TAG ?= ${VERSION}
 
 # Dependency versions
-GOLANGCI_VERSION = 1.42.0
+GOLANGCI_VERSION = 1.45.2
 LICENSEI_VERSION = 0.3.1
 
 # HELP
@@ -57,6 +57,7 @@ docker:	docker-backend docker-plugins
 .PHONY: docker-backend
 docker-backend: ## Build Docker image
 	@(echo "Building backend docker image ..." )
+	@(cd backend)
 	docker build --build-arg VERSION=${VERSION} \
 		--build-arg BUILD_TIMESTAMP=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") \
 		--build-arg COMMIT_HASH=$(shell git rev-parse HEAD) \

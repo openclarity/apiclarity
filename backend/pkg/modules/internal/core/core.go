@@ -39,6 +39,14 @@ func GetAssetsDir() string {
 	return assetsDir
 }
 
+func GetNotificationPrefix() string {
+	notificationPrefix, ok := os.LookupEnv(config.NotificationPrefix)
+	if !ok {
+		return ""
+	}
+	return notificationPrefix
+}
+
 // The order of the modules is not important.
 // You MUST NOT rely on a specific order of modules.
 var modules []ModuleFactory

@@ -23,9 +23,12 @@ import (
 	"runtime/debug"
 	"strconv"
 	"sync"
+	"time"
 
+	"github.com/go-openapi/spec"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/k8straceannotator"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/recovery"
@@ -79,7 +82,7 @@ type BFLADetector interface {
 	SendTrace(trace *CompositeTrace)
 
 	IsLearning(apiID uint) bool
-	IsUnauthorized(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser) bool
+	FindSourceObj(path, method, clientUid string, apiID uint) (*SourceObject, error)
 
 	ApproveTrace(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser)
 	DenyTrace(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser)
@@ -262,6 +265,48 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 	return nil
 }
 
+func GetSpecOperation(spc *spec.Swagger, method models.HTTPMethod, resolvedPath string) *spec.Operation {
+	switch method {
+	case models.HTTPMethodGET:
+		return spc.Paths.Paths[resolvedPath].Get
+	case models.HTTPMethodHEAD:
+		return spc.Paths.Paths[resolvedPath].Head
+	case models.HTTPMethodPOST:
+		return spc.Paths.Paths[resolvedPath].Post
+	case models.HTTPMethodPUT:
+		return spc.Paths.Paths[resolvedPath].Put
+	case models.HTTPMethodDELETE:
+		return spc.Paths.Paths[resolvedPath].Delete
+	case models.HTTPMethodCONNECT:
+		//op = spc.Paths.Paths[resolvedPath].Connect TODO
+	case models.HTTPMethodOPTIONS:
+		return spc.Paths.Paths[resolvedPath].Options
+	case models.HTTPMethodTRACE:
+		//op = spc.Paths.Paths[resolvedPath].Trace TODO
+	case models.HTTPMethodPATCH:
+		return spc.Paths.Paths[resolvedPath].Patch
+	}
+	return nil
+}
+
+func ContainsAll(items []string, vals []string) bool {
+	for _, item := range items {
+		if !Contains(vals, item) {
+			return false
+		}
+	}
+	return true
+}
+
+func Contains(items []string, val string) bool {
+	for _, item := range items {
+		if val == item {
+			return true
+		}
+	}
+	return false
+}
+
 func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTrace) (err error) {
 	defer runtimeRecover()
 	defer l.statePersister.AckSubmit(trace.APIEvent.ID)
@@ -274,7 +319,6 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	}
 	resolvedPath := ResolvePath(apiInfo, trace.APIEvent)
 
-	log.Info("apiInfo", apiInfo.ProvidedSpecInfo, trace.APIEvent.Path)
 	if SpecTypeFromAPIInfo(apiInfo) == SpecTypeNone {
 		return fmt.Errorf("spec not present cannot learn BFLA")
 	}
@@ -302,8 +346,16 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	if err := l.updateAuthorizationModel(resolvedPath, string(trace.APIEvent.Method), trace.K8SSource, trace.APIEvent.APIInfoID, trace.DetectedUser, false, false); err != nil {
 		return err
 	}
-	if l.isUnauthorized(resolvedPath, string(trace.APIEvent.Method),
-		trace.K8SSource, trace.APIEvent.APIInfoID, trace.DetectedUser) {
+	var srcUid string
+	if trace.K8SSource != nil {
+		srcUid = trace.K8SSource.Uid
+	}
+	aud, setAud, err := l.findSourceObj(resolvedPath, string(trace.APIEvent.Method), srcUid, trace.APIEvent.APIInfoID)
+	if err != nil {
+		return err
+	}
+	aud.WarningStatus = restapi.LEGITIMATE
+	if !aud.Authorized {
 		// updates the auth model but this time as unauthorized
 		severity := core.AlertWarn
 		code := trace.APIEvent.StatusCode
@@ -314,7 +366,11 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		if err := l.eventAlerter.SetEventAlert(ctx, ModuleName, trace.APIEvent.ID, severity); err != nil {
 			return fmt.Errorf("unable to set alert annotation: %w", err)
 		}
+		aud.WarningStatus = ResolveBFLAStatusInt(int(trace.APIEvent.StatusCode))
 	}
+	aud.StatusCode = trace.APIEvent.StatusCode
+	aud.LastTime = time.Time(trace.APIEvent.Time)
+	setAud(aud)
 	return nil
 }
 
@@ -412,6 +468,8 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(path, method string, clien
 }
 
 func (l *learnAndDetectBFLA) IsLearning(apiID uint) bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	tracesProcessed, err := l.tracesCounterMap.Get(apiID)
 	if err != nil {
 		log.Error("load traces error: ", err)
@@ -423,19 +481,18 @@ func (l *learnAndDetectBFLA) IsLearning(apiID uint) bool {
 	return false
 }
 
-func (l *learnAndDetectBFLA) IsUnauthorized(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser) bool {
+func (l *learnAndDetectBFLA) FindSourceObj(path, method, clientUid string, apiID uint) (*SourceObject, error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	return l.isUnauthorized(path, method, clientRef, apiID, user)
+	aud, _, err := l.findSourceObj(path, method, clientUid, apiID)
+	return aud, err
 }
 
-func (l *learnAndDetectBFLA) isUnauthorized(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, _ *DetectedUser) bool {
-	var err error
-	external := clientRef == nil
+func (l *learnAndDetectBFLA) findSourceObj(path, method, clientUid string, apiID uint) (obj *SourceObject, setFn func(v *SourceObject), err error) {
+	external := clientUid == ""
 	authzModelEntry, err := l.authzModelsMap.Get(apiID)
 	if err != nil {
-		log.Error("authz model load error: ", err)
-		return true
+		return nil, nil, fmt.Errorf("authz model load error: %w", err)
 	}
 	authzModel, _ := authzModelEntry.Get().(AuthorizationModel)
 	_, op := authzModel.Operations.Find(func(op *Operation) bool {
@@ -443,24 +500,25 @@ func (l *learnAndDetectBFLA) isUnauthorized(path, method string, clientRef *k8st
 			op.Method == method
 	})
 	if op == nil {
-		log.Error("operation not found: ", err)
-		return true
+		return nil, nil, fmt.Errorf("operation not found: %w", err)
 	}
-	_, aud := op.Audience.Find(func(sa *SourceObject) bool {
-		if external {
-			return sa.External
+	audIndex, obj := op.Audience.Find(func(sa *SourceObject) bool {
+		if sa.External == external {
+			return true
 		}
-		if sa.External {
-			return external
+		if sa.External && !external {
+			return false
 		}
-		return sa.K8sObject.Uid == clientRef.Uid
+		return sa.K8sObject.Uid == clientUid
 	})
-	if aud == nil {
-		log.Error("audience not found: ", err)
-		return true
+	if obj == nil {
+		return nil, nil, fmt.Errorf("audience not found: %w", err)
 	}
 
-	return !aud.Authorized
+	return obj, func(v *SourceObject) {
+		op.Audience[audIndex] = v
+		authzModelEntry.Set(authzModel)
+	}, nil
 }
 
 func (l *learnAndDetectBFLA) SendTrace(trace *CompositeTrace) {
@@ -513,15 +571,15 @@ func ResolveBFLAStatus(statusCode string) restapi.BFLAStatus {
 		return ResolveBFLAStatusInt(code)
 	}
 
-	return restapi.BFLAStatusSUSPICIOUSHIGH
+	return restapi.SUSPICIOUSHIGH
 }
 
 func ResolveBFLAStatusInt(code int) restapi.BFLAStatus {
 	if 200 > code || code > 299 {
-		return restapi.BFLAStatusSUSPICIOUSMEDIUM
+		return restapi.SUSPICIOUSMEDIUM
 	}
 
-	return restapi.BFLAStatusSUSPICIOUSHIGH
+	return restapi.SUSPICIOUSHIGH
 }
 
 type SpecType uint
