@@ -86,3 +86,29 @@ func (s *Server) GetAPIInventory(params operations.GetAPIInventoryParams) middle
 			Total: &total,
 		})
 }
+
+func (s *Server) GetAPIInventoryAPIIDFromHostAndPort(params operations.GetAPIInventoryAPIIDFromHostAndPortParams) middleware.Responder {
+	apiID, err := s.dbHandler.APIInventoryTable().GetAPIID(params.Host, params.Port)
+	if err != nil {
+		log.Errorf("Failed to get API ID: %v", err)
+		return operations.NewGetAPIInventoryAPIIDFromHostAndPortDefault(http.StatusInternalServerError)
+	}
+
+	return operations.NewGetAPIInventoryAPIIDFromHostAndPortOK().WithPayload(uint32(apiID))
+}
+
+func (s *Server) GetAPIInventoryAPIIDAPIInfo(params operations.GetAPIInventoryAPIIDAPIInfoParams) middleware.Responder {
+	apiInfo, err := s.dbHandler.APIInventoryTable().GetAPISpecs(params.APIID)
+	if err != nil {
+		log.Errorf("Failed to get API specs: %v", err)
+		return operations.NewGetAPIInventoryAPIIDAPIInfoDefault(http.StatusInternalServerError)
+	}
+
+	return operations.NewGetAPIInventoryAPIIDAPIInfoOK().WithPayload(&models.APIInfo{
+		HasProvidedSpec:      &apiInfo.HasProvidedSpec,
+		HasReconstructedSpec: &apiInfo.HasReconstructedSpec,
+		ID:                   uint32(apiInfo.ID),
+		Name:                 apiInfo.Name,
+		Port:                 apiInfo.Port,
+	})
+}
