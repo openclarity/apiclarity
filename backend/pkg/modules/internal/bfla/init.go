@@ -324,7 +324,7 @@ func (h httpHandler) PostAuthorizationModelApiID(w http.ResponseWriter, r *http.
 		}
 		authModelReq := &restapi.AuthorizationModel{}
 		if err := json.NewDecoder(r.Body).Decode(authModelReq); err != nil {
-			httpResponse(w, http.StatusNotFound, &restapi.ApiResponse{Message: fmt.Sprintf("error decoding body; id=%d err: %s", apiID, err)})
+			httpResponse(w, http.StatusBadRequest, &restapi.ApiResponse{Message: fmt.Sprintf("error decoding body; id=%d err: %s", apiID, err)})
 			return
 		}
 
