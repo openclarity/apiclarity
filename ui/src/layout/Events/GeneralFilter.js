@@ -1,10 +1,13 @@
 import React from 'react';
 import Filter, { OPERATORS, METHOD_ITEMS, ALERT_ITEMS, formatFiltersToQueryParams } from 'components/Filter';
 import { SPEC_DIFF_TYPES_MAP } from 'components/SpecDiffIcon';
+import { getModules, MODULE_TYPES } from 'modules';
 
 export {
     formatFiltersToQueryParams
 }
+
+const MODULE_ALERT_FILTERS = getModules(MODULE_TYPES.EVENT_DETAILS).map((m) => ({ value: m.moduleName, label: m.name }));
 
 const SPEC_DIFF_ITEMS = [
     {value: "true", label: "present"},
@@ -52,6 +55,9 @@ const FILTERS_MAP = {
     ]},
     specDiffType: {value: "specDiffType", label: "Spec diff type", operators: [
         {...OPERATORS.is, valueItems: Object.values(SPEC_DIFF_TYPES_MAP), creatable: false}
+    ]},
+    alertType: {value: "alertType", label:  "Alert Type", operators: [
+        {...OPERATORS.is, valueItems: MODULE_ALERT_FILTERS, creatable: false}
     ]},
     alert: {value: "alert", label: "Alert Level", valuesMapItems: ALERT_ITEMS, operators: [
         {...OPERATORS.is, valueItems: ALERT_ITEMS, creatable: false}

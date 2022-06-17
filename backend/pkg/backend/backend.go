@@ -122,7 +122,7 @@ func Run() {
 
 	var monitor *k8smonitor.Monitor
 	var samplingManager *manager.Manager
-	if !viper.GetBool(_config.NoMonitorEnvVar) && !viper.GetBool(_database.FakeTracesEnvVar) && !viper.GetBool(_database.FakeDataEnvVar) {
+	if !config.K8sLocal && !viper.GetBool(_config.NoMonitorEnvVar) && !viper.GetBool(_database.FakeTracesEnvVar) && !viper.GetBool(_database.FakeDataEnvVar) {
 		monitor, err = k8smonitor.CreateMonitor(clientset)
 		if err != nil {
 			log.Errorf("Failed to create a monitor: %v", err)
@@ -285,6 +285,8 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 	apiInfo := _database.APIInfo{
 		Name: telemetry.Request.Host,
 		Port: int64(destPort),
+
+		DestinationNamespace: trace.DestinationNamespace,
 	}
 
 	// Set API Info type

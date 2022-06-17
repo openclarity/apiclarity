@@ -27,7 +27,8 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 
 	// Enables the demo module.
-	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/demo"
+	//_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/demo"
+	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer"
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer"
 )
 

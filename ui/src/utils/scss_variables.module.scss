@@ -7,6 +7,9 @@ $color-main: #27446E;
 $color-main-dark: #13274A;
 $color-main-light: #40B5F5;
 
+// White
+$color-white: white;
+
 // // Greys
 $color-grey: #AEB5BC;
 $color-grey-off-white: #F9FCFE;
@@ -38,7 +41,10 @@ $color-status-violet: #721BD5;
 $color-status-blue: #30749E;
 
 //risk colors:
+$color-risk-critical: $color-error-dark;
 $color-risk-high: $color-error;
+$color-risk-medium: $color-warning-dark;
+$color-risk-low: $color-warning;
 $color-risk-unknown: $color-status-blue;
 
 :export {
@@ -57,6 +63,10 @@ $color-risk-unknown: $color-status-blue;
     color-warning: $color-warning;
     color-warning-dark: $color-warning-dark;
     color-success: $color-success;
+
+    color-risk-critical: $color-risk-critical;
     color-risk-high: $color-risk-high;
+    color-risk-medium: $color-risk-medium;
+    color-risk-low: $color-risk-low;
     color-risk-unknown: $color-risk-unknown;
 }

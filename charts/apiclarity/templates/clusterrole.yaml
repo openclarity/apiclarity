@@ -12,4 +12,7 @@ rules:
 - apiGroups: ["apps"]
   resources: ["replicasets", "daemonsets", "deployments"]
   verbs: ["get", "list", "watch"]
+- apiGroups: [ "batch" ]
+  resources: [ "jobs" ]
+  verbs: [ "create" ]
 {{- end -}}

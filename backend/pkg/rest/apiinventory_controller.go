@@ -39,15 +39,21 @@ func (s *Server) PostAPIInventory(params operations.PostAPIInventoryParams) midd
 			Message: "please provide name",
 		})
 	}
+	if params.Body.DestinationNamespace == "" {
+		return operations.NewPostAPIInventoryDefault(http.StatusBadRequest).WithPayload(&models.APIResponse{
+			Message: "please provide destinationNamespace",
+		})
+	}
 	if params.Body.Port < 1 {
 		return operations.NewPostAPIInventoryDefault(http.StatusBadRequest).WithPayload(&models.APIResponse{
 			Message: "please provide a valid port",
 		})
 	}
 	apiInfo := &_database.APIInfo{
-		Type: params.Body.APIType,
-		Name: params.Body.Name,
-		Port: params.Body.Port,
+		Type:                 params.Body.APIType,
+		Name:                 params.Body.Name,
+		Port:                 params.Body.Port,
+		DestinationNamespace: params.Body.DestinationNamespace,
 	}
 	if err := s.dbHandler.APIInventoryTable().FirstOrCreate(apiInfo); err != nil {
 		log.Error(err)

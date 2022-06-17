@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { isEmpty } from 'lodash';
-import MODULE_TYPES from '../MODULE_TYPES.js';
+import { MODULE_TYPES } from '../MODULE_TYPES.js';
 
 import { useFetch, FETCH_METHODS, usePrevious } from 'hooks';
 import Loader from 'components/Loader';
@@ -45,8 +45,8 @@ const TraceDetails = ({trace}) => (
             </thead>
             <tbody>
                 {
-                    trace.map((t) => {
-                        return <tr key={t.id}>
+                    trace.map((t, idx) => {
+                        return <tr key={idx}>
                             <td>{t.name}</td>
                             {/* <td><TextWithLinks text={description} /></td> */}
                             <td>{t.annotation}</td>

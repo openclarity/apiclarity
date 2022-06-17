@@ -17,9 +17,7 @@ table {
 
         thead {
             font-weight: bold;
-            font-size: 9px;
-            text-transform: uppercase;
-            color: $color-main;
+            font-size: 14px;
             border-bottom: 1px solid $color-main;
 
             th {
@@ -27,7 +25,7 @@ table {
             }
         }
         tbody {
-            font-size: 11px;
+            font-size: 14px;
 
             td {
                 border: 1px solid $color-grey-light;

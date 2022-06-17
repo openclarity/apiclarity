@@ -16,6 +16,7 @@
 package sensitive
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"regexp"
@@ -169,7 +170,17 @@ func (w *Sensitive) analyzeSensitive(trace *models.Telemetry) (anns []core.Annot
 }
 
 func (w *Sensitive) Analyze(trace *models.Telemetry) (eventAnns []core.Annotation, apiAnns []core.Annotation) {
-	eventAnns = append(eventAnns, w.analyzeSensitive(trace)...)
+	matches := w.analyzeSensitive(trace)
+
+	// Group annotations by location
+	grouped := map[string][][]byte{}
+	for _, a := range matches {
+		grouped[a.Name] = append(grouped[a.Name], a.Annotation)
+	}
+
+	for name, desc := range grouped {
+		eventAnns = append(eventAnns, core.Annotation{Name: name, Annotation: bytes.Join(desc, []byte(", "))})
+	}
 
 	return eventAnns, apiAnns
 }

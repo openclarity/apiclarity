@@ -28,7 +28,7 @@
     "method": "GET",
     "path": "/v2/pet/1"
   },
-  "requestID": "afd3d070-e880-48e0-b00e-a4bd17f53c29",
+  "requestID": "afd3d070-e880-48e0-b00e-a4bd17f53c28",
   "response": {
     "common": {
       "headers": [

@@ -5,7 +5,7 @@ import Button from 'components/Button';
 import TitleValueDisplay, { TitleValueDisplayRow } from 'components/TitleValueDisplay';
 import BflaStatusIcon, {BFLA_STATUS_TYPES_MAP} from './BflaStatusIcon';
 import BflaModal, {MODAL_ACTION_TYPE} from './BflaModal';
-import MODULE_TYPES from '../MODULE_TYPES.js';
+import { MODULE_TYPES } from '../MODULE_TYPES.js';
 import bflaApiInventory from './BflaApiInventory';
 
 import './bfla.scss';
@@ -69,10 +69,10 @@ const BflaStatus = ({bflaStatus, sourceName}) => {
             statusText = 'This API call seems legitimate.';
             break;
         case SUSPICIOUS_HIGH.value:
-            statusText = `The pod ${sourceName} made this call to the API. This looks suspicious, as it would represent a violation of the current authorization model.  The API server correctly rejected the call`;
+            statusText = `The pod ${sourceName} made this call to the API. This looks suspicious, as it represents a violation of the current authorization model. Moreover, the API server accepted the call, which implies a possible Broken Function Level Authorisation. Please verify authorisation implementation in the API server.`;
             break;
         case SUSPICIOUS_MEDIUM.value:
-            statusText = `The pod ${sourceName} made this call to the API. This looks suspicious, as it represents a violation of the current authorization model. Moreover, the API server accepted the call, which implies a possible Broken Function Level Authorisation. Please verify authorisation implementation in the API server.`;
+            statusText = `The pod ${sourceName} made this call to the API. This looks suspicious, as it would represent a violation of the current authorization model.  The API server correctly rejected the call`;
             break;
         case LEARNING.value:
             statusText = 'Data collection in progress.';
