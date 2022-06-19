@@ -3,7 +3,7 @@ module github.com/openclarity/apiclarity/api3
 go 1.18
 
 require (
-	github.com/deepmap/oapi-codegen v1.11.0
+	github.com/deepmap/oapi-codegen v1.11.1-0.20220609223533-7da811e1cf30
 	github.com/getkin/kin-openapi v0.97.0
 	github.com/go-chi/chi/v5 v5.0.7
 )
