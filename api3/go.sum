@@ -6,8 +6,8 @@ github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/decred/dcrd/crypto/blake256 v1.0.0/go.mod h1:sQl2p6Y26YV+ZOcSTP6thNdn47hh8kt6rqSlvmrXFAc=
 github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.0-20210816181553-5444fa50b93d/go.mod h1:tmAIfUFEirG/Y8jhZ9M+h36obRZAk/1fcSpXwAVlfqE=
 github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1/go.mod h1:hyedUtir6IdtD/7lIxGeCxkaw7y45JueMRL4DIyJDKs=
-github.com/deepmap/oapi-codegen v1.11.0 h1:f/X2NdIkaBKsSdpeuwLnY/vDI0AtPUrmB5LMgc7YD+A=
-github.com/deepmap/oapi-codegen v1.11.0/go.mod h1:k+ujhoQGxmQYBZBbxhOZNZf4j08qv5mC+OH+fFTnKxM=
+github.com/deepmap/oapi-codegen v1.11.1-0.20220609223533-7da811e1cf30 h1:GrBzDz61hPmMTwAdISZmXOMgew9KMvZ3+VjgET7i7e0=
+github.com/deepmap/oapi-codegen v1.11.1-0.20220609223533-7da811e1cf30/go.mod h1:0FVI9oUZ4jEE79b8FNI9k8XKk8S7V0TuzPFGIrvE9lM=
 github.com/getkin/kin-openapi v0.94.0/go.mod h1:LWZfzOd7PRy8GJ1dJ6mCU6tNdSfOwRac1BUPam4aw6Q=
 github.com/getkin/kin-openapi v0.97.0 h1:bsvXZeuGiCW43ZKy6xOY5qfT5fCRYmnJwierblSrHCU=
 github.com/getkin/kin-openapi v0.97.0/go.mod h1:w4lRPHiyOdwGbOkLIyk+P0qCwlu7TXPCHD/64nSXzgE=

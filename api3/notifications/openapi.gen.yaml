@@ -57,8 +57,7 @@ components:
       description: Describes the progress of an ongoing test
       properties:
         apiID:
-          schema:
-            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
         progress:
           description: Progress of the test
           maximum: 100
@@ -79,8 +78,7 @@ components:
       description: Short Test Report
       properties:
         apiID:
-          schema:
-            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
         starttime:
           description: Timestamp of the start of the test
           format: int64
