@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -205,6 +206,11 @@ func aggregateNotificationSpecs() {
 			}
 		}
 	}
+	a := parentNotificationSchema.OneOf[0].Ref
+	_ = a
+	sort.Slice(parentNotificationSchema.OneOf, func(i, j int) bool {
+		return strings.Compare(parentNotificationSchema.OneOf[i].Ref, parentNotificationSchema.OneOf[j].Ref) < 0
+	})
 
 	specout, err := notificationSpec.MarshalJSON()
 	if err != nil {
