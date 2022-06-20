@@ -1834,7 +1834,7 @@ paths:
             schema:
               $ref: '#/components/schemas/TestInput'
       responses:
-        "204":
+        "200":
           content:
             application/json:
               schema:
