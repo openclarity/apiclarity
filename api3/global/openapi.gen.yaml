@@ -346,11 +346,14 @@ components:
           $ref: '#/components/schemas/DetectedUser'
         external:
           type: boolean
+        mismatchedScopes:
+          type: boolean
         sourceK8sObject:
           $ref: '#/components/schemas/K8sObjectRef'
       required:
       - bflaStatus
       - external
+      - mismatchedScopes
     Annotation:
       properties:
         annotation:
@@ -419,10 +422,19 @@ components:
           type: boolean
         k8s_object:
           $ref: '#/components/schemas/K8sObjectRef'
+        lastTime:
+          format: date-time
+          type: string
+        statusCode:
+          type: integer
+        warningStatus:
+          $ref: '#/components/schemas/BFLAStatus'
       required:
       - end_users
       - authorized
       - external
+      - statusCode
+      - warningStatus
       type: object
     AuthorizationModelNotification:
       allOf:
