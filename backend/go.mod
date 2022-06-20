@@ -6,7 +6,7 @@ require (
 	github.com/bxcodec/faker/v3 v3.6.0
 	github.com/deepmap/oapi-codegen v1.11.1-0.20220609223533-7da811e1cf30
 	github.com/docker/docker v20.10.14+incompatible
-	github.com/getkin/kin-openapi v0.94.0
+	github.com/getkin/kin-openapi v0.97.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-openapi/loads v0.21.0
@@ -19,7 +19,6 @@ require (
 	github.com/google/go-cmp v0.5.6
 	github.com/hbollon/go-edlib v1.6.0
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe
 	github.com/openclarity/apiclarity/api v0.0.0
 	github.com/openclarity/apiclarity/plugins/api v0.0.0
 	github.com/openclarity/speculator v0.0.5
@@ -70,6 +69,7 @@ require (
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
+	github.com/invopop/yaml v0.1.0 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.10.0 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
@@ -141,20 +141,12 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 )
 
-require github.com/openclarity/apiclarity/api3/common v0.0.0
-
-require github.com/openclarity/apiclarity/api3/global v0.0.0
-
-require github.com/openclarity/apiclarity/api3/notifications v0.0.0
+require github.com/openclarity/apiclarity/api3 v0.0.0
 
 replace github.com/openclarity/trace-sampling-manager/api v0.0.0 => github.com/openclarity/trace-sampling-manager/api v0.0.0-20220503091058-2730f5ebad2c
 
 replace github.com/openclarity/apiclarity/api v0.0.0 => ./../api
 
-replace github.com/openclarity/apiclarity/api3/common v0.0.0 => ./../api3/common
-
-replace github.com/openclarity/apiclarity/api3/global v0.0.0 => ./../api3/global
-
-replace github.com/openclarity/apiclarity/api3/notifications v0.0.0 => ./../api3/notifications
+replace github.com/openclarity/apiclarity/api3 v0.0.0 => ./../api3
 
 replace github.com/openclarity/apiclarity/plugins/api v0.0.0 => ./../plugins/api
