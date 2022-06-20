@@ -139,7 +139,7 @@ paths:
             schema:
               $ref: '#/components/schemas/TestInput'
       responses:
-        '204':
+        '200':
           description: Successful Response
           content:
             application/json:
@@ -443,8 +443,7 @@ components:
       type: object
       properties:
         apiID:
-          schema:
-            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+          $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
         timestamp:
           type: integer
           format: int64
@@ -840,8 +839,7 @@ components:
       type: object
       properties:
         apiID:
-          schema:
-            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+          $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
         starttime:
           description: Timestamp of the start of the test
           title: Start time
@@ -863,8 +861,7 @@ components:
       type: object
       properties:
         apiID:
-          schema:
-            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+          $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
 
         starttime:
           description: Timestamp of the start of the test

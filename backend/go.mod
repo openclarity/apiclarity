@@ -18,7 +18,6 @@ require (
 	github.com/google/go-cmp v0.5.6
 	github.com/hbollon/go-edlib v1.6.0
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe
 	github.com/openclarity/apiclarity/api v0.0.0
 	github.com/openclarity/apiclarity/plugins/api v0.0.0
 	github.com/openclarity/speculator v0.1.0
@@ -145,20 +144,12 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 )
 
-require github.com/openclarity/apiclarity/api3/common v0.0.0
-
-require github.com/openclarity/apiclarity/api3/global v0.0.0
-
-require github.com/openclarity/apiclarity/api3/notifications v0.0.0
+require github.com/openclarity/apiclarity/api3 v0.0.0
 
 replace github.com/openclarity/trace-sampling-manager/api v0.0.0 => github.com/openclarity/trace-sampling-manager/api v0.0.0-20220503091058-2730f5ebad2c
 
 replace github.com/openclarity/apiclarity/api v0.0.0 => ./../api
 
-replace github.com/openclarity/apiclarity/api3/common v0.0.0 => ./../api3/common
-
-replace github.com/openclarity/apiclarity/api3/global v0.0.0 => ./../api3/global
-
-replace github.com/openclarity/apiclarity/api3/notifications v0.0.0 => ./../api3/notifications
+replace github.com/openclarity/apiclarity/api3 v0.0.0 => ./../api3
 
 replace github.com/openclarity/apiclarity/plugins/api v0.0.0 => ./../plugins/api
