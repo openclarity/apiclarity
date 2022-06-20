@@ -472,7 +472,7 @@ type httpHandler struct {
 	ta *traceAnalyzer
 }
 
-func (h httpHandler) GetEventAnnotations(w http.ResponseWriter, r *http.Request, eventID int64) {
+func (h httpHandler) GetEventAnnotations(w http.ResponseWriter, r *http.Request, eventID int64, params restapi.GetEventAnnotationsParams) {
 	dbAnns, err := h.ta.accessor.ListAPIEventAnnotations(r.Context(), moduleName, uint(eventID))
 	if err != nil {
 		return
@@ -481,6 +481,9 @@ func (h httpHandler) GetEventAnnotations(w http.ResponseWriter, r *http.Request,
 
 	taAnns := fromCoreAnnotations(dbAnns)
 	for _, a := range taAnns {
+		if params.Redacted != nil && *params.Redacted {
+			a = a.Redacted()
+		}
 		f := a.ToFinding()
 		annList = append(annList, restapi.Annotation{
 			Annotation: f.DetailedDesc,
