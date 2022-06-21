@@ -121,6 +121,7 @@ func DumpHTTPFuzzParam(params restapi.FuzzTargetParams) string {
 	return ret
 }
 
+//nolint:varnamelen
 func TrimLeftChars(s string, n int) string {
 	m := 0
 	for i := range s {

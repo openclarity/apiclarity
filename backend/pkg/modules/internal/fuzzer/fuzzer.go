@@ -202,7 +202,7 @@ func (p *pluginFuzzerHTTPHandler) FuzzTarget(writer http.ResponseWriter, req *ht
 	// Get the specs here as it need ctx and accessor
 	specsInfo, err := tools.GetAPISpecsInfo(req.Context(), p.fuzzer.accessor, uint(apiID))
 	if err != nil {
-		logging.Errorf("[Fuzzer] FuzzTarget(%v): can't retreive specs error=(%v)", apiID, err)
+		logging.Errorf("[Fuzzer] FuzzTarget(%v): can't retrieve specs error=(%v)", apiID, err)
 		httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
 		return
 	}
@@ -325,7 +325,7 @@ func (p *pluginFuzzerHTTPHandler) GetRawfindings(writer http.ResponseWriter, req
 //
 // Return the findings list for the lastest Test.
 //
-func (p *pluginFuzzerHTTPHandler) GetApiFindings(writer http.ResponseWriter, req *http.Request, apiID int64, params restapi.GetApiFindingsParams) {
+func (p *pluginFuzzerHTTPHandler) GetAPIFindings(writer http.ResponseWriter, req *http.Request, apiID int64, params restapi.GetAPIFindingsParams) {
 	/*logging.Debugf("[Fuzzer] GetFindings(%v): -->", apiID)
 	api, err := p.fuzzer.model.GetAPI(req.Context(), uint(apiID))
 	if err != nil {
@@ -441,7 +441,7 @@ func (p *pluginFuzzerHTTPHandler) GetAnnotatedSpec(writer http.ResponseWriter, r
 }
 
 //
-// Return the progress status of the on going test
+// Return the progress status of the on going test.
 //
 func (p *pluginFuzzerHTTPHandler) GetTestProgress(writer http.ResponseWriter, req *http.Request, apiID int64) {
 	logging.Debugf("[Fuzzer] GetTestProgress(%v): -->", apiID)
@@ -449,7 +449,7 @@ func (p *pluginFuzzerHTTPHandler) GetTestProgress(writer http.ResponseWriter, re
 }
 
 //
-// Start a test
+// Start a test.
 //
 func (p *pluginFuzzerHTTPHandler) StartTest(writer http.ResponseWriter, req *http.Request, apiID int64) {
 	logging.Debugf("[Fuzzer] StartTest(%v): -->", apiID)
@@ -457,7 +457,7 @@ func (p *pluginFuzzerHTTPHandler) StartTest(writer http.ResponseWriter, req *htt
 }
 
 //
-// Stop an ongoing test
+// Stop an ongoing test.
 //
 func (p *pluginFuzzerHTTPHandler) StopTest(writer http.ResponseWriter, req *http.Request, apiID int64) {
 	logging.Debugf("[Fuzzer] StopTest(%v): -->", apiID)
@@ -465,7 +465,7 @@ func (p *pluginFuzzerHTTPHandler) StopTest(writer http.ResponseWriter, req *http
 }
 
 //
-// Return the report of the last test
+// Return the report of the last test.
 //
 func (p *pluginFuzzerHTTPHandler) GetTestReport(writer http.ResponseWriter, req *http.Request, apiID int64) {
 	logging.Debugf("[Fuzzer] GetTestReport(%v): -->", apiID)

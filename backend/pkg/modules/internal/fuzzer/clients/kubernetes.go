@@ -169,7 +169,7 @@ func (l *K8sClient) getEnvs(apiID int64, endpoint string, securityItem string) [
 		},
 		{
 			Name:  apiIDEnvVar,
-			Value: strconv.FormatInt(int64(apiID), convertToBase10),
+			Value: strconv.FormatInt(apiID, convertToBase10),
 		},
 		{
 			Name:  fuzzersEnvVar,

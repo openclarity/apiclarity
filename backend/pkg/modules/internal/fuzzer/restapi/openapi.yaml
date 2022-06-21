@@ -263,7 +263,7 @@ paths:
   
   /apiFindings/{apiID}:
     get:
-      operationId: GetApiFindings
+      operationId: GetAPIFindings
       summary: 'Get findings for an API and module'
       description: 'Asks for findings of an APIClarity module, and API. Implemented by each module'
       parameters:

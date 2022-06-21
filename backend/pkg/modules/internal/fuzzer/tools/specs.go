@@ -18,7 +18,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// FuzzerSpecInfo An object containing info about a spec
+// FuzzerSpecInfo An object containing info about a spec.
 type FuzzerSpecsInfo struct {
 	ProvidedSpec          string
 	ReconstructedSpec     string
@@ -88,7 +88,7 @@ func LoadSpec(spec []byte) (*openapi3.T, error) {
 		logging.Logf("[Fuzzer] getDocFromSpec(): spec V2 identified")
 		loader := openapi3.NewLoader()
 		var docV2 openapi2.T
-		if err := json.Unmarshal([]byte(spec), &docV2); err != nil {
+		if err := json.Unmarshal(spec, &docV2); err != nil {
 			panic(err)
 		}
 		doc, err := openapi2conv.ToV3(&docV2)
@@ -99,10 +99,10 @@ func LoadSpec(spec []byte) (*openapi3.T, error) {
 			panic(err)
 		}
 		return doc, nil
-	} else if IsV3Specification([]byte(spec)) {
+	} else if IsV3Specification(spec) {
 		logging.Logf("[Fuzzer] getDocFromSpec(): spec V3 identified")
 		loader := openapi3.NewLoader()
-		doc, err := loader.LoadFromData([]byte(spec))
+		doc, err := loader.LoadFromData(spec)
 		if err != nil {
 			panic(err)
 		}
@@ -111,13 +111,14 @@ func LoadSpec(spec []byte) (*openapi3.T, error) {
 		}
 		return doc, nil
 	}
-	return nil, fmt.Errorf("Invalid spec")
+	return nil, fmt.Errorf("invalid spec")
 }
 
 func GetBasePathsFromServers(servers *openapi3.Servers) []string {
 	result := []string{}
 	for _, server := range *servers {
 		// convert the full URL in http request to extract later the base path
+		// olint:noctx	// No need of context, the http.NewRequest is used only for formatting
 		req, err := http.NewRequest("GET", server.URL, nil)
 		if err != nil {
 			panic(err)
@@ -132,15 +133,16 @@ func GetBasePathsFromServers(servers *openapi3.Servers) []string {
 
 func FindRoute(router *routers.Router, verb string, uri string) (*routers.Route, error) {
 	logging.Debugf("[Fuzzer] findRoute(): process path (%v %v)", verb, uri)
+	//nolint:noctx // No need of context, the http.NewRequest is used only for formatting
 	req, err := http.NewRequest(verb, uri, nil)
 	if err != nil {
-		return nil, fmt.Errorf("Can't convert (%v %v) to http request, err=(%v)", verb, uri, err.Error())
+		return nil, fmt.Errorf("can't convert (%v %v) to http request, err=(%v)", verb, uri, err.Error())
 	}
 	req.Header.Set("Content-Type", "application/json") // Report this path in shortreport
-	logging.Debugf("[Fuzzer] findRoute(): ... req to find (%v %v)", req)
+	logging.Debugf("[Fuzzer] findRoute(): ... req to find (%v %v)", verb, req)
 	route, _, err := (*router).FindRoute(req)
 	if err != nil {
-		return nil, fmt.Errorf("Can't find route for (%v %v), err=(%v)", verb, uri, err.Error())
+		return nil, fmt.Errorf("can't find route for (%v %v), err=(%v)", verb, uri, err.Error())
 	}
 	return route, nil
 }

@@ -80,7 +80,7 @@ func (m *Model) GetAPI(ctx context.Context, apiID uint) (*API, error) {
 	* Try to retrieve it from the cache
 	 */
 	for index, api := range m.db {
-		if api.Id == apiID {
+		if api.ID == apiID {
 			return &m.db[index], nil
 		}
 	}
@@ -170,14 +170,14 @@ func (m *Model) ReceiveFullReport(ctx context.Context, apiID uint, body []byte) 
 	return nil
 }
 
-//nolint:unused,deadcode
+//nolint:unused,deadcode // used for debug only
 func dumpSlice(s []API) {
 	/*
 	* Debug only, dump the list of APIs
 	 */
 	logging.Logf("len=%d cap=%d", len(s), cap(s))
 	for _, api := range s {
-		logging.Logf("... API {id(%v), name(%v), port(%d), fuzzed(%v), inFuzzing(%v), namespace(%v), tests(%v)}", api.Id, api.Name, api.Port, api.Fuzzed, api.InFuzzing, api.Namespace, len(api.TestsList))
+		logging.Logf("... API {id(%v), name(%v), port(%d), fuzzed(%v), inFuzzing(%v), namespace(%v), tests(%v)}", api.ID, api.Name, api.Port, api.Fuzzed, api.InFuzzing, api.Namespace, len(api.TestsList))
 		for _, testItem := range api.TestsList {
 			logging.Logf("... ... test {progress(%v), start(%v), lastReport(%d), vulns(%d/%d/%d/%d/%d)}",
 				testItem.Test.Progress,
