@@ -205,13 +205,13 @@ func (p *traceAnalyzer) EventNotify(ctx context.Context, e *core.Event) {
 	eventAnns = append(eventAnns, wbaEventAnns...)
 	apiAnns = append(apiAnns, wbaAPIAnns...)
 
-	// wjtEventAnns, wjtAPIAnns := p.weakJWT.Analyze(trace)
-	// eventAnns = append(eventAnns, wjtEventAnns...)
-	// apiAnns = append(apiAnns, wjtAPIAnns...)
+	wjtEventAnns, wjtAPIAnns := p.weakJWT.Analyze(trace)
+	eventAnns = append(eventAnns, wjtEventAnns...)
+	apiAnns = append(apiAnns, wjtAPIAnns...)
 
-	// sensEventAnns, sensAPIAnns := p.sensitive.Analyze(trace)
-	// eventAnns = append(eventAnns, sensEventAnns...)
-	// apiAnns = append(apiAnns, sensAPIAnns...)
+	sensEventAnns, sensAPIAnns := p.sensitive.Analyze(trace)
+	eventAnns = append(eventAnns, sensEventAnns...)
+	apiAnns = append(apiAnns, sensAPIAnns...)
 
 	// If the status code starts with 2, it means that the request has been
 	// accepted, hence, the parameters were accepted as well. So, we can look at
@@ -322,22 +322,29 @@ func (p *traceAnalyzer) toCoreEventAnnotations(eventAnns []utils.TraceAnalyzerAn
 }
 
 func fromCoreAnnotation(coreAnn *core.Annotation) (ann utils.TraceAnalyzerAnnotation, err error) {
+	var a utils.TraceAnalyzerAnnotation
 	switch coreAnn.Name {
-	case weakbasicauth.KindKnownPassword:
-		var a weakbasicauth.AnnotationKnownPassword
-		err = a.Deserialize(coreAnn.Annotation)
-		return &a, err
-	case weakbasicauth.KindShortPassword:
-		var a weakbasicauth.AnnotationShortPassword
-		err = a.Deserialize(coreAnn.Annotation)
-		return &a, err
-	case weakbasicauth.KindSamePassword:
-		var a weakbasicauth.AnnotationSamePassword
-		err = a.Deserialize(coreAnn.Annotation)
-		return &a, err
+	case weakbasicauth.KindKnownPassword: a = &weakbasicauth.AnnotationKnownPassword{}
+	case weakbasicauth.KindShortPassword: a = &weakbasicauth.AnnotationShortPassword{}
+	case weakbasicauth.KindSamePassword: a = &weakbasicauth.AnnotationSamePassword{}
+
+	case weakjwt.JWTNoAlgField: a = &weakjwt.AnnotationNoAlgField{}
+	case weakjwt.JWTAlgFieldNone: a = &weakjwt.AnnotationAlgFieldNone{}
+	case weakjwt.JWTNotRecommendedAlg: a = &weakjwt.AnnotationNotRecommendedAlg{}
+	case weakjwt.JWTNoExpireClaim: a = &weakjwt.AnnotationNoExpireClaim{}
+	case weakjwt.JWTExpTooFar: a = &weakjwt.AnnotationExpTooFar{}
+	case weakjwt.JWTWeakSymetricSecret: a = &weakjwt.AnnotationWeakSymetricSecret{}
+	case weakjwt.JWTSensitiveContentInHeaders: a = &weakjwt.AnnotationSensitiveContentInHeaders{}
+	case weakjwt.JWTSensitiveContentInClaims: a = &weakjwt.AnnotationSensitiveContentInClaims{}
+
+	case sensitive.RegexpMatching: a = &sensitive.AnnotationRegexpMatching{}
+
 	default:
 		return nil, fmt.Errorf("unknown annotation '%s'", coreAnn.Name)
 	}
+
+	err = a.Deserialize(coreAnn.Annotation)
+	return a, err
 }
 
 func fromCoreAnnotations(coreAnns []*core.Annotation) (anns []utils.TraceAnalyzerAnnotation) {
