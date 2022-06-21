@@ -27,11 +27,15 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/openclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/api3/common"
+	oapicommon "github.com/openclarity/apiclarity/api3/common"
+	"github.com/openclarity/apiclarity/api3/notifications"
 	"github.com/openclarity/apiclarity/backend/pkg/config"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/guessableid"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/nlid"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/restapi"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/sensitive"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/weakbasicauth"
@@ -61,7 +65,7 @@ type Finding struct {
 	ShortDesc    string
 	DetailedDesc string
 	Severity     string
-	Alert        *core.Annotation
+	Alert        core.AlertSeverity
 }
 
 type ParameterFinding struct {
@@ -99,7 +103,7 @@ func newTraceAnalyzer(ctx context.Context, accessor core.BackendAccessor) (core.
 	var err error
 
 	p := traceAnalyzer{}
-	h := HandlerWithOptions(&httpHandler{ta: &p}, ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + moduleName})
+	h := restapi.HandlerWithOptions(&httpHandler{ta: &p}, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + moduleName})
 	p.httpHandler = h
 	p.ignoreFindings = map[string]bool{}
 	p.accessor = accessor
@@ -228,21 +232,28 @@ func (p *traceAnalyzer) EventNotify(ctx context.Context, e *core.Event) {
 		}
 
 		// Check for guessable IDs
+		var groupedGuessable []ParameterFinding
 		for pName, pValue := range pathParams {
 			if guessable, reason := p.guessableID.IsGuessableParam("", pName, pValue); guessable {
-				f := ParameterFinding{Location: specPath, Method: string(event.Method), Name: pName, Value: pValue, Reason: reason}
-				bytes, err := json.Marshal(f)
-				if err == nil {
-					apiAnns = append(apiAnns, core.Annotation{Name: "GUESSABLE_ID", Annotation: bytes})
-				}
+				groupedGuessable = append(groupedGuessable, ParameterFinding{Location: specPath, Method: string(event.Method), Name: pName, Value: pValue, Reason: reason})
+			}
+		}
+		if len(groupedGuessable) > 0 {
+			bytes, err := json.Marshal(groupedGuessable)
+			if err == nil {
+				apiAnns = append(apiAnns, core.Annotation{Name: "GUESSABLE_ID", Annotation: bytes})
 			}
 		}
 
 		// Check for NLIDS
 		eventNLIDAnns, _ := p.nlid.Analyze(pathParams, trace)
-		for _, e := range eventNLIDAnns {
-			f := ParameterFinding{Location: specPath, Method: string(event.Method), Name: "", Value: string(e.Annotation), Reason: nlid.Reason{}}
-			bytes, err := json.Marshal(f)
+		if len(eventNLIDAnns) > 0 {
+			// Regroup NLIDs
+			var groupedNLIDs []ParameterFinding
+			for _, e := range eventNLIDAnns {
+				groupedNLIDs = append(groupedNLIDs, ParameterFinding{Location: specPath, Method: string(event.Method), Name: "", Value: string(e.Annotation), Reason: nlid.Reason{}})
+			}
+			bytes, err := json.Marshal(groupedNLIDs)
 			if err == nil {
 				eventAnns = append(eventAnns, core.Annotation{Name: "NLID", Annotation: bytes})
 			}
@@ -259,6 +270,7 @@ func (p *traceAnalyzer) EventNotify(ctx context.Context, e *core.Event) {
 		if err := p.accessor.CreateAPIEventAnnotations(ctx, p.Name(), event.ID, filteredEventAnns...); err != nil {
 			log.Error(err)
 		}
+		p.setAlertSeverity(ctx, event.ID, filteredEventAnns)
 	}
 
 	filteredAPIAnns := []core.Annotation{}
@@ -273,7 +285,43 @@ func (p *traceAnalyzer) EventNotify(ctx context.Context, e *core.Event) {
 		}
 	}
 
-	p.setAlertSeverity(ctx, event.ID, filteredEventAnns)
+	if true {
+		location := "#/paths/blablabla/get"
+		additionalInfo := map[string]interface{}{
+			"token":            "XXXVeryBadTokenXXX",
+			"sensitive_claims": []string{"password", "ssn"},
+		}
+		apiFinding := common.APIFinding{
+			AdditionalInfo:            &additionalInfo,
+			Description:               "A Weak JSON Web Token is used",
+			Name:                      "Weak JWT",
+			Severity:                  "MEDIUM",
+			Source:                    moduleName,
+			ReconstructedSpecLocation: &location,
+			ProvidedSpecLocation:      &location,
+			Type:                      "WEAK_JWT",
+		}
+		err := p.sendAPIFindingsNotification(ctx, event.APIInfoID, []common.APIFinding{apiFinding})
+		if err != nil {
+			log.Error(err)
+		}
+	}
+
+	return
+}
+
+func (p *traceAnalyzer) sendAPIFindingsNotification(ctx context.Context, apiID uint, apiFindings []common.APIFinding) error {
+
+	apiN := notifications.ApiFindingsNotification{
+		NotificationType: "ApiFindingsNotification",
+		Items:            &apiFindings,
+	}
+	n := notifications.APIClarityNotification{}
+	n.FromApiFindingsNotification(apiN)
+
+	err := p.accessor.Notify(ctx, moduleName, apiID, n)
+
+	return err
 }
 
 func (p *traceAnalyzer) EventAnnotationNotify(modName string, eventID uint, ann core.Annotation) error {
@@ -285,22 +333,38 @@ func (p *traceAnalyzer) APIAnnotationNotify(modName string, apiID uint, annotati
 }
 
 func (p *traceAnalyzer) setAlertSeverity(ctx context.Context, eventID uint, anns []core.Annotation) {
+	// Find Highest alert
+	maxAlert := core.AlertInfo
 	for _, a := range anns {
 		f := getEventDescription(a)
-		if f.Alert != nil {
-			if err := p.accessor.CreateAPIEventAnnotations(ctx, p.Name(), eventID, *f.Alert); err != nil {
-				log.Error(err)
-			} else {
-				break
-			}
+		if f.Alert > maxAlert {
+			maxAlert = f.Alert
 		}
+		// We reach the maximum alert level, not need to go further
+		if maxAlert == core.AlertCritical {
+			break
+		}
+	}
+
+	var alertAnn core.Annotation
+	switch maxAlert {
+	case core.AlertInfo:
+		alertAnn = core.AlertInfoAnn
+	case core.AlertWarn:
+		alertAnn = core.AlertWarnAnn
+	case core.AlertCritical:
+		alertAnn = core.AlertCriticalAnn
+	}
+
+	if err := p.accessor.CreateAPIEventAnnotations(ctx, p.Name(), eventID, alertAnn); err != nil {
+		log.Error(err)
 	}
 }
 
 func getAPISpecsInfo(ctx context.Context, accessor core.BackendAccessor, apiID uint) (*models.OpenAPISpecs, error) {
 	apiInfo, err := accessor.GetAPIInfo(ctx, apiID)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get specification API '%d' for %w", apiID, err)
+		return nil, err
 	}
 
 	specsInfo := &models.OpenAPISpecs{}
@@ -336,17 +400,20 @@ func (p *traceAnalyzer) getParams(ctx context.Context, event *database.APIEvent)
 	bodyParams = make(map[string]string)
 
 	var spec *models.SpecInfo
+	var eventPathID string
 	// Prefer reconstructed spec
 	if specInfo.ReconstructedSpec != nil {
 		spec = specInfo.ReconstructedSpec
+		eventPathID = event.ReconstructedPathID
 	} else if specInfo.ProvidedSpec != nil {
 		spec = specInfo.ProvidedSpec
+		eventPathID = event.ProvidedPathID
 	}
 
 	if spec != nil {
-		for _, t := range specInfo.ProvidedSpec.Tags {
+		for _, t := range spec.Tags {
 			for _, path := range t.MethodAndPathList {
-				if path.PathID.String() == event.ProvidedPathID && path.Method == event.Method {
+				if path.PathID.String() == eventPathID && path.Method == event.Method {
 					specPath = path.Path
 					pathParams = utils.GetPathParams(path.Path, event.Path)
 					// XXX Need to get other parameters
@@ -368,19 +435,19 @@ func (h httpHandler) GetEventAnnotations(w http.ResponseWriter, r *http.Request,
 	if err != nil {
 		return
 	}
-	annList := []Annotation{}
+	annList := []restapi.Annotation{}
 
 	for _, a := range dbAnns {
 		f := getEventDescription(*a)
 
-		annList = append(annList, Annotation{
+		annList = append(annList, restapi.Annotation{
 			Annotation: f.DetailedDesc,
 			Name:       f.ShortDesc,
 			Severity:   f.Severity,
 			Kind:       a.Name,
 		})
 	}
-	result := Annotations{
+	result := restapi.Annotations{
 		Items: &annList,
 		Total: len(annList),
 	}
@@ -397,18 +464,18 @@ func (h httpHandler) GetAPIAnnotations(w http.ResponseWriter, r *http.Request, a
 	if err != nil {
 		return
 	}
-	annList := []Annotation{}
+	annList := []restapi.Annotation{}
 
 	for _, a := range dbAnns {
 		f := getAPIDescription(*a)
-		annList = append(annList, Annotation{
+		annList = append(annList, restapi.Annotation{
 			Annotation: f.DetailedDesc,
 			Name:       f.ShortDesc,
 			Severity:   f.Severity,
 			Kind:       a.Name,
 		})
 	}
-	result := Annotations{
+	result := restapi.Annotations{
 		Items: &annList,
 		Total: len(annList),
 	}
@@ -420,12 +487,17 @@ func (h httpHandler) GetAPIAnnotations(w http.ResponseWriter, r *http.Request, a
 	}
 }
 
-func (h httpHandler) DeleteAPIAnnotations(w http.ResponseWriter, r *http.Request, apiID int64, params DeleteAPIAnnotationsParams) {
+func (h httpHandler) DeleteAPIAnnotations(w http.ResponseWriter, r *http.Request, apiID int64, params restapi.DeleteAPIAnnotationsParams) {
 	err := h.ta.accessor.DeleteAPIInfoAnnotations(r.Context(), moduleName, uint(apiID), params.Name)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h httpHandler) GetApiFindings(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.GetApiFindingsParams) {
 
 	w.WriteHeader(http.StatusNoContent)
 }

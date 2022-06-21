@@ -91,6 +91,8 @@ definitions:
       hasProvidedSpec:
         type: 'boolean'
         default: false
+      destinationNamespace:
+        type: 'string'
 
   ApiInfoWithType:
     type: 'object'
@@ -354,6 +356,7 @@ paths:
         - $ref: '#/parameters/apiEventSortKey'
         - $ref: '#/parameters/sortDir'
         - $ref: '#/parameters/showNonApi'
+        - $ref: '#/parameters/apiInfoIdIsFilter'
         - $ref: '#/parameters/methodIsFilter'
         - $ref: '#/parameters/pathIsFilter'
         - $ref: '#/parameters/pathIsNotFilter'
@@ -378,6 +381,7 @@ paths:
         - $ref: '#/parameters/specEndsWithFilter'
         - $ref: '#/parameters/specContainsFilter'
         - $ref: '#/parameters/alertIsFilter'
+        - $ref: '#/parameters/alertIsType'
       responses:
         '200':
           description: 'Success'
@@ -618,6 +622,35 @@ paths:
         default:
           $ref: '#/responses/UnknownError'
 
+  /apiInventory/{apiId}/apiInfo:
+    get:
+      summary: 'Get api info from apiId'
+      parameters:
+        - $ref: '#/parameters/apiId'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/ApiInfo'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /apiInventory/apiId/fromHostAndPort:
+    get:
+      summary: 'Get apiId from host and port'
+      parameters:
+        - $ref: '#/parameters/host'
+        - $ref: '#/parameters/port'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            description: 'api id'
+            type: 'integer'
+            format: 'uint32'
+        default:
+          $ref: '#/responses/UnknownError'
+
   /apiInventory/{apiId}/provided_swagger.json:
     get:
       summary: 'Get provided API spec json file'
@@ -786,6 +819,13 @@ parameters:
     in: 'query'
     type: 'boolean'
     required: true
+
+  apiInfoIdIsFilter:
+    name: 'apiInfoId[is]'
+    in: 'query'
+    type: 'integer'
+    format: 'uint32'
+    required: false
 
   methodIsFilter:
     name: 'method[is]'
@@ -1041,6 +1081,20 @@ parameters:
     type: 'boolean'
     required: false
 
+  port:
+    name: 'port'
+    description: 'api port'
+    in: 'query'
+    type: 'string'
+    required: true
+
+  host:
+    name: 'host'
+    description: 'api host name'
+    in: 'query'
+    type: 'string'
+    required: true
+
   alertIsFilter:
     name: 'alert[is]'
     in: 'query'
@@ -1049,6 +1103,14 @@ parameters:
     items:
       type: 'string'
       enum: *AlertSeverityEnum
+    required: false
+
+  alertIsType:
+    name: 'alertType[is]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
     required: false
 
   apiId:

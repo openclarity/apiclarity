@@ -23,7 +23,8 @@ export const METHOD_ITEMS = [
 ];
 
 export const ALERT_ITEMS = [
-	{value: "ALERT_HIGH", label: "HIGH"},
+	{value: "ALERT_INFO", label: "INFORMATION"},
+	{value: "ALERT_WARN", label: "WARNING"},
 	{value: "ALERT_CRITICAL", label: "CRITICAL"},
 ]
 
@@ -35,6 +36,6 @@ export const formatFiltersToQueryParams = (filters) => {
 
 export const getValueLabel = (valueItems=[], value) => {
     const valueItem = valueItems.find(valueItem => valueItem.value === value);
-    
+
     return !!valueItem ? valueItem.label : value;
 };

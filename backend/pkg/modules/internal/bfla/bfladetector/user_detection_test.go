@@ -16,6 +16,7 @@
 package bfladetector
 
 import (
+	"github.com/golang-jwt/jwt/v4"
 	"net/http"
 	"reflect"
 	"testing"
@@ -40,6 +41,11 @@ func TestGetUserID(t *testing.T) {
 		want: &DetectedUser{
 			Source: DetectedUserSourceJWT,
 			ID:     "test0",
+			JWTClaims: &JWTClaimsWithScopes{
+				RegisteredClaims: &jwt.RegisteredClaims{
+					Subject: "test0",
+				},
+			},
 		},
 		wantErr: false,
 	}, {

@@ -450,3 +450,90 @@ func authModels() map[uint]bfladetector.AuthorizationModel {
 		},
 	}
 }
+
+func Test_Contains(t *testing.T) {
+	type args struct {
+		items []string
+		val   string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{{
+		name: "is success",
+		args: args{
+			items: []string{"A", "B", "C", "D", "E"},
+			val:   "A",
+		},
+		want: true,
+	}}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := bfladetector.Contains(tt.args.items, tt.args.val); got != tt.want {
+				t.Errorf("contains() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestContainsAll(t *testing.T) {
+	type args struct {
+		items []string
+		vals  []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{{
+		name: "is success",
+		args: args{
+			items: []string{"pets:write", "pets:read"},
+			vals:  []string{"pets:write", "pets:read", "admin"},
+		},
+		want: true,
+	}, {
+		name: "is failure 1",
+		args: args{
+			items: []string{"pets:write", "pets:read"},
+			vals:  []string{"pets:write"},
+		},
+		want: false,
+	}, {
+		name: "is failure 2",
+		args: args{
+			items: []string{"pets:read"},
+			vals:  []string{"pets:write"},
+		},
+		want: false,
+	}, {
+		name: "is failure 3",
+		args: args{
+			items: []string{"pets:write", "pets:read"},
+			vals:  []string{"tags:write", "tags:read"},
+		},
+		want: false,
+	}, {
+		name: "is failure 4",
+		args: args{
+			items: []string{"pets:write", "pets:read"},
+			vals:  []string{""},
+		},
+		want: false,
+	}, {
+		name: "is failure 5",
+		args: args{
+			items: []string{"pets:write", "pets:read"},
+			vals:  []string{},
+		},
+		want: false,
+	}}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := bfladetector.ContainsAll(tt.args.items, tt.args.vals); got != tt.want {
+				t.Errorf("ContainsAll() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

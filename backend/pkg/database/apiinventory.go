@@ -54,6 +54,7 @@ type APIInfo struct {
 	ReconstructedSpecInfo string         `json:"reconstructedSpecInfo,omitempty" gorm:"column:reconstructed_spec_info" faker:"-"`
 	ProvidedSpec          string         `json:"providedSpec,omitempty" gorm:"column:provided_spec" faker:"-"`
 	ProvidedSpecInfo      string         `json:"providedSpecInfo,omitempty" gorm:"column:provided_spec_info" faker:"-"`
+	DestinationNamespace  string         `json:"destinationNamespace,omitempty" gorm:"column:destination_namespace" faker:"-"`
 
 	Annotations []*APIInfoAnnotation `gorm:"foreignKey:APIID;references:ID"`
 }
@@ -80,13 +81,14 @@ func (APIInfo) TableName() string {
 	return apiInventoryTableName
 }
 
-func APIInfoFromDB(event *APIInfo) *models.APIInfo {
+func APIInfoFromDB(apiInfo *APIInfo) *models.APIInfo {
 	return &models.APIInfo{
-		HasProvidedSpec:      &event.HasProvidedSpec,
-		HasReconstructedSpec: &event.HasReconstructedSpec,
-		ID:                   uint32(event.ID),
-		Name:                 event.Name,
-		Port:                 event.Port,
+		HasProvidedSpec:      &apiInfo.HasProvidedSpec,
+		HasReconstructedSpec: &apiInfo.HasReconstructedSpec,
+		ID:                   uint32(apiInfo.ID),
+		Name:                 apiInfo.Name,
+		Port:                 apiInfo.Port,
+		DestinationNamespace: apiInfo.DestinationNamespace,
 	}
 }
 

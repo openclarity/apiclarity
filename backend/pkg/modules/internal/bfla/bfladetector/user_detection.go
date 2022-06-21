@@ -49,11 +49,17 @@ func GetUserID(headers http.Header) (*DetectedUser, error) {
 	}
 	if strings.HasPrefix(authz, "Bearer ") {
 		bearer := strings.TrimPrefix(authz, "Bearer ")
-		claims := &jwt.RegisteredClaims{}
+		claims := &JWTClaimsWithScopes{}
 		if _, _, err := jwt.NewParser(jwt.WithoutClaimsValidation()).ParseUnverified(bearer, claims); err != nil {
 			return nil, fmt.Errorf("unsuported bearer token: %w", err)
 		}
-		return &DetectedUser{Source: DetectedUserSourceJWT, ID: claims.Subject}, nil
+		return &DetectedUser{Source: DetectedUserSourceJWT, ID: claims.Subject, JWTClaims: claims}, nil
 	}
 	return nil, ErrUnsupportedAuthScheme
+}
+
+type JWTClaimsWithScopes struct {
+	*jwt.RegisteredClaims
+
+	Scope *string `json:"scope"`
 }

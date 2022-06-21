@@ -1,4 +1,5 @@
 export const ICON_NAMES = {
+    COLUMNS: "columns",
     DASHBOARD: "dashboard",
     INVENTORY: "inventory",
     EVENTS: "events",
@@ -22,5 +23,6 @@ export const ICON_NAMES = {
     UNMERGE: "unmerge",
     ZOMBIE: "zombie",
     SHADOW: "shadow",
-    BEETLE_ROUND: "beetle-round"
+    BEETLE_ROUND: "beetle-round",
+    INFO: "info"
 }

@@ -1,0 +1,777 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: APIClarity APIs
+paths:
+  /apiEvents:
+    get:
+      summary: Get API events
+      parameters:
+        - $ref: "#/components/parameters/startTime"
+        - $ref: "#/components/parameters/endTime"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/apiEventSortKey"
+        - $ref: "#/components/parameters/sortDir"
+        - $ref: "#/components/parameters/showNonApi"
+        - $ref: "#/components/parameters/apiInfoIdIsFilter"
+        - $ref: "#/components/parameters/methodIsFilter"
+        - $ref: "#/components/parameters/pathIsFilter"
+        - $ref: "#/components/parameters/pathIsNotFilter"
+        - $ref: "#/components/parameters/pathStartsWithFilter"
+        - $ref: "#/components/parameters/pathEndsWithFilter"
+        - $ref: "#/components/parameters/pathContainsFilter"
+        - $ref: "#/components/parameters/statusCodeIsFilter"
+        - $ref: "#/components/parameters/statusCodeIsNotFilter"
+        - $ref: "#/components/parameters/statusCodeGteFilter"
+        - $ref: "#/components/parameters/statusCodeLteFilter"
+        - $ref: "#/components/parameters/sourceIPIsFilter"
+        - $ref: "#/components/parameters/sourceIPIsNotFilter"
+        - $ref: "#/components/parameters/destinationIPIsFilter"
+        - $ref: "#/components/parameters/destinationIPIsNotFilter"
+        - $ref: "#/components/parameters/destinationPortIsFilter"
+        - $ref: "#/components/parameters/destinationPortIsNotFilter"
+        - $ref: "#/components/parameters/hasSpecDiffFilter"
+        - $ref: "#/components/parameters/specDiffTypeIsFilter"
+        - $ref: "#/components/parameters/specIsFilter"
+        - $ref: "#/components/parameters/specIsNotFilter"
+        - $ref: "#/components/parameters/specStartsWithFilter"
+        - $ref: "#/components/parameters/specEndsWithFilter"
+        - $ref: "#/components/parameters/specContainsFilter"
+        - $ref: "#/components/parameters/alertIsFilter"
+        - $ref: "#/components/parameters/alertIsType"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - total
+                properties:
+                  total:
+                    type: integer
+                    description: Total events count in the given time range and filters
+                  items:
+                    type: array
+                    description: List of API events in the given time range, filters and
+                      page. List length must be lower or equal to pageSize
+                    items:
+                      $ref: "../common/openapi.yaml#/components/schemas/ApiEvent"
+        default:
+          $ref: "#/components/responses/UnknownError"
+  "/apiEvents/{eventId}":
+    get:
+      summary: Get API event
+      parameters:
+        - name: eventId
+          description: API event ID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: uint32
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "../common/openapi.yaml#/components/schemas/ApiEvent"
+        default:
+          $ref: "#/components/responses/UnknownError"
+  "/apiEvents/{eventId}/reconstructedSpecDiff":
+    get:
+      summary: Get API event reconstructed spec diff
+      parameters:
+        - name: eventId
+          description: API event ID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: uint32
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "../common/openapi.yaml#/components/schemas/ApiEventSpecDiff"
+        default:
+          $ref: "#/components/responses/UnknownError"
+  "/apiEvents/{eventId}/providedSpecDiff":
+    get:
+      summary: Get API event provided spec diff
+      parameters:
+        - name: eventId
+          description: API event ID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: uint32
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "../common/openapi.yaml#/components/schemas/ApiEventSpecDiff"
+        default:
+          $ref: "#/components/responses/UnknownError"
+  /apiInventory:
+    get:
+      summary: Get API inventory
+      parameters:
+        - $ref: "#/components/parameters/apiType"
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/pageSize"
+        - $ref: "#/components/parameters/apiInventorySortKey"
+        - $ref: "#/components/parameters/sortDir"
+        - $ref: "#/components/parameters/apiNameIsFilter"
+        - $ref: "#/components/parameters/apiNameIsNotFilter"
+        - $ref: "#/components/parameters/apiNameStartsWithFilter"
+        - $ref: "#/components/parameters/apiNameEndsWithFilter"
+        - $ref: "#/components/parameters/apiNameContainsFilter"
+        - $ref: "#/components/parameters/portIsFilter"
+        - $ref: "#/components/parameters/portIsNotFilter"
+        - $ref: "#/components/parameters/hasProvidedSpecFilter"
+        - $ref: "#/components/parameters/hasReconstructedSpecFilter"
+        - $ref: "#/components/parameters/apiIdFilter"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - total
+                properties:
+                  total:
+                    type: integer
+                    description: Total filtered APIs count
+                  items:
+                    type: array
+                    description: List of filtered APIs in the given page. List length must
+                      be lower or equal to pageSize
+                    items:
+                      $ref: "../common/openapi.yaml#/components/schemas/ApiInfo"
+        default:
+          $ref: "#/components/responses/UnknownError"
+    post:
+      summary: Create API inventory item
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "../common/openapi.yaml#/components/schemas/ApiInfoWithType"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "../common/openapi.yaml#/components/schemas/ApiInfo"
+        default:
+          $ref: "#/components/responses/UnknownError"
+  /dashboard/apiUsage:
+    get:
+      summary: Get API usage
+      parameters:
+        - $ref: "#/components/parameters/startTime"
+        - $ref: "#/components/parameters/endTime"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "../common/openapi.yaml#/components/schemas/ApiUsages"
+        default:
+          $ref: "#/components/responses/UnknownError"
+  /dashboard/apiUsage/mostUsed:
+    get:
+      summary: Get most used APIs
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "../common/openapi.yaml#/components/schemas/ApiCount"
+        default:
+          $ref: "#/components/responses/UnknownError"
+  /dashboard/apiUsage/latestDiffs:
+    get:
+      summary: Get latest spec diffs
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "../common/openapi.yaml#/components/schemas/SpecDiffTime"
+        default:
+          $ref: "#/components/responses/UnknownError"
+  "/apiInventory/{apiId}/specs":
+    get:
+      summary: Get provided and reconstructed open api specs for a specific API
+      parameters:
+        - $ref: "#/components/parameters/apiId"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "../common/openapi.yaml#/components/schemas/OpenApiSpecs"
+        default:
+          $ref: "#/components/responses/UnknownError"
+  "/apiInventory/{apiId}/specs/providedSpec":
+    put:
+      summary: Add or edit a spec for a specific API
+      parameters:
+        - $ref: "#/components/parameters/apiId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "../common/openapi.yaml#/components/schemas/rawSpec"
+        required: true
+      responses:
+        "201":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "../common/openapi.yaml#/components/schemas/rawSpec"
+        "400":
+          description: Spec validation failure
+          content:
+            application/json:
+              schema:
+                type: string
+        default:
+          $ref: "#/components/responses/UnknownError"
+    delete:
+      summary: Unset a provided spec for a specific API
+      parameters:
+        - $ref: "#/components/parameters/apiId"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "../common/openapi.yaml#/components/schemas/SuccessResponse"
+        default:
+          $ref: "#/components/responses/UnknownError"
+  "/apiInventory/{apiId}/specs/reconstructedSpec":
+    delete:
+      summary: Unset a reconstructed spec for a specific API
+      parameters:
+        - $ref: "#/components/parameters/apiId"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "../common/openapi.yaml#/components/schemas/SuccessResponse"
+        default:
+          $ref: "#/components/responses/UnknownError"
+  "/apiInventory/{apiId}/reconstructed_swagger.json":
+    get:
+      summary: Get reconstructed API spec json file
+      parameters:
+        - $ref: "#/components/parameters/apiId"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                description: spec in json format
+                type: object
+        default:
+          $ref: "#/components/responses/UnknownError"
+  "/apiInventory/{apiId}/provided_swagger.json":
+    get:
+      summary: Get provided API spec json file
+      parameters:
+        - $ref: "#/components/parameters/apiId"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                description: spec in json format
+                type: object
+        default:
+          $ref: "#/components/responses/UnknownError"
+  /apiUsage/hitCount:
+    get:
+      summary: Get a hit count within a selected timeframe for the filtered API events
+      parameters:
+        - $ref: "#/components/parameters/startTime"
+        - $ref: "#/components/parameters/endTime"
+        - $ref: "#/components/parameters/showNonApi"
+        - $ref: "#/components/parameters/methodIsFilter"
+        - $ref: "#/components/parameters/providedPathIDIsFilter"
+        - $ref: "#/components/parameters/reconstructedPathIDIsFilter"
+        - $ref: "#/components/parameters/pathIsFilter"
+        - $ref: "#/components/parameters/pathIsNotFilter"
+        - $ref: "#/components/parameters/pathStartsWithFilter"
+        - $ref: "#/components/parameters/pathEndsWithFilter"
+        - $ref: "#/components/parameters/pathContainsFilter"
+        - $ref: "#/components/parameters/statusCodeIsFilter"
+        - $ref: "#/components/parameters/statusCodeIsNotFilter"
+        - $ref: "#/components/parameters/statusCodeGteFilter"
+        - $ref: "#/components/parameters/statusCodeLteFilter"
+        - $ref: "#/components/parameters/sourceIPIsFilter"
+        - $ref: "#/components/parameters/sourceIPIsNotFilter"
+        - $ref: "#/components/parameters/destinationIPIsFilter"
+        - $ref: "#/components/parameters/destinationIPIsNotFilter"
+        - $ref: "#/components/parameters/destinationPortIsFilter"
+        - $ref: "#/components/parameters/destinationPortIsNotFilter"
+        - $ref: "#/components/parameters/hasSpecDiffFilter"
+        - $ref: "#/components/parameters/specDiffTypeIsFilter"
+        - $ref: "#/components/parameters/specIsFilter"
+        - $ref: "#/components/parameters/specIsNotFilter"
+        - $ref: "#/components/parameters/specStartsWithFilter"
+        - $ref: "#/components/parameters/specEndsWithFilter"
+        - $ref: "#/components/parameters/specContainsFilter"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "../common/openapi.yaml#/components/schemas/HitCount"
+        default:
+          $ref: "#/components/responses/UnknownError"
+  "/apiInventory/{apiId}/suggestedReview":
+    get:
+      summary: Get reconstructed spec for review
+      parameters:
+        - $ref: "#/components/parameters/apiId"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "../common/openapi.yaml#/components/schemas/SuggestedReview"
+        default:
+          $ref: "#/components/responses/UnknownError"
+  "/apiInventory/{reviewId}/approvedReview":
+    post:
+      summary: Apply the approved review to create the reconstructed spec
+      parameters:
+        - $ref: "#/components/parameters/reviewId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "../common/openapi.yaml#/components/schemas/ApprovedReview"
+        required: true
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "../common/openapi.yaml#/components/schemas/SuccessResponse"
+        default:
+          $ref: "#/components/responses/UnknownError"
+servers:
+  - url: /api
+components:
+  parameters:
+    startTime:
+      name: startTime
+      description: Start time of the query
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date-time
+    endTime:
+      name: endTime
+      description: End time of the query
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date-time
+    page:
+      name: page
+      description: Page number of the query
+      in: query
+      required: true
+      schema:
+        type: integer
+    apiIdFilter:
+      name: apiId
+      description: api id to return
+      in: query
+      required: false
+      schema:
+        type: string
+    pageSize:
+      name: pageSize
+      description: Maximum items to return
+      in: query
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
+    sortDir:
+      name: sortDir
+      description: Sorting direction
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - ASC
+          - DESC
+        default: ASC
+    apiEventSortKey:
+      name: sortKey
+      description: Sort key
+      in: query
+      required: true
+      schema:
+        $ref: ../common/openapi.yaml#/components/schemas/ApiEventSortKey
+    apiInventorySortKey:
+      name: sortKey
+      description: Sort key
+      in: query
+      required: true
+      schema:
+        $ref: ../common/openapi.yaml#/components/schemas/ApiInventorySortKey
+    apiType:
+      name: type
+      description: API type [INTERNAL or EXTERNAL]
+      in: query
+      required: true
+      schema:
+        $ref: ../common/openapi.yaml#/components/schemas/ApiTypeEnum
+    showNonApi:
+      name: showNonApi
+      in: query
+      required: true
+      schema:
+        type: boolean
+    apiInfoIdIsFilter:
+      name: apiInfoId[is]
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: uint32
+    methodIsFilter:
+      name: method[is]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          $ref: '../common/openapi.yaml#/components/schemas/HttpMethod'
+    providedPathIDIsFilter:
+      name: providedPathID[is]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    reconstructedPathIDIsFilter:
+      name: reconstructedPathID[is]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    pathIsFilter:
+      name: path[is]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    pathIsNotFilter:
+      name: path[isNot]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    pathStartsWithFilter:
+      name: path[start]
+      in: query
+      required: false
+      schema:
+        type: string
+    pathEndsWithFilter:
+      name: path[end]
+      in: query
+      required: false
+      schema:
+        type: string
+    pathContainsFilter:
+      name: path[contains]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    statusCodeIsFilter:
+      name: statusCode[is]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    statusCodeIsNotFilter:
+      name: statusCode[isNot]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    statusCodeGteFilter:
+      name: statusCode[gte]
+      description: greater than or equal
+      in: query
+      required: false
+      schema:
+        type: string
+    statusCodeLteFilter:
+      name: statusCode[lte]
+      description: less than or equal
+      in: query
+      required: false
+      schema:
+        type: string
+    sourceIPIsFilter:
+      name: sourceIP[is]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    sourceIPIsNotFilter:
+      name: sourceIP[isNot]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    destinationIPIsFilter:
+      name: destinationIP[is]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    destinationIPIsNotFilter:
+      name: destinationIP[isNot]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    destinationPortIsFilter:
+      name: destinationPort[is]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    destinationPortIsNotFilter:
+      name: destinationPort[isNot]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    hasSpecDiffFilter:
+      name: hasSpecDiff[is]
+      in: query
+      required: false
+      schema:
+        type: boolean
+    specDiffTypeIsFilter:
+      name: specDiffType[is]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          $ref: ../common/openapi.yaml#/components/schemas/DiffType
+    specIsFilter:
+      name: spec[is]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    specIsNotFilter:
+      name: spec[isNot]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    specStartsWithFilter:
+      name: spec[start]
+      in: query
+      required: false
+      schema:
+        type: string
+    specEndsWithFilter:
+      name: spec[end]
+      in: query
+      required: false
+      schema:
+        type: string
+    specContainsFilter:
+      name: spec[contains]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    apiNameIsFilter:
+      name: name[is]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    apiNameIsNotFilter:
+      name: name[isNot]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    apiNameStartsWithFilter:
+      name: name[start]
+      in: query
+      required: false
+      schema:
+        type: string
+    apiNameEndsWithFilter:
+      name: name[end]
+      in: query
+      required: false
+      schema:
+        type: string
+    apiNameContainsFilter:
+      name: name[contains]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    portIsFilter:
+      name: port[is]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    portIsNotFilter:
+      name: port[isNot]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    hasProvidedSpecFilter:
+      name: hasProvidedSpec[is]
+      in: query
+      required: false
+      schema:
+        type: boolean
+    hasReconstructedSpecFilter:
+      name: hasReconstructedSpec[is]
+      in: query
+      required: false
+      schema:
+        type: boolean
+    alertIsFilter:
+      name: alert[is]
+      in: query
+      description: Alert Kind [ALERT_INFO or ALERT_WARN]
+      required: false
+      schema:
+        type: array
+        items:
+          $ref: ../common/openapi.yaml#/components/schemas/AlertSeverityEnum
+    alertIsType:
+      name: alertType[is]
+      in: query
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+    apiId:
+      name: apiId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: uint32
+    reviewId:
+      name: reviewId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: uint32
+  responses:
+    UnknownError:
+      description: unknown error
+      content:
+        application/json:
+          schema:
+            $ref: "../common/openapi.yaml#/components/schemas/ApiResponse"
+  schemas: {}
+
+  

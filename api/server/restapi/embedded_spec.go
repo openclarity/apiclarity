@@ -60,6 +60,9 @@ func init() {
             "$ref": "#/parameters/showNonApi"
           },
           {
+            "$ref": "#/parameters/apiInfoIdIsFilter"
+          },
+          {
             "$ref": "#/parameters/methodIsFilter"
           },
           {
@@ -130,6 +133,9 @@ func init() {
           },
           {
             "$ref": "#/parameters/alertIsFilter"
+          },
+          {
+            "$ref": "#/parameters/alertIsType"
           }
         ],
         "responses": {
@@ -326,6 +332,53 @@ func init() {
             "schema": {
               "$ref": "#/definitions/ApiInfoWithType"
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ApiInfo"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/apiInventory/apiId/fromHostAndPort": {
+      "get": {
+        "summary": "Get apiId from host and port",
+        "parameters": [
+          {
+            "$ref": "#/parameters/host"
+          },
+          {
+            "$ref": "#/parameters/port"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "description": "api id",
+              "type": "integer",
+              "format": "uint32"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/apiInventory/{apiId}/apiInfo": {
+      "get": {
+        "summary": "Get api info from api id",
+        "parameters": [
+          {
+            "$ref": "#/parameters/apiId"
           }
         ],
         "responses": {
@@ -851,6 +904,9 @@ func init() {
     "ApiInfo": {
       "type": "object",
       "properties": {
+        "destinationNamespace": {
+          "type": "string"
+        },
         "hasProvidedSpec": {
           "type": "boolean",
           "default": false
@@ -1155,6 +1211,14 @@ func init() {
       "name": "alert[is]",
       "in": "query"
     },
+    "alertIsType": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "name": "alertType[is]",
+      "in": "query"
+    },
     "apiEventSortKey": {
       "enum": [
         "time",
@@ -1185,6 +1249,12 @@ func init() {
       "type": "string",
       "description": "api id to return",
       "name": "apiId",
+      "in": "query"
+    },
+    "apiInfoIdIsFilter": {
+      "type": "integer",
+      "format": "uint32",
+      "name": "apiInfoId[is]",
       "in": "query"
     },
     "apiInventorySortKey": {
@@ -1300,6 +1370,13 @@ func init() {
       "name": "hasSpecDiff[is]",
       "in": "query"
     },
+    "host": {
+      "type": "string",
+      "description": "api host name",
+      "name": "host",
+      "in": "query",
+      "required": true
+    },
     "methodIsFilter": {
       "type": "array",
       "items": {
@@ -1368,6 +1445,13 @@ func init() {
       "type": "string",
       "name": "path[start]",
       "in": "query"
+    },
+    "port": {
+      "type": "string",
+      "description": "api port",
+      "name": "port",
+      "in": "query",
+      "required": true
     },
     "portIsFilter": {
       "type": "array",
@@ -1631,6 +1715,12 @@ func init() {
             "required": true
           },
           {
+            "type": "integer",
+            "format": "uint32",
+            "name": "apiInfoId[is]",
+            "in": "query"
+          },
+          {
             "type": "array",
             "items": {
               "enum": [
@@ -1824,6 +1914,14 @@ func init() {
             },
             "description": "Alert Kind [ALERT_INFO or ALERT_WARN]",
             "name": "alert[is]",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "name": "alertType[is]",
             "in": "query"
           }
         ],
@@ -2108,6 +2206,71 @@ func init() {
             "schema": {
               "$ref": "#/definitions/ApiInfoWithType"
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/ApiInfo"
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/apiInventory/apiId/fromHostAndPort": {
+      "get": {
+        "summary": "Get apiId from host and port",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "api host name",
+            "name": "host",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "api port",
+            "name": "port",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "description": "api id",
+              "type": "integer",
+              "format": "uint32"
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/apiInventory/{apiId}/apiInfo": {
+      "get": {
+        "summary": "Get api info from api id",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "uint32",
+            "name": "apiId",
+            "in": "path",
+            "required": true
           }
         ],
         "responses": {
@@ -2859,6 +3022,9 @@ func init() {
     "ApiInfo": {
       "type": "object",
       "properties": {
+        "destinationNamespace": {
+          "type": "string"
+        },
         "hasProvidedSpec": {
           "type": "boolean",
           "default": false
@@ -3163,6 +3329,14 @@ func init() {
       "name": "alert[is]",
       "in": "query"
     },
+    "alertIsType": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "name": "alertType[is]",
+      "in": "query"
+    },
     "apiEventSortKey": {
       "enum": [
         "time",
@@ -3193,6 +3367,12 @@ func init() {
       "type": "string",
       "description": "api id to return",
       "name": "apiId",
+      "in": "query"
+    },
+    "apiInfoIdIsFilter": {
+      "type": "integer",
+      "format": "uint32",
+      "name": "apiInfoId[is]",
       "in": "query"
     },
     "apiInventorySortKey": {
@@ -3308,6 +3488,13 @@ func init() {
       "name": "hasSpecDiff[is]",
       "in": "query"
     },
+    "host": {
+      "type": "string",
+      "description": "api host name",
+      "name": "host",
+      "in": "query",
+      "required": true
+    },
     "methodIsFilter": {
       "type": "array",
       "items": {
@@ -3376,6 +3563,13 @@ func init() {
       "type": "string",
       "name": "path[start]",
       "in": "query"
+    },
+    "port": {
+      "type": "string",
+      "description": "api port",
+      "name": "port",
+      "in": "query",
+      "required": true
     },
     "portIsFilter": {
       "type": "array",

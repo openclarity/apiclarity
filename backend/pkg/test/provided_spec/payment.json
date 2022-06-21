@@ -1,0 +1,380 @@
+{
+    "swagger": "2.0",
+    "info": {
+      "version": "1.0",
+      "title": "Gateway to Paypal Sandbox",
+      "description": "This service acts as a gateway to Paypal Sandbox (a simulator to actual PayPal Service).",
+      "contact": {
+        "email": "ntafie@cisco.com",
+        "name": "API Support",
+        "url": "https://www.swagger.io/support"
+      }
+    },
+    "host": "payment:80",
+    "basePath": "/",
+    "securityDefinitions": {
+      "api_key": {
+        "type": "apiKey",
+        "name": "api_key",
+        "in": "header"
+      }
+    },
+    "schemes": [],
+    "consumes": [
+      "application/json"
+    ],
+    "produces": [
+      "application/json"
+    ],
+    "paths": {
+      "/health": {
+        "get": {
+          "description": "get health",
+          "summary": "Health_GET",
+          "tags": [
+            "default"
+          ],
+          "operationId": "Health_GET",
+          "deprecated": false,
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "schema": {
+                "$ref": "#/definitions/models.health"
+              },
+              "headers": {}
+            },
+            "400": {
+              "description": "Bad Request",
+              "schema": {
+                "type": "string",
+                "default": ""
+              },
+              "headers": {}
+            }
+          },
+          "security": [
+            {
+              "api_key": []
+            }
+          ]
+        }
+      },
+      "/transactions": {
+        "get": {
+          "description": "FetchTransactions Retrieves executed Transaction for placed order",
+          "summary": "Transactions_GET",
+          "tags": [
+            "transactions"
+          ],
+          "operationId": "Transactions_GET",
+          "deprecated": false,
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "schema": {
+                "$ref": "#/definitions/models.Transaction"
+              },
+              "headers": {}
+            },
+            "400": {
+              "description": "Bad Request",
+              "schema": {
+                "type": "string",
+                "default": ""
+              },
+              "headers": {}
+            }
+          },
+          "security": [
+            {
+              "api_key": []
+            }
+          ]
+        }
+      },
+      "/verify": {
+        "post": {
+          "description": "Verifies executed Transaction for placed order",
+          "summary": "Verify_POST",
+          "tags": [
+            "verify500"
+          ],
+          "operationId": "Verify_POST",
+          "deprecated": false,
+          "produces": [
+            "application/json"
+          ],
+          "consumes": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "in": "header",
+              "required": false,
+              "enum": [
+                "application/json"
+              ],
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "body",
+              "in": "body",
+              "required": true,
+              "description": "Transaction details",
+              "schema": {
+                "$ref": "#/definitions/models.Transaction"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "schema": {
+                "$ref": "#/definitions/models.Transaction"
+              },
+              "headers": {}
+            },
+            "400": {
+              "description": "Bad Request",
+              "schema": {
+                "type": "string",
+                "default": ""
+              },
+              "headers": {}
+            },
+            "500": {
+              "description": "Internal Server Error",
+              "schema": {
+                "type": "string",
+                "default": ""
+              },
+              "headers": {}
+            }
+          }
+        }
+      },
+      "/paymentAuth": {
+        "post": {
+          "description": "Authorise Payment for placed order",
+          "summary": "PaymentAuth_POST",
+          "tags": [
+            "payment"
+          ],
+          "operationId": "PaymentAuth_POST",
+          "deprecated": false,
+          "produces": [
+            "application/json"
+          ],
+          "consumes": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "in": "header",
+              "required": false,
+              "enum": [
+                "application/json"
+              ],
+              "type": "string",
+              "description": ""
+            },
+            {
+              "name": "body",
+              "in": "body",
+              "required": true,
+              "description": "Payment details",
+              "schema": {
+                "$ref": "#/definitions/models.Payment"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "schema": {
+                "$ref": "#/definitions/models.Feedback"
+              },
+              "headers": {}
+            },
+            "400": {
+              "description": "Bad Request",
+              "schema": {
+                "$ref": "#/definitions/models.Feedback"
+              },
+              "headers": {}
+            }
+          }
+        }
+      }
+    },
+    "definitions": {
+      "models.Address": {
+        "title": "models.Address",
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "postcode": {
+            "type": "string"
+          },
+          "street": {
+            "type": "string"
+          }
+        }
+      },
+      "models.Card": {
+        "title": "models.Card",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "models.Customer": {
+        "title": "models.Customer",
+        "type": "object",
+        "properties": {
+          "addresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/models.Address"
+            }
+          },
+          "cards": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/models.Card"
+            }
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "userName": {
+            "type": "string"
+          }
+        }
+      },
+      "models.Feedback": {
+        "title": "models.Feedback",
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "status": {
+            "type": "boolean"
+          }
+        }
+      },
+      "models.Payment": {
+        "title": "models.Payment",
+        "type": "object",
+        "properties": {
+          "address": {
+            "$ref": "#/definitions/models.Address"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "card": {
+            "$ref": "#/definitions/models.Card"
+          },
+          "customer": {
+            "$ref": "#/definitions/models.Customer"
+          }
+        }
+      },
+      "models.Transaction": {
+        "title": "models.Transaction",
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "$ref": "#/definitions/models.Feedback"
+          },
+          "payload": {
+            "$ref": "#/definitions/models.Payment"
+          }
+        }
+      },
+      "models.health": {
+        "title": "models.health",
+        "type": "object",
+        "properties": {
+          "health": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/models.inline_model"
+            }
+          }
+        }
+      },
+      "models.inline_model": {
+        "title": "models.inline_model",
+        "type": "object",
+        "properties": {
+          "service": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "time": {
+            "type": "string"
+          }
+        } 
+      }
+    },
+    "security": [
+      {
+        "api_key": []
+      }
+    ],
+    "tags": [
+      {
+        "name": "transactions",
+        "description": ""
+      },
+      {
+        "name": "verify500",
+        "description": ""
+      },
+      {
+        "name": "payment",
+        "description": ""
+      }
+    ]
+  }

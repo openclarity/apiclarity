@@ -22,7 +22,9 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/openclarity/apiclarity/api3/notifications"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core/notifier"
 	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
 )
 
@@ -63,15 +65,26 @@ type BackendAccessor interface {
 	ListAPIInfoAnnotations(ctx context.Context, modName string, apiID uint) ([]*Annotation, error)
 	StoreAPIInfoAnnotations(ctx context.Context, modName string, apiID uint, annotations ...Annotation) error
 	DeleteAPIInfoAnnotations(ctx context.Context, modName string, apiID uint, name ...string) error
+
+	Notify(ctx context.Context, modName string, apiID uint, notification notifications.APIClarityNotification) error
 }
 
 func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface) BackendAccessor {
-	return &accessor{dbHandler, clientset}
+	notificationPrefix := GetNotificationPrefix()
+
+	var n *notifier.Notifier
+	if notificationPrefix != "" {
+		n = notifier.NewNotifier(notificationPrefix, 100, 10)
+		n.Start(context.Background())
+	}
+
+	return &accessor{dbHandler, clientset, n}
 }
 
 type accessor struct {
 	dbHandler *database.Handler
 	clientset kubernetes.Interface
+	notifier  *notifier.Notifier
 }
 
 func (b *accessor) K8SClient() kubernetes.Interface {
@@ -175,6 +188,16 @@ func (b *accessor) StoreAPIInfoAnnotations(ctx context.Context, modName string, 
 func (b *accessor) DeleteAPIInfoAnnotations(ctx context.Context, modName string, apiID uint, name ...string) error {
 	if err := b.dbHandler.APIInfoAnnotationsTable().Delete(ctx, modName, apiID, name...); err != nil {
 		return fmt.Errorf("unable to delete the apiinfo annotation: %w", err)
+	}
+	return nil
+}
+
+func (b *accessor) Notify(ctx context.Context, modName string, apiID uint, n notifications.APIClarityNotification) error {
+	if b.notifier == nil {
+		return nil
+	}
+	if err := b.notifier.Notify(apiID, n); err != nil {
+		return fmt.Errorf("unable to send notification: %w", err)
 	}
 	return nil
 }
