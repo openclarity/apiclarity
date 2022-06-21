@@ -46,17 +46,14 @@ backend_test: ## Build Backend test
 	@(echo "Building Backend test ..." )
 	@(cd backend && go build --tags=json1 -o bin/backend_test cmd/test/main.go && ls -l bin/)
 
-.PHONY: oapi-aggregate api3-verify
+.PHONY: api3-verify
 api3-verify: 
 	@(echo "Checking if api3 code was generated")
 	@(cd api3; ./generate.sh --verify) 
 	
-	
-
 .PHONY: api3
 api3: 
 	@(cd api3; ./generate.sh) 
-
 
 .PHONY: api
 api: api3 ## Generating API code

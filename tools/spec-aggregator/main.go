@@ -206,8 +206,7 @@ func aggregateNotificationSpecs() {
 			}
 		}
 	}
-	a := parentNotificationSchema.OneOf[0].Ref
-	_ = a
+
 	sort.Slice(parentNotificationSchema.OneOf, func(i, j int) bool {
 		return strings.Compare(parentNotificationSchema.OneOf[i].Ref, parentNotificationSchema.OneOf[j].Ref) < 0
 	})
