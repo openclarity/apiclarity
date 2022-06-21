@@ -79,8 +79,10 @@ func FakeTriggerFuzzingJob(ctx context.Context, testFilename string, apiID uint,
 		logging.Logf("[Fuzzer] Use data from (%v)", testFilename)
 		scanner := bufio.NewScanner(file)
 		// optionally, resize scanner's capacity for lines over 64K
+		buf := make([]byte, 0, 64*1024)
+		scanner.Buffer(buf, 10*1024*1024)
 		for scanner.Scan() {
-			logging.Logf("[Fuzzer] inject (%v)", scanner.Text())
+			logging.Logf("[Fuzzer] inject data len=(%v)", len(scanner.Text()))
 			err = SendReport(ctx, remoteHost, apiID, scanner.Bytes()) // TODO handle error
 			if err != nil {
 				logging.Errorf("Failed to send report to (%v): %v", remoteHost, err)

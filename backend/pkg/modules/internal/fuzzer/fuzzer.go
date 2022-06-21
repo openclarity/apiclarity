@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/openclarity/apiclarity/api/server/models"
 	oapicommon "github.com/openclarity/apiclarity/api3/common"
 
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
@@ -99,7 +98,7 @@ func (p *pluginFuzzer) EventNotify(ctx context.Context, event *core.Event) {
 *
  */
 
-func (p *pluginFuzzer) FuzzTarget(ctx context.Context, apiID oapicommon.ApiID, params restapi.FuzzTargetParams, specsInfo *models.OpenAPISpecs) error {
+func (p *pluginFuzzer) FuzzTarget(ctx context.Context, apiID oapicommon.ApiID, params restapi.FuzzTargetParams, specsInfo *tools.FuzzerSpecsInfo) error {
 	// Check for deployment
 	if p.fuzzerClient == nil {
 		return &PluginError{"No deployment client running"}

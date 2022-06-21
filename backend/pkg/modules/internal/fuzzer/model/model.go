@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/restapi"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/tools"
 )
 
 type Model struct {
@@ -107,7 +107,7 @@ func (m *Model) AddAPITest(apiID uint, message string) error {
 	return nil
 }
 
-func (m *Model) StartAPIFuzzing(ctx context.Context, apiID uint, specsInfo *models.OpenAPISpecs) error {
+func (m *Model) StartAPIFuzzing(ctx context.Context, apiID uint, specsInfo *tools.FuzzerSpecsInfo) error {
 	// Get Api
 	api, err := m.GetAPI(ctx, apiID)
 	if err != nil {
