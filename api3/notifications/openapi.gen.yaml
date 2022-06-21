@@ -11,8 +11,8 @@ components:
       oneOf:
       - $ref: '#/components/schemas/ApiFindingsNotification'
       - $ref: '#/components/schemas/AuthorizationModelNotification'
-      - $ref: '#/components/schemas/TestReportNotification'
       - $ref: '#/components/schemas/TestProgressNotification'
+      - $ref: '#/components/schemas/TestReportNotification'
     APIFindings:
       description: A group of findings
       properties:

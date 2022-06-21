@@ -24,6 +24,9 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v2
 
+    - name: Verify spec aggregation and code generation
+      run: make api3-verify
+   
     - name: Check licenses
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
