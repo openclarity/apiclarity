@@ -9,22 +9,27 @@ paths:
       operationId: getVersion
       summary: Get the version of this Module
       description: Get the version of this Module
+      tags:
+      - local-bfla
       responses:
         '200':
           description: Version of the Module
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Version'
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ModuleVersion'
 
   /authorizationModel/{apiID}:
     post:
       parameters:
-        - in: path
-          schema:
-            type: integer
+        - name: apiID
+          in: path
           required: true
-          name: apiID
+          schema:
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+
+      tags:
+      - bfla
       requestBody:
         content:
             'application/json':
@@ -36,20 +41,23 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
         default:
           description: "Error response"
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
     get:
       parameters:
-        - in: path
-          schema:
-            type: integer
+        - name: apiID
+          in: path
           required: true
-          name: apiID
+          schema:
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+
+      tags:
+        - bfla
       responses:
         '200':
           description: 'Success'
@@ -62,14 +70,17 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
   /authorizationModel/{apiID}/approve:
     put:
+      tags:
+      - local-bfla
       parameters:
-        - in: path
-          name: apiID
+        - name: apiID
+          in: path
+          required: true
           schema:
-            type: integer
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
         - in: query
           name: method
           required: true
@@ -91,20 +102,23 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
         default:
           description: "Error response"
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
   /authorizationModel/{apiID}/deny:
     put:
+      tags:
+      - local-bfla
       parameters:
-        - in: path
-          name: apiID
+        - name: apiID
+          in: path
+          required: true
           schema:
-            type: integer
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
         - in: query
           name: method
           required: true
@@ -126,23 +140,26 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
         default:
           description: "Error response"
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
   /authorizationModel/{apiID}/learning/start:
     put:
+      tags:
+      - bfla
       parameters:
-        - in: path
-          name: apiID
+        - name: apiID
+          in: path
+          required: true
           schema:
-            type: integer
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+
         - in: query
           name: nr_traces
-          required: true
           schema:
             type: integer
       responses:
@@ -151,23 +168,26 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
         default:
           description: "Error response"
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
   /authorizationModel/{apiID}/learning/reset:
     put:
+      tags:
+      - bfla
       parameters:
-        - in: path
-          name: apiID
+        - name: apiID
+          in: path
+          required: true
           schema:
-            type: integer
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+
         - in: query
           name: nr_traces
-          required: true
           schema:
             type: integer
       responses:
@@ -176,37 +196,43 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
         default:
           description: "Error response"
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
 
   /authorizationModel/{apiID}/learning/stop:
     put:
+      tags:
+      - bfla
       parameters:
-        - in: path
-          name: apiID
+        - name: apiID
+          in: path
+          required: true
           schema:
-            type: integer
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+
       responses:
         '200':
           description: 'Success'
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
         default:
           description: "Error response"
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
 
   /event/{id}:
     get:
+      tags:
+        - local-bfla
       operationId: get_event
       parameters:
         - name: id
@@ -225,6 +251,8 @@ paths:
 
   /event/{id}/{operation}:
     put:
+      tags:
+        - local-bfla
       parameters:
         - in: path
           schema:
@@ -242,20 +270,46 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
         default:
           description: "Error response"
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+  /apiFindings/{apiID}:
+    get:
+      operationId: GetApiFindings
+      summary: 'Get findings for an API and module'
+      description: 'Asks for findings of an APIClarity module, and API. Implemented by each module'
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+        - $ref: '../../../../../../api3/common/openapi.yaml#/components/parameters/Sensitive'
+      responses:
+        '200':
+          description: 'An API Findings Bundle'
+          content:
+            application/json:
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/APIFindings'
+        default:
+          description: 'Error response'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
 components:
   schemas:
     APIEventAnnotations:
-      required: [bflaStatus, external]
+      required: [bflaStatus, external, mismatchedScopes]
       properties:
         external:
+          type: boolean
+        mismatchedScopes:
           type: boolean
         destinationK8sObject:
           $ref: '#/components/schemas/K8sObjectRef'
@@ -306,8 +360,15 @@ components:
 
     AuthorizationModelAudience:
       type: object
-      required: [end_users, authorized, external]
+      required: [end_users, authorized, external, statusCode, warningStatus]
       properties:
+        warningStatus:
+          $ref: '#/components/schemas/BFLAStatus'
+        statusCode:
+          type: integer
+        lastTime:
+          type: 'string'
+          format: 'date-time'
         authorized:
           type: boolean
         external:
@@ -359,16 +420,9 @@ components:
         - approve_user
         - deny_user
 
-    ApiResponse:
-      description: 'An object that is return in all cases of failures.'
-      type: 'object'
-      required: [message]
-      properties:
-        message:
-          type: 'string'
-    Version:
-      type: 'object'
-      required: [version]
-      properties:
-        version:
-          type: 'string'
+    AuthorizationModelNotification:
+      allOf:
+      - $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/BaseNotification'
+      - $ref: '#/components/schemas/AuthorizationModel'
+
+

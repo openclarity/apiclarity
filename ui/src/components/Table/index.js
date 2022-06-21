@@ -1,13 +1,15 @@
-import React, { useMemo, useCallback, useEffect } from 'react';
+import React, { useMemo, useCallback, useEffect, useState } from 'react';
 import classnames from 'classnames';
 import { isEmpty, isEqual, pickBy, isNull } from 'lodash';
 import { useTable, usePagination, useSortBy, useResizeColumns, useFlexLayout, useRowSelect } from 'react-table';
 import Icon, { ICON_NAMES } from 'components/Icon';
+import IconWithTitle from 'components/IconWithTitle';
 import Loader from 'components/Loader';
 import Checkbox from 'components/Checkbox';
 import NoResultsDisplay from 'components/NoResultsDisplay';
 import { useFetch, usePrevious } from 'hooks';
 import Pagination from './Pagination';
+import ColumnsSelectPanel from './ColumnsSelectPanel';
 import * as utils from './utils';
 
 import './table.scss';
@@ -26,17 +28,21 @@ const RowSelectCheckbox = React.memo(
     (prevProps, nextProps) => {
         const {checked: prevChecked, indeterminate: prevIndeterminate} = prevProps;
         const {checked, indeterminate} = nextProps;
-        
+
         const shouldRefresh = checked !== prevChecked || indeterminate !== prevIndeterminate;
-        
+
         return !shouldRefresh;
     }
 );
 
+const ColumnPanelSelect = ({toggleColumns}) => {
+    return <IconWithTitle className="table-columns-class" name={ICON_NAMES.COLUMNS} title="Columns" onClick={toggleColumns} />;
+};
+
 const Table = props => {
     const {columns, defaultSortBy: defaultSortByItems, onLineClick, paginationItemsName, url, formatFetchedData, filters,
-        noResultsTitle="API", refreshTimestamp, withPagination=true, data: externalData, withMultiSelect=false, onRowSelect,
-        markedRowIds=[]} = props;
+        hideColumnControl=true, noResultsTitle="API", refreshTimestamp, withPagination=true, data: externalData, withMultiSelect=false, onRowSelect,
+           markedRowIds=[]} = props;
 
     const defaultSortBy = useMemo(() => defaultSortByItems || [], [defaultSortByItems]);
     const defaultColumn = React.useMemo(() => ({
@@ -55,11 +61,12 @@ const Table = props => {
         headerGroups,
         prepareRow,
         page,
+        allColumns,
         canPreviousPage,
         nextPage,
         previousPage,
         gotoPage,
-        toggleSortBy, 
+        toggleSortBy,
         state: {
             pageIndex,
             pageSize,
@@ -183,12 +190,31 @@ const Table = props => {
         }
     }, [prevSelectedRows, selectedRows, onRowSelect]);
 
+    const [showColumnsPanel, setShowColumnsPanel] = useState(false);
+
     if (!!error) {
         return null;
     }
+    const headerColumnNames = (headerGroups.length > 1 ? headerGroups[0].headers.map(header => {
+        // if (STATIC_HEADER_IDS.includes(header.originalId)) {
+        //     return null;
+        // }
+
+        return header.Header;
+    }) : []).filter(item => !isNull(item));
 
     return (
         <div className="table-wrapper">
+            {!hideColumnControl &&
+             <ColumnPanelSelect toggleColumns={() => setShowColumnsPanel(!showColumnsPanel)}/> }
+            {showColumnsPanel &&
+                <ColumnsSelectPanel
+                    headerColumnNames={headerColumnNames}
+                    columns={allColumns}
+                    onClose={() => setShowColumnsPanel(false)}
+                    columnsIconClassName={"table-columns-class"}
+                />
+                }
             {!withPagination ? <div className="no-pagination-results-total">{`Showing ${total} entries`}</div> :
                 <Pagination
                     canPreviousPage={canPreviousPage}

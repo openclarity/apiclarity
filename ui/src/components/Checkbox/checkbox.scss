@@ -9,7 +9,7 @@ $checkbox-size: 20px;
         display: inline-flex;
         align-items: center;
         cursor: pointer;
-    
+
         .checkmark {
             position: relative;
             height: $checkbox-size;
@@ -20,7 +20,7 @@ $checkbox-size: 20px;
             background-color: white;
             border: 1px solid $color-grey-light;
             margin-right: 10px;
-    
+
             &:after {
                 content: "";
                 position: absolute;
@@ -43,17 +43,31 @@ $checkbox-size: 20px;
                 transform: rotate(0deg);
             }
         }
+        &.disabled {
+            cursor: not-allowed;
+            color: $color-grey;
+
+            input {
+                cursor: not-allowed;
+
+                &:checked ~ .checkmark {
+                    &:after {
+                        border-color: $color-grey;
+                    }
+                }
+            }
+        }
         input {
             opacity: 0;
             position: absolute;
             top: 0;
-    
+
             &:checked ~ .checkmark {
                 &:after {
                     display: block;
                 }
             }
-            
+
         }
     }
 }

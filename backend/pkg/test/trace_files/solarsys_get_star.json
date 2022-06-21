@@ -1,0 +1,60 @@
+{
+  "destinationAddress": "localhost:5001",
+  "request": {
+    "common": {
+      "headers": [
+        {
+          "key": "host",
+          "value": "localhost:5001"
+        },
+        {
+          "key": "user-agent",
+          "value": "curl/7.35.0"
+        },
+        {
+          "key": "accept",
+          "value": "text/plain"
+        },
+        {
+          "key": "x-forwarded-proto",
+          "value": "http"
+        },
+        {
+          "key": "x-request-id",
+          "value": "c44c2e8d-8f97-99c7-97ab-8ce59d7d70c3"
+        }
+      ]
+    },
+    "method": "GET",
+    "path": "/star/1"
+  },
+  "requestID": "afd3d070-e880-48e0-b00e-a4bd17f53c25",
+  "response": {
+    "common": {
+      "headers": [
+        {
+          "key": "host",
+          "value": "localhost:5001"
+        },
+        {
+          "key": "user-agent",
+          "value": "curl/7.35.0"
+        },
+        {
+          "key": "accept",
+          "value": "text/plain"
+        },
+        {
+          "key": "x-forwarded-proto",
+          "value": "http"
+        },
+        {
+          "key": "x-request-id",
+          "value": "c44c2e8d-8f97-99c7-97ab-8ce59d7d70c3"
+        }
+      ]
+    },
+    "statusCode": "200"
+  },
+  "sourceAddress": "10.116.207.197:8000"
+}

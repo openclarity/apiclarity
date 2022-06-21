@@ -18,9 +18,16 @@ package bfladetector
 import (
 	"bytes"
 	"fmt"
+	"regexp"
+	"time"
+
+	"github.com/go-openapi/spec"
 
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/k8straceannotator"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/restapi"
 )
+
+var spaceRegex = regexp.MustCompile("\\s+")
 
 type Operation struct {
 	Method   string   `json:"method"`
@@ -29,10 +36,31 @@ type Operation struct {
 }
 
 type SourceObject struct {
-	K8sObject  *k8straceannotator.K8sObjectRef `json:"k8s_object"`
-	External   bool                            `json:"external"`
-	EndUsers   EndUsers                        `json:"end_users,omitempty"`
-	Authorized bool                            `json:"authorized"`
+	K8sObject     *k8straceannotator.K8sObjectRef `json:"k8s_object"`
+	External      bool                            `json:"external"`
+	EndUsers      EndUsers                        `json:"end_users,omitempty"`
+	LastTime      time.Time                       `json:"last_time"`
+	StatusCode    int64                           `json:"status_code"`
+	WarningStatus restapi.BFLAStatus              `json:"warning_status"`
+	Authorized    bool                            `json:"authorized"`
+}
+
+func (u *DetectedUser) IsMismatchedScopes(op *spec.Operation) bool {
+	if u.Source != DetectedUserSourceJWT || u.JWTClaims == nil {
+		return false
+	}
+	if u.JWTClaims.Scope == nil {
+		return false
+	}
+	for _, secItem := range op.Security {
+		for _, scopes := range secItem {
+
+			if !ContainsAll(scopes, spaceRegex.Split(*u.JWTClaims.Scope, -1)) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func DetectedUserSourceFromString(s string) DetectedUserSource {
@@ -100,6 +128,9 @@ type DetectedUser struct {
 	Source    DetectedUserSource `json:"source"`
 	ID        string             `json:"id"`
 	IPAddress string             `json:"ip_address"`
+
+	// Present if the source is JWT.
+	JWTClaims *JWTClaimsWithScopes `json:"jwt_claims"`
 }
 
 type AuthorizationModel struct {

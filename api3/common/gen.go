@@ -13,6 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package traceanalyzer
+package common
 
-//go:generate go run github.com/deepmap/oapi-codegen/cmd/oapi-codegen -generate chi-server,types,spec -package traceanalyzer -o traceanalyzerrest.gen.go openapi.yaml
+//go:generate go run github.com/deepmap/oapi-codegen/cmd/oapi-codegen -old-config-style -generate chi-server,types,spec,skip-prune -package common  -o restapi.gen.go openapi.yaml

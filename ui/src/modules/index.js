@@ -1,11 +1,15 @@
-import MODULE_TYPES from './MODULE_TYPES';
+import { MODULE_TYPES, MODULE_STATUS_TYPES_MAP } from './MODULE_TYPES';
+
 import { bfla, bflaApiInventory } from './bfla';
 import { pluginEventDetails as taEventDetails, pluginAPIDetails as taAPIDetails } from './traceanalyzer';
+import { pluginAPIDetails as fuzzerAPIDetails } from './fuzzer';
 
+
+// Add your module to the modules array: const modules = [module1, module2, ...];
 const modules = [
-    bfla, bflaApiInventory,
     taEventDetails, taAPIDetails,
-    // demoModule
+    fuzzerAPIDetails,
+    bfla, bflaApiInventory
 ];
 
 
@@ -20,5 +24,5 @@ const getModules = (type) => {
     }, []);
 };
 
-export { getModules, MODULE_TYPES };
+export { getModules, MODULE_TYPES, MODULE_STATUS_TYPES_MAP };
 export default modules;

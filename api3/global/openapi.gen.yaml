@@ -1,0 +1,2127 @@
+components:
+  parameters:
+    alertIsFilter:
+      description: Alert Kind [ALERT_INFO or ALERT_WARN]
+      in: query
+      name: alert[is]
+      schema:
+        items:
+          $ref: ../common/openapi.yaml#/components/schemas/AlertSeverityEnum
+        type: array
+    alertIsType:
+      in: query
+      name: alertType[is]
+      schema:
+        items:
+          type: string
+        type: array
+    apiEventSortKey:
+      description: Sort key
+      in: query
+      name: sortKey
+      required: true
+      schema:
+        $ref: ../common/openapi.yaml#/components/schemas/ApiEventSortKey
+    apiId:
+      in: path
+      name: apiId
+      required: true
+      schema:
+        format: uint32
+        type: integer
+    apiIdFilter:
+      description: api id to return
+      in: query
+      name: apiId
+      schema:
+        type: string
+    apiInfoIdIsFilter:
+      in: query
+      name: apiInfoId[is]
+      schema:
+        format: uint32
+        type: integer
+    apiInventorySortKey:
+      description: Sort key
+      in: query
+      name: sortKey
+      required: true
+      schema:
+        $ref: ../common/openapi.yaml#/components/schemas/ApiInventorySortKey
+    apiNameContainsFilter:
+      in: query
+      name: name[contains]
+      schema:
+        items:
+          type: string
+        type: array
+    apiNameEndsWithFilter:
+      in: query
+      name: name[end]
+      schema:
+        type: string
+    apiNameIsFilter:
+      in: query
+      name: name[is]
+      schema:
+        items:
+          type: string
+        type: array
+    apiNameIsNotFilter:
+      in: query
+      name: name[isNot]
+      schema:
+        items:
+          type: string
+        type: array
+    apiNameStartsWithFilter:
+      in: query
+      name: name[start]
+      schema:
+        type: string
+    apiType:
+      description: API type [INTERNAL or EXTERNAL]
+      in: query
+      name: type
+      required: true
+      schema:
+        $ref: ../common/openapi.yaml#/components/schemas/ApiTypeEnum
+    destinationIPIsFilter:
+      in: query
+      name: destinationIP[is]
+      schema:
+        items:
+          type: string
+        type: array
+    destinationIPIsNotFilter:
+      in: query
+      name: destinationIP[isNot]
+      schema:
+        items:
+          type: string
+        type: array
+    destinationPortIsFilter:
+      in: query
+      name: destinationPort[is]
+      schema:
+        items:
+          type: string
+        type: array
+    destinationPortIsNotFilter:
+      in: query
+      name: destinationPort[isNot]
+      schema:
+        items:
+          type: string
+        type: array
+    endTime:
+      description: End time of the query
+      in: query
+      name: endTime
+      required: true
+      schema:
+        format: date-time
+        type: string
+    hasProvidedSpecFilter:
+      in: query
+      name: hasProvidedSpec[is]
+      schema:
+        type: boolean
+    hasReconstructedSpecFilter:
+      in: query
+      name: hasReconstructedSpec[is]
+      schema:
+        type: boolean
+    hasSpecDiffFilter:
+      in: query
+      name: hasSpecDiff[is]
+      schema:
+        type: boolean
+    methodIsFilter:
+      in: query
+      name: method[is]
+      schema:
+        items:
+          $ref: ../common/openapi.yaml#/components/schemas/HttpMethod
+        type: array
+    page:
+      description: Page number of the query
+      in: query
+      name: page
+      required: true
+      schema:
+        type: integer
+    pageSize:
+      description: Maximum items to return
+      in: query
+      name: pageSize
+      required: true
+      schema:
+        maximum: 50
+        minimum: 1
+        type: integer
+    pathContainsFilter:
+      in: query
+      name: path[contains]
+      schema:
+        items:
+          type: string
+        type: array
+    pathEndsWithFilter:
+      in: query
+      name: path[end]
+      schema:
+        type: string
+    pathIsFilter:
+      in: query
+      name: path[is]
+      schema:
+        items:
+          type: string
+        type: array
+    pathIsNotFilter:
+      in: query
+      name: path[isNot]
+      schema:
+        items:
+          type: string
+        type: array
+    pathStartsWithFilter:
+      in: query
+      name: path[start]
+      schema:
+        type: string
+    portIsFilter:
+      in: query
+      name: port[is]
+      schema:
+        items:
+          type: string
+        type: array
+    portIsNotFilter:
+      in: query
+      name: port[isNot]
+      schema:
+        items:
+          type: string
+        type: array
+    providedPathIDIsFilter:
+      in: query
+      name: providedPathID[is]
+      schema:
+        items:
+          type: string
+        type: array
+    reconstructedPathIDIsFilter:
+      in: query
+      name: reconstructedPathID[is]
+      schema:
+        items:
+          type: string
+        type: array
+    reviewId:
+      in: path
+      name: reviewId
+      required: true
+      schema:
+        format: uint32
+        type: integer
+    showNonApi:
+      in: query
+      name: showNonApi
+      required: true
+      schema:
+        type: boolean
+    sortDir:
+      description: Sorting direction
+      in: query
+      name: sortDir
+      schema:
+        default: ASC
+        enum:
+        - ASC
+        - DESC
+        type: string
+    sourceIPIsFilter:
+      in: query
+      name: sourceIP[is]
+      schema:
+        items:
+          type: string
+        type: array
+    sourceIPIsNotFilter:
+      in: query
+      name: sourceIP[isNot]
+      schema:
+        items:
+          type: string
+        type: array
+    specContainsFilter:
+      in: query
+      name: spec[contains]
+      schema:
+        items:
+          type: string
+        type: array
+    specDiffTypeIsFilter:
+      in: query
+      name: specDiffType[is]
+      schema:
+        items:
+          $ref: ../common/openapi.yaml#/components/schemas/DiffType
+        type: array
+    specEndsWithFilter:
+      in: query
+      name: spec[end]
+      schema:
+        type: string
+    specIsFilter:
+      in: query
+      name: spec[is]
+      schema:
+        items:
+          type: string
+        type: array
+    specIsNotFilter:
+      in: query
+      name: spec[isNot]
+      schema:
+        items:
+          type: string
+        type: array
+    specStartsWithFilter:
+      in: query
+      name: spec[start]
+      schema:
+        type: string
+    startTime:
+      description: Start time of the query
+      in: query
+      name: startTime
+      required: true
+      schema:
+        format: date-time
+        type: string
+    statusCodeGteFilter:
+      description: greater than or equal
+      in: query
+      name: statusCode[gte]
+      schema:
+        type: string
+    statusCodeIsFilter:
+      in: query
+      name: statusCode[is]
+      schema:
+        items:
+          type: string
+        type: array
+    statusCodeIsNotFilter:
+      in: query
+      name: statusCode[isNot]
+      schema:
+        items:
+          type: string
+        type: array
+    statusCodeLteFilter:
+      description: less than or equal
+      in: query
+      name: statusCode[lte]
+      schema:
+        type: string
+  responses:
+    UnknownError:
+      content:
+        application/json:
+          schema:
+            $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+      description: unknown error
+  schemas:
+    APIEventAnnotations:
+      properties:
+        bflaStatus:
+          $ref: '#/components/schemas/BFLAStatus'
+        destinationK8sObject:
+          $ref: '#/components/schemas/K8sObjectRef'
+        detectedUser:
+          $ref: '#/components/schemas/DetectedUser'
+        external:
+          type: boolean
+        mismatchedScopes:
+          type: boolean
+        sourceK8sObject:
+          $ref: '#/components/schemas/K8sObjectRef'
+      required:
+      - bflaStatus
+      - external
+      - mismatchedScopes
+    Annotation:
+      properties:
+        annotation:
+          type: string
+        kind:
+          type: string
+        name:
+          type: string
+        severity:
+          type: string
+      required:
+      - id
+      - name
+      - annotation
+      - severity
+      - kind
+      type: object
+    Annotations:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/Annotation'
+          type: array
+        total:
+          description: Total event annotations count
+          type: integer
+      required:
+      - total
+      type: object
+    ApiToken:
+      allOf:
+      - $ref: '#/components/schemas/AuthorizationSchemeBase'
+      - properties:
+          key:
+            type: string
+          value:
+            type: string
+        required:
+        - key
+        - value
+        type: object
+    AuthorizationModel:
+      properties:
+        learning:
+          type: boolean
+        operations:
+          items:
+            $ref: '#/components/schemas/AuthorizationModelOperation'
+          type: array
+        specType:
+          $ref: '#/components/schemas/SpecType'
+      required:
+      - specType
+      - operations
+      - learning
+      type: object
+    AuthorizationModelAudience:
+      properties:
+        authorized:
+          type: boolean
+        end_users:
+          items:
+            $ref: '#/components/schemas/DetectedUser'
+          type: array
+        external:
+          type: boolean
+        k8s_object:
+          $ref: '#/components/schemas/K8sObjectRef'
+        lastTime:
+          format: date-time
+          type: string
+        statusCode:
+          type: integer
+        warningStatus:
+          $ref: '#/components/schemas/BFLAStatus'
+      required:
+      - end_users
+      - authorized
+      - external
+      - statusCode
+      - warningStatus
+      type: object
+    AuthorizationModelNotification:
+      allOf:
+      - $ref: ../common/openapi.yaml#/components/schemas/BaseNotification
+      - $ref: '#/components/schemas/AuthorizationModel'
+    AuthorizationModelOperation:
+      properties:
+        audience:
+          items:
+            $ref: '#/components/schemas/AuthorizationModelAudience'
+          type: array
+        method:
+          type: string
+        path:
+          type: string
+      required:
+      - path
+      - method
+      - audience
+      type: object
+    AuthorizationScheme:
+      discriminator:
+        mapping:
+          ApiToken: '#/components/schemas/ApiToken'
+          BasicAuth: '#/components/schemas/BasicAuth'
+          BearerToken: '#/components/schemas/BearerToken'
+        propertyName: type
+      oneOf:
+      - $ref: '#/components/schemas/BasicAuth'
+      - $ref: '#/components/schemas/ApiToken'
+      - $ref: '#/components/schemas/BearerToken'
+    AuthorizationSchemeBase:
+      properties:
+        type:
+          $ref: '#/components/schemas/AuthorizationTypeEnum'
+      required:
+      - type
+      type: object
+    AuthorizationTypeEnum:
+      description: An enumeration for the authorization type parameter.
+      enum:
+      - BASICAUTH
+      - APITOKEN
+      - BEARERTOKEN
+      title: AuthorizationType
+      type: string
+    BFLAStatus:
+      enum:
+      - NO_SPEC
+      - LEARNING
+      - LEGITIMATE
+      - SUSPICIOUS_MEDIUM
+      - SUSPICIOUS_HIGH
+      type: string
+    BasicAuth:
+      allOf:
+      - $ref: '#/components/schemas/AuthorizationSchemeBase'
+      - properties:
+          password:
+            type: string
+          username:
+            type: string
+        required:
+        - username
+        - password
+        type: object
+    BearerToken:
+      allOf:
+      - $ref: '#/components/schemas/AuthorizationSchemeBase'
+      - properties:
+          token:
+            type: string
+        required:
+        - token
+        type: object
+    DetectedUser:
+      properties:
+        id:
+          type: string
+        ip_address:
+          type: string
+        source:
+          enum:
+          - JWT
+          - BASIC
+          - KONG_X_CONSUMER_ID
+          type: string
+      required:
+      - id
+      - source
+      - ip_address
+    Finding:
+      properties:
+        description:
+          description: description of the finding
+          title: Description
+          type: string
+        name:
+          description: Name of the finding
+          title: Name
+          type: string
+        risk:
+          description: risk of the finding
+          title: Risk
+          type: string
+      title: Finding
+      type: object
+    Findings:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/Finding'
+          title: Items
+          type: array
+        total:
+          description: Nb of items, used for pagination
+          title: Total
+          type: integer
+      title: Findings
+      type: object
+    FuzzingReportItem:
+      description: Current fuzzer report
+      properties:
+        description:
+          type: string
+        findings:
+          description: List of paths that has been fuzzed
+          items:
+            $ref: '#/components/schemas/RawFindings'
+          title: Paths
+          type: array
+        name:
+          type: string
+        paths:
+          description: List of paths that has been fuzzed
+          items:
+            $ref: '#/components/schemas/FuzzingReportPath'
+          title: Paths
+          type: array
+        source:
+          type: string
+        status:
+          type: string
+        testType:
+          type: string
+      title: FuzzingReportItem
+      type: object
+    FuzzingReportOperation:
+      description: Report tag operation
+      properties:
+        findings:
+          items:
+            $ref: ../common/openapi.yaml#/components/schemas/APIFinding
+          title: Findings list
+          type: array
+        operation:
+          $ref: ../common/openapi.yaml#/components/schemas/MethodAndPath
+        requestsCount:
+          description: Request count to this operation item during the test
+          format: int32
+          title: Request count to the opea
+          type: integer
+      required:
+      - requestsCount
+      - findings
+      title: Report tag operation
+      type: object
+    FuzzingReportPath:
+      description: Current fuzzer report
+      properties:
+        payload:
+          type: string
+        response:
+          type: string
+        result:
+          type: integer
+        uri:
+          type: string
+        verb:
+          type: string
+      title: FuzzingReportPath
+      type: object
+    FuzzingReportTag:
+      description: Report tag item
+      properties:
+        name:
+          description: Tag name
+          title: Tag name
+          type: string
+        operations:
+          items:
+            $ref: '#/components/schemas/FuzzingReportOperation'
+          title: Operations list
+          type: array
+      required:
+      - name
+      - operations
+      title: Report tag item
+      type: object
+    FuzzingStatusAndReport:
+      description: fuzzing status and reporting
+      properties:
+        progress:
+          type: integer
+        report:
+          additionalProperties:
+            $ref: '#/components/schemas/FuzzingReportItem'
+          description: List of report item
+          title: Report
+          type: object
+        status:
+          $ref: '#/components/schemas/FuzzingStatusEnum'
+      required:
+      - status
+      - report
+      - progress
+      title: FuzzingStatusAndReport
+      type: object
+    FuzzingStatusEnum:
+      description: An enumeration.
+      enum:
+      - DONE
+      - ERROR
+      - IN_PROGRESS
+      title: FuzzingStatus
+      type: string
+    K8sObjectRef:
+      properties:
+        apiVersion:
+          type: string
+        kind:
+          type: string
+        name:
+          type: string
+        namespace:
+          type: string
+        uid:
+          type: string
+      required:
+      - uid
+      - kind
+      - name
+      - namespace
+      - apiVersion
+      type: object
+    OperationEnum:
+      enum:
+      - approve
+      - deny
+      - approve_user
+      - deny_user
+      type: string
+    RawFindings:
+      properties:
+        additionalInfo:
+          type: string
+        description:
+          type: string
+        location:
+          description: location string token
+          items:
+            type: string
+          title: Paths location
+          type: array
+        namespace:
+          type: string
+        request:
+          $ref: '#/components/schemas/RawFindingsSeverity'
+        type:
+          type: string
+      title: RawFindings
+      type: object
+    RawFindingsBundle:
+      properties:
+        data:
+          description: Opaque data structure for the raw finding
+          title: Data
+          type: string
+        source:
+          $ref: '#/components/schemas/RawFindingsSourceEnum'
+        status:
+          $ref: '#/components/schemas/ScoreExitStatusEnum'
+        status_message:
+          description: Message giving details about the exist status
+          title: Status Message
+          type: string
+        timestamp:
+          description: Raw finding timestamp format= date-time
+          title: Timestamp
+          type: string
+      required:
+      - status
+      - timestamp
+      - source
+      - data
+      title: RawFindingsBundle
+      type: object
+    RawFindingsSeverity:
+      properties:
+        severity:
+          type: string
+    RawFindingsSourceEnum:
+      description: An enumeration.
+      enum:
+      - BITSIGHT
+      - TALOS
+      - OPENDNS
+      - OAS_ANALYSER
+      - GRPC_ANALYZER
+      - OAS_TRACE_ANALYZER
+      - API_FUZZER
+      title: RawFindingsSource
+      type: string
+    ScoreExitStatusEnum:
+      description: An enumeration.
+      enum:
+      - SUCCESS
+      - NETWORK_FAILURE
+      - TOO_LONG
+      - PARSE_ERROR
+      - GENERIC_FAILURE
+      title: ScoreExitStatusEnum
+      type: string
+    ShortTestProgress:
+      description: Describes the progress of an ongoing test
+      properties:
+        apiID:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+        progress:
+          description: Progress of the test
+          maximum: 100
+          minimum: 0
+          title: Description
+          type: integer
+        starttime:
+          description: Timestamp of the start of the test
+          format: int64
+          title: Start time
+          type: integer
+      required:
+      - starttime
+      - progress
+      title: Short Test Progress Report
+      type: object
+    ShortTestReport:
+      description: Short Test Report
+      properties:
+        apiID:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+        starttime:
+          description: Timestamp of the start of the test
+          format: int64
+          title: Start time
+          type: integer
+        status:
+          $ref: '#/components/schemas/FuzzingStatusEnum'
+        statusMessage:
+          description: Message for status details, if any
+          title: Status message details
+          type: string
+        tags:
+          items:
+            $ref: '#/components/schemas/FuzzingReportTag'
+          title: Tags list
+          type: array
+      required:
+      - starttime
+      - status
+      - tags
+      title: Short Test Report
+      type: object
+    SpecType:
+      enum:
+      - NONE
+      - PROVIDED
+      - RECONSTRUCTED
+      type: string
+    Test:
+      properties:
+        errorMessage:
+          description: A message in case of error
+          title: ErrorMessage
+          type: string
+        progress:
+          description: Progress of the test
+          maximum: 100
+          minimum: 0
+          title: Progress
+          type: integer
+        starttime:
+          description: Timestamp of the start of the test
+          format: int64
+          title: Start time
+          type: integer
+        vulnerabilities:
+          $ref: '#/components/schemas/Vulnerabilities'
+      title: Test
+      type: object
+    TestHandle:
+      properties:
+        apiID:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+        timestamp:
+          format: int64
+          type: integer
+      type: object
+    TestInput:
+      description: contains all input parameters for a test
+      properties:
+        auth:
+          $ref: '#/components/schemas/AuthorizationScheme'
+        depth:
+          $ref: '#/components/schemas/TestInputDepthEnum'
+      required:
+      - depth
+      type: object
+    TestInputDepthEnum:
+      description: An enumeration for input depth parameter.
+      enum:
+      - QUICK
+      - DEFAULT
+      - DEEP
+      title: TestInputDepth
+      type: string
+    TestProgressNotification:
+      allOf:
+      - $ref: ../common/openapi.yaml#/components/schemas/BaseNotification
+      - $ref: '#/components/schemas/ShortTestProgress'
+    TestReportNotification:
+      allOf:
+      - $ref: ../common/openapi.yaml#/components/schemas/BaseNotification
+      - $ref: '#/components/schemas/ShortTestReport'
+    TestWithReport:
+      properties:
+        errorMessage:
+          description: A message in case of error
+          title: ErrorMessage
+          type: string
+        lastReportTime:
+          description: Timestamp of the last report received for the test
+          format: int64
+          title: Start time
+          type: integer
+        progress:
+          description: Progress of the test
+          maximum: 100
+          minimum: 0
+          title: Description
+          type: integer
+        report:
+          $ref: '#/components/schemas/FuzzingStatusAndReport'
+        starttime:
+          description: Timestamp of the start of the test
+          format: int64
+          title: Start time
+          type: integer
+        vulnerabilities:
+          $ref: '#/components/schemas/Vulnerabilities'
+      title: Test
+      type: object
+    TestingModuleState:
+      properties:
+        APIsInCache:
+          type: integer
+        version:
+          type: string
+      required:
+      - version
+      - APIsInCache
+      type: object
+    Tests:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/Test'
+          title: Items
+          type: array
+        total:
+          description: Nb of items, used for pagination
+          title: Total
+          type: integer
+      title: Tests
+      type: object
+    Version:
+      properties:
+        version:
+          type: string
+      required:
+      - version
+      type: object
+    Vulnerabilities:
+      description: risk of the finding
+      properties:
+        critical:
+          description: Total of vuln
+          title: Critical
+          type: integer
+        high:
+          description: Total of vuln
+          title: High
+          type: integer
+        low:
+          description: Total of vuln
+          title: Low
+          type: integer
+        medium:
+          description: Total of vuln
+          title: Medium
+          type: integer
+        total:
+          description: Total of vuln
+          title: Total
+          type: integer
+      title: Risk
+      type: object
+info:
+  title: APIClarity APIs
+  version: 1.0.0
+openapi: 3.0.0
+paths:
+  /apiEvents:
+    get:
+      parameters:
+      - $ref: '#/components/parameters/startTime'
+      - $ref: '#/components/parameters/endTime'
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/pageSize'
+      - $ref: '#/components/parameters/apiEventSortKey'
+      - $ref: '#/components/parameters/sortDir'
+      - $ref: '#/components/parameters/showNonApi'
+      - $ref: '#/components/parameters/apiInfoIdIsFilter'
+      - $ref: '#/components/parameters/methodIsFilter'
+      - $ref: '#/components/parameters/pathIsFilter'
+      - $ref: '#/components/parameters/pathIsNotFilter'
+      - $ref: '#/components/parameters/pathStartsWithFilter'
+      - $ref: '#/components/parameters/pathEndsWithFilter'
+      - $ref: '#/components/parameters/pathContainsFilter'
+      - $ref: '#/components/parameters/statusCodeIsFilter'
+      - $ref: '#/components/parameters/statusCodeIsNotFilter'
+      - $ref: '#/components/parameters/statusCodeGteFilter'
+      - $ref: '#/components/parameters/statusCodeLteFilter'
+      - $ref: '#/components/parameters/sourceIPIsFilter'
+      - $ref: '#/components/parameters/sourceIPIsNotFilter'
+      - $ref: '#/components/parameters/destinationIPIsFilter'
+      - $ref: '#/components/parameters/destinationIPIsNotFilter'
+      - $ref: '#/components/parameters/destinationPortIsFilter'
+      - $ref: '#/components/parameters/destinationPortIsNotFilter'
+      - $ref: '#/components/parameters/hasSpecDiffFilter'
+      - $ref: '#/components/parameters/specDiffTypeIsFilter'
+      - $ref: '#/components/parameters/specIsFilter'
+      - $ref: '#/components/parameters/specIsNotFilter'
+      - $ref: '#/components/parameters/specStartsWithFilter'
+      - $ref: '#/components/parameters/specEndsWithFilter'
+      - $ref: '#/components/parameters/specContainsFilter'
+      - $ref: '#/components/parameters/alertIsFilter'
+      - $ref: '#/components/parameters/alertIsType'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                properties:
+                  items:
+                    description: List of API events in the given time range, filters
+                      and page. List length must be lower or equal to pageSize
+                    items:
+                      $ref: ../common/openapi.yaml#/components/schemas/ApiEvent
+                    type: array
+                  total:
+                    description: Total events count in the given time range and filters
+                    type: integer
+                required:
+                - total
+                type: object
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Get API events
+  /apiEvents/{eventId}:
+    get:
+      parameters:
+      - description: API event ID
+        in: path
+        name: eventId
+        required: true
+        schema:
+          format: uint32
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiEvent
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Get API event
+  /apiEvents/{eventId}/providedSpecDiff:
+    get:
+      parameters:
+      - description: API event ID
+        in: path
+        name: eventId
+        required: true
+        schema:
+          format: uint32
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiEventSpecDiff
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Get API event provided spec diff
+  /apiEvents/{eventId}/reconstructedSpecDiff:
+    get:
+      parameters:
+      - description: API event ID
+        in: path
+        name: eventId
+        required: true
+        schema:
+          format: uint32
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiEventSpecDiff
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Get API event reconstructed spec diff
+  /apiInventory:
+    get:
+      parameters:
+      - $ref: '#/components/parameters/apiType'
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/pageSize'
+      - $ref: '#/components/parameters/apiInventorySortKey'
+      - $ref: '#/components/parameters/sortDir'
+      - $ref: '#/components/parameters/apiNameIsFilter'
+      - $ref: '#/components/parameters/apiNameIsNotFilter'
+      - $ref: '#/components/parameters/apiNameStartsWithFilter'
+      - $ref: '#/components/parameters/apiNameEndsWithFilter'
+      - $ref: '#/components/parameters/apiNameContainsFilter'
+      - $ref: '#/components/parameters/portIsFilter'
+      - $ref: '#/components/parameters/portIsNotFilter'
+      - $ref: '#/components/parameters/hasProvidedSpecFilter'
+      - $ref: '#/components/parameters/hasReconstructedSpecFilter'
+      - $ref: '#/components/parameters/apiIdFilter'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                properties:
+                  items:
+                    description: List of filtered APIs in the given page. List length
+                      must be lower or equal to pageSize
+                    items:
+                      $ref: ../common/openapi.yaml#/components/schemas/ApiInfo
+                    type: array
+                  total:
+                    description: Total filtered APIs count
+                    type: integer
+                required:
+                - total
+                type: object
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Get API inventory
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: ../common/openapi.yaml#/components/schemas/ApiInfoWithType
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiInfo
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Create API inventory item
+  /apiInventory/{apiId}/provided_swagger.json:
+    get:
+      parameters:
+      - $ref: '#/components/parameters/apiId'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                description: spec in json format
+                type: object
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Get provided API spec json file
+  /apiInventory/{apiId}/reconstructed_swagger.json:
+    get:
+      parameters:
+      - $ref: '#/components/parameters/apiId'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                description: spec in json format
+                type: object
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Get reconstructed API spec json file
+  /apiInventory/{apiId}/specs:
+    get:
+      parameters:
+      - $ref: '#/components/parameters/apiId'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/OpenApiSpecs
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Get provided and reconstructed open api specs for a specific API
+  /apiInventory/{apiId}/specs/providedSpec:
+    delete:
+      parameters:
+      - $ref: '#/components/parameters/apiId'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/SuccessResponse
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Unset a provided spec for a specific API
+    put:
+      parameters:
+      - $ref: '#/components/parameters/apiId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: ../common/openapi.yaml#/components/schemas/rawSpec
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/rawSpec
+          description: Success
+        "400":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: Spec validation failure
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Add or edit a spec for a specific API
+  /apiInventory/{apiId}/specs/reconstructedSpec:
+    delete:
+      parameters:
+      - $ref: '#/components/parameters/apiId'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/SuccessResponse
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Unset a reconstructed spec for a specific API
+  /apiInventory/{apiId}/suggestedReview:
+    get:
+      parameters:
+      - $ref: '#/components/parameters/apiId'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/SuggestedReview
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Get reconstructed spec for review
+  /apiInventory/{reviewId}/approvedReview:
+    post:
+      parameters:
+      - $ref: '#/components/parameters/reviewId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: ../common/openapi.yaml#/components/schemas/ApprovedReview
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/SuccessResponse
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Apply the approved review to create the reconstructed spec
+  /apiUsage/hitCount:
+    get:
+      parameters:
+      - $ref: '#/components/parameters/startTime'
+      - $ref: '#/components/parameters/endTime'
+      - $ref: '#/components/parameters/showNonApi'
+      - $ref: '#/components/parameters/methodIsFilter'
+      - $ref: '#/components/parameters/providedPathIDIsFilter'
+      - $ref: '#/components/parameters/reconstructedPathIDIsFilter'
+      - $ref: '#/components/parameters/pathIsFilter'
+      - $ref: '#/components/parameters/pathIsNotFilter'
+      - $ref: '#/components/parameters/pathStartsWithFilter'
+      - $ref: '#/components/parameters/pathEndsWithFilter'
+      - $ref: '#/components/parameters/pathContainsFilter'
+      - $ref: '#/components/parameters/statusCodeIsFilter'
+      - $ref: '#/components/parameters/statusCodeIsNotFilter'
+      - $ref: '#/components/parameters/statusCodeGteFilter'
+      - $ref: '#/components/parameters/statusCodeLteFilter'
+      - $ref: '#/components/parameters/sourceIPIsFilter'
+      - $ref: '#/components/parameters/sourceIPIsNotFilter'
+      - $ref: '#/components/parameters/destinationIPIsFilter'
+      - $ref: '#/components/parameters/destinationIPIsNotFilter'
+      - $ref: '#/components/parameters/destinationPortIsFilter'
+      - $ref: '#/components/parameters/destinationPortIsNotFilter'
+      - $ref: '#/components/parameters/hasSpecDiffFilter'
+      - $ref: '#/components/parameters/specDiffTypeIsFilter'
+      - $ref: '#/components/parameters/specIsFilter'
+      - $ref: '#/components/parameters/specIsNotFilter'
+      - $ref: '#/components/parameters/specStartsWithFilter'
+      - $ref: '#/components/parameters/specEndsWithFilter'
+      - $ref: '#/components/parameters/specContainsFilter'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: ../common/openapi.yaml#/components/schemas/HitCount
+                type: array
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Get a hit count within a selected timeframe for the filtered API events
+  /dashboard/apiUsage:
+    get:
+      parameters:
+      - $ref: '#/components/parameters/startTime'
+      - $ref: '#/components/parameters/endTime'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiUsages
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Get API usage
+  /dashboard/apiUsage/latestDiffs:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: ../common/openapi.yaml#/components/schemas/SpecDiffTime
+                type: array
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Get latest spec diffs
+  /dashboard/apiUsage/mostUsed:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: ../common/openapi.yaml#/components/schemas/ApiCount
+                type: array
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Get most used APIs
+  /modules/bfla/apiFindings/{apiID}:
+    get:
+      description: Asks for findings of an APIClarity module, and API. Implemented
+        by each module
+      operationId: bflaGetApiFindings
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      - $ref: ../common/openapi.yaml#/components/parameters/Sensitive
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/APIFindings
+          description: An API Findings Bundle
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      summary: Get findings for an API and module
+  /modules/bfla/authorizationModel/{apiID}:
+    get:
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizationModel'
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      tags:
+      - bfla
+    post:
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthorizationModel'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      tags:
+      - bfla
+  /modules/bfla/authorizationModel/{apiID}/approve:
+    put:
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      - in: query
+        name: method
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: path
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: k8sClientUid
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      tags:
+      - local-bfla
+  /modules/bfla/authorizationModel/{apiID}/deny:
+    put:
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      - in: query
+        name: method
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: path
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: k8sClientUid
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      tags:
+      - local-bfla
+  /modules/bfla/authorizationModel/{apiID}/learning/reset:
+    put:
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      - in: query
+        name: nr_traces
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      tags:
+      - bfla
+  /modules/bfla/authorizationModel/{apiID}/learning/start:
+    put:
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      - in: query
+        name: nr_traces
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      tags:
+      - bfla
+  /modules/bfla/authorizationModel/{apiID}/learning/stop:
+    put:
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      tags:
+      - bfla
+  /modules/bfla/event/{id}:
+    get:
+      operationId: bflaget_event
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIEventAnnotations'
+          description: API Event with annotations
+      summary: Get the event with the annotations and bfla status
+      tags:
+      - local-bfla
+  /modules/bfla/event/{id}/{operation}:
+    put:
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      - in: path
+        name: operation
+        required: true
+        schema:
+          $ref: '#/components/schemas/OperationEnum'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      tags:
+      - local-bfla
+  /modules/bfla/version:
+    get:
+      description: Get the version of this Module
+      operationId: bflagetVersion
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ModuleVersion
+          description: Version of the Module
+      summary: Get the version of this Module
+      tags:
+      - local-bfla
+  /modules/fuzzer/annotatedspec/{apiID}:
+    get:
+      description: Retreive the annotated spec for an API if any, 404 Not Found otherwise
+      operationId: fuzzerGetAnnotatedSpec
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                description: spec in json format
+                type: object
+          description: List of tests
+        "404":
+          content:
+            application/json:
+              schema:
+                description: error message
+                type: string
+          description: Spec not found
+      summary: Retreive the annotated spec for an API
+      tags:
+      - local-fuzzer
+  /modules/fuzzer/apiFindings/{apiID}:
+    get:
+      description: Asks for findings of an APIClarity module, and API. Implemented
+        by each module
+      operationId: fuzzerGetApiFindings
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      - $ref: ../common/openapi.yaml#/components/parameters/Sensitive
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/APIFindings
+          description: An API Findings Bundle
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      summary: Get findings for an API and module
+  /modules/fuzzer/fuzz/{apiID}:
+    get:
+      description: Fuzz a Target
+      operationId: fuzzerfuzzTarget
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      - description: service for the service to test
+        in: query
+        name: service
+        schema:
+          type: string
+      - description: type of auth
+        in: query
+        name: type
+        schema:
+          type: string
+      - description: username
+        in: query
+        name: username
+        schema:
+          type: string
+      - description: password
+        in: query
+        name: password
+        schema:
+          type: string
+      - description: key
+        in: query
+        name: key
+        schema:
+          type: string
+      - description: value for key
+        in: query
+        name: value
+        schema:
+          type: string
+      - description: token
+        in: query
+        name: token
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Successful Response
+        "400":
+          content:
+            application/json:
+              schema:
+                description: error message
+                type: string
+          description: Bad formated namespace
+        "404":
+          content:
+            application/json:
+              schema:
+                description: error message
+                type: string
+          description: Service not found
+        "500":
+          content:
+            application/json:
+              schema:
+                description: error message
+                type: string
+          description: Internal Error
+      summary: Fuzz a Target
+      tags:
+      - local-fuzzer
+  /modules/fuzzer/fuzz/{apiID}/progress:
+    get:
+      description: Start a test for an API
+      operationId: fuzzerGetTestProgress
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShortTestProgress'
+          description: Successful Response
+        "404":
+          content:
+            application/json:
+              schema:
+                description: error message
+                type: string
+          description: Service not found
+        "500":
+          content:
+            application/json:
+              schema:
+                description: error message
+                type: string
+          description: Internal Error
+      summary: Start a test for an API
+      tags:
+      - fuzzer
+  /modules/fuzzer/fuzz/{apiID}/report:
+    get:
+      description: Start a test for an API
+      operationId: fuzzerGetTestReport
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShortTestReport'
+          description: Successful Response
+        "404":
+          content:
+            application/json:
+              schema:
+                description: error message
+                type: string
+          description: Service not found
+        "500":
+          content:
+            application/json:
+              schema:
+                description: error message
+                type: string
+          description: Internal Error
+      summary: Start a test for an API
+      tags:
+      - fuzzer
+  /modules/fuzzer/fuzz/{apiID}/start:
+    post:
+      description: Start a test for an API
+      operationId: fuzzerStartTest
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TestInput'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestHandle'
+          description: Successful Response
+        "404":
+          content:
+            application/json:
+              schema:
+                description: error message
+                type: string
+          description: Service not found
+        "500":
+          content:
+            application/json:
+              schema:
+                description: error message
+                type: string
+          description: Internal Error
+      summary: Start a test for an API
+      tags:
+      - fuzzer
+  /modules/fuzzer/fuzz/{apiID}/stop:
+    post:
+      description: Stop (cancel) a running test for an API
+      operationId: fuzzerStopTest
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "204":
+          description: Successful Response
+        "404":
+          content:
+            application/json:
+              schema:
+                description: error message
+                type: string
+          description: Service not found
+        "500":
+          content:
+            application/json:
+              schema:
+                description: error message
+                type: string
+          description: Internal Error
+      summary: Stop (cancel) a running test for an API
+      tags:
+      - fuzzer
+  /modules/fuzzer/rawfindings/{apiID}:
+    get:
+      description: Receive list of findings for an API
+      operationId: fuzzerGetRawfindings
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RawFindingsBundle'
+          description: Raw Finding Bundle
+      summary: Retreive list of findings for an API
+      tags:
+      - local-fuzzer
+    parameters:
+    - in: path
+      name: apiID
+      required: true
+      schema:
+        $ref: ../common/openapi.yaml#/components/schemas/ApiID
+    post:
+      description: Receive list of raw findings for an API
+      operationId: fuzzerPostRawfindings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RawFindingsBundle'
+        required: true
+      responses:
+        "204":
+          description: Successful Response
+      summary: Receive list of raw findings for an API
+      tags:
+      - local-fuzzer
+  /modules/fuzzer/report/{apiID}/{timestamp}:
+    get:
+      description: Retreive a report for an API identified by its timestamp
+      operationId: fuzzerGetReport
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      - description: Timestamp of the start of the test
+        in: path
+        name: timestamp
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestWithReport'
+          description: List of tests
+      summary: Retreive a report for an API
+      tags:
+      - local-fuzzer
+  /modules/fuzzer/state:
+    get:
+      description: Get useful informations about the current running state of the
+        testing module
+      operationId: fuzzergetState
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestingModuleState'
+          description: Current testing module running state
+      summary: Get the current running state of this module
+  /modules/fuzzer/tests/{apiID}:
+    get:
+      description: Retreive the list of tests for an API (without report)
+      operationId: fuzzerGetTests
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tests'
+          description: List of tests
+      summary: Retreive the list of tests for an API
+      tags:
+      - local-fuzzer
+  /modules/fuzzer/updateStatus/{apiID}:
+    get:
+      description: Retreive last update status for an API under fuzzing
+      operationId: fuzzerGetUpdateStatus
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FuzzingStatusAndReport'
+          description: Raw Finding Bundle
+      summary: Retreive last update status for an API under fuzzing
+      tags:
+      - local-fuzzer
+    parameters:
+    - in: path
+      name: apiID
+      required: true
+      schema:
+        $ref: ../common/openapi.yaml#/components/schemas/ApiID
+    post:
+      description: Provide the Update status for an API under fuzzing
+      operationId: fuzzerPostUpdateStatus
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FuzzingStatusAndReport'
+        required: true
+      responses:
+        "204":
+          description: Successful Response
+      summary: Update status for an API under fuzzing
+      tags:
+      - local-fuzzer
+  /modules/fuzzer/version:
+    get:
+      description: Get the version of this Module
+      operationId: fuzzergetVersion
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+          description: Version of the Module
+      summary: Get the version of this Module
+  /modules/traceanalyzer/apiAnnotations/{apiID}:
+    delete:
+      description: Get Trace Analyzer Annotations for a specific API
+      operationId: traceanalyzerDeleteAPIAnnotations
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      - description: name of the annotation
+        in: query
+        name: name
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: Successful deletion
+      summary: Delete Annotations for an API
+    get:
+      description: Get Trace Analyzer Annotations for a specific API
+      operationId: traceanalyzerGetAPIAnnotations
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Annotations'
+          description: Annotation
+      summary: Get Annotations for an API
+  /modules/traceanalyzer/apiFindings/{apiID}:
+    get:
+      description: Asks for findings of an APIClarity module, and API. Implemented
+        by each module
+      operationId: traceanalyzerGetApiFindings
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      - $ref: ../common/openapi.yaml#/components/parameters/Sensitive
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/APIFindings
+          description: An API Findings Bundle
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      summary: Get findings for an API and module
+  /modules/traceanalyzer/eventAnnotations/{eventID}:
+    get:
+      description: Get Trace Analyzer Annotations for a specific event
+      operationId: traceanalyzerGetEventAnnotations
+      parameters:
+      - in: path
+        name: eventID
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Annotations'
+          description: Annotation
+      summary: Get Annotations for an event
+servers:
+- url: /api

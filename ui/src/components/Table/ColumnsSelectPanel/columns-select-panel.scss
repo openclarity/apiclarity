@@ -1,0 +1,28 @@
+@import 'utils/scss_variables.module.scss';
+
+.columns-select-panel-container {
+    height: 100%;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 230px;
+    padding: 15px;
+    background-color: $color-white;
+    border: 1px solid $color-grey-lighter;
+    overflow-y: scroll;
+    z-index: 3;
+
+    .header-columns-wrapper {
+        .header-column-title {
+            text-transform: uppercase;
+            color: $color-main;
+            margin-bottom: 10px;
+            font-weight: bold;
+            font-size: 9px;
+        }
+        .header-columns {
+            margin-left: 30px;
+            margin-bottom: 20px;
+        }
+    }
+}

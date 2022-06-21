@@ -1,9 +1,34 @@
 openapi: 3.0.3
 info:
-  title: APIClarity PluginB
+  title: APIClarity Trace Analyzer Module
   version: 0.0.1
-  description: APIClarity PluginA API
+  description: APIClarity Trace Analyzer Module API
 paths:
+  /apiFindings/{apiID}:
+    get:
+      operationId: GetApiFindings
+      summary: 'Get findings for an API and module'
+      description: 'Asks for findings of an APIClarity module, and API. Implemented by each module'
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+        - $ref: '../../../../../../api3/common/openapi.yaml#/components/parameters/Sensitive'
+      responses:
+        '200':
+          description: 'An API Findings Bundle'
+          content:
+            application/json:
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/APIFindings'
+        default:
+          description: 'Error response'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
   /eventAnnotations/{eventID}:
     get:
       operationId: GetEventAnnotations
@@ -33,8 +58,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
-            format: int64
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
       responses:
         '200':
           description: Annotation
@@ -51,8 +75,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
-            format: int64
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
         - in: query
           name: name
           required: true

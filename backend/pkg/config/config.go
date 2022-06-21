@@ -50,6 +50,8 @@ const (
 	RequestHeadersToIgnore  = "REQUEST_HEADERS_TO_IGNORE"
 
 	ModulesAssetsEnvVar = "MODULES_ASSETS"
+
+	NotificationPrefix = "NOTIFICATION_BACKEND_PREFIX"
 )
 
 type Config struct {

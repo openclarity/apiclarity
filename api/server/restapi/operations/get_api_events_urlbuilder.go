@@ -16,7 +16,9 @@ import (
 
 // GetAPIEventsURL generates an URL for the get API events operation
 type GetAPIEventsURL struct {
+	AlertTypeIs          []string
 	AlertIs              []string
+	APIInfoIDIs          *uint32
 	DestinationIPIsNot   []string
 	DestinationIPIs      []string
 	DestinationPortIsNot []string
@@ -82,6 +84,23 @@ func (o *GetAPIEventsURL) Build() (*url.URL, error) {
 
 	qs := make(url.Values)
 
+	var alertTypeIsIR []string
+	for _, alertTypeIsI := range o.AlertTypeIs {
+		alertTypeIsIS := alertTypeIsI
+		if alertTypeIsIS != "" {
+			alertTypeIsIR = append(alertTypeIsIR, alertTypeIsIS)
+		}
+	}
+
+	alertTypeIs := swag.JoinByFormat(alertTypeIsIR, "")
+
+	if len(alertTypeIs) > 0 {
+		qsv := alertTypeIs[0]
+		if qsv != "" {
+			qs.Set("alertType[is]", qsv)
+		}
+	}
+
 	var alertIsIR []string
 	for _, alertIsI := range o.AlertIs {
 		alertIsIS := alertIsI
@@ -97,6 +116,14 @@ func (o *GetAPIEventsURL) Build() (*url.URL, error) {
 		if qsv != "" {
 			qs.Set("alert[is]", qsv)
 		}
+	}
+
+	var aPIInfoIDIsQ string
+	if o.APIInfoIDIs != nil {
+		aPIInfoIDIsQ = swag.FormatUint32(*o.APIInfoIDIs)
+	}
+	if aPIInfoIDIsQ != "" {
+		qs.Set("apiInfoId[is]", aPIInfoIDIsQ)
 	}
 
 	var destinationIPIsNotIR []string

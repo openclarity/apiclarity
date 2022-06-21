@@ -60,6 +60,9 @@ func init() {
             "$ref": "#/parameters/showNonApi"
           },
           {
+            "$ref": "#/parameters/apiInfoIdIsFilter"
+          },
+          {
             "$ref": "#/parameters/methodIsFilter"
           },
           {
@@ -130,6 +133,9 @@ func init() {
           },
           {
             "$ref": "#/parameters/alertIsFilter"
+          },
+          {
+            "$ref": "#/parameters/alertIsType"
           }
         ],
         "responses": {
@@ -898,6 +904,9 @@ func init() {
     "ApiInfo": {
       "type": "object",
       "properties": {
+        "destinationNamespace": {
+          "type": "string"
+        },
         "hasProvidedSpec": {
           "type": "boolean",
           "default": false
@@ -1202,6 +1211,14 @@ func init() {
       "name": "alert[is]",
       "in": "query"
     },
+    "alertIsType": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "name": "alertType[is]",
+      "in": "query"
+    },
     "apiEventSortKey": {
       "enum": [
         "time",
@@ -1232,6 +1249,12 @@ func init() {
       "type": "string",
       "description": "api id to return",
       "name": "apiId",
+      "in": "query"
+    },
+    "apiInfoIdIsFilter": {
+      "type": "integer",
+      "format": "uint32",
+      "name": "apiInfoId[is]",
       "in": "query"
     },
     "apiInventorySortKey": {
@@ -1692,6 +1715,12 @@ func init() {
             "required": true
           },
           {
+            "type": "integer",
+            "format": "uint32",
+            "name": "apiInfoId[is]",
+            "in": "query"
+          },
+          {
             "type": "array",
             "items": {
               "enum": [
@@ -1885,6 +1914,14 @@ func init() {
             },
             "description": "Alert Kind [ALERT_INFO or ALERT_WARN]",
             "name": "alert[is]",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "name": "alertType[is]",
             "in": "query"
           }
         ],
@@ -2985,6 +3022,9 @@ func init() {
     "ApiInfo": {
       "type": "object",
       "properties": {
+        "destinationNamespace": {
+          "type": "string"
+        },
         "hasProvidedSpec": {
           "type": "boolean",
           "default": false
@@ -3289,6 +3329,14 @@ func init() {
       "name": "alert[is]",
       "in": "query"
     },
+    "alertIsType": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "name": "alertType[is]",
+      "in": "query"
+    },
     "apiEventSortKey": {
       "enum": [
         "time",
@@ -3319,6 +3367,12 @@ func init() {
       "type": "string",
       "description": "api id to return",
       "name": "apiId",
+      "in": "query"
+    },
+    "apiInfoIdIsFilter": {
+      "type": "integer",
+      "format": "uint32",
+      "name": "apiInfoId[is]",
       "in": "query"
     },
     "apiInventorySortKey": {

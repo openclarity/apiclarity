@@ -18,4 +18,20 @@
         background-color: $color-risk-unknown;
         color: white;
     }
+    &.low {
+        background-color: $color-risk-low;
+        color: white;
+    }
+    &.medium {
+        background-color: $color-risk-medium;
+        color: white;
+    }
+    &.high {
+        background-color: $color-risk-high;
+        color: white;
+    }
+    &.critical {
+        background-color: $color-risk-critical;
+        color: white;
+    }
 }

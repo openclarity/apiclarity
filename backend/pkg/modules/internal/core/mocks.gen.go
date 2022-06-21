@@ -10,6 +10,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	notifications "github.com/openclarity/apiclarity/api3/notifications"
 	database "github.com/openclarity/apiclarity/backend/pkg/database"
 	kubernetes "k8s.io/client-go/kubernetes"
 )
@@ -240,6 +241,20 @@ func (m *MockBackendAccessor) ListAPIInfoAnnotations(arg0 context.Context, arg1 
 func (mr *MockBackendAccessorMockRecorder) ListAPIInfoAnnotations(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAPIInfoAnnotations", reflect.TypeOf((*MockBackendAccessor)(nil).ListAPIInfoAnnotations), arg0, arg1, arg2)
+}
+
+// Notify mocks base method.
+func (m *MockBackendAccessor) Notify(arg0 context.Context, arg1 string, arg2 uint, arg3 notifications.APIClarityNotification) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Notify", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Notify indicates an expected call of Notify.
+func (mr *MockBackendAccessorMockRecorder) Notify(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Notify", reflect.TypeOf((*MockBackendAccessor)(nil).Notify), arg0, arg1, arg2, arg3)
 }
 
 // StoreAPIInfoAnnotations mocks base method.

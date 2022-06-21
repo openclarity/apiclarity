@@ -1,0 +1,405 @@
+paths: {}
+info: 
+  title: "Common Schemas for ApiClarity"
+  version: "1.0"
+openapi: 3.0.2
+servers:
+  - url: /api/v3
+components:
+  schemas:
+    APIFindings:
+      description: 'A group of findings'
+      type: object
+      properties:
+        items:
+          description: 'A list of findings'
+          type: array
+          items:
+            $ref: '#/components/schemas/APIFinding'
+
+    APIFinding:
+      description: 'An API Finding'
+      type: object
+      required:
+        - type
+        - source
+        - name
+        - description
+        - severity
+      properties:
+        type:
+          description: 'Type of the finding'
+          type: string
+          example: WEAK_JWT
+        source:
+          description: "Name of the module which created this finding"
+          type: string
+          example: traceanalyzer
+        name:
+          description: 'Human readable name of the finding'
+          type: string
+          example: 'Weak JSON Web Token'
+        description:
+          description: 'Human readable description of the finding'
+          type: string
+          example: 'A weak JSON Web Token has been detected'
+        severity:
+            $ref: '#/components/schemas/Severity'
+        reconstructed_spec_location:
+            description: 'JSON pointer to the location of the finding in the specification. See https://datatracker.ietf.org/doc/html/rfc6901'
+            type: string
+            example: '#/paths/~1blogs~1{blog_id}~1new~0posts'
+        provided_spec_location:
+            description: 'JSON pointer to the location of the finding in the specification. See https://datatracker.ietf.org/doc/html/rfc6901'
+            type: string
+            example: '#/paths/~1blogs~1{blog_id}~1new~0posts'
+        additional_info:
+          description: "Could be any opaque JSON object, will be interpreted by panoptica. Basically, it's what is stored in the database"
+          type: object
+          example: { "key_len": 12 }
+    ApiResponse:
+      description: 'An object that is returned in all cases of failures'
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    Severity:
+      description: 'Severity of a finding'
+      type: string
+      enum:
+        - LOW
+        - MEDIUM
+        - HIGH
+        - CRITICAL
+        - INFO
+      example: HIGH
+    BaseNotification:
+      description: 'Base Notification all APIClarity notifications must extend'
+      type: object
+      properties:
+        notificationType:
+          type: string
+      required:
+      - notificationType
+    ModuleVersion:
+      type: 'object'
+      required: [version]
+      properties:
+        version:
+          type: 'string'
+    ApiFindingsNotification:
+      allOf:
+      - $ref: "#/components/schemas/BaseNotification"
+      - $ref: "#/components/schemas/APIFindings"
+    ApiEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: uint32
+        requestTime:
+          type: string
+          format: date-time
+        time:
+          type: string
+          format: date-time
+        method:
+          $ref: "#/components/schemas/HttpMethod"
+        path:
+          type: string
+        query:
+          type: string
+        statusCode:
+          type: integer
+        sourceIP:
+          type: string
+        destinationIP:
+          type: string
+        destinationPort:
+          type: integer
+        hasReconstructedSpecDiff:
+          type: boolean
+          default: false
+        hasProvidedSpecDiff:
+          type: boolean
+          default: false
+        specDiffType:
+          $ref: "#/components/schemas/DiffType"
+        hostSpecName:
+          type: string
+        apiInfoId:
+          type: integer
+          description: hold the relevant api spec info id
+          format: uint32
+        apiType:
+          $ref: "#/components/schemas/ApiTypeEnum"
+        alerts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModuleAlert"
+    ApiEventSpecDiff:
+      type: object
+      required:
+        - oldSpec
+        - newSpec
+      properties:
+        diffType:
+          $ref: "#/components/schemas/DiffType"
+        oldSpec:
+          description: Old spec json string
+          type: string
+        newSpec:
+          description: New spec json string
+          type: string
+    ApiInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: uint32
+        name:
+          description: API name
+          type: string
+        port:
+          type: integer
+        hasReconstructedSpec:
+          type: boolean
+          default: false
+        hasProvidedSpec:
+          type: boolean
+          default: false
+        destinationNamespace:
+          type: string
+    ApiInfoWithType:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/ApiInfo"
+        - properties:
+            apiType:
+              $ref: "#/components/schemas/ApiTypeEnum"
+    ApiUsages:
+      type: object
+      properties:
+        existingApis:
+          type: array
+          items:
+            $ref: "#/components/schemas/ApiUsage"
+        newApis:
+          type: array
+          items:
+            $ref: "#/components/schemas/ApiUsage"
+        apisWithDiff:
+          type: array
+          items:
+            $ref: "#/components/schemas/ApiUsage"
+    ApiUsage:
+      type: object
+      properties:
+        numOfCalls:
+          type: integer
+          x-omitempty: false
+        time:
+          type: string
+          format: date-time
+    ApiCount:
+      type: object
+      properties:
+        apiInfoId:
+          type: integer
+          description: hold the relevant api info id
+          format: uint32
+        apiType:
+          $ref: "#/components/schemas/ApiTypeEnum"
+        numCalls:
+          type: integer
+        apiHostName:
+          type: string
+        apiPort:
+          type: integer
+    SpecDiffTime:
+      type: object
+      properties:
+        apiEventId:
+          type: integer
+          format: uint32
+        time:
+          type: string
+          format: date-time
+        apiHostName:
+          type: string
+        diffType:
+          $ref: "#/components/schemas/DiffType"
+    HttpMethod:
+      type: string
+      enum:
+        - GET
+        - HEAD
+        - POST
+        - PUT
+        - DELETE
+        - CONNECT
+        - OPTIONS
+        - TRACE
+        - PATCH
+    ApiTypeEnum:
+      type: string
+      enum:
+        - INTERNAL
+        - EXTERNAL
+    DiffType:
+      type: string
+      default: NO_DIFF
+      enum:
+        - ZOMBIE_DIFF
+        - SHADOW_DIFF
+        - GENERAL_DIFF
+        - NO_DIFF
+    ApiInventorySortKey:
+      type: string
+      enum:
+        - name
+        - port
+        - hasReconstructedSpec
+        - hasProvidedSpec
+    ApiEventSortKey:
+      type: string
+      enum:
+        - time
+        - method
+        - path
+        - statusCode
+        - sourceIP
+        - destinationIP
+        - destinationPort
+        - specDiffType
+        - hostSpecName
+        - apiType
+    SuccessResponse:
+      description: An object that is return in cases of success that return nothing.
+      type: object
+      properties:
+        message:
+          type: string
+    OpenApiSpecs:
+      description: An object representing the provided and reconstructed API specs
+      type: object
+      properties:
+        providedSpec:
+          $ref: "#/components/schemas/SpecInfo"
+        reconstructedSpec:
+          $ref: "#/components/schemas/SpecInfo"
+    SpecInfo:
+      description: An object containing info about a spec
+      type: object
+      properties:
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/SpecTag"
+    rawSpec:
+      description: spec in json or yaml format
+      type: object
+      properties:
+        rawSpec:
+          type: string
+          description: spec in json or yaml format
+    SpecTag:
+      type: object
+      properties:
+        description:
+          type: string
+        name:
+          type: string
+        methodAndPathList:
+          type: array
+          items:
+            $ref: "#/components/schemas/MethodAndPath"
+    MethodAndPath:
+      type: object
+      properties:
+        path:
+          type: string
+        pathId:
+          type: string
+          format: uuid
+        method:
+          $ref: "#/components/schemas/HttpMethod"
+    HitCount:
+      type: object
+      properties:
+        count:
+          type: integer
+          format: int64
+          x-omitempty: false
+        time:
+          type: string
+          format: date-time
+    SuggestedReview:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: uint32
+        reviewPathItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReviewPathItem"
+    ReviewPathItem:
+      type: object
+      properties:
+        suggestedPath:
+          description: Represents the parameterized path suggested by the engine
+          type: string
+        apiEventsPaths:
+          description: Group of api event paths (original) that suggestedPath is
+            representing
+          type: array
+          items:
+            $ref: "#/components/schemas/ApiEventPathAndMethods"
+    ApiEventPathAndMethods:
+      type: object
+      properties:
+        path:
+          type: string
+        methods:
+          type: array
+          items:
+            $ref: "#/components/schemas/HttpMethod"
+    ApprovedReview:
+      type: object
+      properties:
+        reviewPathItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReviewPathItem"
+    AlertSeverityEnum:
+      type: string
+      enum:
+        - ALERT_INFO
+        - ALERT_WARN
+        - ALERT_CRITICAL
+    ModuleAlert:
+      type: object
+      properties:
+        moduleName:
+          description: Name of the module which created this alert
+          type: string
+        reason:
+          description: Optional description of reason of the alert
+          type: string
+        alert:
+          $ref: "#/components/schemas/AlertSeverityEnum"
+    ApiID:
+      type: integer
+      format: int64
+  parameters:
+    Sensitive:
+      name: sensitive
+      description: 'Should findings include sensitive data ?'
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
