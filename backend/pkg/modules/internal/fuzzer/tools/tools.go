@@ -18,6 +18,7 @@ package tools
 import (
 	b64 "encoding/base64"
 	"fmt"
+	"strings"
 
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/restapi"
@@ -134,4 +135,29 @@ func DumpHTTPFuzzParam(params restapi.FuzzTargetParams) string {
 	}
 	ret = ret + "}"
 	return ret
+}
+
+func GetBasePathFromURL(URL string) string {
+	if URL == "" || URL == "/" {
+		return ""
+	}
+
+	// strip scheme if exits
+	urlNoScheme := URL
+	schemeSplittedURL := strings.Split(URL, "://")
+	if len(schemeSplittedURL) > 1 {
+		urlNoScheme = schemeSplittedURL[1]
+	}
+
+	// get path
+	var path string
+	splittedURLNoScheme := strings.SplitN(urlNoScheme, "/", 2) // nolint:gomnd
+	if len(splittedURLNoScheme) > 1 {
+		path = splittedURLNoScheme[1]
+	}
+	if path == "" {
+		return ""
+	}
+
+	return "/" + path
 }

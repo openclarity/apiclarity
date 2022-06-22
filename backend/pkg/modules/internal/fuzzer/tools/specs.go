@@ -135,14 +135,7 @@ func LoadSpec(spec []byte) (*openapi3.T, error) {
 func GetBasePathsFromServers(servers *openapi3.Servers) []string {
 	result := []string{}
 	for _, server := range *servers {
-		// convert the full URL in http request to extract later the base path
-		// olint:noctx	// No need of context, the http.NewRequest is used only for formatting
-		req, err := http.NewRequest("GET", server.URL, nil)
-		if err != nil {
-			// Improper URL format for Servers item, just skip it
-			continue
-		}
-		basePath := req.URL.Path
+		basePath := GetBasePathFromURL(server.URL)
 		if !slices.Contains(result, basePath) {
 			result = append(result, basePath)
 		}
