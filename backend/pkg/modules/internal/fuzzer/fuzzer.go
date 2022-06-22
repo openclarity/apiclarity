@@ -326,46 +326,21 @@ func (p *pluginFuzzerHTTPHandler) PostUpdateStatus(writer http.ResponseWriter, r
 	writer.WriteHeader(http.StatusNoContent)
 }
 
-//
-// Return the Raw findings with SCN format.
-//
+// GetRawfindings return the Raw findings with SCN format.
 func (p *pluginFuzzerHTTPHandler) GetRawfindings(writer http.ResponseWriter, req *http.Request, apiID int64) {
 	logging.Debugf("[Fuzzer] GetRawfindings(%v): -->", apiID)
 	httpResponse(writer, http.StatusNotImplemented, EmptyJSON)
 }
 
-//
-// Return the findings list for the lastest Test.
-//
+// GetApiFindings return the findings list for the lastest Test.
+// nolint:stylecheck,revive
 func (p *pluginFuzzerHTTPHandler) GetApiFindings(writer http.ResponseWriter, req *http.Request, apiID int64, params restapi.GetApiFindingsParams) {
-	/*logging.Debugf("[Fuzzer] GetFindings(%v): -->", apiID)
-	api, err := p.fuzzer.model.GetAPI(req.Context(), uint(apiID))
-	if err != nil {
-		logging.Errorf("[Fuzzer] GetFindings(%v): Can't retrieve api_id=(%v), error=(%v)", apiID, apiID, err)
-		httpResponse(writer, http.StatusNotFound, EmptyJSON)
-		return
-	}
-	logging.Logf("[Fuzzer] GetFindings(%v): API_id (%v) => API (%v)", apiID, apiID, api)
-	var count int
-	result := restapi.Findings{
-		Items: api.GetLastFindings(),
-		Total: &count,
-	}
-	count = len(*(result.Items))
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
-	err = json.NewEncoder(writer).Encode(result)
-	if err != nil {
-		logging.Errorf("[Fuzzer] GetFindings(%v): Failed to encode response, error=(%v)", apiID, err)
-	}*/
 	logging.Debugf("[Fuzzer] GetApiFindings(%v): -->", apiID)
 
 	httpResponse(writer, http.StatusNotImplemented, EmptyJSON)
 }
 
-//
-// Receive findings for last Test.
-//
+// PostRawfindings receive findings for last Test.
 func (p *pluginFuzzerHTTPHandler) PostRawfindings(writer http.ResponseWriter, req *http.Request, apiID int64) {
 	logging.Debugf("[Fuzzer] PostRawfindings(%v): -->", apiID)
 	body, err := ioutil.ReadAll(req.Body)
@@ -391,9 +366,7 @@ func (p *pluginFuzzerHTTPHandler) PostRawfindings(writer http.ResponseWriter, re
 	writer.WriteHeader(http.StatusNoContent)
 }
 
-//
-// Send the list of Tests for the API.
-//
+// GetTests sends the list of Tests for the API.
 func (p *pluginFuzzerHTTPHandler) GetTests(writer http.ResponseWriter, req *http.Request, apiID int64) {
 	logging.Debugf("[Fuzzer] GetTests(%v): -->", apiID)
 

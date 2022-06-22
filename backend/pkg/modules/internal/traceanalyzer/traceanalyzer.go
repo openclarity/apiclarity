@@ -306,8 +306,6 @@ func (p *traceAnalyzer) EventNotify(ctx context.Context, e *core.Event) {
 			log.Error(err)
 		}
 	}
-
-	return
 }
 
 func (p *traceAnalyzer) sendAPIFindingsNotification(ctx context.Context, apiID uint, apiFindings []common.APIFinding) error {

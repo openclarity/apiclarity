@@ -66,7 +66,7 @@ func getEventDescription(a core.Annotation) Finding {
 		f := Finding{
 			ShortDesc: "Same Basic Auth credentials used for another service",
 			Severity:  SeverityMedium,
-			Alert:        severityToAlert(SeverityMedium),
+			Alert:     severityToAlert(SeverityMedium),
 		}
 		if len(p) < 3 {
 			f.DetailedDesc = "The exact same Basic Auth credentials of this event are used for another service"
@@ -114,7 +114,7 @@ func getEventDescription(a core.Annotation) Finding {
 	case "JWT_NO_ALG_FIELD":
 		return Finding{
 			ShortDesc:    "JWT has no algorithm specificed",
-			DetailedDesc: fmt.Sprintf("The JOSE header of the JWT header does not contain an 'alg' field"),
+			DetailedDesc: "The JOSE header of the JWT header does not contain an 'alg' field",
 			Severity:     SeverityHigh,
 			Alert:        severityToAlert(SeverityHigh),
 		}
@@ -195,7 +195,7 @@ func getAPIDescription(a core.Annotation) Finding {
 		}
 		err := json.Unmarshal(a.Annotation, &reasons)
 		if err != nil {
-			f.DetailedDesc = fmt.Sprintf("Parameter(s) are guessable")
+			f.DetailedDesc = "Parameter(s) are guessable"
 		} else {
 			var descs []string
 			for _, r := range reasons {

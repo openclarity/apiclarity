@@ -488,8 +488,8 @@ func (l *learnAndDetectBFLA) FindSourceObj(path, method, clientUid string, apiID
 	return aud, err
 }
 
-func (l *learnAndDetectBFLA) findSourceObj(path, method, clientUid string, apiID uint) (obj *SourceObject, setFn func(v *SourceObject), err error) {
-	external := clientUid == ""
+func (l *learnAndDetectBFLA) findSourceObj(path, method, clientUID string, apiID uint) (obj *SourceObject, setFn func(v *SourceObject), err error) {
+	external := clientUID == ""
 	authzModelEntry, err := l.authzModelsMap.Get(apiID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("authz model load error: %w", err)
@@ -509,7 +509,7 @@ func (l *learnAndDetectBFLA) findSourceObj(path, method, clientUid string, apiID
 		if sa.External && !external {
 			return false
 		}
-		return sa.K8sObject.Uid == clientUid
+		return sa.K8sObject.Uid == clientUID
 	})
 	if obj == nil {
 		return nil, nil, fmt.Errorf("audience not found: %w", err)

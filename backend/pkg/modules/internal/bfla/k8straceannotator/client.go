@@ -230,8 +230,7 @@ func (c *client) GetObject(_ context.Context, apiVersion, kind, namespace, name 
 		return nil, fmt.Errorf("unable to get k8s informer for gvr=%v: %w", gvr, err)
 	}
 	c.resourcesMu.Lock()
-	_, ok := c.resourcesOnce[gvr]
-	if !ok {
+	if _, ok := c.resourcesOnce[gvr]; !ok {
 		c.resourcesOnce[gvr] = struct{}{}
 		go informer.Informer().Run(c.stopCh)
 		cache.WaitForCacheSync(c.stopCh, informer.Informer().HasSynced)
