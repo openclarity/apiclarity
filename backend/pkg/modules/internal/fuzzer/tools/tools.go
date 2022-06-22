@@ -23,7 +23,7 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/restapi"
 )
 
-// Create new FuzzingReportPath.
+// NewFuzzingReportPath Create new FuzzingReportPath.
 func NewFuzzingReportPath(result int, verb string, uri string) restapi.FuzzingReportPath {
 	return restapi.FuzzingReportPath{
 		Result: &result,
@@ -32,7 +32,7 @@ func NewFuzzingReportPath(result int, verb string, uri string) restapi.FuzzingRe
 	}
 }
 
-// Retrieve HTTP result code associated to restler item.
+// GetHTTPCodeFromFindingType Retrieve HTTP result code associated to restler item.
 func GetHTTPCodeFromFindingType(findingtype string) int {
 	result := 200
 	// Note that for restler we haven't the result code. We can dedude the code from findingtype .
@@ -45,10 +45,8 @@ func GetHTTPCodeFromFindingType(findingtype string) int {
 	return result
 }
 
-/*
-Create a string that contain the user auth material, on Fuzzer format.
-This will be usedto send in ENV parameter to fuzzer.
-*/
+// GetAuthStringFromParam Create a string that contain the user auth material, on Fuzzer format.
+// This will be used to send in ENV parameter to fuzzer.
 func GetAuthStringFromParam(params restapi.FuzzTargetParams) (string, error) {
 	ret := ""
 

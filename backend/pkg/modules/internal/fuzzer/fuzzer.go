@@ -110,7 +110,7 @@ func (p *pluginFuzzer) EventNotify(ctx context.Context, event *core.Event) {
 
 /*
 *
-*  Implement Fuzzer module stuff
+*  Implement Fuzzer module stuff.
 *
  */
 
@@ -194,9 +194,7 @@ func httpResponse(writer http.ResponseWriter, statusCode int, data interface{}) 
 	}
 }
 
-//
-// Return the version for the fuzzer module.
-//
+// GetVersion return the version for the fuzzer module.
 func (*pluginFuzzerHTTPHandler) GetVersion(writer http.ResponseWriter, req *http.Request) {
 	logging.Debugf("[Fuzzer] GetVersion(): -->")
 	if err := json.NewEncoder(writer).Encode(restapi.Version{Version: ModuleVersion}); err != nil {
@@ -209,16 +207,14 @@ func (p *pluginFuzzerHTTPHandler) GetState(writer http.ResponseWriter, req *http
 	httpResponse(writer, http.StatusOK, state)
 }
 
-//
-// Launch a fuzzing for an API.
-//
+// FuzzTarget launch a fuzzing for an API.
 func (p *pluginFuzzerHTTPHandler) FuzzTarget(writer http.ResponseWriter, req *http.Request, apiID oapicommon.ApiID, params restapi.FuzzTargetParams) {
 	logging.Debugf("[Fuzzer] FuzzTarget(%v, %v): -->", apiID, tools.DumpHTTPFuzzParam(params))
 
 	// Get the specs here as it need ctx and accessor
 	specsInfo, err := tools.GetAPISpecsInfo(req.Context(), p.fuzzer.accessor, uint(apiID))
 	if err != nil {
-		logging.Errorf("[Fuzzer] FuzzTarget(%v): can't retreive specs error=(%v)", apiID, err)
+		logging.Errorf("[Fuzzer] FuzzTarget(%v): can't retrieve specs error=(%v)", apiID, err)
 		httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
 		return
 	}
@@ -456,33 +452,25 @@ func (p *pluginFuzzerHTTPHandler) GetAnnotatedSpec(writer http.ResponseWriter, r
 	httpResponse(writer, http.StatusNotImplemented, EmptyJSON)
 }
 
-//
-// Return the progress status of the on going test
-//
+// GetTestProgress returns the progress status of the ongoing test.
 func (p *pluginFuzzerHTTPHandler) GetTestProgress(writer http.ResponseWriter, req *http.Request, apiID int64) {
 	logging.Debugf("[Fuzzer] GetTestProgress(%v): -->", apiID)
 	httpResponse(writer, http.StatusNotImplemented, EmptyJSON)
 }
 
-//
-// Start a test
-//
+// StartTest starts a test.
 func (p *pluginFuzzerHTTPHandler) StartTest(writer http.ResponseWriter, req *http.Request, apiID int64) {
 	logging.Debugf("[Fuzzer] StartTest(%v): -->", apiID)
 	httpResponse(writer, http.StatusNotImplemented, EmptyJSON)
 }
 
-//
-// Stop an ongoing test
-//
+// StopTest stops an ongoing test.
 func (p *pluginFuzzerHTTPHandler) StopTest(writer http.ResponseWriter, req *http.Request, apiID int64) {
 	logging.Debugf("[Fuzzer] StopTest(%v): -->", apiID)
 	httpResponse(writer, http.StatusNotImplemented, EmptyJSON)
 }
 
-//
-// Return the report of the last test
-//
+// GetTestReport Return the report of the last test.
 func (p *pluginFuzzerHTTPHandler) GetTestReport(writer http.ResponseWriter, req *http.Request, apiID int64) {
 	logging.Debugf("[Fuzzer] GetTestReport(%v): -->", apiID)
 

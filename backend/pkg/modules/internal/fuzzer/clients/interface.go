@@ -27,7 +27,7 @@ type Client interface {
 	TriggerFuzzingJob(apiID int64, endpoint string, securityItem string) error
 }
 
-//nolint: ireturn,nolintlint
+//nolint:ireturn,nolintlint
 func NewClient(moduleConfig *config.Config, accessor core.BackendAccessor) (Client, error) {
 	if moduleConfig.GetDeploymentType() == config.DeploymentTypeKubernetes {
 		client, err := NewKubernetesClient(moduleConfig, accessor)

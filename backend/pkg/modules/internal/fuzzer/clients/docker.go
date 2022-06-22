@@ -118,7 +118,7 @@ func (c *DockerClient) TriggerFuzzingJob(apiID int64, endpoint string, securityI
 	return nil
 }
 
-//nolint: ireturn,nolintlint
+//nolint:ireturn,nolintlint
 func NewDockerClient(config *config.Config) (Client, error) {
 	client := &DockerClient{
 		imageName:         config.GetImageName(),

@@ -33,7 +33,7 @@ type Model struct {
 }
 
 /*
-* Factories
+* Factories.
  */
 
 func CopyTestFromTestWithReport(fullTest restapi.TestWithReport) restapi.Test {
@@ -75,7 +75,7 @@ func NewRawFindings(message string, severity string, findingType string) restapi
 }
 
 /*
-* Model
+* Model.
  */
 
 func (m *Model) Init(ctx context.Context) error {

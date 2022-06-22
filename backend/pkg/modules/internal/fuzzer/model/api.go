@@ -74,7 +74,7 @@ type API struct {
 }
 
 /*
-* Factories
+* Factories.
  */
 
 func NewAPI(id uint, name string, port uint, namespace string) API {
@@ -109,7 +109,7 @@ func NewTest() *TestItem {
 }
 
 /*
-* API
+* API.
  */
 
 func (api *API) GetLastStatus() *restapi.FuzzingStatusAndReport {

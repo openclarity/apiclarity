@@ -120,7 +120,7 @@ func FakeTriggerFuzzingJob(ctx context.Context, testFilename string, apiID uint,
 	}
 }
 
-//nolint: ireturn,nolintlint
+//nolint:ireturn,nolintlint
 func NewFakeClient(config *config.Config) (Client, error) {
 	p := &FakeClient{
 		testFileName: config.GetFakeFileName(),

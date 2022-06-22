@@ -88,7 +88,7 @@ var lock sync.Mutex
 // config singleton.
 var configSingleton *Config
 
-// return the singleton instance.
+// GetConfig returns the singleton instance.
 func GetConfig() *Config {
 	lock.Lock()
 	defer lock.Unlock()
@@ -99,7 +99,7 @@ func GetConfig() *Config {
 	return configSingleton
 }
 
-// Accessors as member are not visible from external.
+// GetImageName accessors as member are not visible from external.
 func (c *Config) GetImageName() string {
 	return c.imageName
 }

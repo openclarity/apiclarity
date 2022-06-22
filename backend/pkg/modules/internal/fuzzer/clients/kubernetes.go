@@ -241,7 +241,7 @@ func (l *K8sClient) Create(job *batchv1.Job) (*batchv1.Job, error) {
 	return ret, nil
 }
 
-//nolint: ireturn,nolintlint
+//nolint:ireturn,nolintlint
 func NewKubernetesClient(config *config.Config, accessor core.BackendAccessor) (Client, error) {
 	client := &K8sClient{
 		hClient:                accessor.K8SClient(),

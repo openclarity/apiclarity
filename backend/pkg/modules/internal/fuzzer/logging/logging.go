@@ -32,7 +32,7 @@ func Debugf(f string, args ...interface{}) {
 	fuzzerLogger.Debugf(f, args...)
 }
 
-// Logf logs message either via defined user logger or via system one if no user logger is defined.
+// Errorf logs message either via defined user logger or via system one if no user logger is defined.
 func Errorf(f string, args ...interface{}) {
 	fuzzerLogger.Errorf(f, args...)
 }
