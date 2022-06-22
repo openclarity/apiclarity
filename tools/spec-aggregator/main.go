@@ -32,10 +32,10 @@ func loadSpec(path string, fail bool) *openapi3.T {
 
 	spec, err := loader.LoadFromFile(path)
 	if err != nil {
-		log.Warnf("Unable to load spec %s: %v", path, err)
 		if fail {
-			log.Fatal("Fatal Error!")
+			log.Fatalf("Unable to load spec %s: %v", path, err)
 		}
+		log.Warnf("Unable to load spec %s: %v", path, err)
 		return nil
 	}
 	log.Debugf("Spec %s successfully loaded\n", path)
@@ -125,11 +125,11 @@ func aggregateGlobalSpecs() {
 	/* now coreSpec holds the new global spec. We can write to file */
 	specout, err := coreSpec.MarshalJSON()
 	if err != nil {
-		log.Fatalf("ERROR: %v", err)
+		log.Fatalf("%v", err)
 	}
 	yamlout, err := yaml.JSONToYAML(specout)
 	if err != nil {
-		log.Fatalf("ERROR: %v", err)
+		log.Fatalf("%v", err)
 	}
 
 	/* Reference to common folder from module folder */
@@ -140,7 +140,7 @@ func aggregateGlobalSpecs() {
 	yamlout = bytes.ReplaceAll(yamlout, []byte(commonOldPath), []byte(commonNewPath))
 	err = ioutil.WriteFile(rootPath+"/"+globalSpecPath, yamlout, 0644)
 	if err != nil {
-		log.Fatalf("ERROR: %v", err)
+		log.Fatalf("%v", err)
 	}
 
 	/* Try to load it back to verify that it is valid */
@@ -257,15 +257,15 @@ func aggregateNotificationSpecs() {
 
 	specout, err := notificationSpec.MarshalJSON()
 	if err != nil {
-		log.Fatalf("ERROR: %v", err)
+		log.Fatalf("%v", err)
 	}
 	yamlout, err := yaml.JSONToYAML(specout)
 	if err != nil {
-		log.Fatalf("ERROR: %v", err)
+		log.Fatalf("%v", err)
 	}
 	err = ioutil.WriteFile(rootPath+"/"+notificationSpecPath, yamlout, 0644)
 	if err != nil {
-		log.Fatalf("ERROR: %v", err)
+		log.Fatalf("%v", err)
 	}
 
 	loadSpec(rootPath+"/"+notificationSpecPath, true)
