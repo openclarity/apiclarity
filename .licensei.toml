@@ -22,6 +22,7 @@ ignored = [
   "github.com/jensneuse/abstractlogger", # no license file
   "github.com/lonelycode/go-uuid", # 3-Clause BSD License - https://github.com/lonelycode/go-uuid/blob/master/uuid/LICENSE
   "github.com/jensneuse/byte-template", # no license file
+  "github.com/invopop/yaml" # no license file
 ]
 
 [header]
