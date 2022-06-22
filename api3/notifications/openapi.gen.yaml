@@ -79,6 +79,8 @@ components:
       properties:
         apiID:
           $ref: ../common/openapi.yaml#/components/schemas/ApiID
+        highestSeverity:
+          $ref: ../common/openapi.yaml#/components/schemas/Severity
         starttime:
           description: Timestamp of the start of the test
           format: int64
@@ -99,6 +101,7 @@ components:
       - starttime
       - status
       - tags
+      - highestSeverity
       title: Short Test Report
       type: object
     TestProgressNotification:
