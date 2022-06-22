@@ -311,13 +311,13 @@ func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID in
 }
 
 // nolint:stylecheck,revive
-func (h httpHandler) PostAuthorizationModelApiID(w http.ResponseWriter, r *http.Request, apiID int) {
+func (h httpHandler) PostAuthorizationModelApiID(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
 	defer r.Body.Close()
 
 	ctx := r.Context()
 	select {
 	case <-ctx.Done():
-		httpResponse(w, http.StatusCreated, &restapi.ApiResponse{Message: fmt.Sprintf("the request took too long: %s", ctx.Err())})
+		httpResponse(w, http.StatusCreated, &oapicommon.ApiResponse{Message: fmt.Sprintf("the request took too long: %s", ctx.Err())})
 	default:
 		specType := bfladetector.SpecTypeNone
 		if apiinfo, err := h.accessor.GetAPIInfo(r.Context(), uint(apiID)); err != nil {
@@ -326,18 +326,18 @@ func (h httpHandler) PostAuthorizationModelApiID(w http.ResponseWriter, r *http.
 			specType = bfladetector.SpecTypeFromAPIInfo(apiinfo)
 		}
 		if specType == bfladetector.SpecTypeNone {
-			httpResponse(w, http.StatusOK, &restapi.ApiResponse{Message: "Spec not found, please either provide or reconstruct an api spec"})
+			httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Spec not found, please either provide or reconstruct an api spec"})
 			return
 		}
 		authModelReq := &restapi.AuthorizationModel{}
 		if err := json.NewDecoder(r.Body).Decode(authModelReq); err != nil {
-			httpResponse(w, http.StatusBadRequest, &restapi.ApiResponse{Message: fmt.Sprintf("error decoding body; id=%d err: %s", apiID, err)})
+			httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: fmt.Sprintf("error decoding body; id=%d err: %s", apiID, err)})
 			return
 		}
 
 		h.bflaDetector.ProvideAuthzModel(uint(apiID), FromRestapiAuthorizationModel(authModelReq))
 
-		httpResponse(w, http.StatusCreated, &restapi.ApiResponse{Message: "Success"})
+		httpResponse(w, http.StatusCreated, &oapicommon.ApiResponse{Message: "Success"})
 	}
 }
 
@@ -611,10 +611,6 @@ func (h httpHandler) PutEventIdOperation(w http.ResponseWriter, r *http.Request,
 
 func (h httpHandler) GetVersion(w http.ResponseWriter, r *http.Request) {
 	httpResponse(w, http.StatusOK, &oapicommon.ModuleVersion{Version: moduleVersion})
-}
-
-func (h httpHandler) PostAuthorizationModelApiID(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
-	return
 }
 
 func (h httpHandler) GetApiFindings(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.GetApiFindingsParams) {
