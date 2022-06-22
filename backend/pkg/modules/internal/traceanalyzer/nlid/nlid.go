@@ -26,7 +26,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
 	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
 )
@@ -46,6 +45,11 @@ type params = map[string]bool
 
 type Reason map[string]interface{}
 
+type parameter struct {
+	Name string`json:"param_name"`
+	Value string`json:"spec_location"`
+}
+
 type NLID struct {
 	historySize   int
 	paramsHistory map[utils.API]*ring.Ring
@@ -58,15 +62,18 @@ func NewNLID(historySize int) *NLID {
 	}
 }
 
-func (n *NLID) Analyze(pathParams map[string]string, trace *pluginsmodels.Telemetry) ([]core.Annotation, []core.Annotation) {
-	eventAnns := []core.Annotation{}
-	apiAnns := []core.Annotation{}
-
+func (n *NLID) Analyze(path, method string, pathParams map[string]string, trace *pluginsmodels.Telemetry) (eventAnns []utils.TraceAnalyzerAnnotation, apiAnns []utils.TraceAnalyzerAnnotation) {
 	if n.skipTrace(trace) {
-		return eventAnns, apiAnns
+		return
 	}
 
-	eventAnns = append(eventAnns, n.getNLIDS(pathParams, *trace)...)
+	params := n.getNLIDS(pathParams, *trace)
+	if len(params) > 0 {
+		eventAnns = append(eventAnns, NewAnnotationNLID(path, method, params))
+
+	// eventAnns = append(eventAnns, ...)
+	}
+
 	n.learnIDs(*trace)
 
 	return eventAnns, apiAnns
@@ -77,18 +84,16 @@ func (n *NLID) Analyze(pathParams map[string]string, trace *pluginsmodels.Teleme
 // - It's in the Request header AND looks like an ID
 // - XXX: it in the path parameter AND it looks like an ID
 
-func (n *NLID) getNLIDS(pathParams map[string]string, trace pluginsmodels.Telemetry) []core.Annotation {
-	eventAnns := []core.Annotation{}
-
+func (n *NLID) getNLIDS(pathParams map[string]string, trace pluginsmodels.Telemetry) (NLIDparams []parameter) {
 	api := getAPI(trace)
 
 	ph, ok := n.paramsHistory[api]
-	if !ok { // There is not history for this API yet
-		return eventAnns
+	if !ok { // There is no history for this API yet
+		return
 	}
 
 	// Get all parameters of the Request
-	//
+
 	// Get all parameters
 	reqParams := params{}
 
@@ -130,19 +135,16 @@ func (n *NLID) getNLIDS(pathParams map[string]string, trace pluginsmodels.Teleme
 	})
 
 	// Here, if reqParams is empty, this means that all parameters from the
-	// Request were found in the history, there is not observation to
+	// Request were found in the history, there is no observation to
 	// return. The parameters that are left in reqParams are the one which
 	// were not found in the history, meaning that they are non learnt IDs
 	for k := range reqParams {
 		if reqParams[k] {
-			eventAnns = append(eventAnns, core.Annotation{
-				Name:       "NLID",
-				Annotation: []byte(k),
-			})
+			NLIDparams = append(NLIDparams, parameter{"XXX", k})
 		}
 	}
 
-	return eventAnns
+	return NLIDparams
 }
 
 // We store an id if:

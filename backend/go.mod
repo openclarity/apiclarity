@@ -9,6 +9,7 @@ require (
 	github.com/getkin/kin-openapi v0.97.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-chi/chi/v5 v5.0.7
+	github.com/go-openapi/jsonpointer v0.19.5
 	github.com/go-openapi/loads v0.21.0
 	github.com/go-openapi/runtime v0.21.0
 	github.com/go-openapi/spec v0.20.4
@@ -60,7 +61,6 @@ require (
 	github.com/go-logr/logr v1.2.2 // indirect
 	github.com/go-openapi/analysis v0.20.1 // indirect
 	github.com/go-openapi/errors v0.20.1 // indirect
-	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-openapi/swag v0.21.1 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect

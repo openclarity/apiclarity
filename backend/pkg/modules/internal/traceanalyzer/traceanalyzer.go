@@ -217,12 +217,20 @@ func (p *traceAnalyzer) EventNotify(ctx context.Context, e *core.Event) {
 	// accepted, hence, the parameters were accepted as well. So, we can look at
 	// the parameters to see if they are very similar with the one in previous
 	// accepted queries.
-	// if strings.HasPrefix(trace.Response.StatusCode, "2") {
-	// 	// Guessable ID, which is part of the module, not the 3rd party library
-	// 	specPath, pathParams, _, _, _ := p.getParams(ctx, event)
-	// 	if specPath == "" {
-	// 		specPath = trace.Request.Path
-	// 	}
+	if strings.HasPrefix(trace.Response.StatusCode, "2") {
+		specPath, pathParams, _, _, _, err := p.getParams(ctx, event)
+		if err == nil {
+			if specPath == "" {
+				specPath = trace.Request.Path
+			}
+			// Check for guessable IDs
+			eventGuessable, _ := p.guessableID.Analyze(specPath, string(event.Method), pathParams, trace)
+			eventAnns = append(eventAnns, eventGuessable...)
+
+			// Check for NLIDS
+			eventNLIDAnns, _ := p.nlid.Analyze(specPath, string(event.Method), pathParams, trace)
+			eventAnns = append(eventAnns, eventNLIDAnns...)
+		}
 
 	// 	// Check for guessable IDs
 	// 	var groupedGuessable []ParameterFinding
@@ -238,20 +246,10 @@ func (p *traceAnalyzer) EventNotify(ctx context.Context, e *core.Event) {
 	// 		}
 	// 	}
 
-	// 	// Check for NLIDS
-	// 	eventNLIDAnns, _ := p.nlid.Analyze(pathParams, trace)
-	// 	if len(eventNLIDAnns) > 0 {
-	// 		// Regroup NLIDs
-	// 		var groupedNLIDs []ParameterFinding
-	// 		for _, e := range eventNLIDAnns {
-	// 			groupedNLIDs = append(groupedNLIDs, ParameterFinding{Location: specPath, Method: string(event.Method), Name: "", Value: string(e.Annotation), Reason: nlid.Reason{}})
-	// 		}
-	// 		bytes, err := json.Marshal(groupedNLIDs)
-	// 		if err == nil {
-	// 			eventAnns = append(eventAnns, core.Annotation{Name: "NLID", Annotation: bytes})
-	// 		}
-	// 	}
-	// }
+		// Check for NLIDS
+		eventNLIDAnns, _ := p.nlid.Analyze(pathParams, trace)
+		eventAnns = append(eventAnns, eventNLIDAnns...)
+	}
 
 
 	// Filter ignored findings
@@ -338,6 +336,8 @@ func fromCoreAnnotation(coreAnn *core.Annotation) (ann utils.TraceAnalyzerAnnota
 	case weakjwt.JWTSensitiveContentInClaims: a = &weakjwt.AnnotationSensitiveContentInClaims{}
 
 	case sensitive.RegexpMatching: a = &sensitive.AnnotationRegexpMatching{}
+
+	case nlid.NLIDType: a = &nlid.AnnotationNLID{}
 
 	default:
 		return nil, fmt.Errorf("unknown annotation '%s'", coreAnn.Name)
