@@ -590,6 +590,8 @@ components:
             $ref: ../common/openapi.yaml#/components/schemas/APIFinding
           title: Findings list
           type: array
+        highestSeverity:
+          $ref: ../common/openapi.yaml#/components/schemas/Severity
         operation:
           $ref: ../common/openapi.yaml#/components/schemas/MethodAndPath
         requestsCount:
@@ -598,8 +600,10 @@ components:
           title: Request count to the opea
           type: integer
       required:
+      - operation
       - requestsCount
       - findings
+      - highestSeverity
       title: Report tag operation
       type: object
     FuzzingReportPath:
@@ -620,6 +624,8 @@ components:
     FuzzingReportTag:
       description: Report tag item
       properties:
+        highestSeverity:
+          $ref: ../common/openapi.yaml#/components/schemas/Severity
         name:
           description: Tag name
           title: Tag name
@@ -632,6 +638,7 @@ components:
       required:
       - name
       - operations
+      - highestSeverity
       title: Report tag item
       type: object
     FuzzingStatusAndReport:
@@ -784,6 +791,8 @@ components:
       properties:
         apiID:
           $ref: ../common/openapi.yaml#/components/schemas/ApiID
+        highestSeverity:
+          $ref: ../common/openapi.yaml#/components/schemas/Severity
         starttime:
           description: Timestamp of the start of the test
           format: int64
@@ -804,6 +813,7 @@ components:
       - starttime
       - status
       - tags
+      - highestSeverity
       title: Short Test Report
       type: object
     SpecType:
