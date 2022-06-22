@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"io/ioutil"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
@@ -12,14 +13,18 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var commonSpecPath = "/api3/common/openapi.yaml"
-var coreSpecPath = "/api3/core/openapi.yaml"
-var notificationStubPath = "/api3/notifications/openapi.stub.yaml"
-var notificationSpecPath = "/api3/notifications/openapi.gen.yaml"
-var globalSpecPath = "/api3/global/openapi.gen.yaml"
-var modulesPath = "/backend/pkg/modules/internal"
-var inModulePath = "restapi/openapi.yaml"
-var rootPath = "../.."
+const (
+	commonSpecPath         = "/api3/common/openapi.yaml"
+	coreSpecPath           = "/api3/core/openapi.yaml"
+	notificationStubPath   = "/api3/notifications/openapi.stub.yaml"
+	notificationSpecPath   = "/api3/notifications/openapi.gen.yaml"
+	globalSpecPath         = "/api3/global/openapi.gen.yaml"
+	modulesPath            = "/backend/pkg/modules/internal"
+	inModulePath           = "restapi/openapi.yaml"
+	rootPath               = "../.."
+	parentNotificationName = "APIClarityNotification"
+	baseNotificationName   = "BaseNotification"
+)
 
 func loadSpec(path string, fail bool) *openapi3.T {
 	loader := openapi3.NewLoader()
@@ -27,13 +32,13 @@ func loadSpec(path string, fail bool) *openapi3.T {
 
 	spec, err := loader.LoadFromFile(path)
 	if err != nil {
-		log.Errorf("Unable to load spec %s: %v", path, err)
 		if fail {
-			log.Fatal("Fatal Error!")
+			log.Fatalf("Unable to load spec %s: %v", path, err)
 		}
+		log.Warnf("Unable to load spec %s: %v", path, err)
 		return nil
 	}
-	log.Debugf("Spec %s succesfully loaded\n", path)
+	log.Debugf("Spec %s successfully loaded\n", path)
 	return spec
 }
 
@@ -61,10 +66,13 @@ func main() {
 }
 
 func aggregateGlobalSpecs() {
+	/* core spec is the starting point to build global spec */
+	/* loading corespec and then enriching it with the module spec elements */
 	coreSpec := loadSpec(rootPath+"/"+coreSpecPath, true)
 
 	moduleSpecs := loadModuleSpecs()
 	for module, moduleSpec := range moduleSpecs {
+		log.Infof("Aggregating components for module %s", module)
 		coreComponents := reflect.ValueOf(coreSpec.Components)
 		moduleComponents := reflect.ValueOf(moduleSpec.Components)
 		for i := 0; i < coreComponents.Type().NumField(); i++ {
@@ -73,92 +81,122 @@ func aggregateGlobalSpecs() {
 				continue
 			}
 
-			log.Infof("Merging Components/%s\n", fieldName)
+			log.Debugf("Merging Components/%s for module %s\n", fieldName, module)
 			coreMap := coreComponents.FieldByName(fieldName)
 			moduleMap := moduleComponents.FieldByName(fieldName)
 			_ = coreMap
-			for _, k := range moduleMap.MapKeys() {
-				log.Infof("---- %s[%s] ", fieldName, k)
-				moduleV := moduleMap.MapIndex(k)
-				coreV := coreMap.MapIndex(k)
+			for _, key := range moduleMap.MapKeys() {
+				log.Debugf("Handling Components/%s[%s] for module %s", fieldName, key, module)
+				moduleV := moduleMap.MapIndex(key)
+				coreV := coreMap.MapIndex(key)
 				if coreV.IsValid() {
-					log.Fatalf("Key collision in %s: %s[%s]\n", module, fieldName, k.String())
+					log.Fatalf("Key collision in %s: Components/%s[%s]\n. Components keys must be unique across modules\n", module, fieldName, key.String())
 
 				}
-				coreMap.SetMapIndex(k, moduleV)
-
+				coreMap.SetMapIndex(key, moduleV)
 			}
 		}
 
-		for k, v := range moduleSpec.Paths {
-			if v.Get != nil && v.Get.OperationID != "" {
-				v.Get.OperationID = module + v.Get.OperationID
+		log.Infof("Generating OperationIds for module %s", module)
+		for key, value := range moduleSpec.Paths {
+			if value.Get != nil && value.Get.OperationID != "" {
+				value.Get.OperationID = module + value.Get.OperationID
 			}
-			if v.Post != nil && v.Post.OperationID != "" {
-				v.Post.OperationID = module + v.Post.OperationID
+			if value.Post != nil && value.Post.OperationID != "" {
+				value.Post.OperationID = module + value.Post.OperationID
 			}
-			if v.Put != nil && v.Put.OperationID != "" {
-				v.Put.OperationID = module + v.Put.OperationID
+			if value.Put != nil && value.Put.OperationID != "" {
+				value.Put.OperationID = module + value.Put.OperationID
 			}
-			if v.Delete != nil && v.Delete.OperationID != "" {
-				v.Delete.OperationID = module + v.Delete.OperationID
+			if value.Delete != nil && value.Delete.OperationID != "" {
+				value.Delete.OperationID = module + value.Delete.OperationID
 			}
-			if v.Patch != nil && v.Patch.OperationID != "" {
-				v.Patch.OperationID = module + v.Patch.OperationID
+			if value.Patch != nil && value.Patch.OperationID != "" {
+				value.Patch.OperationID = module + value.Patch.OperationID
 			}
-			if v.Head != nil && v.Head.OperationID != "" {
-				v.Head.OperationID = module + v.Head.OperationID
+			if value.Head != nil && value.Head.OperationID != "" {
+				value.Head.OperationID = module + value.Head.OperationID
 			}
 
-			coreSpec.Paths["/modules/"+module+k] = v
+			coreSpec.Paths["/modules/"+module+key] = value
 		}
 	}
+
+	/* now coreSpec holds the new global spec. We can write to file */
 	specout, err := coreSpec.MarshalJSON()
 	if err != nil {
-		log.Errorf("ERROR: %v", err)
+		log.Fatalf("%v", err)
 	}
 	yamlout, err := yaml.JSONToYAML(specout)
 	if err != nil {
-		log.Errorf("ERROR: %v", err)
-	}
-	yamlout = bytes.ReplaceAll(yamlout, []byte("../../../../../../api3/common/"), []byte("../common/"))
-	err = ioutil.WriteFile(rootPath+"/"+globalSpecPath, yamlout, 0644)
-	if err != nil {
-		log.Errorf("ERROR: %v", err)
+		log.Fatalf("%v", err)
 	}
 
+	/* Reference to common folder from module folder */
+	commonOldPath, _ := filepath.Rel(filepath.Dir(modulesPath+"/MODULE/"+inModulePath), commonSpecPath)
+	/* Reference to common folder from global folder */
+	commonNewPath, _ := filepath.Rel(filepath.Dir(globalSpecPath), commonSpecPath)
+	/* Perform the replacement */
+	yamlout = bytes.ReplaceAll(yamlout, []byte(commonOldPath), []byte(commonNewPath))
+	err = ioutil.WriteFile(rootPath+"/"+globalSpecPath, yamlout, 0644)
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
+
+	/* Try to load it back to verify that it is valid */
 	loadSpec(rootPath+"/"+globalSpecPath, true)
-	log.Info("SUCCESS!")
 }
 
 func aggregateNotificationSpecs() {
+	/**
+	* This functions is meant to generate the global notification specs.
+	* Check /api3/README.md for details.
+	*
+	* Code generation does not support oneOf and allOf when they refer to external objects (i.e. objects defined in other oapi specs).
+	* To work around this issue this function will copy in the generated specs all objects that are used in the oneOf and allOf clauses
+	*
+	 */
 	commonSpec := loadSpec(rootPath+"/"+commonSpecPath, true)
 	notificationSpec := loadSpec(rootPath+"/"+notificationStubPath, true)
 
-	// Add Base notification to the notification spec
-	parentNotificationSchema := notificationSpec.Components.Schemas["APIClarityNotification"].Value
-	notificationSpec.Components.Schemas["BaseNotification"] = commonSpec.Components.Schemas["BaseNotification"]
+	// Generic notification schema which will be the parent of all notifications by adding them in the oneOf clause
+	parentNotificationSchema := notificationSpec.Components.Schemas[parentNotificationName].Value
 
-	for k, notificationSchema := range commonSpec.Components.Schemas {
+	// Add Base notification to the notification spec as this is used in allOf clause of all notification instances
+	notificationSpec.Components.Schemas[baseNotificationName] = commonSpec.Components.Schemas[baseNotificationName]
+
+	// Path of common spec from ntification spec
+	commonSpecRelPathFromNotification, _ := filepath.Rel(filepath.Dir(notificationSpecPath), commonSpecPath)
+	commonSpecRelPathFromModule, _ := filepath.Rel(filepath.Dir(modulesPath+"/MODULE/"+inModulePath), commonSpecPath)
+	globalSpecRelPathFromNotification, _ := filepath.Rel(filepath.Dir(notificationSpecPath), globalSpecPath)
+
+	log.Info("Building notification specs from common specs")
+	// Look for notification defined in the common Specs
+	for key, notificationSchema := range commonSpec.Components.Schemas {
 		// Look for schemas that have allOf and BaseNotification as first element
-		if notificationSchema.Value == nil || notificationSchema.Value.AllOf == nil || notificationSchema.Value.AllOf[0].Ref != "#/components/schemas/BaseNotification" {
+		if notificationSchema.Value == nil || notificationSchema.Value.AllOf == nil || notificationSchema.Value.AllOf[0].Ref != "#/components/schemas/"+baseNotificationName {
 			continue
 		}
 
-		notificationSpec.Components.Schemas[k] = notificationSchema
-		parentNotificationSchema.OneOf = append(parentNotificationSchema.OneOf, openapi3.NewSchemaRef("#/components/schemas/"+k, nil))
-		parentNotificationSchema.Discriminator.Mapping[k] = "#/components/schemas/" + k
+		// Add the notification schema locally
+		notificationSpec.Components.Schemas[key] = notificationSchema
 
+		// Add the notification schema to the parent Notification
+		parentNotificationSchema.OneOf = append(parentNotificationSchema.OneOf, openapi3.NewSchemaRef("#/components/schemas/"+key, nil))
+		parentNotificationSchema.Discriminator.Mapping[key] = "#/components/schemas/" + key
+
+		// Since we are copying the scema in the notification spec
+		// we have to make sure that the copied objects refers back to the common spec fo references
 		for _, refSchema := range notificationSchema.Value.AllOf[1:] {
 			refPath := strings.Split(refSchema.Ref, "/")
 			newRef := refSchema.Value.NewRef()
 			for _, innerSchema := range newRef.Value.Properties {
 				if innerSchema.Ref != "" {
-					innerSchema.Ref = "../common/openapi.yaml" + innerSchema.Ref
+					innerSchema.Ref = commonSpecRelPathFromNotification + innerSchema.Ref
 					continue
 				}
 				if innerSchema.Value.Type == "array" && innerSchema.Value.Items.Ref != "" {
-					innerSchema.Value.Items.Ref = "../common/openapi.yaml" + innerSchema.Value.Items.Ref
+					innerSchema.Value.Items.Ref = commonSpecRelPathFromNotification + innerSchema.Value.Items.Ref
 					continue
 				}
 			}
@@ -166,38 +204,43 @@ func aggregateNotificationSpecs() {
 		}
 	}
 	moduleSpecs := loadModuleSpecs()
-	for _, moduleSpec := range moduleSpecs {
-
-		for k, notificationSchema := range moduleSpec.Components.Schemas {
+	for module, moduleSpec := range moduleSpecs {
+		log.Infof("Building notification specs from module %s specs", module)
+		for key, notificationSchema := range moduleSpec.Components.Schemas {
 			// Look for schemas that have allOf and BaseNotification as first element
-			if notificationSchema.Value == nil || notificationSchema.Value.AllOf == nil || notificationSchema.Value.AllOf[0].Ref != "../../../../../../api3/common/openapi.yaml#/components/schemas/BaseNotification" {
+			if notificationSchema.Value == nil || notificationSchema.Value.AllOf == nil || notificationSchema.Value.AllOf[0].Ref != commonSpecRelPathFromModule+"#/components/schemas/BaseNotification" {
 				continue
 			}
 
-			notificationSchema.Value.AllOf[0].Ref = "#/components/schemas/BaseNotification"
+			notificationSchema.Value.AllOf[0].Ref = "#/components/schemas/" + baseNotificationName
 
-			notificationSpec.Components.Schemas[k] = notificationSchema
-			parentNotificationSchema.OneOf = append(parentNotificationSchema.OneOf, openapi3.NewSchemaRef("#/components/schemas/"+k, nil))
-			parentNotificationSchema.Discriminator.Mapping[k] = "#/components/schemas/" + k
+			// Add the notification schema locally
+			notificationSpec.Components.Schemas[key] = notificationSchema
 
+			// Add the notification schema to the parent Notification
+			parentNotificationSchema.OneOf = append(parentNotificationSchema.OneOf, openapi3.NewSchemaRef("#/components/schemas/"+key, nil))
+			parentNotificationSchema.Discriminator.Mapping[key] = "#/components/schemas/" + key
+
+			// Since we are copying the scema in the notification spec
+			// we have to make sure that the copied objects refers back to the common spec fo references
 			for _, refSchema := range notificationSchema.Value.AllOf[1:] {
 				refPath := strings.Split(refSchema.Ref, "/")
 				newRef := refSchema.Value.NewRef()
 				for _, innerSchema := range newRef.Value.Properties {
 					if strings.HasPrefix(innerSchema.Ref, "#/components") {
-						innerSchema.Ref = "../global/openapi.gen.yaml" + innerSchema.Ref
+						innerSchema.Ref = globalSpecRelPathFromNotification + innerSchema.Ref
 						continue
 					}
-					if strings.HasPrefix(innerSchema.Ref, "../../../../../../api3/common/openapi.yaml#") {
-						innerSchema.Ref = strings.Replace(innerSchema.Ref, "../../../../../../api3/common/openapi.yaml#", "../common/openapi.yaml#", 1)
+					if strings.HasPrefix(innerSchema.Ref, commonSpecRelPathFromModule+"#") {
+						innerSchema.Ref = strings.Replace(innerSchema.Ref, commonSpecRelPathFromModule+"#", commonSpecRelPathFromNotification+"#", 1)
 						continue
 					}
 					if innerSchema.Value.Type == "array" && strings.HasPrefix(innerSchema.Value.Items.Ref, "#/components") {
-						innerSchema.Value.Items.Ref = "../global/openapi.gen.yaml" + innerSchema.Value.Items.Ref
+						innerSchema.Value.Items.Ref = globalSpecRelPathFromNotification + innerSchema.Value.Items.Ref
 						continue
 					}
-					if innerSchema.Value.Type == "array" && strings.HasPrefix(innerSchema.Value.Items.Ref, "../../../../../../api3/common/openapi.yaml") {
-						innerSchema.Value.Items.Ref = strings.Replace(innerSchema.Value.Items.Ref, "../../../../../../api3/common/openapi.yaml#", "../common/openapi.yaml#", 1)
+					if innerSchema.Value.Type == "array" && strings.HasPrefix(innerSchema.Value.Items.Ref, commonSpecRelPathFromModule+"#") {
+						innerSchema.Value.Items.Ref = strings.Replace(innerSchema.Value.Items.Ref, commonSpecRelPathFromModule+"#", commonSpecRelPathFromNotification+"#", 1)
 
 						continue
 					}
@@ -207,23 +250,23 @@ func aggregateNotificationSpecs() {
 		}
 	}
 
+	/* Sort the elements of oneOf to force a deterministic outcome */
 	sort.Slice(parentNotificationSchema.OneOf, func(i, j int) bool {
 		return strings.Compare(parentNotificationSchema.OneOf[i].Ref, parentNotificationSchema.OneOf[j].Ref) < 0
 	})
 
 	specout, err := notificationSpec.MarshalJSON()
 	if err != nil {
-		log.Errorf("ERROR: %v", err)
+		log.Fatalf("%v", err)
 	}
 	yamlout, err := yaml.JSONToYAML(specout)
 	if err != nil {
-		log.Errorf("ERROR: %v", err)
+		log.Fatalf("%v", err)
 	}
 	err = ioutil.WriteFile(rootPath+"/"+notificationSpecPath, yamlout, 0644)
 	if err != nil {
-		log.Errorf("ERROR: %v", err)
+		log.Fatalf("%v", err)
 	}
 
 	loadSpec(rootPath+"/"+notificationSpecPath, true)
-	log.Info("SUCCESS!")
 }
