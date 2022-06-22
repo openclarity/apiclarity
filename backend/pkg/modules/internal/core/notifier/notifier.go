@@ -9,7 +9,7 @@ import (
 )
 
 type notificationWithParams struct {
-	apiID uint
+	apiID   uint
 	payload notifications.APIClarityNotification
 }
 

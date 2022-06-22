@@ -311,6 +311,37 @@ func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID in
 }
 
 // nolint:stylecheck,revive
+func (h httpHandler) PostAuthorizationModelApiID(w http.ResponseWriter, r *http.Request, apiID int) {
+	defer r.Body.Close()
+
+	ctx := r.Context()
+	select {
+	case <-ctx.Done():
+		httpResponse(w, http.StatusCreated, &restapi.ApiResponse{Message: fmt.Sprintf("the request took too long: %s", ctx.Err())})
+	default:
+		specType := bfladetector.SpecTypeNone
+		if apiinfo, err := h.accessor.GetAPIInfo(r.Context(), uint(apiID)); err != nil {
+			log.Error("error getting openAPI spec")
+		} else {
+			specType = bfladetector.SpecTypeFromAPIInfo(apiinfo)
+		}
+		if specType == bfladetector.SpecTypeNone {
+			httpResponse(w, http.StatusOK, &restapi.ApiResponse{Message: "Spec not found, please either provide or reconstruct an api spec"})
+			return
+		}
+		authModelReq := &restapi.AuthorizationModel{}
+		if err := json.NewDecoder(r.Body).Decode(authModelReq); err != nil {
+			httpResponse(w, http.StatusBadRequest, &restapi.ApiResponse{Message: fmt.Sprintf("error decoding body; id=%d err: %s", apiID, err)})
+			return
+		}
+
+		h.bflaDetector.ProvideAuthzModel(uint(apiID), FromRestapiAuthorizationModel(authModelReq))
+
+		httpResponse(w, http.StatusCreated, &restapi.ApiResponse{Message: "Success"})
+	}
+}
+
+// nolint:stylecheck,revive
 func (h httpHandler) GetAuthorizationModelApiID(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
 	apiinfo, err := h.accessor.GetAPIInfo(r.Context(), uint(apiID))
 	if err != nil {
@@ -350,6 +381,30 @@ func ToRestapiSpecType(specType bfladetector.SpecType) restapi.SpecType {
 		return restapi.RECONSTRUCTED
 	}
 	return restapi.NONE
+}
+
+func FromRestapiAuthorizationModel(am *restapi.AuthorizationModel) bfladetector.AuthorizationModel {
+	res := bfladetector.AuthorizationModel{}
+	for _, o := range am.Operations {
+		resOp := &bfladetector.Operation{Method: o.Method, Path: o.Path}
+		for _, aud := range o.Audience {
+			resAud := &bfladetector.SourceObject{
+				Authorized: aud.Authorized,
+				External:   aud.External,
+				K8sObject:  (*k8straceannotator.K8sObjectRef)(aud.K8sObject),
+			}
+			for _, user := range aud.EndUsers {
+				resAud.EndUsers = append(resAud.EndUsers, &bfladetector.DetectedUser{
+					ID:        user.Id,
+					IPAddress: user.IpAddress,
+					Source:    bfladetector.DetectedUserSourceFromString(string(user.Source)),
+				})
+			}
+			resOp.Audience = append(resOp.Audience, resAud)
+		}
+		res.Operations = append(res.Operations, resOp)
+	}
+	return res
 }
 
 func ToRestapiAuthorizationModel(am *bfladetector.AuthorizationModel) *restapi.AuthorizationModel {
