@@ -879,10 +879,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FuzzingReportTag'
+        highestSeverity:
+          $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/Severity        
       required:
-       - starttime
-       - status
-       - tags
+        - starttime
+        - status
+        - tags
+        - highestSeverity
             
     FuzzingReportTag:
       title: Report tag item
@@ -898,9 +901,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FuzzingReportOperation'
+        highestSeverity:
+          $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/Severity        
       required:
-       - name
-       - operations
+        - name
+        - operations
+        - highestSeverity
       
     FuzzingReportOperation:
       description: Report tag operation
@@ -919,7 +925,11 @@ components:
           type: array
           items:
             $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/APIFinding'
+        highestSeverity:
+          $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/Severity        
       required:
+        - operation
         - requestsCount
         - findings
+        - highestSeverity
            

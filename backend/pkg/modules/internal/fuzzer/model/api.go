@@ -127,12 +127,6 @@ func (api *API) GetLastShortStatus() (*restapi.ShortTestReport, error) {
 				fuzzingReportTag := restapi.FuzzingReportTag{Name: tag.Name, Operations: []restapi.FuzzingReportOperation{}}
 				for _, op := range tag.MethodAndPathList {
 					logging.Logf("[Fuzzer] API(%v).StartFuzzing(): ... ... method %v %v", api.Id, op.Method, op.Path)
-					fuzzingReportTag.Operations = append(fuzzingReportTag.Operations, restapi.FuzzingReportOperation{
-						Operation: &common.MethodAndPath{
-							Method: (*common.HttpMethod)(&op.Method),
-							Path:   &op.Path,
-						},
-						RequestsCount: 0})
 				}
 				shortReport.Tags = append(shortReport.Tags, fuzzingReportTag)
 			}
