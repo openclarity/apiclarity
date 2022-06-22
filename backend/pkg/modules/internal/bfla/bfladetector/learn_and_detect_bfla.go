@@ -257,11 +257,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 			return fmt.Errorf("unable to get state traces counter: %w", err)
 		}
 
-		toLearn, err := l.tracesToLearnMap.Get(cmd.apiID)
-		if err != nil {
-			return fmt.Errorf("unable to get state traces to learn: %w", err)
-		}
-		toLearn.Set(counter.Get())
+		counter.Set(0)
 	}
 	if err != nil {
 		return fmt.Errorf("error when trying to update the authz model: %w", err)
@@ -556,7 +552,7 @@ func (l *learnAndDetectBFLA) ResetLearning(apiID uint, numberOfTraces int) {
 		return
 	}
 	l.commandsCh <- &ResetLearningCommand{
-		apiID:           apiID,
+		apiID:          apiID,
 		numberOfTraces: numberOfTraces,
 	}
 }
