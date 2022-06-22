@@ -1,7 +1,9 @@
 #!/bin/bash	
 
 (cd ../tools/spec-aggregator && go run main.go)
-go generate -v ./...
+(cd ./common && go generate)
+(cd ./global && go generate)
+(cd ./notifications && go generate)
 
 if [[ $1 == "--verify" ]]  ; then
     diffs=$(git status --porcelain)
