@@ -180,9 +180,7 @@ type pluginFuzzerHTTPHandler struct {
 func httpError(writer http.ResponseWriter, err error) {
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusBadRequest)
-	if err := json.NewEncoder(writer).Encode(map[string]interface{}{"error": err.Error()}); err != nil {
-		httpError(writer, err)
-	}
+	_ = json.NewEncoder(writer).Encode(map[string]interface{}{"error": err.Error()})
 }
 
 func httpResponse(writer http.ResponseWriter, statusCode int, data interface{}) {

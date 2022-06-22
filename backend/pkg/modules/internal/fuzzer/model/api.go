@@ -274,7 +274,8 @@ func updateRequestCountersForRestler(shortReport *restapi.ShortTestReport, repor
 	logging.Logf("[Fuzzer] updateRequestCountersForRestler(): spec len=(%v)", len(spec))
 	doc, err := tools.LoadSpec([]byte(spec))
 	if err != nil {
-		return fmt.Errorf("[Fuzzer] Invalid Spec")
+		logging.Errorf("[Fuzzer] updateRequestCountersForRestler(): Invalid Spec err=(%v)", err)
+		return fmt.Errorf("invalid Spec")
 	}
 
 	// Find basepaths from servers list, then save it before reset
@@ -285,21 +286,21 @@ func updateRequestCountersForRestler(shortReport *restapi.ShortTestReport, repor
 	// Create the router
 	router, err := gorillamux.NewRouter(doc)
 	if err != nil {
-		return fmt.Errorf("can't create router, err=(%v)", err.Error())
+		return fmt.Errorf("can't create router, err=(%v)", err)
 	}
 
 	for _, path := range *reportItem.Paths {
 		// Patch for Fuzzer improper verb
 		verb := *path.Verb
 		if verb[0:1] == "'" {
-			verb = tools.TrimLeftChars(verb, 1)
+			verb = strings.TrimPrefix(verb, "'")
 		}
 
 		URIsToTest := []string{}
 		URIsToTest = append(URIsToTest, *path.Uri)
 		for _, basepath := range basePaths {
 			if strings.HasPrefix(*path.Uri, basepath) {
-				URIsToTest = append(URIsToTest, tools.TrimLeftChars(*path.Uri, len(basepath)))
+				URIsToTest = append(URIsToTest, strings.TrimPrefix(*path.Uri, basepath))
 			}
 		}
 		logging.Debugf("[Fuzzer] updateRequestCountersForRestler(): process paths (%v %v)", verb, URIsToTest)
@@ -524,11 +525,11 @@ func (api *API) StopFuzzing(fuzzerError error) error {
 func (api *API) StoreReportData(ctx context.Context, accessor core.BackendAccessor, moduleName string, data restapi.FuzzingStatusAndReport) error {
 	bytes, err := json.Marshal(data)
 	if err != nil {
-		return fmt.Errorf("can't decode report data for api(%v), err=%v", api.ID, err.Error())
+		return fmt.Errorf("can't decode report data for api(%v), err=%v", api.ID, err)
 	}
 	err = accessor.StoreAPIInfoAnnotations(ctx, moduleName, api.ID, core.Annotation{Name: AnnotationReportName, Annotation: bytes})
 	if err != nil {
-		return fmt.Errorf("can't store report data for api(%v), err=%v", api.ID, err.Error())
+		return fmt.Errorf("can't store report data for api(%v), err=%v", api.ID, err)
 	}
 	return nil
 }
@@ -536,7 +537,7 @@ func (api *API) StoreReportData(ctx context.Context, accessor core.BackendAccess
 func (api *API) StoreLastFindingsData(ctx context.Context, accessor core.BackendAccessor, moduleName string, data []byte) error {
 	err := accessor.StoreAPIInfoAnnotations(ctx, moduleName, api.ID, core.Annotation{Name: AnnotationFindingsName, Annotation: data})
 	if err != nil {
-		return fmt.Errorf("can't store report data for api(%v), err=%v", api.ID, err.Error())
+		return fmt.Errorf("can't store report data for api(%v), err=%v", api.ID, err)
 	}
 	return nil
 }
@@ -544,7 +545,7 @@ func (api *API) StoreLastFindingsData(ctx context.Context, accessor core.Backend
 func (api *API) RetrieveInfoFromStore(ctx context.Context, accessor core.BackendAccessor, moduleName string) error {
 	dbAnns, err := accessor.ListAPIInfoAnnotations(ctx, moduleName, api.ID)
 	if err != nil {
-		return fmt.Errorf("can't retrieve annotation for api(%v), err=%v", api.ID, err.Error())
+		return fmt.Errorf("can't retrieve annotation for api(%v), err=%v", api.ID, err)
 	}
 	for _, annotation := range dbAnns {
 		if annotation.Name == AnnotationReportName {

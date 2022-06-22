@@ -17,7 +17,6 @@ package tools
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -27,10 +26,10 @@ import (
 	"github.com/getkin/kin-openapi/routers"
 	"k8s.io/utils/strings/slices"
 
+	"github.com/ghodss/yaml"
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
-	"gopkg.in/yaml.v2"
 )
 
 // FuzzerSpecInfo An object containing info about a spec.
@@ -51,7 +50,7 @@ func GetAPISpecsInfo(ctx context.Context, accessor core.BackendAccessor, apiID u
 
 	if apiInfo.ProvidedSpecInfo != "" {
 		specInfo := models.SpecInfo{}
-		if err := json.Unmarshal([]byte(apiInfo.ProvidedSpecInfo), &specInfo); err != nil {
+		if err := yaml.Unmarshal([]byte(apiInfo.ProvidedSpecInfo), &specInfo); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal provided spec info. info=%+v: %v", apiInfo.ProvidedSpecInfo, err)
 		}
 		fuzzerSpecsInfo.ProvidedSpecInfo = &specInfo
@@ -63,7 +62,7 @@ func GetAPISpecsInfo(ctx context.Context, accessor core.BackendAccessor, apiID u
 
 	if apiInfo.ReconstructedSpecInfo != "" {
 		specInfo := models.SpecInfo{}
-		if err := json.Unmarshal([]byte(apiInfo.ReconstructedSpecInfo), &specInfo); err != nil {
+		if err := yaml.Unmarshal([]byte(apiInfo.ReconstructedSpecInfo), &specInfo); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal reconstructed spec info. info=%+v: %v", apiInfo.ReconstructedSpecInfo, err)
 		}
 		fuzzerSpecsInfo.ReconstructedSpecInfo = &specInfo
@@ -103,15 +102,17 @@ func LoadSpec(spec []byte) (*openapi3.T, error) {
 		logging.Logf("[Fuzzer] getDocFromSpec(): spec V2 identified")
 		loader := openapi3.NewLoader()
 		var docV2 openapi2.T
-		if err := json.Unmarshal(spec, &docV2); err != nil {
-			panic(err)
+		if err := yaml.Unmarshal(spec, &docV2); err != nil {
+			return nil, fmt.Errorf("invalid V2 spec")
 		}
 		doc, err := openapi2conv.ToV3(&docV2)
 		if err != nil {
-			panic(err)
+			logging.Errorf("can't convert V2 spec to V3, err=(%v)", err)
+			return nil, fmt.Errorf("can't convert V2 spec to V3")
 		}
 		if err := doc.Validate(loader.Context); err != nil {
-			panic(err)
+			logging.Errorf("invalid V2 to V3 conversion spec result, err=(%v)", err)
+			return nil, fmt.Errorf("invalid V2 to V3 conversion spec result")
 		}
 		return doc, nil
 	} else if IsV3Specification(spec) {
@@ -119,14 +120,16 @@ func LoadSpec(spec []byte) (*openapi3.T, error) {
 		loader := openapi3.NewLoader()
 		doc, err := loader.LoadFromData(spec)
 		if err != nil {
-			panic(err)
+			logging.Errorf("can't load V3 openapi spec, err=(%v)", err)
+			return nil, fmt.Errorf("can't load V3 openapi spec")
 		}
 		if err := doc.Validate(loader.Context); err != nil {
-			panic(err)
+			logging.Errorf("invalid V3 spec, err=(%v)", err)
+			return nil, fmt.Errorf("invalid V3 spec")
 		}
 		return doc, nil
 	}
-	return nil, fmt.Errorf("invalid spec")
+	return nil, fmt.Errorf("invalid openapi spec")
 }
 
 func GetBasePathsFromServers(servers *openapi3.Servers) []string {
@@ -136,7 +139,8 @@ func GetBasePathsFromServers(servers *openapi3.Servers) []string {
 		// olint:noctx	// No need of context, the http.NewRequest is used only for formatting
 		req, err := http.NewRequest("GET", server.URL, nil)
 		if err != nil {
-			panic(err)
+			// Improper URL format for Servers item, just skip it
+			continue
 		}
 		basePath := req.URL.Path
 		if !slices.Contains(result, basePath) {
@@ -151,13 +155,13 @@ func FindRoute(router *routers.Router, verb string, uri string) (*routers.Route,
 	//nolint:noctx // No need of context, the http.NewRequest is used only for formatting
 	req, err := http.NewRequest(verb, uri, nil)
 	if err != nil {
-		return nil, fmt.Errorf("can't convert (%v %v) to http request, err=(%v)", verb, uri, err.Error())
+		return nil, fmt.Errorf("can't convert (%v %v) to http request, err=(%v)", verb, uri, err)
 	}
 	req.Header.Set("Content-Type", "application/json") // Report this path in shortreport
 	logging.Debugf("[Fuzzer] findRoute(): ... req to find (%v %v)", verb, req)
 	route, _, err := (*router).FindRoute(req)
 	if err != nil {
-		return nil, fmt.Errorf("can't find route for (%v %v), err=(%v)", verb, uri, err.Error())
+		return nil, fmt.Errorf("can't find route for (%v %v), err=(%v)", verb, uri, err)
 	}
 	return route, nil
 }
