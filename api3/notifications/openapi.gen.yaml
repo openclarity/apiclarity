@@ -101,7 +101,6 @@ components:
       - starttime
       - status
       - tags
-      - highestSeverity
       title: Short Test Report
       type: object
     TestProgressNotification:

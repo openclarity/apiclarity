@@ -862,7 +862,6 @@ components:
       properties:
         apiID:
           $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
-
         starttime:
           description: Timestamp of the start of the test
           title: Start time
@@ -885,7 +884,6 @@ components:
         - starttime
         - status
         - tags
-        - highestSeverity
             
     FuzzingReportTag:
       title: Report tag item
@@ -906,7 +904,6 @@ components:
       required:
         - name
         - operations
-        - highestSeverity
       
     FuzzingReportOperation:
       description: Report tag operation
@@ -931,5 +928,4 @@ components:
         - operation
         - requestsCount
         - findings
-        - highestSeverity
            
