@@ -3,7 +3,7 @@
 Name of the chart.
 */}}
 {{- define "apiclarity.name" -}}
-{{- printf "%s-%s" .Release.Name .Chart.Name -}}
+{{- printf "%s" .Release.Name -}}
 {{- end -}}
 
 {{/*

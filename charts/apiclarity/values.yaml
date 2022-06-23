@@ -31,6 +31,12 @@ global:
   traceSampling:
     enable: false
 
+  postgresql:
+    auth:
+      ## Setup database name and password
+      existingSecret: apiclarity-postgresql-secret
+      database: apiclarity
+
 ## End of Global Values
 #######################################################################################
 
@@ -87,7 +93,7 @@ apiclarity:
 #######################################################################################
 ## APIClarity Postgres Values
 
-apiclarity-postgresql:
+postgresql:
   enabled: true
 
   ## ConfigMap with scripts to be run at first boot
@@ -101,10 +107,6 @@ apiclarity-postgresql:
   ## Specify the PostgreSQL username and password to execute the initdb scripts
   # initdbUser:
   # initdbPassword:
-
-  ## Setup database name and password
-  existingSecret: apiclarity-postgresql-secret
-  postgresqlDatabase: apiclarity
 
   ## Enable security context
   containerSecurityContext:
