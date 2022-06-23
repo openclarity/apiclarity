@@ -60,11 +60,19 @@ func NewGetAPIEventsParamsWithHTTPClient(client *http.Client) *GetAPIEventsParam
 */
 type GetAPIEventsParams struct {
 
+	// AlertTypeIs.
+	AlertTypeIs []string
+
 	/* AlertIs.
 
 	   Alert Kind [ALERT_INFO or ALERT_WARN]
 	*/
 	AlertIs []string
+
+	// APIInfoIDIs.
+	//
+	// Format: uint32
+	APIInfoIDIs *uint32
 
 	// DestinationIPIsNot.
 	DestinationIPIsNot []string
@@ -250,6 +258,17 @@ func (o *GetAPIEventsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithAlertTypeIs adds the alertTypeIs to the get API events params
+func (o *GetAPIEventsParams) WithAlertTypeIs(alertTypeIs []string) *GetAPIEventsParams {
+	o.SetAlertTypeIs(alertTypeIs)
+	return o
+}
+
+// SetAlertTypeIs adds the alertTypeIs to the get API events params
+func (o *GetAPIEventsParams) SetAlertTypeIs(alertTypeIs []string) {
+	o.AlertTypeIs = alertTypeIs
+}
+
 // WithAlertIs adds the alertIs to the get API events params
 func (o *GetAPIEventsParams) WithAlertIs(alertIs []string) *GetAPIEventsParams {
 	o.SetAlertIs(alertIs)
@@ -259,6 +278,17 @@ func (o *GetAPIEventsParams) WithAlertIs(alertIs []string) *GetAPIEventsParams {
 // SetAlertIs adds the alertIs to the get API events params
 func (o *GetAPIEventsParams) SetAlertIs(alertIs []string) {
 	o.AlertIs = alertIs
+}
+
+// WithAPIInfoIDIs adds the aPIInfoIDIs to the get API events params
+func (o *GetAPIEventsParams) WithAPIInfoIDIs(aPIInfoIDIs *uint32) *GetAPIEventsParams {
+	o.SetAPIInfoIDIs(aPIInfoIDIs)
+	return o
+}
+
+// SetAPIInfoIDIs adds the apiInfoIdIs to the get API events params
+func (o *GetAPIEventsParams) SetAPIInfoIDIs(aPIInfoIDIs *uint32) {
+	o.APIInfoIDIs = aPIInfoIDIs
 }
 
 // WithDestinationIPIsNot adds the destinationIPIsNot to the get API events params
@@ -599,6 +629,17 @@ func (o *GetAPIEventsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.
 	}
 	var res []error
 
+	if o.AlertTypeIs != nil {
+
+		// binding items for alertType[is]
+		joinedAlertTypeIs := o.bindParamAlertTypeIs(reg)
+
+		// query array param alertType[is]
+		if err := r.SetQueryParam("alertType[is]", joinedAlertTypeIs...); err != nil {
+			return err
+		}
+	}
+
 	if o.AlertIs != nil {
 
 		// binding items for alert[is]
@@ -607,6 +648,23 @@ func (o *GetAPIEventsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.
 		// query array param alert[is]
 		if err := r.SetQueryParam("alert[is]", joinedAlertIs...); err != nil {
 			return err
+		}
+	}
+
+	if o.APIInfoIDIs != nil {
+
+		// query param apiInfoId[is]
+		var qrAPIInfoIDIs uint32
+
+		if o.APIInfoIDIs != nil {
+			qrAPIInfoIDIs = *o.APIInfoIDIs
+		}
+		qAPIInfoIDIs := swag.FormatUint32(qrAPIInfoIDIs)
+		if qAPIInfoIDIs != "" {
+
+			if err := r.SetQueryParam("apiInfoId[is]", qAPIInfoIDIs); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -986,6 +1044,23 @@ func (o *GetAPIEventsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.
 		return errors.CompositeValidationError(res...)
 	}
 	return nil
+}
+
+// bindParamGetAPIEvents binds the parameter alertType[is]
+func (o *GetAPIEventsParams) bindParamAlertTypeIs(formats strfmt.Registry) []string {
+	alertTypeIsIR := o.AlertTypeIs
+
+	var alertTypeIsIC []string
+	for _, alertTypeIsIIR := range alertTypeIsIR { // explode []string
+
+		alertTypeIsIIV := alertTypeIsIIR // string as string
+		alertTypeIsIC = append(alertTypeIsIC, alertTypeIsIIV)
+	}
+
+	// items.CollectionFormat: ""
+	alertTypeIsIS := swag.JoinByFormat(alertTypeIsIC, "")
+
+	return alertTypeIsIS
 }
 
 // bindParamGetAPIEvents binds the parameter alert[is]

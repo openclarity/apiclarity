@@ -25,7 +25,7 @@ type GetAPIInventoryAPIIDAPIInfoOK struct {
 	/*
 	  In: Body
 	*/
-	Payload *models.APIInfo `json:"body,omitempty"`
+	Payload *models.APIInfoWithType `json:"body,omitempty"`
 }
 
 // NewGetAPIInventoryAPIIDAPIInfoOK creates GetAPIInventoryAPIIDAPIInfoOK with default headers values
@@ -35,13 +35,13 @@ func NewGetAPIInventoryAPIIDAPIInfoOK() *GetAPIInventoryAPIIDAPIInfoOK {
 }
 
 // WithPayload adds the payload to the get Api inventory Api Id Api info o k response
-func (o *GetAPIInventoryAPIIDAPIInfoOK) WithPayload(payload *models.APIInfo) *GetAPIInventoryAPIIDAPIInfoOK {
+func (o *GetAPIInventoryAPIIDAPIInfoOK) WithPayload(payload *models.APIInfoWithType) *GetAPIInventoryAPIIDAPIInfoOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the get Api inventory Api Id Api info o k response
-func (o *GetAPIInventoryAPIIDAPIInfoOK) SetPayload(payload *models.APIInfo) {
+func (o *GetAPIInventoryAPIIDAPIInfoOK) SetPayload(payload *models.APIInfoWithType) {
 	o.Payload = payload
 }
 
