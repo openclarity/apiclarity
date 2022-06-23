@@ -110,11 +110,14 @@ func (s *Server) GetAPIInventoryAPIIDAPIInfo(params operations.GetAPIInventoryAP
 		return operations.NewGetAPIInventoryAPIIDAPIInfoDefault(http.StatusInternalServerError)
 	}
 
-	return operations.NewGetAPIInventoryAPIIDAPIInfoOK().WithPayload(&models.APIInfo{
-		HasProvidedSpec:      &apiInfo.HasProvidedSpec,
-		HasReconstructedSpec: &apiInfo.HasReconstructedSpec,
-		ID:                   uint32(apiInfo.ID),
-		Name:                 apiInfo.Name,
-		Port:                 apiInfo.Port,
+	return operations.NewGetAPIInventoryAPIIDAPIInfoOK().WithPayload(&models.APIInfoWithType{
+		APIInfo: models.APIInfo{
+			HasProvidedSpec:      &apiInfo.HasProvidedSpec,
+			HasReconstructedSpec: &apiInfo.HasReconstructedSpec,
+			ID:                   uint32(apiInfo.ID),
+			Name:                 apiInfo.Name,
+			Port:                 apiInfo.Port,
+		},
+		APIType: apiInfo.Type,
 	})
 }

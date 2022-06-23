@@ -631,7 +631,7 @@ paths:
         '200':
           description: 'Success'
           schema:
-            $ref: '#/definitions/ApiInfo'
+            $ref: '#/definitions/ApiInfoWithType'
         default:
           $ref: '#/responses/UnknownError'
 
