@@ -375,7 +375,7 @@ func init() {
     },
     "/apiInventory/{apiId}/apiInfo": {
       "get": {
-        "summary": "Get api info from api id",
+        "summary": "Get api info from apiId",
         "parameters": [
           {
             "$ref": "#/parameters/apiId"
@@ -385,7 +385,7 @@ func init() {
           "200": {
             "description": "Success",
             "schema": {
-              "$ref": "#/definitions/ApiInfo"
+              "$ref": "#/definitions/ApiInfoWithType"
             }
           },
           "default": {
@@ -2279,7 +2279,7 @@ func init() {
     },
     "/apiInventory/{apiId}/apiInfo": {
       "get": {
-        "summary": "Get api info from api id",
+        "summary": "Get api info from apiId",
         "parameters": [
           {
             "type": "integer",
@@ -2293,7 +2293,7 @@ func init() {
           "200": {
             "description": "Success",
             "schema": {
-              "$ref": "#/definitions/ApiInfo"
+              "$ref": "#/definitions/ApiInfoWithType"
             }
           },
           "default": {

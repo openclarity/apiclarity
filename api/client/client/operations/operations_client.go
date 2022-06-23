@@ -331,7 +331,7 @@ func (a *Client) GetAPIInventory(params *GetAPIInventoryParams, opts ...ClientOp
 }
 
 /*
-  GetAPIInventoryAPIIDAPIInfo gets api info from api id
+  GetAPIInventoryAPIIDAPIInfo gets api info from api Id
 */
 func (a *Client) GetAPIInventoryAPIIDAPIInfo(params *GetAPIInventoryAPIIDAPIInfoParams, opts ...ClientOption) (*GetAPIInventoryAPIIDAPIInfoOK, error) {
 	// TODO: Validate the params before sending

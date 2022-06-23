@@ -17,6 +17,9 @@ import (
 // swagger:model ApiInfo
 type APIInfo struct {
 
+	// destination namespace
+	DestinationNamespace string `json:"destinationNamespace,omitempty"`
+
 	// has provided spec
 	HasProvidedSpec *bool `json:"hasProvidedSpec,omitempty"`
 
