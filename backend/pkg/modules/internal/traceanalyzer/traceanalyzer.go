@@ -231,26 +231,7 @@ func (p *traceAnalyzer) EventNotify(ctx context.Context, e *core.Event) {
 			eventNLIDAnns, _ := p.nlid.Analyze(specPath, string(event.Method), pathParams, trace)
 			eventAnns = append(eventAnns, eventNLIDAnns...)
 		}
-
-	// 	// Check for guessable IDs
-	// 	var groupedGuessable []ParameterFinding
-	// 	for pName, pValue := range pathParams {
-	// 		if guessable, reason := p.guessableID.IsGuessableParam("", pName, pValue); guessable {
-	// 			groupedGuessable = append(groupedGuessable, ParameterFinding{Location: specPath, Method: string(event.Method), Name: pName, Value: pValue, Reason: reason})
-	// 		}
-	// 	}
-	// 	if len(groupedGuessable) > 0 {
-	// 		bytes, err := json.Marshal(groupedGuessable)
-	// 		if err == nil {
-	// 			apiAnns = append(apiAnns, core.Annotation{Name: "GUESSABLE_ID", Annotation: bytes})
-	// 		}
-	// 	}
-
-		// Check for NLIDS
-		eventNLIDAnns, _ := p.nlid.Analyze(pathParams, trace)
-		eventAnns = append(eventAnns, eventNLIDAnns...)
 	}
-
 
 	// Filter ignored findings
 	filteredEventAnns := []utils.TraceAnalyzerAnnotation{}
@@ -339,6 +320,8 @@ func fromCoreAnnotation(coreAnn *core.Annotation) (ann utils.TraceAnalyzerAnnota
 
 	case nlid.NLIDType: a = &nlid.AnnotationNLID{}
 
+	case guessableid.GuessableType: a = &guessableid.AnnotationGuessableID{}
+
 	default:
 		return nil, fmt.Errorf("unknown annotation '%s'", coreAnn.Name)
 	}
@@ -410,37 +393,29 @@ func (p *traceAnalyzer) setAlertSeverity(ctx context.Context, eventID uint, anns
 	}
 }
 
-func getAPISpecsInfo(ctx context.Context, accessor core.BackendAccessor, apiID uint) (*models.OpenAPISpecs, error) {
-	apiInfo, err := accessor.GetAPIInfo(ctx, apiID)
-	if err != nil {
-		return nil, err
-	}
-
-	specsInfo := &models.OpenAPISpecs{}
-	if apiInfo.ProvidedSpecInfo != "" {
-		specInfo := models.SpecInfo{}
-		if err := json.Unmarshal([]byte(apiInfo.ProvidedSpecInfo), &specInfo); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal provided spec info. info=%+v: %v", apiInfo.ProvidedSpecInfo, err)
-		}
-		specsInfo.ProvidedSpec = &specInfo
-	}
-
-	if apiInfo.ReconstructedSpecInfo != "" {
-		specInfo := models.SpecInfo{}
-		if err := json.Unmarshal([]byte(apiInfo.ReconstructedSpecInfo), &specInfo); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal reconstructed spec info. info=%+v: %v", apiInfo.ReconstructedSpecInfo, err)
-		}
-		specsInfo.ReconstructedSpec = &specInfo
-	}
-
-	return specsInfo, nil
-}
-
 // XXX There are too many parameters to this function. It needs refactoring.
-func (p *traceAnalyzer) getParams(ctx context.Context, event *database.APIEvent) (specPath string, pathParams map[string]string, queryParams map[string]string, headerParams map[string]string, bodyParams map[string]string) {
-	specInfo, err := getAPISpecsInfo(ctx, p.accessor, event.APIInfoID)
+func (p *traceAnalyzer) getParams(ctx context.Context, event *database.APIEvent) (specPath string, pathParams map[string]string, queryParams map[string]string, headerParams map[string]string, bodyParams map[string]string, err error) {
+	apiInfo, err := p.accessor.GetAPIInfo(ctx, event.APIInfoID)
 	if err != nil {
-		return "", nil, nil, nil, nil
+		return "", nil, nil, nil, nil, err
+	}
+
+	// Prefer Provided specification if available
+	var serializedSpecInfo *string
+	var eventPathID string
+	if apiInfo.HasProvidedSpec && apiInfo.ProvidedSpecInfo != "" {
+		serializedSpecInfo = &apiInfo.ProvidedSpecInfo
+		eventPathID = event.ProvidedPathID
+	} else if apiInfo.HasReconstructedSpec && apiInfo.ReconstructedSpecInfo != "" {
+		serializedSpecInfo = &apiInfo.ReconstructedSpecInfo
+		eventPathID = event.ReconstructedPathID
+	} else {
+		return specPath, pathParams, queryParams, headerParams, bodyParams, nil
+	}
+
+	var specInfo models.SpecInfo
+	if err := json.Unmarshal([]byte(*serializedSpecInfo), &specInfo); err != nil {
+		return specPath, pathParams, queryParams, headerParams, bodyParams, fmt.Errorf("failed to unmarshal spec info for api=%d: %v", event.APIInfoID, err)
 	}
 
 	pathParams = make(map[string]string)
@@ -448,31 +423,18 @@ func (p *traceAnalyzer) getParams(ctx context.Context, event *database.APIEvent)
 	headerParams = make(map[string]string)
 	bodyParams = make(map[string]string)
 
-	var spec *models.SpecInfo
-	var eventPathID string
-	// Prefer reconstructed spec
-	if specInfo.ReconstructedSpec != nil {
-		spec = specInfo.ReconstructedSpec
-		eventPathID = event.ReconstructedPathID
-	} else if specInfo.ProvidedSpec != nil {
-		spec = specInfo.ProvidedSpec
-		eventPathID = event.ProvidedPathID
-	}
-
-	if spec != nil {
-		for _, t := range spec.Tags {
-			for _, path := range t.MethodAndPathList {
-				if path.PathID.String() == eventPathID && path.Method == event.Method {
-					specPath = path.Path
-					pathParams = utils.GetPathParams(path.Path, event.Path)
-					// XXX Need to get other parameters
-					break
-				}
+	for _, t := range specInfo.Tags {
+		for _, path := range t.MethodAndPathList {
+			if path.PathID.String() == eventPathID && path.Method == event.Method {
+				specPath = path.Path
+				pathParams = utils.GetPathParams(path.Path, event.Path)
+				// XXX Need to get other parameters
+				break
 			}
 		}
 	}
 
-	return specPath, pathParams, queryParams, headerParams, bodyParams
+	return specPath, pathParams, queryParams, headerParams, bodyParams, nil
 }
 
 type httpHandler struct {

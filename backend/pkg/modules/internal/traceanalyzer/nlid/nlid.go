@@ -46,8 +46,8 @@ type params = map[string]bool
 type Reason map[string]interface{}
 
 type parameter struct {
-	Name string`json:"param_name"`
-	Value string`json:"spec_location"`
+	Name string`json:"name"`
+	Value string`json:"value"`
 }
 
 type NLID struct {

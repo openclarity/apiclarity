@@ -22,6 +22,9 @@ import (
 
 	edlib "github.com/hbollon/go-edlib"
 	uuid "github.com/satori/go.uuid"
+
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
+	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
 )
 
 const gzipHeaderLen = 23
@@ -33,8 +36,6 @@ const (
 	DistanceThreshold    = 0.8 // Close to 1 means very similar
 	CompressionThreshold = 2.0 // High means better compression, means very similar
 )
-
-type GuessableReason map[string]interface{}
 
 type paramLocKey struct {
 	operation, name string
@@ -125,10 +126,10 @@ func (p *paramHistory) isSimilar() (bool, GuessableReason) {
 	// ratio is "pretty" good, it means that the set is pretty similar
 	if d >= DistanceThreshold && c >= CompressionThreshold {
 		return true, GuessableReason{
-			"distance":              d,
-			"distance_threshold":    DistanceThreshold,
-			"compression":           c,
-			"compression_threshold": CompressionThreshold,
+			Distance:             d,
+			DistanceThreshold:    DistanceThreshold,
+			CompressionRatio:     c,
+			CompressionThreshold: CompressionThreshold,
 		}
 	}
 
@@ -230,4 +231,20 @@ func (g *GuessableAnalyzer) learnParam(key paramLocKey, value string) bool {
 	p.add(value)
 
 	return p.i == 0
+}
+
+func (g *GuessableAnalyzer) Analyze(path, method string, pathParams map[string]string, trace *pluginsmodels.Telemetry) (eventAnns []utils.TraceAnalyzerAnnotation, apiAnns []utils.TraceAnalyzerAnnotation) {
+	guessableParams := []GuessableParameter{}
+
+	for pName, pValue := range pathParams {
+		if isGuessable, reason := g.IsGuessableParam(path, pName, pValue); isGuessable {
+			guessableParams = append(guessableParams, GuessableParameter{Name: pName, Value: pValue, Reason: reason})
+		}
+	}
+
+	if len(guessableParams) > 0 {
+		eventAnns = append(eventAnns, NewAnnotationGuessableID(path, method, guessableParams))
+	}
+
+	return
 }
