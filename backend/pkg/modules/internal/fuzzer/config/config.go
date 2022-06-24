@@ -40,18 +40,21 @@ var SupportedDeployment = map[string]bool{
 }
 
 const (
-	DeploymentType         = DeploymentTypeFake // One of SUPPORTED_DEPLOYMENT[] value.
-	ImageName              = "xxx"
-	PlatformType           = "API_CLARITY"
-	PlatformHost           = "http://localhost:8080/api"
-	PlatformHostFromDocker = "http://apiclarity-apiclarity:8080/api"
-	Fuzzers                = "scn-fuzzer,restler,crud"
-	ShowDockerLogs         = false
-	FuzzerTestTraceFile    = "data.txt"
-	DebugMode              = false
-	RestlerTimeBudget      = "0.005" // In hours
-	TokenInjectorPath      = "/app/"
-	TestReportTimeout      = 30 // In seconds
+	DeploymentType           = DeploymentTypeFake // One of SUPPORTED_DEPLOYMENT[] value.
+	ImageName                = "xxx"
+	PlatformType             = "API_CLARITY"
+	PlatformHost             = "http://localhost:8080/api"
+	PlatformHostFromDocker   = "http://apiclarity-apiclarity:8080/api"
+	Fuzzers                  = "scn-fuzzer,restler,crud"
+	ShowDockerLogs           = false
+	FuzzerTestTraceFile      = "data.txt"
+	DebugMode                = false
+	RestlerTimeBudget        = "0.005" // In hours =~ 20s
+	TokenInjectorPath        = "/app/"
+	TestReportTimeout        = 30      // In seconds
+	RestlerQuickTimeBudget   = "0.016" // In hours =~ 1mn
+	RestlerDefaultTimeBudget = "0.16"  // In hours =~ 10mn
+	RestlerDeepTimeBudget    = "1"     // In hours
 
 	FuzzerImageNameEnvVar            = "FUZZER_IMAGE_NAME"
 	FuzzerDeploymentTypeEnvVar       = "FUZZER_DEPLOYMENT_TYPE"

@@ -492,18 +492,18 @@ func (api *API) ForceProgressForLastTest(progress int) error {
 	return nil
 }
 
-func (api *API) StartFuzzing(specsInfo *tools.FuzzerSpecsInfo) error {
+func (api *API) StartFuzzing(params *FuzzingInput) (FuzzingTimestamp, error) {
 	logging.Logf("[Fuzzer] API(%v).StartFuzzing(): Start fuzzing", api.ID)
 	if api.InFuzzing {
 		logging.Errorf("[Fuzzer] API(%v).StartFuzzing(): A fuzzing is already started", api.ID)
-		return fmt.Errorf("a fuzzing is already started for api(%v)", api.ID)
+		return ZeroTime, fmt.Errorf("a fuzzing is already started for api(%v)", api.ID)
 	}
 	api.InFuzzing = true
 	// Add a new Test item with progress 0% and No report
 	testItem := NewTest()
-	testItem.SpecsInfo = specsInfo
+	testItem.SpecsInfo = params.SpecsInfo
 	api.TestsList = append(api.TestsList, testItem)
-	return nil
+	return *testItem.Test.Starttime, nil
 }
 
 func (api *API) StopFuzzing(fuzzerError error) error {

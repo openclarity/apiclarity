@@ -75,15 +75,14 @@ type K8sClient struct {
 	platformType           string
 	platformHostFromFuzzer string
 	subFuzzer              string
-	timeBudget             string
 	tokenInjectorPath      string
 }
 
-func (l *K8sClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem string) error {
-	logging.Logf("[Fuzzer][K8sClient] TriggerFuzzingJob(%v, %v):: -->", apiID, endpoint)
+func (l *K8sClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem string, timeBudget string) error {
+	logging.Logf("[Fuzzer][K8sClient] TriggerFuzzingJob(%v, %v, %v, %v):: -->", apiID, endpoint, securityItem, timeBudget)
 
 	// Retrieve the env var slice that will configure our pod
-	envVars := l.getEnvs(apiID, endpoint, securityItem)
+	envVars := l.getEnvs(apiID, endpoint, securityItem, timeBudget)
 	logging.Logf("[Fuzzer][K8sClient] envVars=%v", envVars)
 
 	// Create job struct
@@ -168,7 +167,7 @@ func CreateSCNJobSecurityContext() *v1.SecurityContext {
 	}
 }
 
-func (l *K8sClient) getEnvs(apiID int64, endpoint string, securityItem string) []v1.EnvVar {
+func (l *K8sClient) getEnvs(apiID int64, endpoint string, securityItem string, timeBudget string) []v1.EnvVar {
 	envs := []v1.EnvVar{
 		{
 			Name:  uriEnvVar,
@@ -204,7 +203,7 @@ func (l *K8sClient) getEnvs(apiID int64, endpoint string, securityItem string) [
 		},
 		{
 			Name:  restlerTimeBudgetEnvVar,
-			Value: l.timeBudget,
+			Value: timeBudget,
 		},
 		{
 			Name:  debugEnvVar,
@@ -250,7 +249,6 @@ func NewKubernetesClient(config *config.Config, accessor core.BackendAccessor) (
 		platformType:           config.GetPlatformType(),
 		platformHostFromFuzzer: config.GetPlatformHostFromFuzzer(),
 		subFuzzer:              config.GetSubFuzzerList(),
-		timeBudget:             config.GetRestlerTimeBudget(),
 		tokenInjectorPath:      config.GetRestlerTokenInjectorPath(),
 	}
 	if client.hClient == nil {
