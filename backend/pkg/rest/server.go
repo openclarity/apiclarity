@@ -114,6 +114,14 @@ func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *d
 		return s.GetAPIInventoryAPIIDSuggestedReview(params)
 	})
 
+	api.GetAPIInventoryAPIIDAPIInfoHandler = operations.GetAPIInventoryAPIIDAPIInfoHandlerFunc(func(params operations.GetAPIInventoryAPIIDAPIInfoParams) middleware.Responder {
+		return s.GetAPIInventoryAPIIDAPIInfo(params)
+	})
+
+	api.GetAPIInventoryAPIIDFromHostAndPortHandler = operations.GetAPIInventoryAPIIDFromHostAndPortHandlerFunc(func(params operations.GetAPIInventoryAPIIDFromHostAndPortParams) middleware.Responder {
+		return s.GetAPIInventoryAPIIDFromHostAndPort(params)
+	})
+
 	api.PostAPIInventoryReviewIDApprovedReviewHandler = operations.PostAPIInventoryReviewIDApprovedReviewHandlerFunc(func(params operations.PostAPIInventoryReviewIDApprovedReviewParams) middleware.Responder {
 		return s.PostAPIInventoryReviewIDApprovedReview(params)
 	})
