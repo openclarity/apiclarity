@@ -8,7 +8,7 @@ import Title from 'components/Title';
 import Table from 'components/Table';
 import PageContainer from 'components/PageContainer';
 import Button from 'components/Button';
-import Tag from 'components/Tag';
+import MethodTag from 'components/MethodTag';
 import Loader from 'components/Loader';
 import BoldText from 'components/BoldText';
 import { SPEC_TAB_ITEMS } from 'layout/Inventory/InventoryDetails/Specs'
@@ -107,7 +107,7 @@ const Reviewer = () => {
                 const methods = getMethodsFromPaths(apiEventsPaths);
                 
                 return (
-                    <div className="methods-wrapper">{methods.map(method => <Tag key={method}>{method}</Tag>)}</div>
+                    <div className="methods-wrapper">{methods.map(method => <MethodTag key={method} method={method} />)}</div>
                 )
             }
         }
