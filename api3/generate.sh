@@ -10,7 +10,7 @@ if [[ $1 == "--verify" ]]  ; then
     if [[ ${diffs} != "" ]]; then
         echo "Verification Failed: the spec aggregation and the code generation was not run on the latest version of the specs"
         git diff
-        echo "Please run `make api3` and commit again"
+        echo "Please run 'make api3' and commit again"
         exit 1
     fi
 fi
