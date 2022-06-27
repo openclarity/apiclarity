@@ -19,6 +19,7 @@ require (
 	github.com/hbollon/go-edlib v1.6.0
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/openclarity/apiclarity/api v0.0.0
+	github.com/openclarity/apiclarity/api3 v0.0.0
 	github.com/openclarity/apiclarity/plugins/api v0.0.0
 	github.com/openclarity/speculator v0.1.0
 	github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220622111449-ff7eed2b2b39
@@ -37,6 +38,7 @@ require (
 	k8s.io/api v0.23.5
 	k8s.io/apimachinery v0.23.5
 	k8s.io/client-go v0.23.5
+	k8s.io/utils v0.0.0-20211116205334-6203023598ed
 	sigs.k8s.io/yaml v1.2.0
 )
 
@@ -68,6 +70,7 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
+	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/invopop/yaml v0.1.0 // indirect
@@ -139,12 +142,10 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	k8s.io/klog/v2 v2.30.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
-	k8s.io/utils v0.0.0-20211116205334-6203023598ed // indirect
 	sigs.k8s.io/json v0.0.0-20211020170558-c049b76a60c6 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 )
 
-require github.com/openclarity/apiclarity/api3 v0.0.0
 
 replace github.com/openclarity/trace-sampling-manager/api v0.0.0 => github.com/openclarity/trace-sampling-manager/api v0.0.0-20220622111449-ff7eed2b2b39
 
