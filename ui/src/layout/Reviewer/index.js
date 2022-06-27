@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, Redirect, useHistory } from 'react-router-dom';
 import { isEmpty, isNull } from 'lodash';
 import { useFetch, FETCH_METHODS, usePrevious } from 'hooks';
-import { useNotificationDispatch, showNotification } from 'context/NotificationProvider'; 
+import { useNotificationDispatch, showNotification } from 'context/NotificationProvider';
 import BackRouteButton from 'components/BackRouteButton';
 import Title from 'components/Title';
 import Table from 'components/Table';
@@ -52,7 +52,7 @@ const Reviewer = () => {
             returnToInventory();
         }
     }, [prevSubmitting, submitting, submitError, returnToInventory, showReviewCompletedNotification]);
-    
+
     const columns = useMemo(() => [
         {
             Header: 'Path',
@@ -79,7 +79,7 @@ const Reviewer = () => {
 
                                     pathsToReview = data.filter(pathData => updatedPath === getPathWithParamInIndex(pathData.suggestedPath, index, paramName));
                                 }
-                                
+
                                 dispatch({type: REVIEW_ACTIONS.SET_MERGING_PATHS_DATA, payload: {
                                     isMerging,
                                     pathsToReview,
@@ -105,7 +105,7 @@ const Reviewer = () => {
             Cell: ({row}) => {
                 const {apiEventsPaths} = row.original;
                 const methods = getMethodsFromPaths(apiEventsPaths);
-                
+
                 return (
                     <div className="methods-wrapper">{methods.map(method => <MethodTag key={method} method={method} />)}</div>
                 )
@@ -165,7 +165,7 @@ const Reviewer = () => {
                             ...newPaths,
                             ...dataToReview.filter(({suggestedPath}) => !suggestedPathsToReview.includes(suggestedPath))
                         ];
-                        
+
                         dispatch({type: REVIEW_ACTIONS.UPDATE_REVIEW_DATA, payload: updatedData});
                     }}
                     onClose={closeMergingReviewModal}
@@ -176,11 +176,12 @@ const Reviewer = () => {
                     inventoryName={inventoryName}
                     pathsCount={selectedRowsCount}
                     onClose={closeConfirmationModal}
-                    onConfirm={() => {
+                    onConfirm={(OASVersion) => {
                         submitApprovedReview({
                             formatUrl: url => `${url}/${reviewId}/approvedReview`,
                             method: FETCH_METHODS.POST,
                             submitData: {
+                                oasVersion: OASVersion,
                                 reviewPathItems: dataToReview.filter(item => selectedRowIds.includes(item.id)).map(({id, ...item}) => item)
                             }
                         });
