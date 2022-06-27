@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { isEmpty } from 'lodash';
 import Modal from 'components/Modal';
-import Tag from 'components/Tag';
+import MethodTag from 'components/MethodTag';
 import CheckboxListSelect from 'components/CheckboxListSelect';
 import { SEPARATOR, checkIsParam, getMethodsFromPaths } from '../utils';
 
@@ -47,7 +47,7 @@ const ReviewPathDisplay = ({path, methods, markIndexs}) => (
                 ))
             }
         </div>
-        <div className="merge-review-path-display-methods">{methods.map(method => <Tag key={method}>{method}</Tag>)}</div>
+        <div className="merge-review-path-display-methods">{methods.map(method => <MethodTag key={method} method={method} />)}</div>
     </div>
 );
 
