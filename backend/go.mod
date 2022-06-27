@@ -136,5 +136,3 @@ replace github.com/openclarity/trace-sampling-manager/api v0.0.0 => github.com/o
 replace github.com/openclarity/apiclarity/api v0.0.0 => ./../api
 
 replace github.com/openclarity/apiclarity/plugins/api v0.0.0 => ./../plugins/api
-
-//replace github.com/openclarity/speculator v0.0.0 => /Users/idanf/gocode/src/github.com/openclarity/speculator
