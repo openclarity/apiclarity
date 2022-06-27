@@ -21,6 +21,9 @@ import (
 	"fmt"
 	"strings"
 
+	"encoding/json"
+
+	"github.com/openclarity/apiclarity/api3/global"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/config"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/restapi"
@@ -219,4 +222,24 @@ func GetBasePathFromURL(URL string) string {
 	}
 
 	return "/" + path
+}
+
+func ConvertLocalToGlobalReportTag(from []restapi.FuzzingReportTag) ([]global.FuzzingReportTag, error) {
+	/*
+	* We need to convert restapi.FuzzingReportTag to global.FuzzingReportTag
+	* It is the same struc, because global.FuzzingReportTag is created from restapi.FuzzingReportTag.
+	* But: We need to use restapi.FuzzingReportTag on restapi.gen.go and Fuzzer functions that use it,
+	* and we need to use global.FuzzingReportTag for notifications.
+	* As it is same struct, it is valid here to unmarshall then marshall things.
+	 */
+	to := []global.FuzzingReportTag{}
+	bytes, err := json.Marshal(from)
+	if err != nil {
+		return to, err
+	}
+	err = json.Unmarshal(bytes, &to)
+	if err != nil {
+		return to, err
+	}
+	return to, nil
 }

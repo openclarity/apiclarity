@@ -483,6 +483,43 @@ func (api *API) GetLastFindings() *[]restapi.Finding {
 	return &(findingList)
 }
 
+func (api *API) GetLastAPIFindings() *[]common.APIFinding {
+	var findingList []common.APIFinding
+
+	if len(api.TestsList) > 0 {
+		index := len(api.TestsList) - 1
+		lastTestItem := api.TestsList[index].Test
+		if lastTestItem.Report != nil {
+			for _, reportItem := range lastTestItem.Report.Report {
+				for _, finding := range *reportItem.Findings {
+					findingName := typeToNameMap[*finding.Type]
+					findingDescription := ""
+					if finding.Description != nil {
+						findingDescription = *finding.Description
+					}
+					risk := *(finding.Request.Severity)
+					additionalInfo := map[string]interface{}{
+						"Description": finding.AdditionalInfo,
+					}
+					APIFinding := common.APIFinding{
+						AdditionalInfo:            &additionalInfo,
+						Description:               findingDescription,
+						Name:                      findingName,
+						ProvidedSpecLocation:      new(string),
+						ReconstructedSpecLocation: new(string),
+						Severity:                  common.Severity(risk),
+						Source:                    *finding.Namespace,
+						Type:                      *finding.Type,
+					}
+					findingList = append(findingList, APIFinding)
+				}
+			}
+		}
+	}
+
+	return &(findingList)
+}
+
 func (api *API) ForceProgressForLastTest(progress int) error {
 	if len(api.TestsList) > 0 {
 		index := len(api.TestsList) - 1

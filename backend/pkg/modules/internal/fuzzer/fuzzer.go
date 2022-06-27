@@ -23,6 +23,8 @@ import (
 	"net/http"
 
 	oapicommon "github.com/openclarity/apiclarity/api3/common"
+	"github.com/openclarity/apiclarity/api3/global"
+	"github.com/openclarity/apiclarity/api3/notifications"
 
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/clients"
@@ -104,6 +106,62 @@ func (p *pluginFuzzer) Name() string {
 func (p *pluginFuzzer) EventNotify(ctx context.Context, event *core.Event) {
 	// Fuzzer doesn't use this
 	// Logf("[Fuzzer] received a new trace for API(%s) EventID(%v)", event.APIInfoID, event.ID)
+}
+
+/*
+*
+*  Manage notifications
+*
+ */
+
+func (p *pluginFuzzer) sendAPIFindingsNotification(ctx context.Context, apiID uint, findings []oapicommon.APIFinding) error {
+	apiFindingsNotification := notifications.ApiFindingsNotification{
+		NotificationType: "ApiFindingsNotification",
+		Items:            &findings,
+	}
+	notification := notifications.APIClarityNotification{}
+	notification.FromApiFindingsNotification(apiFindingsNotification)
+
+	err := p.accessor.Notify(ctx, ModuleName, apiID, notification)
+
+	return err
+}
+
+func (p *pluginFuzzer) sendTestReportNotification(ctx context.Context, apiID uint, report restapi.ShortTestReport) error {
+	globalReportTags, err := tools.ConvertLocalToGlobalReportTag(report.Tags)
+	if err != nil {
+		return err
+	}
+	testReportNotification := notifications.TestReportNotification{
+		ApiID:            report.ApiID,
+		HighestSeverity:  report.HighestSeverity,
+		NotificationType: "TestReportNotification",
+		Starttime:        report.Starttime,
+		Status:           global.FuzzingStatusEnum(report.Status),
+		StatusMessage:    report.StatusMessage,
+		Tags:             globalReportTags,
+	}
+	notification := notifications.APIClarityNotification{}
+	notification.FromTestReportNotification(testReportNotification)
+
+	err = p.accessor.Notify(ctx, ModuleName, apiID, notification)
+
+	return err
+}
+
+func (p *pluginFuzzer) sendTestProgressNotification(ctx context.Context, apiID uint, report restapi.ShortTestProgress) error {
+	testProgressNotification := notifications.TestProgressNotification{
+		ApiID:            report.ApiID,
+		NotificationType: "TestProgressNotification",
+		Progress:         report.Progress,
+		Starttime:        report.Starttime,
+	}
+	notification := notifications.APIClarityNotification{}
+	notification.FromTestProgressNotification(testProgressNotification)
+
+	err := p.accessor.Notify(ctx, ModuleName, apiID, notification)
+
+	return err
 }
 
 /*
@@ -297,8 +355,8 @@ func (p *pluginFuzzerHTTPHandler) PostUpdateStatus(writer http.ResponseWriter, r
 		httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
 		return
 	}
-
 	logging.Logf("[Fuzzer] PostUpdateStatus(%v): Received a request of size=(%v)", apiID, len(body))
+
 	/*
 	* Decode the result
 	 */
@@ -309,7 +367,6 @@ func (p *pluginFuzzerHTTPHandler) PostUpdateStatus(writer http.ResponseWriter, r
 		httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
 		return
 	}
-	// Logf("body=%v", data)
 
 	/*
 	* Add the new status to the last Test
@@ -320,19 +377,55 @@ func (p *pluginFuzzerHTTPHandler) PostUpdateStatus(writer http.ResponseWriter, r
 		httpResponse(writer, http.StatusNotFound, EmptyJSON)
 		return
 	}
-	// Logf("[Fuzzer] PostUpdateStatus():: API_id (%v) => API (%v)", apiId, api)
 	api.AddNewStatusReport(data)
 	err = api.StoreReportData(req.Context(), p.fuzzer.accessor, ModuleName, data)
 	if err != nil {
 		logging.Errorf("[Fuzzer] PostUpdateStatus(%v): Can't store report data, error=(%v)", apiID, err)
 		// Not fatal, we can continue
 	}
-	// If the status indicate a completion, close the job
+
+	/*
+	* If the status indicate a completion, close the job
+	 */
 	if data.Progress == 100 && data.Status != "IN_PROGRESS" {
 		err = p.fuzzer.model.StopAPIFuzzing(req.Context(), uint(apiID), nil)
 		if err != nil {
 			logging.Errorf("[Fuzzer] PostUpdateStatus(%v): failed to stop fuzzing status, error=%v", apiID, err)
 		}
+	}
+
+	/*
+	* ... Then check for notifications to send
+	 */
+	shortReport, err := api.GetLastShortStatus()
+	if err != nil {
+		logging.Errorf("[Fuzzer] PostUpdateStatus(%v): Can't get short report for this API", apiID)
+		httpResponse(writer, http.StatusNotFound, EmptyJSON)
+		return
+	}
+	if shortReport.Status == restapi.INPROGRESS {
+		p.fuzzer.sendTestProgressNotification(
+			req.Context(),
+			uint(apiID),
+			restapi.ShortTestProgress{
+				ApiID:     &apiID,
+				Progress:  data.Progress,
+				Starttime: shortReport.Starttime,
+			},
+		)
+	} else if shortReport.Status == restapi.DONE {
+		// The
+		p.fuzzer.sendTestReportNotification(
+			req.Context(),
+			uint(apiID),
+			*shortReport,
+		)
+		lastFindings := api.GetLastAPIFindings()
+		p.fuzzer.sendAPIFindingsNotification(
+			req.Context(),
+			uint(apiID),
+			*lastFindings,
+		)
 	}
 
 	writer.Header().Set("Content-Type", "application/json")
