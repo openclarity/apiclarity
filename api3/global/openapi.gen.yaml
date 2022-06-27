@@ -1678,7 +1678,7 @@ paths:
     get:
       description: Asks for findings of an APIClarity module, and API. Implemented
         by each module
-      operationId: fuzzerGetApiFindings
+      operationId: fuzzerGetAPIFindings
       parameters:
       - in: path
         name: apiID

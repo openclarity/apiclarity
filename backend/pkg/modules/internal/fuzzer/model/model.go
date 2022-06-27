@@ -1,3 +1,18 @@
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package model
 
 import (
@@ -6,10 +21,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/restapi"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/tools"
 )
 
 type Model struct {
@@ -80,7 +95,7 @@ func (m *Model) GetAPI(ctx context.Context, apiID uint) (*API, error) {
 	* Try to retrieve it from the cache
 	 */
 	for index, api := range m.db {
-		if api.Id == apiID {
+		if api.ID == apiID {
 			return &m.db[index], nil
 		}
 	}
@@ -107,7 +122,7 @@ func (m *Model) AddAPITest(apiID uint, message string) error {
 	return nil
 }
 
-func (m *Model) StartAPIFuzzing(ctx context.Context, apiID uint, specsInfo *models.OpenAPISpecs) error {
+func (m *Model) StartAPIFuzzing(ctx context.Context, apiID uint, specsInfo *tools.FuzzerSpecsInfo) error {
 	// Get Api
 	api, err := m.GetAPI(ctx, apiID)
 	if err != nil {
@@ -170,14 +185,14 @@ func (m *Model) ReceiveFullReport(ctx context.Context, apiID uint, body []byte) 
 	return nil
 }
 
-//nolint:unused,deadcode
+//nolint:unused,deadcode // used for debug only
 func dumpSlice(s []API) {
 	/*
 	* Debug only, dump the list of APIs
 	 */
 	logging.Logf("len=%d cap=%d", len(s), cap(s))
 	for _, api := range s {
-		logging.Logf("... API {id(%v), name(%v), port(%d), fuzzed(%v), inFuzzing(%v), namespace(%v), tests(%v)}", api.Id, api.Name, api.Port, api.Fuzzed, api.InFuzzing, api.Namespace, len(api.TestsList))
+		logging.Logf("... API {id(%v), name(%v), port(%d), fuzzed(%v), inFuzzing(%v), namespace(%v), tests(%v)}", api.ID, api.Name, api.Port, api.Fuzzed, api.InFuzzing, api.Namespace, len(api.TestsList))
 		for _, testItem := range api.TestsList {
 			logging.Logf("... ... test {progress(%v), start(%v), lastReport(%d), vulns(%d/%d/%d/%d/%d)}",
 				testItem.Test.Progress,
