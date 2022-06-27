@@ -86,7 +86,7 @@ func (s *Server) getAPISwaggerJSON(apiID uint32, typ swaggerType) (interface{}, 
 
 	specToReturn, err = yaml.YAMLToJSON(specToReturn)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert provided spec into json: %s. %v", specToReturn, err)
+		return nil, fmt.Errorf("failed to convert spec into json (%s): %v", specToReturn, err)
 	}
 
 	oasVersion, err := speculatorspec.GetJsonSpecVersion(specToReturn)
