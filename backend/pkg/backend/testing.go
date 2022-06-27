@@ -174,7 +174,6 @@ func createDefaultTestEvent() *APIEventTest {
 			SourceIP:        "2.2.2.2",
 			DestinationIP:   "1.1.1.1",
 			DestinationPort: destinationPort,
-			SpecDiffType:    models.DiffTypeNODIFF,
 			HostSpecName:    host,
 			EventType:       models.APITypeINTERNAL,
 		},

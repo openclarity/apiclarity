@@ -614,12 +614,19 @@ components:
           format: int64
           title: Last seen time
           type: integer
+        method:
+          $ref: ../common/openapi.yaml#/components/schemas/HttpMethod
         newSpec:
           description: New spec json string
           type: string
         oldSpec:
           description: Old spec json string
           type: string
+        path:
+          description: Path of the diff element
+          type: string
+        specType:
+          $ref: ../common/openapi.yaml#/components/schemas/SpecType
       required:
       - lastSeen
       - diffType
@@ -914,9 +921,7 @@ components:
     SpecDiffs:
       properties:
         diffs:
-          items:
-            $ref: '#/components/schemas/APIDiffs'
-          type: array
+          $ref: '#/components/schemas/APIDiffs'
       required:
       - diffs
       type: object
@@ -1894,6 +1899,34 @@ paths:
       summary: Get the version of this Module
       tags:
       - local-bfla
+  /modules/differ/start:
+    get:
+      description: Start this Module
+      operationId: differstart
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+      summary: Start this Module
+      tags:
+      - local-differ
+  /modules/differ/stop:
+    get:
+      description: Stop this Module
+      operationId: differstop
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+      summary: Stop this Module
+      tags:
+      - local-differ
   /modules/differ/version:
     get:
       description: Get the version of this Module

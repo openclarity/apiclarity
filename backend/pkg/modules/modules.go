@@ -20,11 +20,14 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/openclarity/apiclarity/backend/pkg/backend/speculatorAccessor"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 
 	// Enables the bfla module.
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla"
+
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
+	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/differ"
 
 	// Enables the fuzzer module.
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer"
@@ -49,6 +52,6 @@ var (
 	NewMockBackendAccessor = core.NewMockBackendAccessor
 )
 
-func New(ctx context.Context, dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager) (ModulesManager, []ModuleInfo) {
-	return core.New(ctx, core.NewAccessor(dbHandler, clientset, samplingManager), samplingManager)
+func New(ctx context.Context, dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager, speculatorAccessor speculatorAccessor.SpeculatorAccessor) (ModulesManager, []ModuleInfo) {
+	return core.New(ctx, core.NewAccessor(dbHandler, clientset, samplingManager, speculatorAccessor), samplingManager)
 }

@@ -26,13 +26,13 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"gotest.tools/assert"
 
-	"github.com/openclarity/apiclarity/api/server/models"
+	_spec "github.com/openclarity/speculator/pkg/spec"
+	_speculator "github.com/openclarity/speculator/pkg/speculator"
+
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/k8smonitor"
 	"github.com/openclarity/apiclarity/backend/pkg/modules"
 	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
-	_spec "github.com/openclarity/speculator/pkg/spec"
-	_speculator "github.com/openclarity/speculator/pkg/speculator"
 )
 
 func Test_isNonAPI(t *testing.T) {
@@ -176,112 +176,6 @@ func Test_getHostname(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("getHostname() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_convertAPIDiffType(t *testing.T) {
-	type args struct {
-		diffType _spec.DiffType
-	}
-	tests := []struct {
-		name string
-		args args
-		want models.DiffType
-	}{
-		{
-			name: "unknown type - default DiffTypeNODIFF",
-			args: args{
-				diffType: "unknown type",
-			},
-			want: models.DiffTypeNODIFF,
-		},
-		{
-			name: "DiffTypeNoDiff",
-			args: args{
-				diffType: _spec.DiffTypeNoDiff,
-			},
-			want: models.DiffTypeNODIFF,
-		},
-		{
-			name: "DiffTypeZombieDiff",
-			args: args{
-				diffType: _spec.DiffTypeZombieDiff,
-			},
-			want: models.DiffTypeZOMBIEDIFF,
-		},
-		{
-			name: "DiffTypeShadowDiff",
-			args: args{
-				diffType: _spec.DiffTypeShadowDiff,
-			},
-			want: models.DiffTypeSHADOWDIFF,
-		},
-		{
-			name: "DiffTypeGeneralDiff",
-			args: args{
-				diffType: _spec.DiffTypeGeneralDiff,
-			},
-			want: models.DiffTypeGENERALDIFF,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := convertAPIDiffType(tt.args.diffType); got != tt.want {
-				t.Errorf("convertAPIDiffType() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_getHighestPrioritySpecDiffType(t *testing.T) {
-	type args struct {
-		providedDiff      models.DiffType
-		reconstructedDiff models.DiffType
-	}
-	tests := []struct {
-		name string
-		args args
-		want models.DiffType
-	}{
-		{
-			name: "Zombie over Shadow",
-			args: args{
-				providedDiff:      models.DiffTypeZOMBIEDIFF,
-				reconstructedDiff: models.DiffTypeSHADOWDIFF,
-			},
-			want: models.DiffTypeZOMBIEDIFF,
-		},
-		{
-			name: "Same type",
-			args: args{
-				providedDiff:      models.DiffTypeGENERALDIFF,
-				reconstructedDiff: models.DiffTypeGENERALDIFF,
-			},
-			want: models.DiffTypeGENERALDIFF,
-		},
-		{
-			name: "reconstructed unknown type",
-			args: args{
-				providedDiff:      models.DiffTypeNODIFF,
-				reconstructedDiff: "unknown type",
-			},
-			want: models.DiffTypeNODIFF,
-		},
-		{
-			name: "provided unknown type",
-			args: args{
-				providedDiff:      "unknown type",
-				reconstructedDiff: models.DiffTypeNODIFF,
-			},
-			want: models.DiffTypeNODIFF,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := getHighestPrioritySpecDiffType(tt.args.providedDiff, tt.args.reconstructedDiff); got != tt.want {
-				t.Errorf("getHighestPrioritySpecDiffType() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -649,7 +543,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 					apiInventoryTable.EXPECT().FirstOrCreate(gomock.Any())
 				},
 				expectAPIEventTable: func(apiEventTable *_database.MockAPIEventsTable) {
-					apiEventTable.EXPECT().CreateAPIEvent(NewEventMatcher(createDefaultTestEvent().WithHasProvidedSpecDiff(true).WithSpecDiffType(models.DiffTypeSHADOWDIFF).event))
+					apiEventTable.EXPECT().CreateAPIEvent(NewEventMatcher(createDefaultTestEvent().event))
 				},
 			},
 			args: args{
@@ -699,7 +593,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 					apiInventoryTable.EXPECT().FirstOrCreate(gomock.Any())
 				},
 				expectAPIEventTable: func(apiEventTable *_database.MockAPIEventsTable) {
-					apiEventTable.EXPECT().CreateAPIEvent(NewEventMatcher(createDefaultTestEvent().WithHasReconstructedSpecDiff(true).WithSpecDiffType(models.DiffTypeSHADOWDIFF).event))
+					apiEventTable.EXPECT().CreateAPIEvent(NewEventMatcher(createDefaultTestEvent().event))
 				},
 			},
 			args: args{

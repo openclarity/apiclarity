@@ -40,6 +40,8 @@ const (
 	StateBackupFileName          = "STATE_BACKUP_FILE_NAME"
 	NoMonitorEnvVar              = "NO_K8S_MONITOR"
 	K8sLocalEnvVar               = "K8S_LOCAL"
+	DiffsSendIntervalMin         = "DIFFS_SEND_INTERVAL"
+
 
 	DBNameEnvVar     = "DB_NAME"
 	DBUserEnvVar     = "DB_USER"

@@ -23,6 +23,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/openclarity/apiclarity/api3/notifications"
+	"github.com/openclarity/apiclarity/backend/pkg/backend/speculatorAccessor"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core/notifier"
 	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
@@ -63,9 +64,11 @@ type Module interface {
 
 type BackendAccessor interface {
 	K8SClient() kubernetes.Interface
+	GetSpeculatorAccessor() speculatorAccessor.SpeculatorAccessor
 
 	GetAPIInfo(ctx context.Context, apiID uint) (*database.APIInfo, error)
 	GetAPIEvents(ctx context.Context, filter database.GetAPIEventsQuery) ([]*database.APIEvent, error)
+	UpdateAPIEvent(ctx context.Context, event *database.APIEvent) error
 
 	GetAPIEventAnnotation(ctx context.Context, modName string, eventID uint, name string) (*Annotation, error)
 	ListAPIEventAnnotations(ctx context.Context, modName string, eventID uint) ([]*Annotation, error)
@@ -83,7 +86,7 @@ type BackendAccessor interface {
 	Notify(ctx context.Context, modName string, apiID uint, notification notifications.APIClarityNotification) error
 }
 
-func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager) BackendAccessor {
+func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager, speculatorAccessor speculatorAccessor.SpeculatorAccessor) BackendAccessor {
 	notificationPrefix := GetNotificationPrefix()
 
 	var n *notifier.Notifier
@@ -96,6 +99,7 @@ func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface, sa
 		clientset:       clientset,
 		notifier:        n,
 		samplingManager: samplingManager,
+		speculatorAccessor: speculatorAccessor,
 	}
 }
 
@@ -104,10 +108,15 @@ type accessor struct {
 	clientset       kubernetes.Interface
 	notifier        *notifier.Notifier
 	samplingManager *manager.Manager
+	speculatorAccessor speculatorAccessor.SpeculatorAccessor
 }
 
 func (b *accessor) K8SClient() kubernetes.Interface {
 	return b.clientset
+}
+
+func (b *accessor) GetSpeculatorAccessor() speculatorAccessor.SpeculatorAccessor {
+	return b.speculatorAccessor
 }
 
 func (b *accessor) GetAPIInfo(ctx context.Context, apiID uint) (*database.APIInfo, error) {
@@ -116,6 +125,10 @@ func (b *accessor) GetAPIInfo(ctx context.Context, apiID uint) (*database.APIInf
 		return nil, fmt.Errorf("failed to retrieve API info for apiID=%v: %v", apiID, err)
 	}
 	return apiInfo, nil
+}
+
+func (b *accessor) UpdateAPIEvent(ctx context.Context, event *database.APIEvent) error {
+	return b.dbHandler.APIEventsTable().UpdateAPIEvent(event)
 }
 
 func (b *accessor) GetAPIEvents(ctx context.Context, filter database.GetAPIEventsQuery) ([]*database.APIEvent, error) {

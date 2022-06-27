@@ -198,3 +198,17 @@ func (mr *MockAPIEventsTableMockRecorder) SetAPIEventsReconstructedPathID(arg0, 
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAPIEventsReconstructedPathID", reflect.TypeOf((*MockAPIEventsTable)(nil).SetAPIEventsReconstructedPathID), arg0, arg1, arg2)
 }
+
+// UpdateAPIEvent mocks base method
+func (m *MockAPIEventsTable) UpdateAPIEvent(arg0 *APIEvent) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateAPIEvent", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateAPIEvent indicates an expected call of UpdateAPIEvent
+func (mr *MockAPIEventsTableMockRecorder) UpdateAPIEvent(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAPIEvent", reflect.TypeOf((*MockAPIEventsTable)(nil).UpdateAPIEvent), arg0)
+}

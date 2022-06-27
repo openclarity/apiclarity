@@ -107,9 +107,7 @@ components:
     SpecDiffs:
       properties:
         diffs:
-          items:
-            $ref: ../global/openapi.gen.yaml#/components/schemas/APIDiffs
-          type: array
+          $ref: ../global/openapi.gen.yaml#/components/schemas/APIDiffs
       required:
       - diffs
       type: object

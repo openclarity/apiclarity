@@ -13,11 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package backend
+package speculator
 
 import (
-	"github.com/openclarity/apiclarity/plugins/api/server/models"
 	"github.com/openclarity/speculator/pkg/spec"
+
+	"github.com/openclarity/apiclarity/plugins/api/server/models"
 )
 
 func ConvertModelsToSpeculatorTelemetry(telemetry *models.Telemetry) *spec.Telemetry {

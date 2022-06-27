@@ -26,6 +26,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
@@ -117,7 +118,17 @@ type APIEventsTable interface {
 	GetAPIUsages(params operations.GetAPIUsageHitCountParams) ([]*models.HitCount, error)
 	GetDashboardAPIUsages(startTime, endTime time.Time, apiType APIUsageType) ([]*models.APIUsage, error)
 	CreateAPIEvent(event *APIEvent)
+	UpdateAPIEvent(event *APIEvent) error
 	GroupByAPIInfo() ([]HostGroup, error)
+}
+
+func (a *APIEventsTableHandler) UpdateAPIEvent(event *APIEvent) error {
+	err := a.tx.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}},
+		UpdateAll: true,
+	}).Create(&event).Error
+
+	return err
 }
 
 type GetAPIEventsQuery struct {
