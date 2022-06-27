@@ -758,6 +758,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 }
 
 func Test_getPathItemForVersion(t *testing.T) {
+	var nilPathItem *spec.PathItem
 	type args struct {
 		v3PathItem *spec.PathItem
 		version    _spec.OASVersion
@@ -860,6 +861,14 @@ func Test_getPathItemForVersion(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			name: "nil input",
+			args: args{
+				v3PathItem: nilPathItem,
+				version:    _spec.OASv3,
+			},
+			want: nilPathItem,
 		},
 	}
 	for _, tt := range tests {

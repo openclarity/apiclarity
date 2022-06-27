@@ -231,7 +231,7 @@ func getPathItemForVersion(v3PathItem *spec.PathItem, version _spec.OASVersion) 
 		log.Errorf("Converting to OASv2 path item")
 		v2PathItem, err := openapi2conv.FromV3PathItem(&spec.T{Components: spec.Components{}}, v3PathItem)
 		if err != nil {
-			log.Errorf("failed to convert v3 path item to v2, keeping v3: %v", err)
+			log.Errorf("Failed to convert v3 path item to v2, keeping v3: %v", err)
 			return v3PathItem
 		}
 
