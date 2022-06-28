@@ -1,0 +1,15 @@
+# https://github.com/google/re2/wiki/Syntax
+- id: simple-001
+  description: Find 'username' keyword in flow data
+  regex: '(?i)username'
+  searchIn:
+    - RequestBody   # Allowed values: RequestBody, ResponseBody, RequestHeaders, ResponseHeaders
+    - ResponseBody
+    - RequestHeaders
+    - ResponseHeaders
+
+- id: core-002
+  description: Find 'API Key' keyword in Request Headers
+  regex: '(?i)api-?key'
+  searchIn:
+    - RequestHeaders

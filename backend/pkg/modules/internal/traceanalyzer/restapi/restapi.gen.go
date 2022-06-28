@@ -35,6 +35,9 @@ type Annotations struct {
 	Total int `json:"total"`
 }
 
+// Redacted defines model for redacted.
+type Redacted = bool
+
 // DeleteAPIAnnotationsParams defines parameters for DeleteAPIAnnotations.
 type DeleteAPIAnnotationsParams struct {
 	// name of the annotation
@@ -45,6 +48,11 @@ type DeleteAPIAnnotationsParams struct {
 type GetApiFindingsParams struct {
 	// Should findings include sensitive data ?
 	Sensitive *externalRef0.Sensitive `form:"sensitive,omitempty" json:"sensitive,omitempty"`
+}
+
+// GetEventAnnotationsParams defines parameters for GetEventAnnotations.
+type GetEventAnnotationsParams struct {
+	Redacted *Redacted `form:"redacted,omitempty" json:"redacted,omitempty"`
 }
 
 // ServerInterface represents all server handlers.
@@ -60,7 +68,7 @@ type ServerInterface interface {
 	GetApiFindings(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params GetApiFindingsParams)
 	// Get Annotations for an event
 	// (GET /eventAnnotations/{eventID})
-	GetEventAnnotations(w http.ResponseWriter, r *http.Request, eventID int64)
+	GetEventAnnotations(w http.ResponseWriter, r *http.Request, eventID int64, params GetEventAnnotationsParams)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -196,8 +204,22 @@ func (siw *ServerInterfaceWrapper) GetEventAnnotations(w http.ResponseWriter, r 
 		return
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetEventAnnotationsParams
+
+	// ------------- Optional query parameter "redacted" -------------
+	if paramValue := r.URL.Query().Get("redacted"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "redacted", r.URL.Query(), &params.Redacted)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "redacted", Err: err})
+		return
+	}
+
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetEventAnnotations(w, r, eventID)
+		siw.Handler.GetEventAnnotations(w, r, eventID, params)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -339,18 +361,19 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"5ltaex3Vzjn3MwAA//8t7HDxZQsAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

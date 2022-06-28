@@ -16,10 +16,10 @@
 package weakbasicauth
 
 import (
-	"bytes"
+	"reflect"
 	"testing"
 
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
 	"github.com/openclarity/apiclarity/plugins/api/server/models"
 )
 
@@ -54,14 +54,14 @@ func TestFindToken(t *testing.T) {
 	}
 }
 
-func sameAnns(got []core.Annotation, expected []core.Annotation) bool {
+func sameAnns(got []utils.TraceAnalyzerAnnotation, expected []utils.TraceAnalyzerAnnotation) bool {
 	if len(got) != len(expected) {
 		return false
 	}
 	for _, eo := range expected { // For each wanted observation
 		found := false
 		for _, o := range got { // Check if it's in the result
-			if eo.Name == o.Name && bytes.Equal(eo.Annotation, o.Annotation) {
+			if reflect.DeepEqual(o, eo) {
 				found = true
 				break
 			}
@@ -73,18 +73,20 @@ func sameAnns(got []core.Annotation, expected []core.Annotation) bool {
 	return true
 }
 
+
+
 func TestBasicAuth(t *testing.T) {
 	testcases := []struct {
 		headers []*models.Header
-		wanted  []core.Annotation
+		wanted  []utils.TraceAnalyzerAnnotation
 	}{
-		{headers: []*models.Header{}, wanted: []core.Annotation{}},
-		{headers: []*models.Header{{Key: "authorization", Value: "Basic "}}, wanted: []core.Annotation{}},
-		{headers: []*models.Header{{Key: "authorization", Value: "basic"}}, wanted: []core.Annotation{}},
-		{headers: []*models.Header{{Key: "authorization", Value: "XXXX     basic"}}, wanted: []core.Annotation{}},
-		{headers: []*models.Header{{Key: "authorization", Value: "XXXX     Basic "}}, wanted: []core.Annotation{}},
-		{headers: []*models.Header{{Key: "authorization", Value: "Basic dXNlcjE6cGFzcw=="}}, wanted: []core.Annotation{{Name: "BASIC_AUTH_SHORT_PASSWORD", Annotation: []byte("4")}, {Name: "BASIC_AUTH_KNOWN_PASSWORD", Annotation: []byte("pass")}}},
-		{headers: []*models.Header{{Key: "authorization", Value: "Basic dXNlcjE6bG9uZ2xvbmdsb25n"}}, wanted: []core.Annotation{{Name: "BASIC_AUTH_KNOWN_PASSWORD", Annotation: []byte("longlonglong")}}},
+		{headers: []*models.Header{}, wanted: []utils.TraceAnalyzerAnnotation{}},
+		{headers: []*models.Header{{Key: "authorization", Value: "Basic "}}, wanted: []utils.TraceAnalyzerAnnotation{}},
+		{headers: []*models.Header{{Key: "authorization", Value: "basic"}}, wanted: []utils.TraceAnalyzerAnnotation{}},
+		{headers: []*models.Header{{Key: "authorization", Value: "XXXX     basic"}}, wanted: []utils.TraceAnalyzerAnnotation{}},
+		{headers: []*models.Header{{Key: "authorization", Value: "XXXX     Basic "}}, wanted: []utils.TraceAnalyzerAnnotation{}},
+		{headers: []*models.Header{{Key: "authorization", Value: "Basic dXNlcjE6cGFzcw=="}}, wanted: []utils.TraceAnalyzerAnnotation{&AnnotationShortPassword{Password: "pass", Length: 4, MinSize: 8}, &AnnotationKnownPassword{Password: "pass"}}},
+		{headers: []*models.Header{{Key: "authorization", Value: "Basic dXNlcjE6bG9uZ2xvbmdsb25n"}}, wanted: []utils.TraceAnalyzerAnnotation{&AnnotationKnownPassword{Password: "longlonglong"}}},
 	}
 
 	knownPasswords := []string{"pass", "pass123", "123", "1234", "longlonglong"}
@@ -97,7 +99,13 @@ func TestBasicAuth(t *testing.T) {
 		trace.Request.Common.Headers = tc.headers
 		eventAnns, _ := analyzer.Analyze(&trace)
 		if !sameAnns(eventAnns, tc.wanted) {
-			t.Errorf("Wanted: (%v) got (%v)", tc.wanted, eventAnns)
+			for _, ea := range eventAnns {
+				t.Logf("Got: %+v", ea)
+			}
+			for _, w := range tc.wanted {
+				t.Logf("Wanted: %+v", w)
+			}
+			t.Errorf("Wanted: (%+v) got (%+v)", tc.wanted, eventAnns)
 		}
 	}
 }
@@ -106,19 +114,19 @@ func TestSamePassword(t *testing.T) {
 	testcases := []struct {
 		host   string
 		auth   string
-		wanted []core.Annotation
+		wanted []utils.TraceAnalyzerAnnotation
 	}{
-		{host: "example1.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []core.Annotation{}},
-		{host: "example1.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []core.Annotation{}},
-		{host: "example1.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []core.Annotation{}},
-		{host: "example2.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []core.Annotation{{Name: "BASIC_AUTH_SAME_PASSWORD", Annotation: []byte("user1:passwordmorethan8,example1.com,example2.com")}}},
-		{host: "example2.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []core.Annotation{}},
-		{host: "example2.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []core.Annotation{}},
-		{host: "example1.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []core.Annotation{}},
-		{host: "example1.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []core.Annotation{}},
-		{host: "example3.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []core.Annotation{{Name: "BASIC_AUTH_SAME_PASSWORD", Annotation: []byte("user1:passwordmorethan8,example1.com,example2.com,example3.com")}}},
-		{host: "example1.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []core.Annotation{}},
-		{host: "example2.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []core.Annotation{}},
+		{host: "example1.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []utils.TraceAnalyzerAnnotation{}},
+		{host: "example1.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []utils.TraceAnalyzerAnnotation{}},
+		{host: "example1.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []utils.TraceAnalyzerAnnotation{}},
+		{host: "example2.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []utils.TraceAnalyzerAnnotation{&AnnotationSamePassword{User: "user1", Password: "passwordmorethan8", APIs: []string{"example1.com", "example2.com"}}}},
+		{host: "example2.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []utils.TraceAnalyzerAnnotation{}},
+		{host: "example2.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []utils.TraceAnalyzerAnnotation{}},
+		{host: "example1.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []utils.TraceAnalyzerAnnotation{}},
+		{host: "example1.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []utils.TraceAnalyzerAnnotation{}},
+		{host: "example3.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []utils.TraceAnalyzerAnnotation{&AnnotationSamePassword{User: "user1", Password: "passwordmorethan8", APIs: []string{"example1.com", "example2.com", "example3.com"}}}},
+		{host: "example1.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []utils.TraceAnalyzerAnnotation{}},
+		{host: "example2.com", auth: "Basic dXNlcjE6cGFzc3dvcmRtb3JldGhhbjg=", wanted: []utils.TraceAnalyzerAnnotation{}},
 	}
 	var knownPasswords []string
 	analyzer := NewWeakBasicAuth(knownPasswords)
@@ -136,7 +144,13 @@ func TestSamePassword(t *testing.T) {
 		trace.Request.Host = tc.host
 		eventAnns, _ := analyzer.Analyze(&trace)
 		if !sameAnns(eventAnns, tc.wanted) {
-			t.Errorf("Wanted: (%v) got (%v)", tc.wanted, eventAnns)
+			for _, ea := range eventAnns {
+				t.Logf("Got: %+v", ea)
+			}
+			for _, w := range tc.wanted {
+				t.Logf("Wanted: %+v", w)
+			}
+			t.Errorf("Wanted: (%+v) got (%+v)", tc.wanted, eventAnns)
 		}
 	}
 }

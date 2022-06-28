@@ -33,6 +33,7 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/config"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
+
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/guessableid"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/nlid"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/restapi"
@@ -59,14 +60,6 @@ const (
 	ignoreFindingsEnvVar  = "TRACE_ANALYZER_IGNORE_FINDINGS"
 	ignoreFindingsDefault = ""
 )
-
-// A finding is an interpreted annotation.
-type Finding struct {
-	ShortDesc    string
-	DetailedDesc string
-	Severity     string
-	Alert        core.AlertSeverity
-}
 
 type ParameterFinding struct {
 	Location string      `json:"location"`
@@ -205,8 +198,8 @@ func (p *traceAnalyzer) HTTPHandler() http.Handler {
 func (p *traceAnalyzer) EventNotify(ctx context.Context, e *core.Event) {
 	event, trace := e.APIEvent, e.Telemetry
 	log.Debugf("[TraceAnalyzer] received a new trace for API(%v) EventID(%v)", event.APIInfoID, event.ID)
-	eventAnns := []core.Annotation{}
-	apiAnns := []core.Annotation{}
+	eventAnns := []utils.TraceAnalyzerAnnotation{}
+	apiAnns := []utils.TraceAnalyzerAnnotation{}
 
 	wbaEventAnns, wbaAPIAnns := p.weakBasicAuth.Analyze(trace)
 	eventAnns = append(eventAnns, wbaEventAnns...)
@@ -225,93 +218,133 @@ func (p *traceAnalyzer) EventNotify(ctx context.Context, e *core.Event) {
 	// the parameters to see if they are very similar with the one in previous
 	// accepted queries.
 	if strings.HasPrefix(trace.Response.StatusCode, "2") {
-		// Guessable ID, which is part of the module, not the 3rd party library
-		specPath, pathParams, _, _, _ := p.getParams(ctx, event)
-		if specPath == "" {
-			specPath = trace.Request.Path
-		}
+		specPath, pathParams, _, _, _, err := p.getParams(ctx, event)
+		if err == nil {
+			if specPath == "" {
+				specPath = trace.Request.Path
+			}
+			// Check for guessable IDs
+			eventGuessable, _ := p.guessableID.Analyze(specPath, string(event.Method), pathParams, trace)
+			eventAnns = append(eventAnns, eventGuessable...)
 
-		// Check for guessable IDs
-		var groupedGuessable []ParameterFinding
-		for pName, pValue := range pathParams {
-			if guessable, reason := p.guessableID.IsGuessableParam("", pName, pValue); guessable {
-				groupedGuessable = append(groupedGuessable, ParameterFinding{Location: specPath, Method: string(event.Method), Name: pName, Value: pValue, Reason: reason})
-			}
-		}
-		if len(groupedGuessable) > 0 {
-			bytes, err := json.Marshal(groupedGuessable)
-			if err == nil {
-				apiAnns = append(apiAnns, core.Annotation{Name: "GUESSABLE_ID", Annotation: bytes})
-			}
-		}
-
-		// Check for NLIDS
-		eventNLIDAnns, _ := p.nlid.Analyze(pathParams, trace)
-		if len(eventNLIDAnns) > 0 {
-			// Regroup NLIDs
-			var groupedNLIDs []ParameterFinding
-			for _, e := range eventNLIDAnns {
-				groupedNLIDs = append(groupedNLIDs, ParameterFinding{Location: specPath, Method: string(event.Method), Name: "", Value: string(e.Annotation), Reason: nlid.Reason{}})
-			}
-			bytes, err := json.Marshal(groupedNLIDs)
-			if err == nil {
-				eventAnns = append(eventAnns, core.Annotation{Name: "NLID", Annotation: bytes})
-			}
+			// Check for NLIDS
+			eventNLIDAnns, _ := p.nlid.Analyze(specPath, string(event.Method), pathParams, trace)
+			eventAnns = append(eventAnns, eventNLIDAnns...)
 		}
 	}
 
-	filteredEventAnns := []core.Annotation{}
+	// Filter ignored findings
+	filteredEventAnns := []utils.TraceAnalyzerAnnotation{}
 	for _, a := range eventAnns {
-		if !p.ignoreFindings[a.Name] {
+		if !p.ignoreFindings[a.Name()] {
 			filteredEventAnns = append(filteredEventAnns, a)
 		}
 	}
+
 	if len(filteredEventAnns) > 0 {
-		if err := p.accessor.CreateAPIEventAnnotations(ctx, p.Name(), event.ID, filteredEventAnns...); err != nil {
+		coreEventAnnotations := p.toCoreEventAnnotations(filteredEventAnns, false)
+		if err := p.accessor.CreateAPIEventAnnotations(ctx, p.Name(), event.ID, coreEventAnnotations...); err != nil {
 			log.Error(err)
 		}
 		p.setAlertSeverity(ctx, event.ID, filteredEventAnns)
 	}
 
-	filteredAPIAnns := []core.Annotation{}
-	for _, a := range apiAnns {
-		if !p.ignoreFindings[a.Name] {
-			filteredAPIAnns = append(filteredAPIAnns, a)
-		}
-	}
-	if len(filteredAPIAnns) > 0 {
-		if err := p.accessor.StoreAPIInfoAnnotations(ctx, p.Name(), event.APIInfoID, filteredAPIAnns...); err != nil {
-			log.Error(err)
-		}
-	}
+	// filteredAPIAnns := []core.Annotation{}
+	// for _, a := range apiAnns {
+	// 	if !p.ignoreFindings[a.Name] {
+	// 		filteredAPIAnns = append(filteredAPIAnns, a)
+	// 	}
+	// }
+	// if len(filteredAPIAnns) > 0 {
+	// 	if err := p.accessor.StoreAPIInfoAnnotations(ctx, p.Name(), event.APIInfoID, filteredAPIAnns...); err != nil {
+	// 		log.Error(err)
+	// 	}
+	// }
 
-	if true {
-		location := "#/paths/blablabla/get"
-		additionalInfo := map[string]interface{}{
-			"token":            "XXXVeryBadTokenXXX",
-			"sensitive_claims": []string{"password", "ssn"},
-		}
-		apiFinding := common.APIFinding{
-			AdditionalInfo:            &additionalInfo,
-			Description:               "A Weak JSON Web Token is used",
-			Name:                      "Weak JWT",
-			Severity:                  "MEDIUM",
-			Source:                    moduleName,
-			ReconstructedSpecLocation: &location,
-			ProvidedSpecLocation:      &location,
-			Type:                      "WEAK_JWT",
-		}
-		err := p.sendAPIFindingsNotification(ctx, event.APIInfoID, []common.APIFinding{apiFinding})
-		if err != nil {
-			log.Error(err)
-		}
-	}
+	// if true {
+	// 	location := "#/paths/blablabla/get"
+	// 	additionalInfo := map[string]interface{}{
+	// 		"token":            "XXXVeryBadTokenXXX",
+	// 		"sensitive_claims": []string{"password", "ssn"},
+	// 	}
+	// 	apiFinding := common.APIFinding{
+	// 		AdditionalInfo:            &additionalInfo,
+	// 		Description:               "A Weak JSON Web Token is used",
+	// 		Name:                      "Weak JWT",
+	// 		Severity:                  "MEDIUM",
+	// 		Source:                    moduleName,
+	// 		ReconstructedSpecLocation: &location,
+	// 		ProvidedSpecLocation:      &location,
+	// 		Type:                      "WEAK_JWT",
+	// 	}
+	// 	err := p.sendAPIFindingsNotification(ctx, event.APIInfoID, []common.APIFinding{apiFinding})
+	// 	if err != nil {
+	// 		log.Error(err)
+	// 	}
+	// }
 
 	return
 }
 
-func (p *traceAnalyzer) sendAPIFindingsNotification(ctx context.Context, apiID uint, apiFindings []common.APIFinding) error {
+func (p *traceAnalyzer) toCoreEventAnnotations(eventAnns []utils.TraceAnalyzerAnnotation, redacted bool) (coreAnnotations []core.Annotation) {
+	for _, a := range eventAnns {
+		if redacted {
+			a = a.Redacted()
+		}
+		annotation, err := a.Serialize()
+		if err != nil {
+			log.Errorf("unable to serialize annotation: %s", err)
+		}
+		coreAnnotations = append(coreAnnotations, core.Annotation{ Name: a.Name(), Annotation: annotation })
+	}
+	return coreAnnotations
+}
 
+func fromCoreAnnotation(coreAnn *core.Annotation) (ann utils.TraceAnalyzerAnnotation, err error) {
+	var a utils.TraceAnalyzerAnnotation
+	switch coreAnn.Name {
+	case weakbasicauth.KindKnownPassword: a = &weakbasicauth.AnnotationKnownPassword{}
+	case weakbasicauth.KindShortPassword: a = &weakbasicauth.AnnotationShortPassword{}
+	case weakbasicauth.KindSamePassword: a = &weakbasicauth.AnnotationSamePassword{}
+
+	case weakjwt.JWTNoAlgField: a = &weakjwt.AnnotationNoAlgField{}
+	case weakjwt.JWTAlgFieldNone: a = &weakjwt.AnnotationAlgFieldNone{}
+	case weakjwt.JWTNotRecommendedAlg: a = &weakjwt.AnnotationNotRecommendedAlg{}
+	case weakjwt.JWTNoExpireClaim: a = &weakjwt.AnnotationNoExpireClaim{}
+	case weakjwt.JWTExpTooFar: a = &weakjwt.AnnotationExpTooFar{}
+	case weakjwt.JWTWeakSymetricSecret: a = &weakjwt.AnnotationWeakSymetricSecret{}
+	case weakjwt.JWTSensitiveContentInHeaders: a = &weakjwt.AnnotationSensitiveContentInHeaders{}
+	case weakjwt.JWTSensitiveContentInClaims: a = &weakjwt.AnnotationSensitiveContentInClaims{}
+
+	case sensitive.RegexpMatching: a = &sensitive.AnnotationRegexpMatching{}
+
+	case nlid.NLIDType: a = &nlid.AnnotationNLID{}
+
+	case guessableid.GuessableType: a = &guessableid.AnnotationGuessableID{}
+
+	default:
+		return nil, fmt.Errorf("unknown annotation '%s'", coreAnn.Name)
+	}
+
+	err = a.Deserialize(coreAnn.Annotation)
+	return a, err
+}
+
+func fromCoreAnnotations(coreAnns []*core.Annotation) (anns []utils.TraceAnalyzerAnnotation) {
+	for _, coreAnn := range coreAnns {
+		taAnn, err := fromCoreAnnotation(coreAnn)
+		if err != nil {
+			log.Errorf("Unable to understand annotation: %v", err)
+		} else {
+			anns = append(anns, taAnn)
+		}
+	}
+
+	return anns
+}
+
+
+func (p *traceAnalyzer) sendAPIFindingsNotification(ctx context.Context, apiID uint, apiFindings []common.APIFinding) error {
 	apiN := notifications.ApiFindingsNotification{
 		NotificationType: "ApiFindingsNotification",
 		Items:            &apiFindings,
@@ -332,13 +365,12 @@ func (p *traceAnalyzer) APIAnnotationNotify(modName string, apiID uint, annotati
 	return nil
 }
 
-func (p *traceAnalyzer) setAlertSeverity(ctx context.Context, eventID uint, anns []core.Annotation) {
-	// Find Highest alert
+func (p *traceAnalyzer) setAlertSeverity(ctx context.Context, eventID uint, anns []utils.TraceAnalyzerAnnotation) {
 	maxAlert := core.AlertInfo
 	for _, a := range anns {
-		f := getEventDescription(a)
-		if f.Alert > maxAlert {
-			maxAlert = f.Alert
+		alert := utils.SeverityToAlert(a.Severity())
+		if alert > maxAlert {
+			maxAlert = alert
 		}
 		// We reach the maximum alert level, not need to go further
 		if maxAlert == core.AlertCritical {
@@ -361,37 +393,29 @@ func (p *traceAnalyzer) setAlertSeverity(ctx context.Context, eventID uint, anns
 	}
 }
 
-func getAPISpecsInfo(ctx context.Context, accessor core.BackendAccessor, apiID uint) (*models.OpenAPISpecs, error) {
-	apiInfo, err := accessor.GetAPIInfo(ctx, apiID)
-	if err != nil {
-		return nil, err
-	}
-
-	specsInfo := &models.OpenAPISpecs{}
-	if apiInfo.ProvidedSpecInfo != "" {
-		specInfo := models.SpecInfo{}
-		if err := json.Unmarshal([]byte(apiInfo.ProvidedSpecInfo), &specInfo); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal provided spec info. info=%+v: %v", apiInfo.ProvidedSpecInfo, err)
-		}
-		specsInfo.ProvidedSpec = &specInfo
-	}
-
-	if apiInfo.ReconstructedSpecInfo != "" {
-		specInfo := models.SpecInfo{}
-		if err := json.Unmarshal([]byte(apiInfo.ReconstructedSpecInfo), &specInfo); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal reconstructed spec info. info=%+v: %v", apiInfo.ReconstructedSpecInfo, err)
-		}
-		specsInfo.ReconstructedSpec = &specInfo
-	}
-
-	return specsInfo, nil
-}
-
 // XXX There are too many parameters to this function. It needs refactoring.
-func (p *traceAnalyzer) getParams(ctx context.Context, event *database.APIEvent) (specPath string, pathParams map[string]string, queryParams map[string]string, headerParams map[string]string, bodyParams map[string]string) {
-	specInfo, err := getAPISpecsInfo(ctx, p.accessor, event.APIInfoID)
+func (p *traceAnalyzer) getParams(ctx context.Context, event *database.APIEvent) (specPath string, pathParams map[string]string, queryParams map[string]string, headerParams map[string]string, bodyParams map[string]string, err error) {
+	apiInfo, err := p.accessor.GetAPIInfo(ctx, event.APIInfoID)
 	if err != nil {
-		return "", nil, nil, nil, nil
+		return "", nil, nil, nil, nil, err
+	}
+
+	// Prefer Provided specification if available
+	var serializedSpecInfo *string
+	var eventPathID string
+	if apiInfo.HasProvidedSpec && apiInfo.ProvidedSpecInfo != "" {
+		serializedSpecInfo = &apiInfo.ProvidedSpecInfo
+		eventPathID = event.ProvidedPathID
+	} else if apiInfo.HasReconstructedSpec && apiInfo.ReconstructedSpecInfo != "" {
+		serializedSpecInfo = &apiInfo.ReconstructedSpecInfo
+		eventPathID = event.ReconstructedPathID
+	} else {
+		return specPath, pathParams, queryParams, headerParams, bodyParams, nil
+	}
+
+	var specInfo models.SpecInfo
+	if err := json.Unmarshal([]byte(*serializedSpecInfo), &specInfo); err != nil {
+		return specPath, pathParams, queryParams, headerParams, bodyParams, fmt.Errorf("failed to unmarshal spec info for api=%d: %v", event.APIInfoID, err)
 	}
 
 	pathParams = make(map[string]string)
@@ -399,54 +423,45 @@ func (p *traceAnalyzer) getParams(ctx context.Context, event *database.APIEvent)
 	headerParams = make(map[string]string)
 	bodyParams = make(map[string]string)
 
-	var spec *models.SpecInfo
-	var eventPathID string
-	// Prefer reconstructed spec
-	if specInfo.ReconstructedSpec != nil {
-		spec = specInfo.ReconstructedSpec
-		eventPathID = event.ReconstructedPathID
-	} else if specInfo.ProvidedSpec != nil {
-		spec = specInfo.ProvidedSpec
-		eventPathID = event.ProvidedPathID
-	}
-
-	if spec != nil {
-		for _, t := range spec.Tags {
-			for _, path := range t.MethodAndPathList {
-				if path.PathID.String() == eventPathID && path.Method == event.Method {
-					specPath = path.Path
-					pathParams = utils.GetPathParams(path.Path, event.Path)
-					// XXX Need to get other parameters
-					break
-				}
+	for _, t := range specInfo.Tags {
+		for _, path := range t.MethodAndPathList {
+			if path.PathID.String() == eventPathID && path.Method == event.Method {
+				specPath = path.Path
+				pathParams = utils.GetPathParams(path.Path, event.Path)
+				// XXX Need to get other parameters
+				break
 			}
 		}
 	}
 
-	return specPath, pathParams, queryParams, headerParams, bodyParams
+	return specPath, pathParams, queryParams, headerParams, bodyParams, nil
 }
 
 type httpHandler struct {
 	ta *traceAnalyzer
 }
 
-func (h httpHandler) GetEventAnnotations(w http.ResponseWriter, r *http.Request, eventID int64) {
+func (h httpHandler) GetEventAnnotations(w http.ResponseWriter, r *http.Request, eventID int64, params restapi.GetEventAnnotationsParams) {
 	dbAnns, err := h.ta.accessor.ListAPIEventAnnotations(r.Context(), moduleName, uint(eventID))
 	if err != nil {
 		return
 	}
 	annList := []restapi.Annotation{}
 
-	for _, a := range dbAnns {
-		f := getEventDescription(*a)
-
+	taAnns := fromCoreAnnotations(dbAnns)
+	for _, a := range taAnns {
+		if params.Redacted != nil && *params.Redacted {
+			a = a.Redacted()
+		}
+		f := a.ToFinding()
 		annList = append(annList, restapi.Annotation{
 			Annotation: f.DetailedDesc,
 			Name:       f.ShortDesc,
 			Severity:   f.Severity,
-			Kind:       a.Name,
+			Kind:       a.Name(),
 		})
 	}
+
 	result := restapi.Annotations{
 		Items: &annList,
 		Total: len(annList),
@@ -498,8 +513,21 @@ func (h httpHandler) DeleteAPIAnnotations(w http.ResponseWriter, r *http.Request
 }
 
 func (h httpHandler) GetApiFindings(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.GetApiFindingsParams) {
+	// dbAnns, err := h.ta.accessor.ListAPIInfoAnnotations(r.Context(), moduleName, uint(apiID))
+	// if err != nil {
+	// 	err := oapicommon.ApiResponse{Message: "Internal Error"}
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// 	json.NewEncoder(w).Encode(err)
+	// 	return
+	// }
 
-	w.WriteHeader(http.StatusNoContent)
+	items := []oapicommon.APIFinding{}
+
+	apiFindings := oapicommon.APIFindings{
+		Items: &items,
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(apiFindings)
 }
 
 //nolint:gochecknoinits
