@@ -27,7 +27,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/openclarity/apiclarity/api/server/models"
-	"github.com/openclarity/apiclarity/api3/common"
 	oapicommon "github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/api3/notifications"
 	"github.com/openclarity/apiclarity/backend/pkg/config"
@@ -41,10 +40,6 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/weakbasicauth"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/weakjwt"
-)
-
-const (
-	moduleName = "TraceAnalyzer"
 )
 
 const (
@@ -96,7 +91,7 @@ func newTraceAnalyzer(ctx context.Context, accessor core.BackendAccessor) (core.
 	var err error
 
 	p := traceAnalyzer{}
-	h := restapi.HandlerWithOptions(&httpHandler{ta: &p}, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + moduleName})
+	h := restapi.HandlerWithOptions(&httpHandler{ta: &p}, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + utils.ModuleName})
 	p.httpHandler = h
 	p.ignoreFindings = map[string]bool{}
 	p.accessor = accessor
@@ -159,19 +154,19 @@ func loadConfig() traceAnalyzerConfig {
 	var err error
 	if modulesAssets != "" {
 		if len(dictFilenames) == 0 {
-			dictFilenames, err = utils.WalkFiles(filepath.Join(modulesAssets, moduleName, "dictionaries"))
+			dictFilenames, err = utils.WalkFiles(filepath.Join(modulesAssets, utils.ModuleName, "dictionaries"))
 			if err != nil {
 				log.Warnf("There was problem while reading the Trace Analyzer assets directory 'dictionaries': %s", err)
 			}
 		}
 		if len(rulesFilenames) == 0 {
-			rulesFilenames, err = utils.WalkFiles(filepath.Join(modulesAssets, moduleName, "sensitive_rules"))
+			rulesFilenames, err = utils.WalkFiles(filepath.Join(modulesAssets, utils.ModuleName, "sensitive_rules"))
 			if err != nil {
 				log.Warnf("There was problem while reading the Trace Analyzer assets directory 'sensitive_rules': %s", err)
 			}
 		}
 		if len(keywordsFilenames) == 0 {
-			keywordsFilenames, err = utils.WalkFiles(filepath.Join(modulesAssets, moduleName, "sensitive_keywords"))
+			keywordsFilenames, err = utils.WalkFiles(filepath.Join(modulesAssets, utils.ModuleName, "sensitive_keywords"))
 			if err != nil {
 				log.Warnf("There was problem while reading the Trace Analyzer assets directory 'sensitive_keywords': %s", err)
 			}
@@ -188,7 +183,7 @@ func loadConfig() traceAnalyzerConfig {
 }
 
 func (p *traceAnalyzer) Name() string {
-	return moduleName
+	return utils.ModuleName
 }
 
 func (p *traceAnalyzer) HTTPHandler() http.Handler {
@@ -199,7 +194,7 @@ func (p *traceAnalyzer) EventNotify(ctx context.Context, e *core.Event) {
 	event, trace := e.APIEvent, e.Telemetry
 	log.Debugf("[TraceAnalyzer] received a new trace for API(%v) EventID(%v)", event.APIInfoID, event.ID)
 	eventAnns := []utils.TraceAnalyzerAnnotation{}
-	apiAnns := []utils.TraceAnalyzerAnnotation{}
+	apiAnns := []utils.TraceAnalyzerAPIAnnotation{}
 
 	wbaEventAnns, wbaAPIAnns := p.weakBasicAuth.Analyze(trace)
 	eventAnns = append(eventAnns, wbaEventAnns...)
@@ -233,7 +228,7 @@ func (p *traceAnalyzer) EventNotify(ctx context.Context, e *core.Event) {
 		}
 	}
 
-	// Filter ignored findings
+	// Filter ignored findings for event annotations
 	filteredEventAnns := []utils.TraceAnalyzerAnnotation{}
 	for _, a := range eventAnns {
 		if !p.ignoreFindings[a.Name()] {
@@ -249,17 +244,20 @@ func (p *traceAnalyzer) EventNotify(ctx context.Context, e *core.Event) {
 		p.setAlertSeverity(ctx, event.ID, filteredEventAnns)
 	}
 
-	// filteredAPIAnns := []core.Annotation{}
-	// for _, a := range apiAnns {
-	// 	if !p.ignoreFindings[a.Name] {
-	// 		filteredAPIAnns = append(filteredAPIAnns, a)
-	// 	}
-	// }
-	// if len(filteredAPIAnns) > 0 {
-	// 	if err := p.accessor.StoreAPIInfoAnnotations(ctx, p.Name(), event.APIInfoID, filteredAPIAnns...); err != nil {
-	// 		log.Error(err)
-	// 	}
-	// }
+	// Filter ignored findings for API annotations
+	filteredAPIAnns := []utils.TraceAnalyzerAPIAnnotation{}
+	for _, a := range apiAnns {
+		if !p.ignoreFindings[a.Name()] {
+			filteredAPIAnns = append(filteredAPIAnns, a)
+		}
+	}
+
+	if len(filteredAPIAnns) > 0 {
+		coreAPIAnnotations := p.toCoreAPIAnnotations(filteredAPIAnns, false)
+		if err := p.accessor.StoreAPIInfoAnnotations(ctx, p.Name(), event.APIInfoID, coreAPIAnnotations...); err != nil {
+			log.Error(err)
+		}
+	}
 
 	// if true {
 	// 	location := "#/paths/blablabla/get"
@@ -300,7 +298,7 @@ func (p *traceAnalyzer) toCoreEventAnnotations(eventAnns []utils.TraceAnalyzerAn
 	return coreAnnotations
 }
 
-func fromCoreAnnotation(coreAnn *core.Annotation) (ann utils.TraceAnalyzerAnnotation, err error) {
+func fromCoreEventAnnotation(coreAnn *core.Annotation) (ann utils.TraceAnalyzerAnnotation, err error) {
 	var a utils.TraceAnalyzerAnnotation
 	switch coreAnn.Name {
 	case weakbasicauth.KindKnownPassword: a = &weakbasicauth.AnnotationKnownPassword{}
@@ -318,8 +316,6 @@ func fromCoreAnnotation(coreAnn *core.Annotation) (ann utils.TraceAnalyzerAnnota
 
 	case sensitive.RegexpMatching: a = &sensitive.AnnotationRegexpMatching{}
 
-	case nlid.NLIDType: a = &nlid.AnnotationNLID{}
-
 	case guessableid.GuessableType: a = &guessableid.AnnotationGuessableID{}
 
 	default:
@@ -330,9 +326,9 @@ func fromCoreAnnotation(coreAnn *core.Annotation) (ann utils.TraceAnalyzerAnnota
 	return a, err
 }
 
-func fromCoreAnnotations(coreAnns []*core.Annotation) (anns []utils.TraceAnalyzerAnnotation) {
+func fromCoreEventAnnotations(coreAnns []*core.Annotation) (anns []utils.TraceAnalyzerAnnotation) {
 	for _, coreAnn := range coreAnns {
-		taAnn, err := fromCoreAnnotation(coreAnn)
+		taAnn, err := fromCoreEventAnnotation(coreAnn)
 		if err != nil {
 			log.Errorf("Unable to understand annotation: %v", err)
 		} else {
@@ -343,8 +339,47 @@ func fromCoreAnnotations(coreAnns []*core.Annotation) (anns []utils.TraceAnalyze
 	return anns
 }
 
+func (p *traceAnalyzer) toCoreAPIAnnotations(anns []utils.TraceAnalyzerAPIAnnotation, redacted bool) (coreAnnotations []core.Annotation) {
+	for _, a := range anns {
+		if redacted {
+			a = a.Redacted()
+		}
+		annotation, err := a.Serialize()
+		if err != nil {
+			log.Errorf("unable to serialize annotation: %s", err)
+		}
+		coreAnnotations = append(coreAnnotations, core.Annotation{ Name: a.Name(), Annotation: annotation })
+	}
+	return coreAnnotations
+}
 
-func (p *traceAnalyzer) sendAPIFindingsNotification(ctx context.Context, apiID uint, apiFindings []common.APIFinding) error {
+func fromCoreAPIAnnotation(coreAnn *core.Annotation) (ann utils.TraceAnalyzerAPIAnnotation, err error) {
+	var a utils.TraceAnalyzerAPIAnnotation
+	switch coreAnn.Name {
+	case nlid.NLIDType: a = &nlid.APIAnnotationNLID{}
+
+	default:
+		return nil, fmt.Errorf("unknown annotation '%s'", coreAnn.Name)
+	}
+
+	err = a.Deserialize(coreAnn.Annotation)
+	return a, err
+}
+
+func fromCoreAPIAnnotations(coreAnns []*core.Annotation) (anns []utils.TraceAnalyzerAPIAnnotation) {
+	for _, coreAnn := range coreAnns {
+		taAnn, err := fromCoreAPIAnnotation(coreAnn)
+		if err != nil {
+			log.Errorf("Unable to understand annotation: %v", err)
+		} else {
+			anns = append(anns, taAnn)
+		}
+	}
+
+	return anns
+}
+
+func (p *traceAnalyzer) sendAPIFindingsNotification(ctx context.Context, apiID uint, apiFindings []oapicommon.APIFinding) error {
 	apiN := notifications.ApiFindingsNotification{
 		NotificationType: "ApiFindingsNotification",
 		Items:            &apiFindings,
@@ -352,7 +387,7 @@ func (p *traceAnalyzer) sendAPIFindingsNotification(ctx context.Context, apiID u
 	n := notifications.APIClarityNotification{}
 	n.FromApiFindingsNotification(apiN)
 
-	err := p.accessor.Notify(ctx, moduleName, apiID, n)
+	err := p.accessor.Notify(ctx, utils.ModuleName, apiID, n)
 
 	return err
 }
@@ -437,18 +472,38 @@ func (p *traceAnalyzer) getParams(ctx context.Context, event *database.APIEvent)
 	return specPath, pathParams, queryParams, headerParams, bodyParams, nil
 }
 
+func (p *traceAnalyzer) getAPIFindings(ctx context.Context, apiID uint, sensitive bool) (apiFindings []oapicommon.APIFinding, err error) {
+	dbAnns, err := p.accessor.ListAPIInfoAnnotations(ctx, utils.ModuleName, uint(apiID))
+	if err != nil {
+		return apiFindings, err
+	}
+
+	anns := fromCoreAPIAnnotations(dbAnns)
+	for _, ann := range anns {
+		var f oapicommon.APIFinding
+		if sensitive {
+			f = ann.ToAPIFinding()
+		} else {
+			f = ann.Redacted().ToAPIFinding()
+		}
+		apiFindings = append(apiFindings, f)
+	}
+
+	return apiFindings, nil
+}
+
 type httpHandler struct {
 	ta *traceAnalyzer
 }
 
 func (h httpHandler) GetEventAnnotations(w http.ResponseWriter, r *http.Request, eventID int64, params restapi.GetEventAnnotationsParams) {
-	dbAnns, err := h.ta.accessor.ListAPIEventAnnotations(r.Context(), moduleName, uint(eventID))
+	dbAnns, err := h.ta.accessor.ListAPIEventAnnotations(r.Context(), utils.ModuleName, uint(eventID))
 	if err != nil {
 		return
 	}
 	annList := []restapi.Annotation{}
 
-	taAnns := fromCoreAnnotations(dbAnns)
+	taAnns := fromCoreEventAnnotations(dbAnns)
 	for _, a := range taAnns {
 		if params.Redacted != nil && *params.Redacted {
 			a = a.Redacted()
@@ -475,7 +530,7 @@ func (h httpHandler) GetEventAnnotations(w http.ResponseWriter, r *http.Request,
 }
 
 func (h httpHandler) GetAPIAnnotations(w http.ResponseWriter, r *http.Request, apiID int64) {
-	dbAnns, err := h.ta.accessor.ListAPIInfoAnnotations(r.Context(), moduleName, uint(apiID))
+	dbAnns, err := h.ta.accessor.ListAPIInfoAnnotations(r.Context(), utils.ModuleName, uint(apiID))
 	if err != nil {
 		return
 	}
@@ -503,7 +558,7 @@ func (h httpHandler) GetAPIAnnotations(w http.ResponseWriter, r *http.Request, a
 }
 
 func (h httpHandler) DeleteAPIAnnotations(w http.ResponseWriter, r *http.Request, apiID int64, params restapi.DeleteAPIAnnotationsParams) {
-	err := h.ta.accessor.DeleteAPIInfoAnnotations(r.Context(), moduleName, uint(apiID), params.Name)
+	err := h.ta.accessor.DeleteAPIInfoAnnotations(r.Context(), utils.ModuleName, uint(apiID), params.Name)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -513,21 +568,21 @@ func (h httpHandler) DeleteAPIAnnotations(w http.ResponseWriter, r *http.Request
 }
 
 func (h httpHandler) GetApiFindings(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.GetApiFindingsParams) {
-	// dbAnns, err := h.ta.accessor.ListAPIInfoAnnotations(r.Context(), moduleName, uint(apiID))
-	// if err != nil {
-	// 	err := oapicommon.ApiResponse{Message: "Internal Error"}
-	// 	w.WriteHeader(http.StatusInternalServerError)
-	// 	json.NewEncoder(w).Encode(err)
-	// 	return
-	// }
+	// If sensitive parameter is not set, default to false (ie: do not include sensitive data)
+	sensitive := params.Sensitive != nil && *params.Sensitive
+	apiFindings, err := h.ta.getAPIFindings(r.Context(), uint(apiID), sensitive)
+	if err != nil {
+		err := oapicommon.ApiResponse{Message: "Internal error, could not read data from database"}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(err)
+		return
+	}
 
-	items := []oapicommon.APIFinding{}
-
-	apiFindings := oapicommon.APIFindings{
-		Items: &items,
+	apiFindingsObject := oapicommon.APIFindings{
+		Items: &apiFindings,
 	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(apiFindings)
+	json.NewEncoder(w).Encode(apiFindingsObject)
 }
 
 //nolint:gochecknoinits

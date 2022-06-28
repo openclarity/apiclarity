@@ -233,7 +233,7 @@ func (g *GuessableAnalyzer) learnParam(key paramLocKey, value string) bool {
 	return p.i == 0
 }
 
-func (g *GuessableAnalyzer) Analyze(path, method string, pathParams map[string]string, trace *pluginsmodels.Telemetry) (eventAnns []utils.TraceAnalyzerAnnotation, apiAnns []utils.TraceAnalyzerAnnotation) {
+func (g *GuessableAnalyzer) Analyze(path, method string, pathParams map[string]string, trace *pluginsmodels.Telemetry) (eventAnns []utils.TraceAnalyzerAnnotation, apiAnns []utils.TraceAnalyzerAPIAnnotation) {
 	guessableParams := []GuessableParameter{}
 
 	for pName, pValue := range pathParams {

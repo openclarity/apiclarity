@@ -204,7 +204,7 @@ func (w *WeakJWT) analyzeSensitive(token *jwt.Token) []utils.TraceAnalyzerAnnota
 	return anns
 }
 
-func (w *WeakJWT) Analyze(trace *models.Telemetry) (eventAnns []utils.TraceAnalyzerAnnotation, apiAnns []utils.TraceAnalyzerAnnotation) {
+func (w *WeakJWT) Analyze(trace *models.Telemetry) (eventAnns []utils.TraceAnalyzerAnnotation, apiAnns []utils.TraceAnalyzerAPIAnnotation) {
 	JWTToken, eventAnns := findJWTToken(trace)
 	if JWTToken != nil {
 		eventAnns = append(eventAnns, w.analyzeAlg(JWTToken)...)

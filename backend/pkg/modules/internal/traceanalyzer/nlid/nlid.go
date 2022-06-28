@@ -62,7 +62,7 @@ func NewNLID(historySize int) *NLID {
 	}
 }
 
-func (n *NLID) Analyze(path, method string, pathParams map[string]string, trace *pluginsmodels.Telemetry) (eventAnns []utils.TraceAnalyzerAnnotation, apiAnns []utils.TraceAnalyzerAnnotation) {
+func (n *NLID) Analyze(path, method string, pathParams map[string]string, trace *pluginsmodels.Telemetry) (eventAnns []utils.TraceAnalyzerAnnotation, apiAnns []utils.TraceAnalyzerAPIAnnotation) {
 	if n.skipTrace(trace) {
 		return
 	}

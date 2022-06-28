@@ -16,6 +16,9 @@
 package utils
 
 import (
+	"time"
+
+	oapicommon "github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 )
 
@@ -26,6 +29,16 @@ type TraceAnalyzerAnnotation interface {
 	Deserialize([]byte) error
 	Redacted() TraceAnalyzerAnnotation
 	ToFinding() Finding
+}
+
+type TraceAnalyzerAPIAnnotation interface {
+	Name() string
+	Severity() string
+	TTL() time.Duration
+	Serialize() ([]byte, error)
+	Deserialize([]byte) error
+	Redacted() TraceAnalyzerAPIAnnotation
+	ToAPIFinding() oapicommon.APIFinding
 }
 
 // A finding is an interpreted annotation.

@@ -19,9 +19,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/go-openapi/jsonpointer"
 
+	oapicommon "github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
 )
 
@@ -75,5 +77,54 @@ func (a *AnnotationNLID) ToFinding() utils.Finding {
 		DetailedDesc: fmt.Sprintf("In call '%s', parameter(s) '%s' were used but not previously retrieved. Potential BOLA.", a.SpecLocation, strings.Join(paramValues, ",")),
 		Severity:     a.Severity(),
 		Alert:        utils.SeverityToAlert(a.Severity()),
+	}
+}
+
+type APIAnnotationNLID struct {
+	SpecLocation string      `json:"spec_location"`
+	Params       []parameter `json:"parameters"`
+}
+
+func NewAPIAnnotationNLID(path, method string) *APIAnnotationNLID {
+	pointerTokens := []string{
+		jsonpointer.Escape("paths"),
+		jsonpointer.Escape(path),
+		jsonpointer.Escape(strings.ToLower(method)),
+	}
+	pointer := strings.Join(pointerTokens, "/")
+	return &APIAnnotationNLID{
+		SpecLocation: pointer,
+	}
+}
+func (a *APIAnnotationNLID) Name() string       { return NLIDType }
+func (a *APIAnnotationNLID) Severity() string   { return utils.SeverityInfo }
+func (a *APIAnnotationNLID) TTL() time.Duration { return 24 * time.Hour }
+
+func (a *APIAnnotationNLID) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a *APIAnnotationNLID) Deserialize(serialized []byte) error {
+	var tmp APIAnnotationNLID
+	err := json.Unmarshal(serialized, &tmp)
+	*a = tmp
+
+	return err
+}
+func (a APIAnnotationNLID) Redacted() utils.TraceAnalyzerAPIAnnotation {
+	newA := a
+	return &newA
+}
+func (a *APIAnnotationNLID) ToAPIFinding() oapicommon.APIFinding {
+	return oapicommon.APIFinding{
+		Source: utils.ModuleName,
+
+		Type:        a.Name(),
+		Name:        "NLID (Non learnt Identifier)",
+		Description: "Parameters were used but not previously retrieved. Potential BOLA",
+
+		ProvidedSpecLocation:      &a.SpecLocation,
+		ReconstructedSpecLocation: &a.SpecLocation,
+
+		Severity: oapicommon.INFO,
+
+		AdditionalInfo: nil,
 	}
 }
