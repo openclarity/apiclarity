@@ -927,5 +927,5 @@ components:
       required:
         - operation
         - requestsCount
-        - findings
+
            

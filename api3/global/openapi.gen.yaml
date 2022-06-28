@@ -608,7 +608,6 @@ components:
       required:
       - operation
       - requestsCount
-      - findings
       title: Report tag operation
       type: object
     FuzzingReportPath:
