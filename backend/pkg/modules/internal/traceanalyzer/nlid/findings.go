@@ -30,7 +30,7 @@ const (
 )
 
 type AnnotationNLID struct {
-	SpecLocation string
+	SpecLocation string      `json:"spec_location"`
 	Params       []parameter `json:"parameters"`
 }
 

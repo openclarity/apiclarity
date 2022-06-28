@@ -43,7 +43,7 @@ type GuessableParameter struct {
 }
 
 type AnnotationGuessableID struct {
-	SpecLocation string
+	SpecLocation string               `json:"spec_location"`
 	Params       []GuessableParameter `json:"parameters"`
 }
 
