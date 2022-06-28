@@ -41,12 +41,11 @@ type DockerClient struct {
 	platformType      string
 	platformHost      string
 	subFuzzer         string
-	timeBudget        string
 	tokenInjectorPath string
 }
 
-func (c *DockerClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem string) error {
-	logging.Logf("[Fuzzer][DockerClient] TriggerFuzzingJob(%v, %v, %v):: -->", apiID, endpoint, securityItem)
+func (c *DockerClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem string, timeBudget string) error {
+	logging.Logf("[Fuzzer][DockerClient] TriggerFuzzingJob(%v, %v, %v, %v):: -->", apiID, endpoint, securityItem, timeBudget)
 
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -62,7 +61,7 @@ func (c *DockerClient) TriggerFuzzingJob(apiID int64, endpoint string, securityI
 		fmt.Sprintf("PLATFORM_TYPE=%s", c.platformType),
 		fmt.Sprintf("PLATFORM_HOST=%s", c.platformHost),
 		fmt.Sprintf("API_ID=%v", apiID),
-		fmt.Sprintf("RESTLER_TIME_BUDGET=%s", c.timeBudget),
+		fmt.Sprintf("RESTLER_TIME_BUDGET=%s", timeBudget),
 		fmt.Sprintf("RESTLER_TOKEN_INJECTOR_PATH=%s", c.tokenInjectorPath),
 		fmt.Sprintf("FUZZER=%s", c.subFuzzer),
 	}
@@ -126,7 +125,6 @@ func NewDockerClient(config *config.Config) (Client, error) {
 		platformType:      config.GetPlatformType(),
 		platformHost:      config.GetPlatformHostFromFuzzer(),
 		subFuzzer:         config.GetSubFuzzerList(),
-		timeBudget:        config.GetRestlerTimeBudget(),
 		tokenInjectorPath: config.GetRestlerTokenInjectorPath(),
 	}
 	return client, nil

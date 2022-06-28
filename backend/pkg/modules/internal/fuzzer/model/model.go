@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
@@ -27,9 +28,23 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/tools"
 )
 
+// FuzzingTimestamp: the type used for our Timestamp
+type FuzzingTimestamp = int64
+
+// ZeroTime: The zero timestamp to use
+var ZeroTime int64 = time.Time{}.Unix()
+
+// Model: The Model struct
 type Model struct {
 	db       []API
 	accessor core.BackendAccessor
+}
+
+// FuzzingInput: a struct to store all input parameters for fuzzing
+type FuzzingInput struct {
+	Auth      *restapi.AuthorizationScheme
+	Depth     restapi.TestInputDepthEnum
+	SpecsInfo *tools.FuzzerSpecsInfo
 }
 
 /*
@@ -122,19 +137,19 @@ func (m *Model) AddAPITest(apiID uint, message string) error {
 	return nil
 }
 
-func (m *Model) StartAPIFuzzing(ctx context.Context, apiID uint, specsInfo *tools.FuzzerSpecsInfo) error {
+func (m *Model) StartAPIFuzzing(ctx context.Context, apiID uint, params *FuzzingInput) (FuzzingTimestamp, error) {
 	// Get Api
 	api, err := m.GetAPI(ctx, apiID)
 	if err != nil {
-		return fmt.Errorf("API not found (%v)", apiID)
+		return ZeroTime, fmt.Errorf("API not found (%v)", apiID)
 	}
 	// Start fuzzing
-	err = api.StartFuzzing(specsInfo)
+	timestamp, err := api.StartFuzzing(params)
 	if err != nil {
-		return fmt.Errorf("can't start fuzzing (%v)", apiID)
+		return ZeroTime, fmt.Errorf("can't start fuzzing (%v)", apiID)
 	}
 	//dumpSlice(m.db)
-	return nil
+	return timestamp, nil
 }
 
 func (m *Model) StopAPIFuzzing(ctx context.Context, apiID uint, fuzzerError error) error {

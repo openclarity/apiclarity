@@ -66,8 +66,8 @@ type FakeClient struct {
 	remoteHost   string
 }
 
-func (c *FakeClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem string) error {
-	logging.Logf("[Fuzzer][FakeClient] TriggerFuzzingJob(%v, %v, %v):: -->", apiID, endpoint, securityItem)
+func (c *FakeClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem string, timeBudget string) error {
+	logging.Logf("[Fuzzer][FakeClient] TriggerFuzzingJob(%v, %v, %v, %v):: -->", apiID, endpoint, securityItem, timeBudget)
 	go FakeTriggerFuzzingJob(context.TODO(), c.testFileName, uint(apiID), c.remoteHost)
 	logging.Logf("[Fuzzer][FakeClient] TriggerFuzzingJob():: <--")
 	return nil
@@ -95,13 +95,13 @@ func FakeTriggerFuzzingJob(ctx context.Context, testFilename string, apiID uint,
 	file, err := os.Open(testFilename)
 	if err == nil {
 		defer file.Close()
-		logging.Logf("[Fuzzer] Use data from (%v)", testFilename)
+		logging.Logf("[Fuzzer][FakeClient] Use data from (%v)", testFilename)
 		scanner := bufio.NewScanner(file)
 		// Use a predefined capacity. If failure, update the fixed report file to make sure line size not exceed MaxScannerCapacity
 		buf := make([]byte, 0, MaxScannerCapacity)
 		scanner.Buffer(buf, MaxScannerCapacity)
 		for scanner.Scan() {
-			logging.Logf("[Fuzzer] inject data len=(%v)", len(scanner.Text()))
+			logging.Logf("[Fuzzer][FakeClient] inject data len=(%v)", len(scanner.Text()))
 			err = SendReport(ctx, remoteHost, apiID, scanner.Bytes()) // TODO handle error
 			if err != nil {
 				logging.Errorf("Failed to send report to (%v): %v", remoteHost, err)
@@ -113,10 +113,10 @@ func FakeTriggerFuzzingJob(ctx context.Context, testFilename string, apiID uint,
 			logging.Errorf("can't read file (%v): %v", testFilename, err)
 		}
 	} else {
-		logging.Logf("[Fuzzer] err=(%v)", err)
-		logging.Logf("[Fuzzer] Use staticFakeData")
+		logging.Logf("[Fuzzer][FakeClient] err=(%v)", err)
+		logging.Logf("[Fuzzer][FakeClient] Use staticFakeData")
 		for _, item := range staticFakeData {
-			logging.Logf("[Fuzzer] inject (%v)", item)
+			logging.Logf("[Fuzzer][FakeClient] inject (%v)", item)
 			err = SendReport(ctx, remoteHost, apiID, []byte(item)) // TODO handle error
 			if err != nil {
 				logging.Errorf("Failed to send report to (%v): %v", remoteHost, err)

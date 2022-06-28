@@ -17,9 +17,11 @@ package tools
 
 import (
 	b64 "encoding/base64"
+	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/config"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/restapi"
 )
@@ -50,91 +52,148 @@ func GetHTTPCodeFromFindingType(findingtype string) int {
 Create a string that contain the user auth material, on Fuzzer format.
 This will be usedto send in ENV parameter to fuzzer.
 */
-func GetAuthStringFromParam(params restapi.FuzzTargetParams) (string, error) {
+func GetAuthStringFromParam(params *restapi.AuthorizationScheme) (string, error) {
 	ret := ""
 
-	if params.Type == nil || *params.Type == "NONE" {
+	if params == nil {
 		return ret, nil
 	}
 
-	switch {
-	case *params.Type == "apikey":
+	discriminator, err := params.Discriminator()
+	if err != nil {
+		return ret, err
+	}
 
-		if params.Key == nil || params.Value == nil {
-			logging.Logf("Bad (%v) auth format (%v)", *params.Type, params)
-			return ret, nil
+	switch discriminator {
+	case "ApiToken":
+
+		apiToken, err := params.AsApiToken()
+		if err != nil {
+			msg := fmt.Sprintf("Bad ApiToken auth format (%v)", params)
+			logging.Logf(msg)
+			return ret, errors.New(msg)
 		}
-		sEncKey := b64.StdEncoding.EncodeToString([]byte(*params.Key))
-		sEncValue := b64.StdEncoding.EncodeToString([]byte(*params.Value))
+		sEncKey := b64.StdEncoding.EncodeToString([]byte(apiToken.Key))
+		sEncValue := b64.StdEncoding.EncodeToString([]byte(apiToken.Value))
 		ret = fmt.Sprintf("APIKey:%s:%s:Header", sEncKey, sEncValue)
 
-	case *params.Type == "bearertoken":
+	case "BasicAuth":
 
-		if params.Token == nil {
-			logging.Logf("Bad (%v) auth format (%v)", *params.Type, params)
-			return ret, nil
+		basicAuth, err := params.AsBasicAuth()
+		if err != nil {
+			msg := fmt.Sprintf("Bad BasicAuth auth format (%v)", params)
+			logging.Logf(msg)
+			return ret, errors.New(msg)
 		}
-		sEncToken := b64.StdEncoding.EncodeToString([]byte(*params.Token))
-		ret = fmt.Sprintf("BearerToken:%s", sEncToken)
-
-	case *params.Type == "basicauth":
-
-		if params.Username == nil || params.Password == nil {
-			logging.Logf("Bad (%v) auth format (%v)", *params.Type, params)
-			return ret, nil
-		}
-		sEncUser := b64.StdEncoding.EncodeToString([]byte(*params.Username))
-		sEncPass := b64.StdEncoding.EncodeToString([]byte(*params.Password))
+		sEncUser := b64.StdEncoding.EncodeToString([]byte(basicAuth.Username))
+		sEncPass := b64.StdEncoding.EncodeToString([]byte(basicAuth.Password))
 		ret = fmt.Sprintf("BasicAuth:%s:%s:Header", sEncUser, sEncPass)
 
-	default:
+	case "BearerToken":
 
-		logging.Logf("Not supported auth type (%v) auth format (%v)", *params.Type, params)
+		bearerToken, err := params.AsBearerToken()
+		if err != nil {
+			msg := fmt.Sprintf("Bad BearerToken auth format (%v)", params)
+			logging.Logf(msg)
+			return ret, errors.New(msg)
+		}
+		sEncToken := b64.StdEncoding.EncodeToString([]byte(bearerToken.Token))
+		ret = fmt.Sprintf("BearerToken:%s", sEncToken)
+
+	default:
+		return ret, fmt.Errorf("unknown discriminator value: (%v)", discriminator)
 	}
 
 	return ret, nil
 }
 
-func DumpHTTPFuzzParam(params restapi.FuzzTargetParams) string {
-	ret := "{"
-	// No ternary operator in golang... :-(
-	if params.Service == nil {
-		ret = ret + "Service=<nil>"
-	} else {
-		ret = ret + fmt.Sprintf("Service=%s", *params.Service)
+func GetTimeBudgetFromParam(param restapi.TestInputDepthEnum) (string, error) {
+	ret := config.RestlerDefaultTimeBudget
+
+	switch param {
+	case restapi.QUICK:
+		ret = config.RestlerQuickTimeBudget
+	case restapi.DEFAULT:
+		ret = config.RestlerDefaultTimeBudget
+	case restapi.DEEP:
+		ret = config.RestlerDeepTimeBudget
+	default:
+		return ret, fmt.Errorf("unknown test depth value: (%v)", string(param))
 	}
-	if params.Type == nil {
-		ret = ret + ", Authentication=<nil>"
-	} else {
-		ret = ret + fmt.Sprintf(", Authentication=%s", *params.Type)
+
+	return ret, nil
+}
+
+func GetAuthSchemeFromFuzzTargetParams(params restapi.FuzzTargetParams) (*restapi.AuthorizationScheme, error) {
+
+	if params.Type == nil || *params.Type == "NONE" {
+		return nil, nil
 	}
-	if params.Token == nil {
-		ret = ret + ", Token=<nil>"
-	} else {
-		ret = ret + fmt.Sprintf(", Token=%s", *params.Token)
+
+	authScheme := restapi.AuthorizationScheme{}
+
+	switch {
+	case *params.Type == "apikey":
+
+		if params.Key == nil || params.Value == nil {
+			msg := fmt.Sprintf("Bad (%v) auth format (%v)", *params.Type, params)
+			logging.Logf(msg)
+			return nil, errors.New(msg)
+		}
+		ret := authScheme.FromApiToken(
+			restapi.ApiToken{
+				Key:   *params.Key,
+				Value: *params.Value,
+				Type:  restapi.APITOKEN,
+			},
+		)
+		if ret != nil {
+			return nil, ret
+		}
+
+	case *params.Type == "bearertoken":
+
+		if params.Token == nil {
+			msg := fmt.Sprintf("Bad (%v) auth format (%v)", *params.Type, params)
+			logging.Logf(msg)
+			return nil, errors.New(msg)
+		}
+		ret := authScheme.FromBearerToken(
+			restapi.BearerToken{
+				Token: *params.Token,
+				Type:  restapi.BEARERTOKEN,
+			},
+		)
+		if ret != nil {
+			return nil, ret
+		}
+
+	case *params.Type == "basicauth":
+
+		if params.Username == nil || params.Password == nil {
+			msg := fmt.Sprintf("Bad (%v) auth format (%v)", *params.Type, params)
+			logging.Logf(msg)
+			return nil, errors.New(msg)
+		}
+		ret := authScheme.FromBasicAuth(
+			restapi.BasicAuth{
+				Username: *params.Username,
+				Password: *params.Password,
+				Type:     restapi.BASICAUTH,
+			},
+		)
+		if ret != nil {
+			return nil, ret
+		}
+
+	default:
+
+		msg := fmt.Sprintf("Not supported auth type (%v) auth format (%v)", *params.Type, params)
+		logging.Logf(msg)
+		return nil, errors.New(msg)
 	}
-	if params.Key == nil {
-		ret = ret + ", Key=<nil>"
-	} else {
-		ret = ret + fmt.Sprintf(", Key=%s", *params.Key)
-	}
-	if params.Value == nil {
-		ret = ret + ", Value=<nil>"
-	} else {
-		ret = ret + fmt.Sprintf(", Value=%s", *params.Value)
-	}
-	if params.Username == nil {
-		ret = ret + ", Username=<nil>"
-	} else {
-		ret = ret + fmt.Sprintf(", Username=%s", *params.Username)
-	}
-	if params.Password == nil {
-		ret = ret + ", Password=<nil>"
-	} else {
-		ret = ret + fmt.Sprintf(", Password=%s", *params.Password)
-	}
-	ret = ret + "}"
-	return ret
+
+	return &authScheme, nil
 }
 
 func GetBasePathFromURL(URL string) string {

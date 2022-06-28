@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strings"
 
 	oapicommon "github.com/openclarity/apiclarity/api3/common"
 
@@ -113,64 +112,63 @@ func (p *pluginFuzzer) EventNotify(ctx context.Context, event *core.Event) {
 *
  */
 
-func (p *pluginFuzzer) FuzzTarget(ctx context.Context, apiID oapicommon.ApiID, params restapi.FuzzTargetParams, specsInfo *tools.FuzzerSpecsInfo) error {
-	// Check for deployment
+func (p *pluginFuzzer) FuzzTarget(ctx context.Context, apiID oapicommon.ApiID, params *model.FuzzingInput) (model.FuzzingTimestamp, error) {
+	// Checks
 	if p.fuzzerClient == nil {
-		return &PluginError{"No deployment client running"}
+		return model.ZeroTime, &PluginError{"No deployment client running"}
+	}
+	if params == nil {
+		return model.ZeroTime, &InvalidParameterError{"No input parameter"}
 	}
 
 	// Retrieve the API (it will give the endpoint and the port)
 	api, err := p.model.GetAPI(ctx, uint(apiID))
 	if err != nil {
 		logging.Errorf("[Fuzzer] FuzzTarget():: can't retrieve API (%v)", apiID)
-		return &NotFoundError{msg: ""}
+		return model.ZeroTime, &NotFoundError{msg: ""}
 	}
 
-	logging.Logf("[Fuzzer] FuzzTarget():: API_id (%v) => API (%v) with parameters (%v)", apiID, api, tools.DumpHTTPFuzzParam(params))
+	logging.Logf("[Fuzzer] FuzzTarget():: API_id (%v) => API (%v)", apiID, api)
 
 	// Construct the URI of the enpoint to fuzz
 	serviceToTest := api.Name
 	if len(api.Namespace) > 0 {
 		serviceToTest = fmt.Sprintf("%s.%s", serviceToTest, api.Namespace)
-	} else if params.Service != nil {
-		serviceToTest = *params.Service
-		sp := strings.Split(serviceToTest, ".")
-		if len(sp) > NbMaxServicePart {
-			logging.Logf("[Fuzzer] FuzzTarget():: Service is bad formated (%v). Fuzz aborted!", params.Service)
-			// Retur an n error
-			return &InvalidParameterError{}
-		}
 	}
-	sURI := fmt.Sprintf("http://%s:%v", serviceToTest, api.Port)
+	fullServiceURI := fmt.Sprintf("http://%s:%v", serviceToTest, api.Port)
 
 	// Get auth material, if provided
-	securityParam := ""
-	if params.Type != nil && *params.Type != "NONE" {
-		securityParam, err = tools.GetAuthStringFromParam(params)
-		if err != nil {
-			logging.Errorf("[Fuzzer] FuzzTarget():: can't get auth material for (%v)", apiID)
-			return &PluginError{msg: err.Error()}
-		}
+	securityParam, err := tools.GetAuthStringFromParam(params.Auth)
+	if err != nil {
+		logging.Errorf("[Fuzzer] FuzzTarget():: can't get auth material for (%v)", apiID)
+		return model.ZeroTime, &InvalidParameterError{msg: err.Error()}
+	}
+
+	// Get time budget
+	timeBudget, err := tools.GetTimeBudgetFromParam(params.Depth)
+	if err != nil {
+		logging.Errorf("[Fuzzer] FuzzTarget():: can't get depth param (%v)", apiID)
+		return model.ZeroTime, &InvalidParameterError{msg: err.Error()}
 	}
 
 	// Fuzz it!
 
-	err = p.model.StartAPIFuzzing(ctx, uint(apiID), specsInfo)
+	timestamp, err := p.model.StartAPIFuzzing(ctx, uint(apiID), params)
 	if err != nil {
 		logging.Errorf("[Fuzzer] FuzzTarget():: can't start fuzzing for API (%v)", apiID)
-		return &PluginError{msg: err.Error()}
+		return model.ZeroTime, &PluginError{msg: err.Error()}
 	}
 
-	err = p.fuzzerClient.TriggerFuzzingJob(apiID, sURI, securityParam)
+	err = p.fuzzerClient.TriggerFuzzingJob(apiID, fullServiceURI, securityParam, timeBudget)
 	if err != nil {
 		logging.Errorf("[Fuzzer] FuzzTarget():: can't trigger fuzzing job for API (%v), err=(%v)", apiID, err)
 		fuzzerError := fmt.Errorf("can't start fuzzing job for API (%v), err=(%v)", apiID, err)
 		_ = p.model.StopAPIFuzzing(ctx, uint(apiID), fuzzerError)
-		return &PluginError{msg: err.Error()}
+		return model.ZeroTime, &PluginError{msg: err.Error()}
 	}
 
 	// Success
-	return nil
+	return timestamp, nil
 }
 
 type pluginFuzzerHTTPHandler struct {
@@ -210,7 +208,7 @@ func (p *pluginFuzzerHTTPHandler) GetState(writer http.ResponseWriter, req *http
 // Launch a fuzzing for an API.
 //
 func (p *pluginFuzzerHTTPHandler) FuzzTarget(writer http.ResponseWriter, req *http.Request, apiID oapicommon.ApiID, params restapi.FuzzTargetParams) {
-	logging.Debugf("[Fuzzer] FuzzTarget(%v, %v): -->", apiID, tools.DumpHTTPFuzzParam(params))
+	logging.Debugf("[Fuzzer] FuzzTarget(%v): -->", apiID)
 
 	// Get the specs here as it need ctx and accessor
 	specsInfo, err := tools.GetAPISpecsInfo(req.Context(), p.fuzzer.accessor, uint(apiID))
@@ -220,7 +218,21 @@ func (p *pluginFuzzerHTTPHandler) FuzzTarget(writer http.ResponseWriter, req *ht
 		return
 	}
 
-	err = p.fuzzer.FuzzTarget(req.Context(), apiID, params, specsInfo)
+	authScheme, err := tools.GetAuthSchemeFromFuzzTargetParams(params)
+	if err != nil {
+		logging.Errorf("[Fuzzer] FuzzTarget(%v): can't retrieve auth scheme=(%v)", apiID, err)
+		httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
+		return
+	}
+
+	// Store everything we need on a FuzzingInput struct
+	fuzzingInput := model.FuzzingInput{
+		Depth:     restapi.QUICK, // By default
+		Auth:      authScheme,
+		SpecsInfo: specsInfo,
+	}
+
+	_, err = p.fuzzer.FuzzTarget(req.Context(), apiID, &fuzzingInput)
 	if err != nil {
 		writer.Header().Set("Content-Type", "application/json")
 		//nolint: errorlint // no wrapped error here
@@ -466,7 +478,69 @@ func (p *pluginFuzzerHTTPHandler) GetTestProgress(writer http.ResponseWriter, re
 //
 func (p *pluginFuzzerHTTPHandler) StartTest(writer http.ResponseWriter, req *http.Request, apiID int64) {
 	logging.Debugf("[Fuzzer] StartTest(%v): -->", apiID)
-	httpResponse(writer, http.StatusNotImplemented, EmptyJSON)
+
+	// Decode the restapi.TestInput requesBody
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		logging.Errorf("[Fuzzer] StartTest(%v): can't read body content, error=(%v)", apiID, err)
+		httpResponse(writer, http.StatusBadRequest, EmptyJSON)
+		return
+	}
+	logging.Debugf(string(body))
+	var testInput restapi.TestInput
+	err = json.Unmarshal(body, &testInput)
+	if err != nil {
+		logging.Errorf("[Fuzzer] StartTest(%v): failed to decode the request body, error=%v", apiID, err)
+		httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
+		return
+	}
+
+	// Get the specs here as it need ctx and accessor
+	specsInfo, err := tools.GetAPISpecsInfo(req.Context(), p.fuzzer.accessor, uint(apiID))
+	if err != nil {
+		logging.Errorf("[Fuzzer] StartTest(%v): can't retrieve specs error=(%v)", apiID, err)
+		httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
+		return
+	}
+
+	// Store everything we need on a FuzzingInput struct
+	fuzzingInput := model.FuzzingInput{
+		Depth:     testInput.Depth,
+		Auth:      testInput.Auth,
+		SpecsInfo: specsInfo,
+	}
+
+	timestamp, err := p.fuzzer.FuzzTarget(req.Context(), apiID, &fuzzingInput)
+	if err != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		//nolint: errorlint // no wrapped error here
+		switch err2 := err.(type) {
+		case *NotFoundError:
+			httpResponse(writer, http.StatusNotFound, EmptyJSON)
+		case *InvalidParameterError:
+			httpResponse(writer, http.StatusBadRequest, EmptyJSON)
+		case *PluginError:
+			httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
+		case *NotSupportedError:
+			httpResponse(writer, http.StatusBadRequest, EmptyJSON)
+		default:
+			logging.Errorf("[Fuzzer] StartTest(%v): unexpected error=(%v)", apiID, err2)
+			httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
+		}
+		return
+	}
+
+	// Success
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+	result := restapi.TestHandle{
+		ApiID:     &apiID,
+		Timestamp: &timestamp,
+	}
+	err = json.NewEncoder(writer).Encode(&result)
+	if err != nil {
+		logging.Errorf("[Fuzzer] StartTest(%v): Failed to encode response, error=(%v)", apiID, err)
+	}
 }
 
 //
