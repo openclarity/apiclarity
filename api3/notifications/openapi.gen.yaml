@@ -100,7 +100,6 @@ components:
       required:
       - starttime
       - status
-      - tags
       title: Short Test Report
       type: object
     TestProgressNotification:

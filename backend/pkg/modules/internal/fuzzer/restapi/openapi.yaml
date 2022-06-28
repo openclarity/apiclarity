@@ -883,7 +883,6 @@ components:
       required:
         - starttime
         - status
-        - tags
             
     FuzzingReportTag:
       title: Report tag item

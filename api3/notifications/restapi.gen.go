@@ -88,8 +88,8 @@ type ShortTestReport struct {
 	Status externalRef1.FuzzingStatusEnum `json:"status"`
 
 	// Message for status details, if any
-	StatusMessage *string                         `json:"statusMessage,omitempty"`
-	Tags          []externalRef1.FuzzingReportTag `json:"tags"`
+	StatusMessage *string                          `json:"statusMessage,omitempty"`
+	Tags          *[]externalRef1.FuzzingReportTag `json:"tags,omitempty"`
 }
 
 // TestProgressNotification defines model for TestProgressNotification.
@@ -119,8 +119,8 @@ type TestReportNotification struct {
 	Status externalRef1.FuzzingStatusEnum `json:"status"`
 
 	// Message for status details, if any
-	StatusMessage *string                         `json:"statusMessage,omitempty"`
-	Tags          []externalRef1.FuzzingReportTag `json:"tags"`
+	StatusMessage *string                          `json:"statusMessage,omitempty"`
+	Tags          *[]externalRef1.FuzzingReportTag `json:"tags,omitempty"`
 }
 
 // PostNotificationApiIDJSONBody defines parameters for PostNotificationApiID.
@@ -658,12 +658,12 @@ var swaggerSpec = []string{
 	"cDSoWRhc3L5y24Nr1OwLdd33KvGVpRKk+IGylnz+bjbLuEQVn2YZJ6QK2oZMOlwSJKgISrCB+CQsEUoY",
 	"5lyhBEdCmiZpsD2rYKOtFBRj/vUn7xIvg3GIPMx7viJtET0M1r1YfnDMT461QESJ50+NOZkMGuuFa6P8",
 	"/GFusdyCoyXswNP/ddFa7182qpCX6v8hxZ/qx0dU5TKE+VvVsgv6GZwT5UhD6QXbaMuiKSuABFYuY+iX",
-	"cX9avzeQyScZdr00mpFxEuXPOFxSR5E8KxFDp2JWonThNsBHDu5LpE8QpwLHmX+Z8Jdvn292TAylNJwS",
-	"ly6vb19HQue4PnqcUW10ODQSjB+1BXZ3c78IhOqdSWeX7x1YFwn4bjJLdxJPBz7nf0xmk/deKARtA3Wm",
-	"/TNnegiScQx3Hu2C6LSn/aLwCq7dCShRJ3w8KyQQWBfQQZ/c5+AZV/HqLpJlRx6yNWTpq8pnGm72ud6u",
-	"ozs4+qCLoEW5VgSKotqZqunjm4vz6oI/cwsc+5oLMzhd6DOgT3sJm+GMVi7K7/vZ7EUlnt8NBtmXdZ4H",
-	"knrlqaUUdh8P1R0WwEizG4N5okRzk7fiO0NlagqcEazEHSjPHba4ZcI5naMgKNh3pG37mhohjlU4sLtm",
-	"srWt+JxPPUX/CwAA//+9uIoBIA8AAA==",
+	"cX9avzeQyScZdr00mpFxEuXPOFxSR5E8KxFDp2JWonThNsBHDu5LpE8Qj1P+MtMvXzvf7HwYamg4Hi7d",
+	"Wt++joTOcX30AKPa6HBaJBg/agvs7uZ+EZjUO4zObt07sC4y791kli4jngd8zv+YzCbvvUII2gbOTPuH",
+	"zfQQtOIYLjvaBbVpj/lF4aVbuxNQokD4eFZIILAuoIM+uc/BM67inV0ky441ZGvI0ueUzzRc6XOhXUd3",
+	"cPRBF0GEcq0IFEWZM1XTxzcX59UFf+b6N/YZF2ZwuslnQJ/2ElbCGa1c1N33s9mLSjy/FAyyL+s8DyT1",
+	"klNLKew+nqY7LICRZjcG80SJ5gpvxXeGytQUOCNYiTtQnjtsccuEczpHQVCw70jb9jU1ChyrcGB3zWRr",
+	"W/E5n3qK/hcAAP//psOo8RkPAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
