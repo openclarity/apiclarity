@@ -41,6 +41,7 @@ paths:
           schema:
             type: integer
             format: int64
+        - $ref: '#/components/parameters/redacted'
       responses:
         '200':
           description: Annotation
@@ -117,3 +118,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Annotation'
+  parameters:
+    redacted:
+      name: redacted
+      in: query
+      required: false
+      schema:
+        default: false
+        type: boolean

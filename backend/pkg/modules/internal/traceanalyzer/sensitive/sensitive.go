@@ -16,14 +16,13 @@
 package sensitive
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"regexp"
 
 	yaml "gopkg.in/yaml.v3"
 
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
 	"github.com/openclarity/apiclarity/plugins/api/server/models"
 )
 
@@ -36,20 +35,13 @@ const (
 	SearchInResponseBody    = "ResponseBody"
 )
 
-const (
-	RexgexpMatchingRequestBody     = "REGEXP_MATCHING_REQUEST_BODY"
-	RexgexpMatchingResponseBody    = "REGEXP_MATCHING_RESPONSE_BODY"
-	RegexpMatchingRequestHeaders   = "REGEXP_MATCHING_REQUEST_HEADERS"
-	RexgexpMatchingResponseHeaders = "REGEXP_MATCHING_RESPONSE_HEADERS"
-)
-
 type Rule struct {
-	ID          string   `yaml:"id"`
-	Description string   `yaml:"description"`
-	Regex       string   `yaml:"regex"`
-	SearchIn    []string `yaml:"searchIn"`
+	ID          string   `yaml:"id" json:"id"`
+	Description string   `yaml:"description" json:"description"`
+	Regex       string   `yaml:"regex" json:"-"`
+	SearchIn    []string `yaml:"searchIn" json:"-"`
 
-	CompiledRegex *regexp.Regexp
+	compiledRegex *regexp.Regexp
 }
 
 type Sensitive struct {
@@ -85,7 +77,7 @@ func loadRules(filename string) (rules []Rule, err error) {
 		if !isValidSearchIn(r.SearchIn) {
 			return nil, fmt.Errorf("in rule file '%s', the searchIn Location (%v) is not valid", filename, r.SearchIn)
 		}
-		rules[i].CompiledRegex, err = regexp.Compile(r.Regex)
+		rules[i].compiledRegex, err = regexp.Compile(r.Regex)
 		if err != nil {
 			return nil, fmt.Errorf("in rule file '%s', unable to compile regexp: %w", filename, err)
 		}
@@ -112,7 +104,7 @@ func NewSensitive(rulesFilenames []string) (*Sensitive, error) {
 func (w *Sensitive) applyRuleHeaders(headers []*models.Header, rule Rule) bool {
 	for _, h := range headers {
 		for _, value := range []string{h.Key, h.Value} {
-			if rule.CompiledRegex.MatchString(value) {
+			if rule.compiledRegex.MatchString(value) {
 				return true
 			}
 		}
@@ -121,65 +113,61 @@ func (w *Sensitive) applyRuleHeaders(headers []*models.Header, rule Rule) bool {
 	return false
 }
 
-func (w *Sensitive) applyRule(trace *models.Telemetry, rule Rule) []core.Annotation {
-	anns := []core.Annotation{}
-
+func (w *Sensitive) applyRule(trace *models.Telemetry, rule Rule) (inRequestBody, inResponseBody, inRequestHeaders, inResponseHeaders bool) {
 	for _, where := range rule.SearchIn {
 		switch where {
 		case SearchInRequestBody:
-			if rule.CompiledRegex.Match(trace.Request.Common.Body) {
-				anns = append(anns, core.Annotation{
-					Name:       RexgexpMatchingRequestBody,
-					Annotation: []byte(rule.ID + ":" + rule.Description),
-				})
+			if rule.compiledRegex.Match(trace.Request.Common.Body) {
+				inRequestBody = true
 			}
 		case SearchInResponseBody:
-			if rule.CompiledRegex.Match(trace.Response.Common.Body) {
-				anns = append(anns, core.Annotation{
-					Name:       RexgexpMatchingResponseBody,
-					Annotation: []byte(rule.ID + ":" + rule.Description),
-				})
+			if rule.compiledRegex.Match(trace.Response.Common.Body) {
+				inResponseBody = true
 			}
 		case SearchInRequestHeaders:
 			if w.applyRuleHeaders(trace.Request.Common.Headers, rule) {
-				anns = append(anns, core.Annotation{
-					Name:       RegexpMatchingRequestHeaders,
-					Annotation: []byte(rule.ID + ":" + rule.Description),
-				})
+				inRequestHeaders = true
 			}
 		case SearchInResponseHeaders:
 			if w.applyRuleHeaders(trace.Response.Common.Headers, rule) {
-				anns = append(anns, core.Annotation{
-					Name:       RexgexpMatchingResponseHeaders,
-					Annotation: []byte(rule.ID + ":" + rule.Description),
-				})
+				inResponseHeaders = true
 			}
 		}
 	}
 
-	return anns
+	return
 }
 
-func (w *Sensitive) analyzeSensitive(trace *models.Telemetry) (anns []core.Annotation) {
-	for _, rule := range w.Rules {
-		obs := w.applyRule(trace, rule)
-		anns = append(anns, obs...)
-	}
-
-	return anns
+type RuleMatch struct {
+	Rule              *Rule `json:"rule"`
+	InRequestBody     bool `json:"in_request_body"`
+	InResponseBody    bool `json:"in_response_body"`
+	InRequestHeaders  bool `json:"in_request_headers"`
+	InResponseHeaders bool `json:"in_response_headers"`
 }
 
-func (w *Sensitive) Analyze(trace *models.Telemetry) (eventAnns []core.Annotation, apiAnns []core.Annotation) {
-	matches := w.analyzeSensitive(trace)
+func (w *Sensitive) analyzeSensitive(trace *models.Telemetry) *AnnotationRegexpMatching {
+	ruleMatches := []RuleMatch{}
 
-	// Group annotations by location
-	grouped := map[string][][]byte{}
-	for _, a := range matches {
-		grouped[a.Name] = append(grouped[a.Name], a.Annotation)
+	for i, rule := range w.Rules {
+		inReqBody, inRespBody, inReqHdr, inRespHdr := w.applyRule(trace, rule)
+		if inReqBody || inRespBody || inReqHdr || inRespHdr {
+			ruleMatches = append(ruleMatches, RuleMatch{&w.Rules[i], inReqBody, inRespBody, inReqHdr, inRespHdr})
+		}
 	}
 
-	for name, desc := range grouped {
-		eventAnns = append(eventAnns, core.Annotation{Name: name, Annotation: bytes.Join(desc, []byte(", "))})
+	if len(ruleMatches) > 0 {
+		return NewAnnotationRegexpMatching(ruleMatches)
+	}
+
+	return nil
+}
+
+func (w *Sensitive) Analyze(trace *models.Telemetry) (eventAnns []utils.TraceAnalyzerAnnotation, apiAnns []utils.TraceAnalyzerAnnotation) {
+	ann := w.analyzeSensitive(trace)
+
+	if ann != nil {
+		eventAnns = append(eventAnns, ann)
 	}
 
 	return eventAnns, apiAnns

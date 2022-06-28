@@ -219,6 +219,12 @@ components:
         items:
           type: string
         type: array
+    redacted:
+      in: query
+      name: redacted
+      schema:
+        default: false
+        type: boolean
     reviewId:
       in: path
       name: reviewId
@@ -2125,6 +2131,7 @@ paths:
         schema:
           format: int64
           type: integer
+      - $ref: '#/components/parameters/redacted'
       responses:
         "200":
           content:
