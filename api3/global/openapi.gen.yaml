@@ -608,8 +608,6 @@ components:
       required:
       - operation
       - requestsCount
-      - findings
-      - highestSeverity
       title: Report tag operation
       type: object
     FuzzingReportPath:
@@ -644,7 +642,6 @@ components:
       required:
       - name
       - operations
-      - highestSeverity
       title: Report tag item
       type: object
     FuzzingStatusAndReport:
@@ -818,8 +815,6 @@ components:
       required:
       - starttime
       - status
-      - tags
-      - highestSeverity
       title: Short Test Report
       type: object
     SpecType:

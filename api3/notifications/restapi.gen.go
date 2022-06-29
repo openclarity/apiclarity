@@ -79,7 +79,7 @@ type ShortTestReport struct {
 	ApiID *externalRef0.ApiID `json:"apiID,omitempty"`
 
 	// Severity of a finding
-	HighestSeverity externalRef0.Severity `json:"highestSeverity"`
+	HighestSeverity *externalRef0.Severity `json:"highestSeverity,omitempty"`
 
 	// Timestamp of the start of the test
 	Starttime int64 `json:"starttime"`
@@ -88,8 +88,8 @@ type ShortTestReport struct {
 	Status externalRef1.FuzzingStatusEnum `json:"status"`
 
 	// Message for status details, if any
-	StatusMessage *string                         `json:"statusMessage,omitempty"`
-	Tags          []externalRef1.FuzzingReportTag `json:"tags"`
+	StatusMessage *string                          `json:"statusMessage,omitempty"`
+	Tags          *[]externalRef1.FuzzingReportTag `json:"tags,omitempty"`
 }
 
 // TestProgressNotification defines model for TestProgressNotification.
@@ -109,8 +109,8 @@ type TestReportNotification struct {
 	ApiID *externalRef0.ApiID `json:"apiID,omitempty"`
 
 	// Severity of a finding
-	HighestSeverity  externalRef0.Severity `json:"highestSeverity"`
-	NotificationType string                `json:"notificationType"`
+	HighestSeverity  *externalRef0.Severity `json:"highestSeverity,omitempty"`
+	NotificationType string                 `json:"notificationType"`
 
 	// Timestamp of the start of the test
 	Starttime int64 `json:"starttime"`
@@ -119,8 +119,8 @@ type TestReportNotification struct {
 	Status externalRef1.FuzzingStatusEnum `json:"status"`
 
 	// Message for status details, if any
-	StatusMessage *string                         `json:"statusMessage,omitempty"`
-	Tags          []externalRef1.FuzzingReportTag `json:"tags"`
+	StatusMessage *string                          `json:"statusMessage,omitempty"`
+	Tags          *[]externalRef1.FuzzingReportTag `json:"tags,omitempty"`
 }
 
 // PostNotificationApiIDJSONBody defines parameters for PostNotificationApiID.
@@ -647,23 +647,23 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/8RXS2/bOBD+KwR3j4Ltdhd78C1ttoAPbYK1b4UPjDSWpxAfS47cOob/+4IU9bApJ062",
-	"QW+WNc9vvvlIHXiupdEKFDk+P3CXb0GK8PPmfvGxEhZp/0UTbjAXhFr5NwW63KJEJUhb/4cUxqAqg5fB",
-	"T6gKVKU7deO/TftU05hnesk84zc1bbXFx/D8WRdQXRXvaa+Mr8DRvdWlBXdVgRftm1D/gNGWrg00Yn3M",
-	"uLHagKX9FyGBz7kavF7tDXgTreBuw+dfD/x3C5uXgnnMnvF7GrTn3C9CdI3jGCTrY+bZ1/YSKAeeciYC",
-	"fMNKq2vD9IZtWqMOR4TggQRy1LVCR2eenW2sdjLx5UqtptqAEgYneyGrcey6Ov2cyM9rzoW1Ys+P/R/6",
-	"4Rvk5C0u7seBi6q6YsgfhIOXTXeAZANtMm6f/RS9CoRVcaVjDw9aVyACY71l8D5FukevrPSDqDr0SlBP",
-	"IJiUc9eGTyHNuDOQh7V4dcJlG8EPyMK/NVoo+PxrH/qkw6wHYz020Gd06u3mmo4xjDcJlOyAt2BDEyaq",
-	"ivV6z4YS5JisHTH4QaCKZMsSser54siGrTgDOfEYA3W51ZaGupI2cRueHsAx2gIz0c4vtlBMq1KjKhmB",
-	"o6RmYXBx+8ptD66NZl+o635Qia8sliDFD5S15PN3s1nGJarmaZZxQqqga8jEwyVCgoqgBBuIT8ISoYQ0",
-	"5wolOBLStEmD7VkFG22loCbmX3/yPvEyGIfIad7zFemKGGCwHsTyg2N+cqwDopF4/tSYo0nS2CBcF+Xn",
-	"D3OL5RYcLWEHnv6vi9Z5/7JRhbxU/w8p/lQ/PqIqlyHM36qWfdDP4JwoRxqKL9hGW9aYsgJIYOUyhn4Z",
-	"96f1ewMZfaJh30urGRknUf6MwyV21JBnJZrQsZiVKF24DfCRg/sS6SPEscCUO+O7cHkFLt9H3+zgSMU1",
-	"nBuXrrNvX0dE57g+euRRbXQ4RiKMH7UFdndzvwgUG5xSZ9fxHVjXUPLdZBZvKZ4gfM7/mMwm7710CNoG",
-	"Mk2Hp9D0EETkGG5B2gUZ6s7/ReE1XbsTUBrl8PGskEBgXUAHfXKfg2dcNZd5ES17OpGtIYvfWT5Tuuvn",
-	"Crxu3MHRB10Edcq1IlDU6J+p2j6+uWZeffBn7oVj33dhBqcrfgb0aS9hV5zRyjWC/H42e1GJ57eFJPuy",
-	"zvNAUq9FtZTC7ptjdocFMNLsxmAeKdHe7a34zlCZmgJnBCtxB8pzhy1umXBO5ygICvYdadu9plaamyoc",
-	"2F072dpWfM6nnqL/BQAA//9TEzQkMg8AAA==",
+	"H4sIAAAAAAAC/8RXS2/bRhD+K4ttj4SkpEUPujlxA+iQ2Kh0C3RYkyNqAu6ju0MlsqD/XuyDD4mULbsx",
+	"chPFeX7zzbfLA8+1NFqBIsfnB+7yLUgRft7cLz5WwiLtv2jCDeaCUCv/pkCXW5SoBGnr/5DCGFRl8DL4",
+	"CVWBqnSnbvy3aZdqmvJML5ln/Kamrbb4GJ4/6wKqq+I97ZXxFTi6t7q04K4q8KJ9DPUPGG3p2kAj1seM",
+	"G6sNWNp/ERL4nKve69XegDfRCu42fP71wH+3sHkpmMfsGb+nQXvO/SJE1ziOQbI+Zp59TS+BcuApZxLA",
+	"N6y0ujZMb9imMWpxRAgeSCBHXSt0dObZ2qZqJxNfrtRqqg0oYXCyF7Iax66t08+J/LzmXFgr9vzY/aEf",
+	"vkFO3uLifhy4qKorhvxBOHjZdHtIRmgH4/bZT9GrQFiVVjr18KB1BSIw1lsG71OkO/TKSj+IqkWvBPUE",
+	"goNy7prwQ0gz7gzkYS1enXDZRPADsvBvjRYKPv/ahT7pMOvAWI8N9Bmderu5DscYxjsINNgBb8H6JkxU",
+	"Fev0nvUlyDFZO2Lwg0AVgy0biFXHF0c2bMUZyAOPMVCXW22pryvDJm7D0wM4RltgJtn5xRaKaVVqVCUj",
+	"cDSoWRhc3L5y24Nr1OwLdd33KvGVpRKk+IGylnz+bjbLuEQVn2YZJ6QK2oZMOlwSJKgISrCB+CQsEUoY",
+	"5lyhBEdCmiZpsD2rYKOtFBRj/vUn7xIvg3GIPMx7viJtET0M1r1YfnDMT461QESJ50+NOZkMGuuFa6P8",
+	"/GFusdyCoyXswNP/ddFa7182qpCX6v8hxZ/qx0dU5TKE+VvVsgv6GZwT5UhD6QXbaMuiKSuABFYuY+iX",
+	"cX9avzeQyScZdr00mpFxEuXPOFxSR5E8KxFDp2JWonThNsBHDu5LpE8Qj1P+MtMvXzvf7HwYamg4Hi7d",
+	"Wt++joTOcX30AKPa6HBaJBg/agvs7uZ+EZjUO4zObt07sC4y791kli4jngd8zv+YzCbvvUII2gbOTPuH",
+	"zfQQtOIYLjvaBbVpj/lF4aVbuxNQokD4eFZIILAuoIM+uc/BM67inV0ky441ZGvI0ueUzzRc6XOhXUd3",
+	"cPRBF0GEcq0IFEWZM1XTxzcX59UFf+b6N/YZF2ZwuslnQJ/2ElbCGa1c1N33s9mLSjy/FAyyL+s8DyT1",
+	"klNLKew+nqY7LICRZjcG80SJ5gpvxXeGytQUOCNYiTtQnjtsccuEczpHQVCw70jb9jU1ChyrcGB3zWRr",
+	"W/E5n3qK/hcAAP//psOo8RkPAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
