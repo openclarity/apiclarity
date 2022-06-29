@@ -898,6 +898,11 @@ type TraceanalyzerDeleteAPIAnnotationsParams struct {
 	Name string `form:"name" json:"name"`
 }
 
+// TraceanalyzerGetAPIAnnotationsParams defines parameters for TraceanalyzerGetAPIAnnotations.
+type TraceanalyzerGetAPIAnnotationsParams struct {
+	Redacted *Redacted `form:"redacted,omitempty" json:"redacted,omitempty"`
+}
+
 // TraceanalyzerGetApiFindingsParams defines parameters for TraceanalyzerGetApiFindings.
 type TraceanalyzerGetApiFindingsParams struct {
 	// Should findings include sensitive data ?
@@ -1227,7 +1232,7 @@ type ClientInterface interface {
 	TraceanalyzerDeleteAPIAnnotations(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerDeleteAPIAnnotationsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// TraceanalyzerGetAPIAnnotations request
-	TraceanalyzerGetAPIAnnotations(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	TraceanalyzerGetAPIAnnotations(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerGetAPIAnnotationsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// TraceanalyzerGetApiFindings request
 	TraceanalyzerGetApiFindings(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerGetApiFindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1860,8 +1865,8 @@ func (c *Client) TraceanalyzerDeleteAPIAnnotations(ctx context.Context, apiID ex
 	return c.Client.Do(req)
 }
 
-func (c *Client) TraceanalyzerGetAPIAnnotations(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewTraceanalyzerGetAPIAnnotationsRequest(c.Server, apiID)
+func (c *Client) TraceanalyzerGetAPIAnnotations(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerGetAPIAnnotationsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewTraceanalyzerGetAPIAnnotationsRequest(c.Server, apiID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -4835,7 +4840,7 @@ func NewTraceanalyzerDeleteAPIAnnotationsRequest(server string, apiID externalRe
 }
 
 // NewTraceanalyzerGetAPIAnnotationsRequest generates requests for TraceanalyzerGetAPIAnnotations
-func NewTraceanalyzerGetAPIAnnotationsRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
+func NewTraceanalyzerGetAPIAnnotationsRequest(server string, apiID externalRef0.ApiID, params *TraceanalyzerGetAPIAnnotationsParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -4859,6 +4864,26 @@ func NewTraceanalyzerGetAPIAnnotationsRequest(server string, apiID externalRef0.
 	if err != nil {
 		return nil, err
 	}
+
+	queryValues := queryURL.Query()
+
+	if params.Redacted != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "redacted", runtime.ParamLocationQuery, *params.Redacted); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
@@ -5169,7 +5194,7 @@ type ClientWithResponsesInterface interface {
 	TraceanalyzerDeleteAPIAnnotationsWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerDeleteAPIAnnotationsParams, reqEditors ...RequestEditorFn) (*TraceanalyzerDeleteAPIAnnotationsResponse, error)
 
 	// TraceanalyzerGetAPIAnnotations request
-	TraceanalyzerGetAPIAnnotationsWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*TraceanalyzerGetAPIAnnotationsResponse, error)
+	TraceanalyzerGetAPIAnnotationsWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerGetAPIAnnotationsParams, reqEditors ...RequestEditorFn) (*TraceanalyzerGetAPIAnnotationsResponse, error)
 
 	// TraceanalyzerGetApiFindings request
 	TraceanalyzerGetApiFindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerGetApiFindingsParams, reqEditors ...RequestEditorFn) (*TraceanalyzerGetApiFindingsResponse, error)
@@ -6743,8 +6768,8 @@ func (c *ClientWithResponses) TraceanalyzerDeleteAPIAnnotationsWithResponse(ctx 
 }
 
 // TraceanalyzerGetAPIAnnotationsWithResponse request returning *TraceanalyzerGetAPIAnnotationsResponse
-func (c *ClientWithResponses) TraceanalyzerGetAPIAnnotationsWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*TraceanalyzerGetAPIAnnotationsResponse, error) {
-	rsp, err := c.TraceanalyzerGetAPIAnnotations(ctx, apiID, reqEditors...)
+func (c *ClientWithResponses) TraceanalyzerGetAPIAnnotationsWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerGetAPIAnnotationsParams, reqEditors ...RequestEditorFn) (*TraceanalyzerGetAPIAnnotationsResponse, error) {
+	rsp, err := c.TraceanalyzerGetAPIAnnotations(ctx, apiID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -8404,7 +8429,7 @@ type ServerInterface interface {
 	TraceanalyzerDeleteAPIAnnotations(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params TraceanalyzerDeleteAPIAnnotationsParams)
 	// Get Annotations for an API
 	// (GET /modules/traceanalyzer/apiAnnotations/{apiID})
-	TraceanalyzerGetAPIAnnotations(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
+	TraceanalyzerGetAPIAnnotations(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params TraceanalyzerGetAPIAnnotationsParams)
 	// Get findings for an API and module
 	// (GET /modules/traceanalyzer/apiFindings/{apiID})
 	TraceanalyzerGetApiFindings(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params TraceanalyzerGetApiFindingsParams)
@@ -10590,8 +10615,22 @@ func (siw *ServerInterfaceWrapper) TraceanalyzerGetAPIAnnotations(w http.Respons
 		return
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params TraceanalyzerGetAPIAnnotationsParams
+
+	// ------------- Optional query parameter "redacted" -------------
+	if paramValue := r.URL.Query().Get("redacted"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "redacted", r.URL.Query(), &params.Redacted)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "redacted", Err: err})
+		return
+	}
+
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.TraceanalyzerGetAPIAnnotations(w, r, apiID)
+		siw.Handler.TraceanalyzerGetAPIAnnotations(w, r, apiID, params)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -11043,9 +11082,9 @@ var swaggerSpec = []string{
 	"9/90h9mWM0aKxJ/3L/R/7ozVUinNYVq1j8yd1CtLQsiQfO7KncviaTDZVT85arA5IyFKwVq+pNXM40tj",
 	"6MfUraYnvXrFUZ0I8KPFVaoyl5Cyyz5c5iFWjc3Hj7H2cfhRAq3Lnpy3KOKRt7hz13XcLW77k3OPuo1d",
 	"IpY4EwkJjO7VJqFx+sg0X0WxrzoVlxwGGCggwIBgq1NVJezSxEDVDpsF5iGoFxel8jE1B4rjVDoyrR48",
-	"hTvU81j+fpUSrJHiYkqBJGWdG0QXF2zUiiPyU27yviRmPuoJvpaTe4WoWCoZNPBpr7K+lB39Gs9f74e/",
-	"buwfaWO/LPSockJWv0uyR/a7mTSkzg7vF/DaQV0XKVeY9kxRuFQrC+GKoeOVXXwKY4eKh40oSm81GbM0",
-	"8k5FgTvv4erh/wIAAP//L7g7WaC/AAA=",
+	"hTvU81j+fpUSrJHiYkqBJGWdG0QXF2zUiiPyU27yvjBmthb7CeGKoeNVLbPj03LKrxArS9WDBp7uVeyX",
+	"svtfk4/Xu+SvhwCOdAigLPSocppWv2GyR/a7mT+kzhnvF/DaoV4XKVeY9kxn/KTGDhWPIFGU3moyZmnk",
+	"nYpieN7D1cP/BQAA//9U6I6dzL8AAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

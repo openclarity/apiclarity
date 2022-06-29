@@ -70,8 +70,6 @@ func (n *NLID) Analyze(path, method string, pathParams map[string]string, trace 
 	params := n.getNLIDS(pathParams, *trace)
 	if len(params) > 0 {
 		eventAnns = append(eventAnns, NewAnnotationNLID(path, method, params))
-
-	// eventAnns = append(eventAnns, ...)
 	}
 
 	n.learnIDs(*trace)
