@@ -19,7 +19,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -149,7 +148,7 @@ func (api *API) GetLastShortStatus() (*restapi.ShortTestReport, error) {
 			Starttime:     *lastTest.Starttime,
 			Status:        lastReport.Status,
 			StatusMessage: lastTest.ErrorMessage,
-			Tags:          []restapi.FuzzingReportTag{},
+			Tags:          &[]restapi.FuzzingReportTag{},
 		}
 
 		// Get current spec informations
@@ -167,7 +166,11 @@ func (api *API) GetLastShortStatus() (*restapi.ShortTestReport, error) {
 		if specInfo.Tags != nil {
 			for _, tag := range specInfo.Tags {
 				logging.Debugf("[Fuzzer] API(%v).GetLastShortStatus(): ... tag (%v)", api.ID, tag.Name)
-				fuzzingReportTag := restapi.FuzzingReportTag{Name: tag.Name, Operations: []restapi.FuzzingReportOperation{}}
+				fuzzingReportTag := restapi.FuzzingReportTag{
+					Name:            tag.Name,
+					Operations:      []restapi.FuzzingReportOperation{},
+					HighestSeverity: nil,
+				}
 				for _, op := range tag.MethodAndPathList {
 					logging.Debugf("[Fuzzer] API(%v).GetLastShortStatus(): ... ... method %v %v", api.ID, op.Method, op.Path)
 					fuzzingReportTag.Operations = append(fuzzingReportTag.Operations, restapi.FuzzingReportOperation{
@@ -175,10 +178,12 @@ func (api *API) GetLastShortStatus() (*restapi.ShortTestReport, error) {
 							Method: (*common.HttpMethod)(&op.Method),
 							Path:   &op.Path,
 						},
-						RequestsCount: 0,
-						Findings:      []common.APIFinding{}})
+						RequestsCount:   0,
+						Findings:        &[]common.APIFinding{},
+						HighestSeverity: nil,
+					})
 				}
-				shortReport.Tags = append(shortReport.Tags, fuzzingReportTag)
+				*shortReport.Tags = append(*shortReport.Tags, fuzzingReportTag)
 			}
 		} else {
 			return nil, fmt.Errorf("invalid or no existing spec content")
@@ -232,14 +237,24 @@ func (api *API) GetLastShortStatus() (*restapi.ShortTestReport, error) {
 			}
 		}
 
+		// Some guys ask to not have Tags item if no tags on it...
+		if len(*shortReport.Tags) == 0 {
+			shortReport.Tags = nil
+		}
+
 		return &shortReport, nil
 	}
 	return nil, fmt.Errorf("no existing tests for api(%v)", api.ID)
 }
 
 func updateRequestCounter(shortReport *restapi.ShortTestReport, path string, verb string) error {
-	for idx1 := range shortReport.Tags {
-		tag := &shortReport.Tags[idx1]
+	if *shortReport.Tags == nil {
+		// No tags, then no operations and no request counter to update
+		return nil
+	}
+
+	for idx1 := range *shortReport.Tags {
+		tag := &(*shortReport.Tags)[idx1]
 		for idx2 := range tag.Operations {
 			ops := &tag.Operations[idx2]
 			if *ops.Operation.Path == path && *ops.Operation.Method == common.HttpMethod(verb) {
@@ -254,13 +269,31 @@ func updateRequestCounter(shortReport *restapi.ShortTestReport, path string, ver
 }
 
 func AddFindingOnShortReport(shortReport *restapi.ShortTestReport, path string, verb string, finding restapi.RawFindings) error {
-	for idx1 := range shortReport.Tags {
-		tag := &shortReport.Tags[idx1]
+	if *shortReport.Tags == nil {
+		// No tags, then no operations on which to add findings
+		return nil
+	}
+
+	for idx1 := range *shortReport.Tags {
+		tag := &(*shortReport.Tags)[idx1]
 		for idx2 := range tag.Operations {
 			ops := &tag.Operations[idx2]
 			if *ops.Operation.Path == path && *ops.Operation.Method == common.HttpMethod(verb) {
+				// Add the finding
 				commonFinding := ConvertRawFindingToAPIFinding(finding)
-				ops.Findings = append(ops.Findings, *commonFinding)
+				*ops.Findings = append(*ops.Findings, *commonFinding)
+				// Update higestSeverity for operation
+				if ops.HighestSeverity == nil || tools.IsGreaterSeverity(commonFinding.Severity, *ops.HighestSeverity) {
+					ops.HighestSeverity = &commonFinding.Severity
+					// Check for higestSeverity at tags level
+					if tag.HighestSeverity == nil || tools.IsGreaterSeverity(commonFinding.Severity, *tag.HighestSeverity) {
+						tag.HighestSeverity = &commonFinding.Severity
+						// Lastly... test at report level
+						if shortReport.HighestSeverity == nil || tools.IsGreaterSeverity(commonFinding.Severity, *shortReport.HighestSeverity) {
+							shortReport.HighestSeverity = &commonFinding.Severity
+						}
+					}
+				}
 				return nil
 			}
 		}
@@ -271,7 +304,12 @@ func AddFindingOnShortReport(shortReport *restapi.ShortTestReport, path string, 
 }
 
 func updateRequestCountersForRestler(shortReport *restapi.ShortTestReport, reportItem restapi.FuzzingReportItem, spec string) error {
-	logging.Logf("[Fuzzer] updateRequestCountersForRestler(): spec len=(%v)", len(spec))
+	if *shortReport.Tags == nil {
+		// No tags, then no operations and no request counter to update
+		return nil
+	}
+
+	logging.Debugf("[Fuzzer] updateRequestCountersForRestler(): spec len=(%v)", len(spec))
 	doc, err := tools.LoadSpec([]byte(spec))
 	if err != nil {
 		logging.Errorf("[Fuzzer] updateRequestCountersForRestler(): Invalid Spec err=(%v)", err)
@@ -280,7 +318,7 @@ func updateRequestCountersForRestler(shortReport *restapi.ShortTestReport, repor
 
 	// Find basepaths from servers list, then save it before reset
 	basePaths := tools.GetBasePathsFromServers(&doc.Servers)
-	logging.Logf("[Fuzzer] updateRequestCountersForRestler(): basePaths (%v)", basePaths)
+	logging.Debugf("[Fuzzer] updateRequestCountersForRestler(): basePaths (%v)", basePaths)
 	doc.Servers = openapi3.Servers{}
 
 	// Create the router
@@ -553,7 +591,6 @@ func (api *API) StopFuzzing(fuzzerError error) error {
 		api.AddErrorOnLastTest(fuzzerError)
 	}
 	if err != nil {
-		log.Fatalln(err)
 		return fmt.Errorf("can't set the progress status for last test of api (%v)", api.ID)
 	}
 	return nil

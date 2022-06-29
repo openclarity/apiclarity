@@ -263,59 +263,6 @@ func (p *pluginFuzzerHTTPHandler) GetState(writer http.ResponseWriter, req *http
 }
 
 //
-// Launch a fuzzing for an API.
-//
-func (p *pluginFuzzerHTTPHandler) FuzzTarget(writer http.ResponseWriter, req *http.Request, apiID oapicommon.ApiID, params restapi.FuzzTargetParams) {
-	logging.Debugf("[Fuzzer] FuzzTarget(%v): -->", apiID)
-
-	// Get the specs here as it need ctx and accessor
-	specsInfo, err := tools.GetAPISpecsInfo(req.Context(), p.fuzzer.accessor, uint(apiID))
-	if err != nil {
-		logging.Errorf("[Fuzzer] FuzzTarget(%v): can't retrieve specs error=(%v)", apiID, err)
-		httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
-		return
-	}
-
-	authScheme, err := tools.GetAuthSchemeFromFuzzTargetParams(params)
-	if err != nil {
-		logging.Errorf("[Fuzzer] FuzzTarget(%v): can't retrieve auth scheme=(%v)", apiID, err)
-		httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
-		return
-	}
-
-	// Store everything we need on a FuzzingInput struct
-	fuzzingInput := model.FuzzingInput{
-		Depth:     restapi.QUICK, // By default
-		Auth:      authScheme,
-		SpecsInfo: specsInfo,
-	}
-
-	_, err = p.fuzzer.FuzzTarget(req.Context(), apiID, &fuzzingInput)
-	if err != nil {
-		writer.Header().Set("Content-Type", "application/json")
-		//nolint: errorlint // no wrapped error here
-		switch err2 := err.(type) {
-		case *NotFoundError:
-			httpResponse(writer, http.StatusNotFound, EmptyJSON)
-		case *InvalidParameterError:
-			httpResponse(writer, http.StatusBadRequest, EmptyJSON)
-		case *PluginError:
-			httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
-		case *NotSupportedError:
-			httpResponse(writer, http.StatusBadRequest, EmptyJSON)
-		default:
-			logging.Errorf("[Fuzzer] FuzzTarget(%v): unexpected error=(%v)", apiID, err2)
-			httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
-		}
-		return
-	}
-
-	// Success
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusNoContent)
-}
-
-//
 // Retrieve the last update status for the API.
 //
 func (p *pluginFuzzerHTTPHandler) GetUpdateStatus(writer http.ResponseWriter, req *http.Request, apiID int64) {
@@ -444,29 +391,24 @@ func (p *pluginFuzzerHTTPHandler) GetRawfindings(writer http.ResponseWriter, req
 // Return the findings list for the lastest Test.
 //
 func (p *pluginFuzzerHTTPHandler) GetAPIFindings(writer http.ResponseWriter, req *http.Request, apiID int64, params restapi.GetAPIFindingsParams) {
-	/*logging.Debugf("[Fuzzer] GetFindings(%v): -->", apiID)
+	logging.Debugf("[Fuzzer] GetFindings(%v): -->", apiID)
 	api, err := p.fuzzer.model.GetAPI(req.Context(), uint(apiID))
 	if err != nil {
 		logging.Errorf("[Fuzzer] GetFindings(%v): Can't retrieve api_id=(%v), error=(%v)", apiID, apiID, err)
 		httpResponse(writer, http.StatusNotFound, EmptyJSON)
 		return
 	}
-	logging.Logf("[Fuzzer] GetFindings(%v): API_id (%v) => API (%v)", apiID, apiID, api)
-	var count int
-	result := restapi.Findings{
-		Items: api.GetLastFindings(),
-		Total: &count,
+	lastFindings := api.GetLastAPIFindings()
+	result := oapicommon.APIFindings{
+		Items: lastFindings,
 	}
-	count = len(*(result.Items))
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(writer).Encode(result)
 	if err != nil {
 		logging.Errorf("[Fuzzer] GetFindings(%v): Failed to encode response, error=(%v)", apiID, err)
-	}*/
-	logging.Debugf("[Fuzzer] GetApiFindings(%v): -->", apiID)
-
-	httpResponse(writer, http.StatusNotImplemented, EmptyJSON)
+		httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
+	}
 }
 
 //
@@ -554,7 +496,7 @@ func (p *pluginFuzzerHTTPHandler) GetReport(writer http.ResponseWriter, req *htt
 }
 
 func (p *pluginFuzzerHTTPHandler) GetAnnotatedSpec(writer http.ResponseWriter, req *http.Request, apiID int64) {
-	logging.Logf("[Fuzzer] GetAnnotatedSpec(): called for API_id (%v)", apiID)
+	logging.Logf("[Fuzzer] GetAnnotatedSpec(%v): --> <--", apiID)
 	httpResponse(writer, http.StatusNotImplemented, EmptyJSON)
 }
 
@@ -562,7 +504,7 @@ func (p *pluginFuzzerHTTPHandler) GetAnnotatedSpec(writer http.ResponseWriter, r
 // Return the progress status of the on going test.
 //
 func (p *pluginFuzzerHTTPHandler) GetTestProgress(writer http.ResponseWriter, req *http.Request, apiID int64) {
-	logging.Debugf("[Fuzzer] GetTestProgress(%v): -->", apiID)
+	logging.Debugf("[Fuzzer] GetTestProgress(%v): -->  <--", apiID)
 	httpResponse(writer, http.StatusNotImplemented, EmptyJSON)
 }
 
@@ -570,7 +512,7 @@ func (p *pluginFuzzerHTTPHandler) GetTestProgress(writer http.ResponseWriter, re
 // Start a test.
 //
 func (p *pluginFuzzerHTTPHandler) StartTest(writer http.ResponseWriter, req *http.Request, apiID int64) {
-	logging.Debugf("[Fuzzer] StartTest(%v): -->", apiID)
+	logging.Debugf("[Fuzzer] StartTest(%v): -->  <--", apiID)
 
 	// Decode the restapi.TestInput requesBody
 	body, err := ioutil.ReadAll(req.Body)

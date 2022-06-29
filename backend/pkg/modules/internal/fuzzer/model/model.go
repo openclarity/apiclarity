@@ -19,7 +19,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
@@ -123,7 +122,6 @@ func (m *Model) GetAPI(ctx context.Context, apiID uint) (*API, error) {
 	apiInfo, err := m.accessor.GetAPIInfo(ctx, apiID)
 	logging.Logf("[model.GetAPI(%v)]: get apiInfo=(%v)", apiID, apiInfo)
 	if err != nil {
-		log.Fatalln(err)
 		return nil, fmt.Errorf("Error when retrieve api %v: %v", apiID, err)
 	}
 
