@@ -203,11 +203,11 @@ type eventDiff struct {
 func convertSpecDiffToEventDiff(diff *_spec.APIDiff, version _spec.OASVersion) (originalRet, modifiedRet []byte, err error) {
 	original := eventDiff{
 		Path:     diff.Path,
-		PathItem: getPathItemForVersion(diff.OriginalPathItem, version),
+		PathItem: getPathItemForVersionOrOriginal(diff.OriginalPathItem, version),
 	}
 	modified := eventDiff{
 		Path:     diff.Path,
-		PathItem: getPathItemForVersion(diff.ModifiedPathItem, version),
+		PathItem: getPathItemForVersionOrOriginal(diff.ModifiedPathItem, version),
 	}
 	originalRet, err = yaml.Marshal(original)
 	if err != nil {
@@ -221,7 +221,7 @@ func convertSpecDiffToEventDiff(diff *_spec.APIDiff, version _spec.OASVersion) (
 	return originalRet, modifiedRet, nil
 }
 
-func getPathItemForVersion(v3PathItem *spec.PathItem, version _spec.OASVersion) interface{} {
+func getPathItemForVersionOrOriginal(v3PathItem *spec.PathItem, version _spec.OASVersion) interface{} {
 	if v3PathItem == nil {
 		return v3PathItem
 	}

@@ -757,7 +757,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 	}
 }
 
-func Test_getPathItemForVersion(t *testing.T) {
+func Test_getPathItemForVersionOrOriginal(t *testing.T) {
 	var nilPathItem *spec.PathItem
 	type args struct {
 		v3PathItem *spec.PathItem
@@ -873,7 +873,7 @@ func Test_getPathItemForVersion(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := getPathItemForVersion(tt.args.v3PathItem, tt.args.version)
+			got := getPathItemForVersionOrOriginal(tt.args.v3PathItem, tt.args.version)
 			assert.DeepEqual(t, got, tt.want, cmpopts.IgnoreUnexported(spec.Schema{}))
 		})
 	}
