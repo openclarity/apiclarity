@@ -41,7 +41,10 @@ type AnnotationNoAlgField struct{}
 func NewAnnotationNoAlgField() *AnnotationNoAlgField {
 	return &AnnotationNoAlgField{}
 }
-func (a *AnnotationNoAlgField) Name() string               { return JWTNoAlgField }
+func (a *AnnotationNoAlgField) Name() string { return JWTNoAlgField }
+func (a *AnnotationNoAlgField) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
+	return nil
+}
 func (a *AnnotationNoAlgField) Severity() string           { return utils.SeverityHigh }
 func (a *AnnotationNoAlgField) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *AnnotationNoAlgField) Deserialize(serialized []byte) error {
@@ -68,7 +71,10 @@ type AnnotationAlgFieldNone struct{}
 func NewAnnotationAlgFieldNone() *AnnotationAlgFieldNone {
 	return &AnnotationAlgFieldNone{}
 }
-func (a *AnnotationAlgFieldNone) Name() string               { return JWTAlgFieldNone }
+func (a *AnnotationAlgFieldNone) Name() string { return JWTAlgFieldNone }
+func (a *AnnotationAlgFieldNone) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
+	return nil
+}
 func (a *AnnotationAlgFieldNone) Severity() string           { return utils.SeverityHigh }
 func (a *AnnotationAlgFieldNone) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *AnnotationAlgFieldNone) Deserialize(serialized []byte) error {
@@ -98,7 +104,10 @@ type AnnotationNotRecommendedAlg struct {
 func NewAnnotationNotRecommendedAlg(alg string, recommended []string) *AnnotationNotRecommendedAlg {
 	return &AnnotationNotRecommendedAlg{Algorithm: alg, RecommendedAlgs: recommended}
 }
-func (a *AnnotationNotRecommendedAlg) Name() string               { return JWTNotRecommendedAlg }
+func (a *AnnotationNotRecommendedAlg) Name() string { return JWTNotRecommendedAlg }
+func (a *AnnotationNotRecommendedAlg) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
+	return nil
+}
 func (a *AnnotationNotRecommendedAlg) Severity() string           { return utils.SeverityHigh }
 func (a *AnnotationNotRecommendedAlg) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *AnnotationNotRecommendedAlg) Deserialize(serialized []byte) error {
@@ -125,7 +134,10 @@ type AnnotationNoExpireClaim struct{}
 func NewAnnotationNoExpireClaim() *AnnotationNoExpireClaim {
 	return &AnnotationNoExpireClaim{}
 }
-func (a *AnnotationNoExpireClaim) Name() string               { return JWTNoExpireClaim }
+func (a *AnnotationNoExpireClaim) Name() string { return JWTNoExpireClaim }
+func (a *AnnotationNoExpireClaim) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
+	return nil
+}
 func (a *AnnotationNoExpireClaim) Severity() string           { return utils.SeverityLow }
 func (a *AnnotationNoExpireClaim) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *AnnotationNoExpireClaim) Deserialize(serialized []byte) error {
@@ -158,7 +170,10 @@ func NewAnnotationExpTooFar(expireAt time.Time) *AnnotationExpTooFar {
 		ExpireIn: time.Until(expireAt),
 	}
 }
-func (a *AnnotationExpTooFar) Name() string               { return JWTExpTooFar }
+func (a *AnnotationExpTooFar) Name() string { return JWTExpTooFar }
+func (a *AnnotationExpTooFar) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
+	return nil
+}
 func (a *AnnotationExpTooFar) Severity() string           { return utils.SeverityLow }
 func (a *AnnotationExpTooFar) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *AnnotationExpTooFar) Deserialize(serialized []byte) error {
@@ -198,7 +213,10 @@ func NewAnnotationWeakSymetricSecret(weakKey []byte) *AnnotationWeakSymetricSecr
 		WeakKeyLen: len(weakKey),
 	}
 }
-func (a *AnnotationWeakSymetricSecret) Name() string               { return JWTWeakSymetricSecret }
+func (a *AnnotationWeakSymetricSecret) Name() string { return JWTWeakSymetricSecret }
+func (a *AnnotationWeakSymetricSecret) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
+	return nil
+}
 func (a *AnnotationWeakSymetricSecret) Severity() string           { return utils.SeverityMedium }
 func (a *AnnotationWeakSymetricSecret) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *AnnotationWeakSymetricSecret) Deserialize(serialized []byte) error {
@@ -242,7 +260,10 @@ func NewAnnotationSensitiveContentInHeaders(sensitive_words []string) *Annotatio
 		SensitiveWords: sensitive_words,
 	}
 }
-func (a *AnnotationSensitiveContentInHeaders) Name() string               { return JWTSensitiveContentInHeaders }
+func (a *AnnotationSensitiveContentInHeaders) Name() string { return JWTSensitiveContentInHeaders }
+func (a *AnnotationSensitiveContentInHeaders) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
+	return nil
+}
 func (a *AnnotationSensitiveContentInHeaders) Severity() string           { return utils.SeverityMedium }
 func (a *AnnotationSensitiveContentInHeaders) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *AnnotationSensitiveContentInHeaders) Deserialize(serialized []byte) error {
@@ -279,7 +300,10 @@ func NewAnnotationSensitiveContentInClaims(sensitive_words []string) *Annotation
 		SensitiveWords: sensitive_words,
 	}
 }
-func (a *AnnotationSensitiveContentInClaims) Name() string               { return JWTSensitiveContentInClaims }
+func (a *AnnotationSensitiveContentInClaims) Name() string { return JWTSensitiveContentInClaims }
+func (a *AnnotationSensitiveContentInClaims) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
+	return nil
+}
 func (a *AnnotationSensitiveContentInClaims) Severity() string           { return utils.SeverityMedium }
 func (a *AnnotationSensitiveContentInClaims) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *AnnotationSensitiveContentInClaims) Deserialize(serialized []byte) error {

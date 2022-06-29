@@ -36,6 +36,7 @@ func NewAnnotationRegexpMatching(matches []RuleMatch) *AnnotationRegexpMatching 
 	}
 }
 func (a *AnnotationRegexpMatching) Name() string               { return RegexpMatching }
+func (a *AnnotationRegexpMatching) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation { return nil }
 func (a *AnnotationRegexpMatching) Severity() string           { return utils.SeverityMedium }
 func (a *AnnotationRegexpMatching) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *AnnotationRegexpMatching) Deserialize(serialized []byte) error {

@@ -60,7 +60,10 @@ func NewAnnotationGuessableID(path, method string, parameters []GuessableParamet
 		Params:       parameters,
 	}
 }
-func (a *AnnotationGuessableID) Name() string               { return GuessableType }
+func (a *AnnotationGuessableID) Name() string { return GuessableType }
+func (a *AnnotationGuessableID) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
+	return nil
+}
 func (a *AnnotationGuessableID) Severity() string           { return utils.SeverityInfo }
 func (a *AnnotationGuessableID) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *AnnotationGuessableID) Deserialize(serialized []byte) error {

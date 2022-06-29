@@ -49,7 +49,10 @@ func NewAnnotationNLID(path, method string, parameters []parameter) *AnnotationN
 		Params:       parameters,
 	}
 }
-func (a *AnnotationNLID) Name() string               { return NLIDType }
+func (a *AnnotationNLID) Name() string { return NLIDType }
+func (a AnnotationNLID) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
+	return NewAPIAnnotationNLID(path, method)
+}
 func (a *AnnotationNLID) Severity() string           { return utils.SeverityInfo }
 func (a *AnnotationNLID) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *AnnotationNLID) Deserialize(serialized []byte) error {
@@ -81,8 +84,8 @@ func (a *AnnotationNLID) ToFinding() utils.Finding {
 }
 
 type APIAnnotationNLID struct {
-	SpecLocation string      `json:"spec_location"`
-	Params       []parameter `json:"parameters"`
+	SpecLocation string          `json:"spec_location"`
+	ParamNames   map[string]bool `json:"parameters"`
 }
 
 func NewAPIAnnotationNLID(path, method string) *APIAnnotationNLID {
@@ -94,9 +97,24 @@ func NewAPIAnnotationNLID(path, method string) *APIAnnotationNLID {
 	pointer := strings.Join(pointerTokens, "/")
 	return &APIAnnotationNLID{
 		SpecLocation: pointer,
+		ParamNames:   make(map[string]bool),
 	}
 }
-func (a *APIAnnotationNLID) Name() string       { return NLIDType }
+func (a *APIAnnotationNLID) Name() string { return NLIDType }
+func (a *APIAnnotationNLID) Aggregate(ann utils.TraceAnalyzerAnnotation) (updated bool) {
+	initialSize := len(a.ParamNames)
+	eventAnn, valid := ann.(*AnnotationNLID)
+	if !valid {
+		panic("invalid type")
+	}
+	// Merge parameter
+	for _, p := range eventAnn.Params {
+		a.ParamNames[p.Name] = true
+	}
+
+	return initialSize != len(a.ParamNames)
+}
+
 func (a *APIAnnotationNLID) Severity() string   { return utils.SeverityInfo }
 func (a *APIAnnotationNLID) TTL() time.Duration { return 24 * time.Hour }
 
@@ -112,7 +130,36 @@ func (a APIAnnotationNLID) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
 	return &newA
 }
+func (a *APIAnnotationNLID) ToFinding() utils.Finding {
+	var detailedDesc string
+	if len(a.ParamNames) > 0 {
+		paramNames := []string{}
+		for name := range a.ParamNames {
+			paramNames = append(paramNames, name)
+		}
+		detailedDesc = fmt.Sprintf("In call '%s', parameter(s) '%s' were used but not previously retrieved. Potential BOLA.", a.SpecLocation, strings.Join(paramNames, ","))
+	} else {
+		detailedDesc = fmt.Sprintf("In call '%s', parameter(s) were used but not previously retrieved. Potential BOLA.", a.SpecLocation)
+	}
+
+	return utils.Finding{
+		ShortDesc:    "NLID (Non learnt Identifier)",
+		DetailedDesc: detailedDesc,
+		Severity:     a.Severity(),
+		Alert:        utils.SeverityToAlert(a.Severity()),
+	}
+}
 func (a *APIAnnotationNLID) ToAPIFinding() oapicommon.APIFinding {
+	var additionalInfo *map[string]interface{}
+	if len(a.ParamNames) > 0 {
+		paramNames := []string{}
+		for name := range a.ParamNames {
+			paramNames = append(paramNames, name)
+		}
+		additionalInfo = &map[string]interface{}{
+			"parameters": paramNames,
+		}
+	}
 	return oapicommon.APIFinding{
 		Source: utils.ModuleName,
 
@@ -125,6 +172,6 @@ func (a *APIAnnotationNLID) ToAPIFinding() oapicommon.APIFinding {
 
 		Severity: oapicommon.INFO,
 
-		AdditionalInfo: nil,
+		AdditionalInfo: additionalInfo,
 	}
 }

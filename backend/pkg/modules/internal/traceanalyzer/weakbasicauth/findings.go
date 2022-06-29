@@ -41,7 +41,10 @@ type AnnotationShortPassword struct {
 func NewAnnotationShortPassword(password string, minSize int) *AnnotationShortPassword {
 	return &AnnotationShortPassword{Password: password, Length: len(password), MinSize: minSize}
 }
-func (a *AnnotationShortPassword) Name() string               { return KindShortPassword }
+func (a *AnnotationShortPassword) Name() string { return KindShortPassword }
+func (a *AnnotationShortPassword) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
+	return nil
+}
 func (a *AnnotationShortPassword) Severity() string           { return utils.SeverityMedium }
 func (a *AnnotationShortPassword) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *AnnotationShortPassword) Deserialize(serialized []byte) error {
@@ -70,7 +73,10 @@ type AnnotationKnownPassword struct {
 func NewAnnotationKnownPassword(password string) *AnnotationKnownPassword {
 	return &AnnotationKnownPassword{Password: password}
 }
-func (a *AnnotationKnownPassword) Name() string               { return KindKnownPassword }
+func (a *AnnotationKnownPassword) Name() string { return KindKnownPassword }
+func (a *AnnotationKnownPassword) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
+	return nil
+}
 func (a *AnnotationKnownPassword) Severity() string           { return utils.SeverityMedium }
 func (a *AnnotationKnownPassword) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *AnnotationKnownPassword) Deserialize(serialized []byte) error {
@@ -101,7 +107,10 @@ type AnnotationSamePassword struct {
 func NewAnnotationSamePassword(user, password string, apis []string) *AnnotationSamePassword {
 	return &AnnotationSamePassword{User: user, Password: password, APIs: apis}
 }
-func (a *AnnotationSamePassword) Name() string               { return KindSamePassword }
+func (a *AnnotationSamePassword) Name() string { return KindSamePassword }
+func (a *AnnotationSamePassword) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
+	return nil
+}
 func (a *AnnotationSamePassword) Severity() string           { return utils.SeverityMedium }
 func (a *AnnotationSamePassword) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *AnnotationSamePassword) Deserialize(serialized []byte) error {

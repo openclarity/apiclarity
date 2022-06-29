@@ -24,6 +24,7 @@ import (
 
 type TraceAnalyzerAnnotation interface {
 	Name() string
+	NewAPIAnnotation(path, method string) TraceAnalyzerAPIAnnotation
 	Severity() string
 	Serialize() ([]byte, error)
 	Deserialize([]byte) error
@@ -33,11 +34,13 @@ type TraceAnalyzerAnnotation interface {
 
 type TraceAnalyzerAPIAnnotation interface {
 	Name() string
+	Aggregate(TraceAnalyzerAnnotation) (notify bool)
 	Severity() string
 	TTL() time.Duration
 	Serialize() ([]byte, error)
 	Deserialize([]byte) error
 	Redacted() TraceAnalyzerAPIAnnotation
+	ToFinding() Finding
 	ToAPIFinding() oapicommon.APIFinding
 }
 
