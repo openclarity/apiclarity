@@ -120,18 +120,18 @@ func (p *pluginFuzzer) sendAPIFindingsNotification(ctx context.Context, apiID ui
 		Items:            &findings,
 	}
 	notification := notifications.APIClarityNotification{}
-	notification.FromApiFindingsNotification(apiFindingsNotification)
+	err := notification.FromApiFindingsNotification(apiFindingsNotification)
+	if err != nil {
+		return fmt.Errorf("failed to create 'APIFindings' notification, err=(%v)", err)
+	}
 
-	err := p.accessor.Notify(ctx, ModuleName, apiID, notification)
+	err = p.accessor.Notify(ctx, ModuleName, apiID, notification)
 
-	return err
+	return err //nolint:wrapcheck // really want to return the result of the notify
 }
 
 func (p *pluginFuzzer) sendTestReportNotification(ctx context.Context, apiID uint, report restapi.ShortTestReport) error {
-	globalReportTags, err := tools.ConvertLocalToGlobalReportTag(report.Tags)
-	if err != nil {
-		return err
-	}
+	globalReportTags := tools.ConvertLocalToGlobalReportTag(report.Tags)
 	testReportNotification := notifications.TestReportNotification{
 		ApiID:            report.ApiID,
 		HighestSeverity:  report.HighestSeverity,
@@ -142,11 +142,14 @@ func (p *pluginFuzzer) sendTestReportNotification(ctx context.Context, apiID uin
 		Tags:             globalReportTags,
 	}
 	notification := notifications.APIClarityNotification{}
-	notification.FromTestReportNotification(testReportNotification)
+	err := notification.FromTestReportNotification(testReportNotification)
+	if err != nil {
+		return fmt.Errorf("failed to create 'TestReport' notification, err=(%v)", err)
+	}
 
 	err = p.accessor.Notify(ctx, ModuleName, apiID, notification)
 
-	return err
+	return err //nolint:wrapcheck // really want to return the result of the notify
 }
 
 func (p *pluginFuzzer) sendTestProgressNotification(ctx context.Context, apiID uint, report restapi.ShortTestProgress) error {
@@ -157,11 +160,14 @@ func (p *pluginFuzzer) sendTestProgressNotification(ctx context.Context, apiID u
 		Starttime:        report.Starttime,
 	}
 	notification := notifications.APIClarityNotification{}
-	notification.FromTestProgressNotification(testProgressNotification)
+	err := notification.FromTestProgressNotification(testProgressNotification)
+	if err != nil {
+		return fmt.Errorf("failed to create 'TestProgress' notification, err=(%v)", err)
+	}
 
-	err := p.accessor.Notify(ctx, ModuleName, apiID, notification)
+	err = p.accessor.Notify(ctx, ModuleName, apiID, notification)
 
-	return err
+	return err //nolint:wrapcheck // really want to return the result of the notify
 }
 
 /*
@@ -236,7 +242,11 @@ type pluginFuzzerHTTPHandler struct {
 func httpError(writer http.ResponseWriter, err error) {
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusBadRequest)
-	_ = json.NewEncoder(writer).Encode(map[string]interface{}{"error": err.Error()})
+	if err2 := json.NewEncoder(writer).Encode(map[string]interface{}{"error": err.Error()}); err2 != nil {
+		// we can't send the error... we can't fo anything else, here, except logging the error
+		logging.Errorf("[Fuzzer] Can't encode the error (%v)", err2)
+		logging.Errorf("[Fuzzer] The original error is (%v)", err)
+	}
 }
 
 func httpResponse(writer http.ResponseWriter, statusCode int, data interface{}) {
@@ -351,7 +361,7 @@ func (p *pluginFuzzerHTTPHandler) PostUpdateStatus(writer http.ResponseWriter, r
 		return
 	}
 	if shortReport.Status == restapi.INPROGRESS {
-		p.fuzzer.sendTestProgressNotification(
+		err = p.fuzzer.sendTestProgressNotification(
 			req.Context(),
 			uint(apiID),
 			restapi.ShortTestProgress{
@@ -360,19 +370,31 @@ func (p *pluginFuzzerHTTPHandler) PostUpdateStatus(writer http.ResponseWriter, r
 				Starttime: shortReport.Starttime,
 			},
 		)
-	} else if shortReport.Status == restapi.DONE {
+		if err != nil {
+			// Log the error, but do not block the process as the error seems external to the Fuzzer modue
+			logging.Errorf("[Fuzzer] PostUpdateStatus(%v): Failed to send 'TestProgress' notification, err=(%v)", apiID, err)
+		}
+	} else if shortReport.Status == restapi.DONE || shortReport.Status == restapi.ERROR {
 		// The
-		p.fuzzer.sendTestReportNotification(
+		err = p.fuzzer.sendTestReportNotification(
 			req.Context(),
 			uint(apiID),
 			*shortReport,
 		)
+		if err != nil {
+			// Log the error, but do not block the process as the error seems external to the Fuzzer modue
+			logging.Errorf("[Fuzzer] PostUpdateStatus(%v): Failed to send 'TestReport' notification, err=(%v)", apiID, err)
+		}
 		lastFindings := api.GetLastAPIFindings()
-		p.fuzzer.sendAPIFindingsNotification(
+		err = p.fuzzer.sendAPIFindingsNotification(
 			req.Context(),
 			uint(apiID),
 			*lastFindings,
 		)
+		if err != nil {
+			// Log the error, but do not block the process as the error seems external to the Fuzzer modue
+			logging.Errorf("[Fuzzer] PostUpdateStatus(%v): Failed to send 'APIFindings' notification, err=(%v)", apiID, err)
+		}
 	}
 
 	writer.Header().Set("Content-Type", "application/json")

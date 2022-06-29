@@ -27,19 +27,19 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/tools"
 )
 
-// FuzzingTimestamp: the type used for our Timestamp
+// FuzzingTimestamp the type used for our Timestamp.
 type FuzzingTimestamp = int64
 
-// ZeroTime: The zero timestamp to use
-var ZeroTime int64 = time.Time{}.Unix()
+// ZeroTime The zero timestamp to use.
+var ZeroTime = time.Time{}.Unix()
 
-// Model: The Model struct
+// Model: The Model struct.
 type Model struct {
 	db       []API
 	accessor core.BackendAccessor
 }
 
-// FuzzingInput: a struct to store all input parameters for fuzzing
+// FuzzingInput: a struct to store all input parameters for fuzzing.
 type FuzzingInput struct {
 	Auth      *restapi.AuthorizationScheme
 	Depth     restapi.TestInputDepthEnum
@@ -122,7 +122,7 @@ func (m *Model) GetAPI(ctx context.Context, apiID uint) (*API, error) {
 	apiInfo, err := m.accessor.GetAPIInfo(ctx, apiID)
 	logging.Logf("[model.GetAPI(%v)]: get apiInfo=(%v)", apiID, apiInfo)
 	if err != nil {
-		return nil, fmt.Errorf("Error when retrieve api %v: %v", apiID, err)
+		return nil, fmt.Errorf("error when retrieve api %v: %v", apiID, err)
 	}
 
 	newAPI := NewAPI(apiInfo.ID, apiInfo.Name, uint(apiInfo.Port), apiInfo.DestinationNamespace)

@@ -114,13 +114,16 @@ func NewTest() *TestItem {
 }
 
 func ConvertRawFindingToAPIFinding(finding restapi.RawFindings) *common.APIFinding {
+	additionalInfo := map[string]interface{}{
+		"Description": finding.AdditionalInfo,
+	}
 	result := common.APIFinding{
-		Type:        *finding.Type,
-		Name:        typeToNameMap[*finding.Type],
-		Source:      *finding.Namespace,
-		Description: *finding.Description,
-		Severity:    common.Severity(*finding.Request.Severity),
-		//AdditionalInfo: *finding.AdditionalInfo,
+		Type:           *finding.Type,
+		Name:           typeToNameMap[*finding.Type],
+		Source:         *finding.Namespace,
+		Description:    *finding.Description,
+		Severity:       common.Severity(*finding.Request.Severity),
+		AdditionalInfo: &additionalInfo,
 	}
 	return &result
 }
