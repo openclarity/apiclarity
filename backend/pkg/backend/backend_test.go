@@ -739,10 +739,10 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 		mockModules.EXPECT().EventNotify(ctx, gomock.Any()).AnyTimes()
 		t.Run(tt.name, func(t *testing.T) {
 			b := &Backend{
-				speculator: tt.fields.speculator,
-				monitor:    tt.fields.monitor,
-				dbHandler:  tt.fields.dbHandler,
-				modules:    mockModules,
+				speculator:     tt.fields.speculator,
+				monitor:        tt.fields.monitor,
+				dbHandler:      tt.fields.dbHandler,
+				modulesWrapper: mockModules,
 			}
 			if err := b.handleHTTPTrace(ctx, tt.args.trace); (err != nil) != tt.wantErr {
 				t.Errorf("handleHTTPTrace() error = %v, wantErr %v", err, tt.wantErr)

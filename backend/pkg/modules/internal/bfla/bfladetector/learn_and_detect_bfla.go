@@ -37,7 +37,7 @@ import (
 )
 
 const (
-	ModuleName               = "bfla"
+	ModuleDescription        = "Reconstructs an authorization model for an API and detects violations of such authorization model"
 	K8sSrcAnnotationName     = "bfla_k8s_src"
 	K8sDstAnnotationName     = "bfla_k8s_dst"
 	DetectedIDAnnotationName = "bfla_detected_id"
@@ -49,7 +49,7 @@ const (
 
 var ErrUnsupportedAuthScheme = errors.New("unsupported auth scheme")
 
-func NewBFLADetector(ctx context.Context, apiInfoProvider apiInfoProvider, eventAlerter EventAlerter, ctrlNotifier ControllerNotifier, sp recovery.StatePersister, controllerResyncInterval time.Duration) BFLADetector {
+func NewBFLADetector(ctx context.Context, modName string, apiInfoProvider apiInfoProvider, eventAlerter EventAlerter, ctrlNotifier ControllerNotifier, sp recovery.StatePersister, controllerResyncInterval time.Duration) BFLADetector {
 	l := &learnAndDetectBFLA{
 		tracesCh:                 make(chan *CompositeTrace),
 		commandsCh:               make(chan Command),
@@ -62,6 +62,7 @@ func NewBFLADetector(ctx context.Context, apiInfoProvider apiInfoProvider, event
 		controllerNotifier:       ctrlNotifier,
 		controllerResyncInterval: controllerResyncInterval,
 		mu:                       &sync.RWMutex{},
+		modName:                  modName,
 	}
 	go func() {
 		for {
@@ -187,6 +188,7 @@ type learnAndDetectBFLA struct {
 	controllerNotifier       ControllerNotifier
 	controllerResyncInterval time.Duration
 	mu                       *sync.RWMutex
+	modName                  string
 }
 
 type CommandsChan chan Command
@@ -296,7 +298,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 			log.Warn("won't start learning, because the learning has already started")
 			return nil
 		}
-
+		// TODO: Check if the (reconstructed or provided) spec is available
 		tracesToProcess.Set(cmd.numberOfTraces)
 	case *ResetLearningCommand:
 		counter, err := l.tracesCounterMap.Get(cmd.apiID)
@@ -442,7 +444,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			severity = core.AlertInfo
 		}
 
-		if err := l.eventAlerter.SetEventAlert(ctx, ModuleName, trace.APIEvent.ID, severity); err != nil {
+		if err := l.eventAlerter.SetEventAlert(ctx, l.modName, trace.APIEvent.ID, severity); err != nil {
 			return fmt.Errorf("unable to set alert annotation: %w", err)
 		}
 

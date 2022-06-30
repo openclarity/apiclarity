@@ -25,6 +25,23 @@ import (
 	externalRef0 "github.com/openclarity/apiclarity/api3/common"
 )
 
+// Defines values for APIClarityFeatureEnum.
+const (
+	Bfla              APIClarityFeatureEnum = "bfla"
+	Differ            APIClarityFeatureEnum = "differ"
+	Fuzzer            APIClarityFeatureEnum = "fuzzer"
+	Specdiffs         APIClarityFeatureEnum = "specdiffs"
+	Specreconstructor APIClarityFeatureEnum = "specreconstructor"
+	Traceanalyzer     APIClarityFeatureEnum = "traceanalyzer"
+)
+
+// Defines values for APIClarityFeatureOperationEnum.
+const (
+	ADD    APIClarityFeatureOperationEnum = "ADD"
+	REMOVE APIClarityFeatureOperationEnum = "REMOVE"
+	SET    APIClarityFeatureOperationEnum = "SET"
+)
+
 // Defines values for AuthorizationTypeEnum.
 const (
 	APITOKEN    AuthorizationTypeEnum = "APITOKEN"
@@ -114,6 +131,27 @@ const (
 	ASC  GetApiInventoryParamsSortDir = "ASC"
 	DESC GetApiInventoryParamsSortDir = "DESC"
 )
+
+// APIClarityFeature defines model for APIClarityFeature.
+type APIClarityFeature struct {
+	// Short human readable description of the feature
+	FeatureDescription *string `json:"featureDescription,omitempty"`
+
+	// APIClarity Feature Name
+	FeatureName  APIClarityFeatureEnum `json:"featureName"`
+	HostsToTrace *[]string             `json:"hostsToTrace,omitempty"`
+}
+
+// APIClarity Feature Name
+type APIClarityFeatureEnum string
+
+// APIClarityFeatureList defines model for APIClarityFeatureList.
+type APIClarityFeatureList struct {
+	Features *[]APIClarityFeature `json:"features,omitempty"`
+}
+
+// APIClarity Feature Operation Enum
+type APIClarityFeatureOperationEnum string
 
 // APIDiffs defines model for APIDiffs.
 type APIDiffs struct {
@@ -1143,6 +1181,9 @@ type ClientInterface interface {
 	// GetDashboardApiUsageMostUsed request
 	GetDashboardApiUsageMostUsed(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetFeatures request
+	GetFeatures(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// BflaGetApiFindings request
 	BflaGetApiFindings(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetApiFindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1159,6 +1200,12 @@ type ClientInterface interface {
 
 	// PutModulesBflaAuthorizationModelApiIDDeny request
 	PutModulesBflaAuthorizationModelApiIDDeny(ctx context.Context, apiID externalRef0.ApiID, params *PutModulesBflaAuthorizationModelApiIDDenyParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutModulesBflaAuthorizationModelApiIDDetectionStart request
+	PutModulesBflaAuthorizationModelApiIDDetectionStart(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutModulesBflaAuthorizationModelApiIDDetectionStop request
+	PutModulesBflaAuthorizationModelApiIDDetectionStop(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PutModulesBflaAuthorizationModelApiIDLearningReset request
 	PutModulesBflaAuthorizationModelApiIDLearningReset(ctx context.Context, apiID externalRef0.ApiID, params *PutModulesBflaAuthorizationModelApiIDLearningResetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1240,6 +1287,12 @@ type ClientInterface interface {
 
 	// TraceanalyzerGetEventAnnotations request
 	TraceanalyzerGetEventAnnotations(ctx context.Context, eventID int64, params *TraceanalyzerGetEventAnnotationsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// TraceanalyzerStartTraceAnalysis request
+	TraceanalyzerStartTraceAnalysis(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// TraceanalyzerStopTraceAnalysis request
+	TraceanalyzerStopTraceAnalysis(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) GetApiEvents(ctx context.Context, params *GetApiEventsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -1494,6 +1547,18 @@ func (c *Client) GetDashboardApiUsageMostUsed(ctx context.Context, reqEditors ..
 	return c.Client.Do(req)
 }
 
+func (c *Client) GetFeatures(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetFeaturesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) BflaGetApiFindings(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetApiFindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewBflaGetApiFindingsRequest(c.Server, apiID, params)
 	if err != nil {
@@ -1556,6 +1621,30 @@ func (c *Client) PutModulesBflaAuthorizationModelApiIDApprove(ctx context.Contex
 
 func (c *Client) PutModulesBflaAuthorizationModelApiIDDeny(ctx context.Context, apiID externalRef0.ApiID, params *PutModulesBflaAuthorizationModelApiIDDenyParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutModulesBflaAuthorizationModelApiIDDenyRequest(c.Server, apiID, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutModulesBflaAuthorizationModelApiIDDetectionStart(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutModulesBflaAuthorizationModelApiIDDetectionStartRequest(c.Server, apiID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutModulesBflaAuthorizationModelApiIDDetectionStop(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutModulesBflaAuthorizationModelApiIDDetectionStopRequest(c.Server, apiID)
 	if err != nil {
 		return nil, err
 	}
@@ -1892,6 +1981,30 @@ func (c *Client) TraceanalyzerGetApiFindings(ctx context.Context, apiID external
 
 func (c *Client) TraceanalyzerGetEventAnnotations(ctx context.Context, eventID int64, params *TraceanalyzerGetEventAnnotationsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewTraceanalyzerGetEventAnnotationsRequest(c.Server, eventID, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) TraceanalyzerStartTraceAnalysis(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewTraceanalyzerStartTraceAnalysisRequest(c.Server, apiID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) TraceanalyzerStopTraceAnalysis(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewTraceanalyzerStopTraceAnalysisRequest(c.Server, apiID)
 	if err != nil {
 		return nil, err
 	}
@@ -3708,6 +3821,33 @@ func NewGetDashboardApiUsageMostUsedRequest(server string) (*http.Request, error
 	return req, nil
 }
 
+// NewGetFeaturesRequest generates requests for GetFeatures
+func NewGetFeaturesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/features")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewBflaGetApiFindingsRequest generates requests for BflaGetApiFindings
 func NewBflaGetApiFindingsRequest(server string, apiID externalRef0.ApiID, params *BflaGetApiFindingsParams) (*http.Request, error) {
 	var err error
@@ -3982,6 +4122,74 @@ func NewPutModulesBflaAuthorizationModelApiIDDenyRequest(server string, apiID ex
 	}
 
 	queryURL.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("PUT", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutModulesBflaAuthorizationModelApiIDDetectionStartRequest generates requests for PutModulesBflaAuthorizationModelApiIDDetectionStart
+func NewPutModulesBflaAuthorizationModelApiIDDetectionStartRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/modules/bfla/authorizationModel/%s/detection/start", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutModulesBflaAuthorizationModelApiIDDetectionStopRequest generates requests for PutModulesBflaAuthorizationModelApiIDDetectionStop
+func NewPutModulesBflaAuthorizationModelApiIDDetectionStopRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/modules/bfla/authorizationModel/%s/detection/stop", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
 
 	req, err := http.NewRequest("PUT", queryURL.String(), nil)
 	if err != nil {
@@ -5002,6 +5210,74 @@ func NewTraceanalyzerGetEventAnnotationsRequest(server string, eventID int64, pa
 	return req, nil
 }
 
+// NewTraceanalyzerStartTraceAnalysisRequest generates requests for TraceanalyzerStartTraceAnalysis
+func NewTraceanalyzerStartTraceAnalysisRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/modules/traceanalyzer/%s/start", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewTraceanalyzerStopTraceAnalysisRequest generates requests for TraceanalyzerStopTraceAnalysis
+func NewTraceanalyzerStopTraceAnalysisRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/modules/traceanalyzer/%s/stop", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -5105,6 +5381,9 @@ type ClientWithResponsesInterface interface {
 	// GetDashboardApiUsageMostUsed request
 	GetDashboardApiUsageMostUsedWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetDashboardApiUsageMostUsedResponse, error)
 
+	// GetFeatures request
+	GetFeaturesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFeaturesResponse, error)
+
 	// BflaGetApiFindings request
 	BflaGetApiFindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetApiFindingsParams, reqEditors ...RequestEditorFn) (*BflaGetApiFindingsResponse, error)
 
@@ -5121,6 +5400,12 @@ type ClientWithResponsesInterface interface {
 
 	// PutModulesBflaAuthorizationModelApiIDDeny request
 	PutModulesBflaAuthorizationModelApiIDDenyWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *PutModulesBflaAuthorizationModelApiIDDenyParams, reqEditors ...RequestEditorFn) (*PutModulesBflaAuthorizationModelApiIDDenyResponse, error)
+
+	// PutModulesBflaAuthorizationModelApiIDDetectionStart request
+	PutModulesBflaAuthorizationModelApiIDDetectionStartWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*PutModulesBflaAuthorizationModelApiIDDetectionStartResponse, error)
+
+	// PutModulesBflaAuthorizationModelApiIDDetectionStop request
+	PutModulesBflaAuthorizationModelApiIDDetectionStopWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*PutModulesBflaAuthorizationModelApiIDDetectionStopResponse, error)
 
 	// PutModulesBflaAuthorizationModelApiIDLearningReset request
 	PutModulesBflaAuthorizationModelApiIDLearningResetWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *PutModulesBflaAuthorizationModelApiIDLearningResetParams, reqEditors ...RequestEditorFn) (*PutModulesBflaAuthorizationModelApiIDLearningResetResponse, error)
@@ -5202,6 +5487,12 @@ type ClientWithResponsesInterface interface {
 
 	// TraceanalyzerGetEventAnnotations request
 	TraceanalyzerGetEventAnnotationsWithResponse(ctx context.Context, eventID int64, params *TraceanalyzerGetEventAnnotationsParams, reqEditors ...RequestEditorFn) (*TraceanalyzerGetEventAnnotationsResponse, error)
+
+	// TraceanalyzerStartTraceAnalysis request
+	TraceanalyzerStartTraceAnalysisWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*TraceanalyzerStartTraceAnalysisResponse, error)
+
+	// TraceanalyzerStopTraceAnalysis request
+	TraceanalyzerStopTraceAnalysisWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*TraceanalyzerStopTraceAnalysisResponse, error)
 }
 
 type GetApiEventsResponse struct {
@@ -5631,6 +5922,28 @@ func (r GetDashboardApiUsageMostUsedResponse) StatusCode() int {
 	return 0
 }
 
+type GetFeaturesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *APIClarityFeatureList
+}
+
+// Status returns HTTPResponse.Status
+func (r GetFeaturesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetFeaturesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type BflaGetApiFindingsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -5740,6 +6053,52 @@ func (r PutModulesBflaAuthorizationModelApiIDDenyResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PutModulesBflaAuthorizationModelApiIDDenyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutModulesBflaAuthorizationModelApiIDDetectionStartResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *externalRef0.ApiResponse
+	JSONDefault  *externalRef0.ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PutModulesBflaAuthorizationModelApiIDDetectionStartResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutModulesBflaAuthorizationModelApiIDDetectionStartResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutModulesBflaAuthorizationModelApiIDDetectionStopResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *externalRef0.ApiResponse
+	JSONDefault  *externalRef0.ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PutModulesBflaAuthorizationModelApiIDDetectionStopResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutModulesBflaAuthorizationModelApiIDDetectionStopResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -6307,6 +6666,52 @@ func (r TraceanalyzerGetEventAnnotationsResponse) StatusCode() int {
 	return 0
 }
 
+type TraceanalyzerStartTraceAnalysisResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *externalRef0.ApiResponse
+	JSONDefault  *externalRef0.ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r TraceanalyzerStartTraceAnalysisResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r TraceanalyzerStartTraceAnalysisResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type TraceanalyzerStopTraceAnalysisResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *externalRef0.ApiResponse
+	JSONDefault  *externalRef0.ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r TraceanalyzerStopTraceAnalysisResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r TraceanalyzerStopTraceAnalysisResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // GetApiEventsWithResponse request returning *GetApiEventsResponse
 func (c *ClientWithResponses) GetApiEventsWithResponse(ctx context.Context, params *GetApiEventsParams, reqEditors ...RequestEditorFn) (*GetApiEventsResponse, error) {
 	rsp, err := c.GetApiEvents(ctx, params, reqEditors...)
@@ -6493,6 +6898,15 @@ func (c *ClientWithResponses) GetDashboardApiUsageMostUsedWithResponse(ctx conte
 	return ParseGetDashboardApiUsageMostUsedResponse(rsp)
 }
 
+// GetFeaturesWithResponse request returning *GetFeaturesResponse
+func (c *ClientWithResponses) GetFeaturesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFeaturesResponse, error) {
+	rsp, err := c.GetFeatures(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetFeaturesResponse(rsp)
+}
+
 // BflaGetApiFindingsWithResponse request returning *BflaGetApiFindingsResponse
 func (c *ClientWithResponses) BflaGetApiFindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetApiFindingsParams, reqEditors ...RequestEditorFn) (*BflaGetApiFindingsResponse, error) {
 	rsp, err := c.BflaGetApiFindings(ctx, apiID, params, reqEditors...)
@@ -6544,6 +6958,24 @@ func (c *ClientWithResponses) PutModulesBflaAuthorizationModelApiIDDenyWithRespo
 		return nil, err
 	}
 	return ParsePutModulesBflaAuthorizationModelApiIDDenyResponse(rsp)
+}
+
+// PutModulesBflaAuthorizationModelApiIDDetectionStartWithResponse request returning *PutModulesBflaAuthorizationModelApiIDDetectionStartResponse
+func (c *ClientWithResponses) PutModulesBflaAuthorizationModelApiIDDetectionStartWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*PutModulesBflaAuthorizationModelApiIDDetectionStartResponse, error) {
+	rsp, err := c.PutModulesBflaAuthorizationModelApiIDDetectionStart(ctx, apiID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutModulesBflaAuthorizationModelApiIDDetectionStartResponse(rsp)
+}
+
+// PutModulesBflaAuthorizationModelApiIDDetectionStopWithResponse request returning *PutModulesBflaAuthorizationModelApiIDDetectionStopResponse
+func (c *ClientWithResponses) PutModulesBflaAuthorizationModelApiIDDetectionStopWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*PutModulesBflaAuthorizationModelApiIDDetectionStopResponse, error) {
+	rsp, err := c.PutModulesBflaAuthorizationModelApiIDDetectionStop(ctx, apiID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutModulesBflaAuthorizationModelApiIDDetectionStopResponse(rsp)
 }
 
 // PutModulesBflaAuthorizationModelApiIDLearningResetWithResponse request returning *PutModulesBflaAuthorizationModelApiIDLearningResetResponse
@@ -6793,6 +7225,24 @@ func (c *ClientWithResponses) TraceanalyzerGetEventAnnotationsWithResponse(ctx c
 		return nil, err
 	}
 	return ParseTraceanalyzerGetEventAnnotationsResponse(rsp)
+}
+
+// TraceanalyzerStartTraceAnalysisWithResponse request returning *TraceanalyzerStartTraceAnalysisResponse
+func (c *ClientWithResponses) TraceanalyzerStartTraceAnalysisWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*TraceanalyzerStartTraceAnalysisResponse, error) {
+	rsp, err := c.TraceanalyzerStartTraceAnalysis(ctx, apiID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseTraceanalyzerStartTraceAnalysisResponse(rsp)
+}
+
+// TraceanalyzerStopTraceAnalysisWithResponse request returning *TraceanalyzerStopTraceAnalysisResponse
+func (c *ClientWithResponses) TraceanalyzerStopTraceAnalysisWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*TraceanalyzerStopTraceAnalysisResponse, error) {
+	rsp, err := c.TraceanalyzerStopTraceAnalysis(ctx, apiID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseTraceanalyzerStopTraceAnalysisResponse(rsp)
 }
 
 // ParseGetApiEventsResponse parses an HTTP response from a GetApiEventsWithResponse call
@@ -7408,6 +7858,32 @@ func ParseGetDashboardApiUsageMostUsedResponse(rsp *http.Response) (*GetDashboar
 	return response, nil
 }
 
+// ParseGetFeaturesResponse parses an HTTP response from a GetFeaturesWithResponse call
+func ParseGetFeaturesResponse(rsp *http.Response) (*GetFeaturesResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetFeaturesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest APIClarityFeatureList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseBflaGetApiFindingsResponse parses an HTTP response from a BflaGetApiFindingsWithResponse call
 func ParseBflaGetApiFindingsResponse(rsp *http.Response) (*BflaGetApiFindingsResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
@@ -7549,6 +8025,72 @@ func ParsePutModulesBflaAuthorizationModelApiIDDenyResponse(rsp *http.Response) 
 	}
 
 	response := &PutModulesBflaAuthorizationModelApiIDDenyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutModulesBflaAuthorizationModelApiIDDetectionStartResponse parses an HTTP response from a PutModulesBflaAuthorizationModelApiIDDetectionStartWithResponse call
+func ParsePutModulesBflaAuthorizationModelApiIDDetectionStartResponse(rsp *http.Response) (*PutModulesBflaAuthorizationModelApiIDDetectionStartResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutModulesBflaAuthorizationModelApiIDDetectionStartResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutModulesBflaAuthorizationModelApiIDDetectionStopResponse parses an HTTP response from a PutModulesBflaAuthorizationModelApiIDDetectionStopWithResponse call
+func ParsePutModulesBflaAuthorizationModelApiIDDetectionStopResponse(rsp *http.Response) (*PutModulesBflaAuthorizationModelApiIDDetectionStopResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutModulesBflaAuthorizationModelApiIDDetectionStopResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -8291,6 +8833,72 @@ func ParseTraceanalyzerGetEventAnnotationsResponse(rsp *http.Response) (*Tracean
 	return response, nil
 }
 
+// ParseTraceanalyzerStartTraceAnalysisResponse parses an HTTP response from a TraceanalyzerStartTraceAnalysisWithResponse call
+func ParseTraceanalyzerStartTraceAnalysisResponse(rsp *http.Response) (*TraceanalyzerStartTraceAnalysisResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &TraceanalyzerStartTraceAnalysisResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseTraceanalyzerStopTraceAnalysisResponse parses an HTTP response from a TraceanalyzerStopTraceAnalysisWithResponse call
+func ParseTraceanalyzerStopTraceAnalysisResponse(rsp *http.Response) (*TraceanalyzerStopTraceAnalysisResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &TraceanalyzerStopTraceAnalysisResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Get API events
@@ -8347,6 +8955,9 @@ type ServerInterface interface {
 	// Get most used APIs
 	// (GET /dashboard/apiUsage/mostUsed)
 	GetDashboardApiUsageMostUsed(w http.ResponseWriter, r *http.Request)
+	// Get the list of APIClarity features
+	// (GET /features)
+	GetFeatures(w http.ResponseWriter, r *http.Request)
 	// Get findings for an API and module
 	// (GET /modules/bfla/apiFindings/{apiID})
 	BflaGetApiFindings(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params BflaGetApiFindingsParams)
@@ -8362,6 +8973,12 @@ type ServerInterface interface {
 
 	// (PUT /modules/bfla/authorizationModel/{apiID}/deny)
 	PutModulesBflaAuthorizationModelApiIDDeny(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params PutModulesBflaAuthorizationModelApiIDDenyParams)
+
+	// (PUT /modules/bfla/authorizationModel/{apiID}/detection/start)
+	PutModulesBflaAuthorizationModelApiIDDetectionStart(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
+
+	// (PUT /modules/bfla/authorizationModel/{apiID}/detection/stop)
+	PutModulesBflaAuthorizationModelApiIDDetectionStop(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 
 	// (PUT /modules/bfla/authorizationModel/{apiID}/learning/reset)
 	PutModulesBflaAuthorizationModelApiIDLearningReset(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params PutModulesBflaAuthorizationModelApiIDLearningResetParams)
@@ -8437,6 +9054,12 @@ type ServerInterface interface {
 	// Get Annotations for an event
 	// (GET /modules/traceanalyzer/eventAnnotations/{eventID})
 	TraceanalyzerGetEventAnnotations(w http.ResponseWriter, r *http.Request, eventID int64, params TraceanalyzerGetEventAnnotationsParams)
+	// Start Trace Analysis for an API
+	// (POST /modules/traceanalyzer/{apiID}/start)
+	TraceanalyzerStartTraceAnalysis(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
+	// Stop Trace Analysis for an API
+	// (POST /modules/traceanalyzer/{apiID}/stop)
+	TraceanalyzerStopTraceAnalysis(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -9762,6 +10385,21 @@ func (siw *ServerInterfaceWrapper) GetDashboardApiUsageMostUsed(w http.ResponseW
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// GetFeatures operation middleware
+func (siw *ServerInterfaceWrapper) GetFeatures(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetFeatures(w, r)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 // BflaGetApiFindings operation middleware
 func (siw *ServerInterfaceWrapper) BflaGetApiFindings(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -9987,6 +10625,58 @@ func (siw *ServerInterfaceWrapper) PutModulesBflaAuthorizationModelApiIDDeny(w h
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PutModulesBflaAuthorizationModelApiIDDeny(w, r, apiID, params)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// PutModulesBflaAuthorizationModelApiIDDetectionStart operation middleware
+func (siw *ServerInterfaceWrapper) PutModulesBflaAuthorizationModelApiIDDetectionStart(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutModulesBflaAuthorizationModelApiIDDetectionStart(w, r, apiID)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// PutModulesBflaAuthorizationModelApiIDDetectionStop operation middleware
+func (siw *ServerInterfaceWrapper) PutModulesBflaAuthorizationModelApiIDDetectionStop(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutModulesBflaAuthorizationModelApiIDDetectionStop(w, r, apiID)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -10721,6 +11411,58 @@ func (siw *ServerInterfaceWrapper) TraceanalyzerGetEventAnnotations(w http.Respo
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// TraceanalyzerStartTraceAnalysis operation middleware
+func (siw *ServerInterfaceWrapper) TraceanalyzerStartTraceAnalysis(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.TraceanalyzerStartTraceAnalysis(w, r, apiID)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// TraceanalyzerStopTraceAnalysis operation middleware
+func (siw *ServerInterfaceWrapper) TraceanalyzerStopTraceAnalysis(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.TraceanalyzerStopTraceAnalysis(w, r, apiID)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 type UnescapedCookieParamError struct {
 	ParamName string
 	Err       error
@@ -10889,6 +11631,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/dashboard/apiUsage/mostUsed", wrapper.GetDashboardApiUsageMostUsed)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/features", wrapper.GetFeatures)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/modules/bfla/apiFindings/{apiID}", wrapper.BflaGetApiFindings)
 	})
 	r.Group(func(r chi.Router) {
@@ -10902,6 +11647,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/modules/bfla/authorizationModel/{apiID}/deny", wrapper.PutModulesBflaAuthorizationModelApiIDDeny)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/modules/bfla/authorizationModel/{apiID}/detection/start", wrapper.PutModulesBflaAuthorizationModelApiIDDetectionStart)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/modules/bfla/authorizationModel/{apiID}/detection/stop", wrapper.PutModulesBflaAuthorizationModelApiIDDetectionStop)
 	})
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/modules/bfla/authorizationModel/{apiID}/learning/reset", wrapper.PutModulesBflaAuthorizationModelApiIDLearningReset)
@@ -10978,6 +11729,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/modules/traceanalyzer/eventAnnotations/{eventID}", wrapper.TraceanalyzerGetEventAnnotations)
 	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/modules/traceanalyzer/{apiID}/start", wrapper.TraceanalyzerStartTraceAnalysis)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/modules/traceanalyzer/{apiID}/stop", wrapper.TraceanalyzerStopTraceAnalysis)
+	})
 
 	return r
 }
@@ -10985,107 +11742,111 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

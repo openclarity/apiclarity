@@ -36,8 +36,7 @@ import (
 )
 
 const (
-	ModuleName        = "fuzzer"
-	ModuleDescription = "This is the Fuzzer module"
+	ModuleDescription = "Runs a set of tests against API endpoints to discover insecure implementations"
 	ModuleVersion     = "0.0.0"
 	EmptyJSON         = "{}"
 	NbMaxServicePart  = 2
@@ -52,6 +51,7 @@ type pluginFuzzer struct {
 	fuzzerClient clients.Client
 
 	accessor core.BackendAccessor
+	info     *core.ModuleInfo
 }
 
 //nolint:gochecknoinits // was needed for the module implementation of ApiClarity
@@ -60,7 +60,7 @@ func init() {
 }
 
 //nolint:ireturn,nolintlint // was needed for the module implementation of ApiClarity
-func newFuzzer(ctx context.Context, accessor core.BackendAccessor) (core.Module, error) {
+func newFuzzer(ctx context.Context, moduleName string, accessor core.BackendAccessor) (core.Module, error) {
 	logging.InitLogger()
 	logging.Logf("[Fuzzer] Start():: -->")
 
@@ -72,11 +72,15 @@ func newFuzzer(ctx context.Context, accessor core.BackendAccessor) (core.Module,
 		fuzzerClient: nil,
 		model:        nil,
 		accessor:     accessor,
+		info: &core.ModuleInfo{
+			Name:        moduleName,
+			Description: ModuleDescription,
+		},
 	}
 
 	plugin.config.Dump()
 
-	plugin.httpHandler = restapi.HandlerWithOptions(&pluginFuzzerHTTPHandler{fuzzer: &plugin}, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + ModuleName})
+	plugin.httpHandler = restapi.HandlerWithOptions(&pluginFuzzerHTTPHandler{fuzzer: &plugin}, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + moduleName})
 
 	// Initialize the model
 	plugin.model = model.NewModel(accessor)
@@ -99,8 +103,8 @@ func newFuzzer(ctx context.Context, accessor core.BackendAccessor) (core.Module,
 	return &plugin, nil
 }
 
-func (p *pluginFuzzer) Name() string {
-	return ModuleName
+func (p *pluginFuzzer) Info() core.ModuleInfo {
+	return *p.info
 }
 
 func (p *pluginFuzzer) EventNotify(ctx context.Context, event *core.Event) {
@@ -125,7 +129,7 @@ func (p *pluginFuzzer) sendAPIFindingsNotification(ctx context.Context, apiID ui
 		return fmt.Errorf("failed to create 'APIFindings' notification, err=(%v)", err)
 	}
 
-	err = p.accessor.Notify(ctx, ModuleName, apiID, notification)
+	err = p.accessor.Notify(ctx, p.info.Name, apiID, notification)
 
 	return err //nolint:wrapcheck // really want to return the result of the notify
 }
@@ -147,7 +151,7 @@ func (p *pluginFuzzer) sendTestReportNotification(ctx context.Context, apiID uin
 		return fmt.Errorf("failed to create 'TestReport' notification, err=(%v)", err)
 	}
 
-	err = p.accessor.Notify(ctx, ModuleName, apiID, notification)
+	err = p.accessor.Notify(ctx, p.info.Name, apiID, notification)
 
 	return err //nolint:wrapcheck // really want to return the result of the notify
 }
@@ -165,7 +169,7 @@ func (p *pluginFuzzer) sendTestProgressNotification(ctx context.Context, apiID u
 		return fmt.Errorf("failed to create 'TestProgress' notification, err=(%v)", err)
 	}
 
-	err = p.accessor.Notify(ctx, ModuleName, apiID, notification)
+	err = p.accessor.Notify(ctx, p.info.Name, apiID, notification)
 
 	return err //nolint:wrapcheck // really want to return the result of the notify
 }
@@ -335,7 +339,7 @@ func (p *pluginFuzzerHTTPHandler) PostUpdateStatus(writer http.ResponseWriter, r
 		return
 	}
 	api.AddNewStatusReport(data)
-	err = api.StoreReportData(req.Context(), p.fuzzer.accessor, ModuleName, data)
+	err = api.StoreReportData(req.Context(), p.fuzzer.accessor, p.fuzzer.info.Name, data)
 	if err != nil {
 		logging.Errorf("[Fuzzer] PostUpdateStatus(%v): Can't store report data, error=(%v)", apiID, err)
 		// Not fatal, we can continue
@@ -452,7 +456,7 @@ func (p *pluginFuzzerHTTPHandler) PostRawfindings(writer http.ResponseWriter, re
 		httpResponse(writer, http.StatusNotFound, EmptyJSON)
 		return
 	}
-	err = api.StoreLastFindingsData(req.Context(), p.fuzzer.accessor, ModuleName, body)
+	err = api.StoreLastFindingsData(req.Context(), p.fuzzer.accessor, p.fuzzer.info.Name, body)
 	if err != nil {
 		logging.Errorf("[Fuzzer] PostRawfindings(%v): Can't store findings data, error=(%v)", apiID, err)
 		// Not fatal, we can continue

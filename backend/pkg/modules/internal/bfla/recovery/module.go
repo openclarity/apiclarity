@@ -24,12 +24,12 @@ import (
 )
 
 func ResyncedModule(wrappedModuleFactory core.ModuleFactory) core.ModuleFactory {
-	return func(ctx context.Context, accessor core.BackendAccessor) (core.Module, error) {
-		wrappedModule, err := wrappedModuleFactory(ctx, accessor)
+	return func(ctx context.Context, moduleName string, accessor core.BackendAccessor) (core.Module, error) {
+		wrappedModule, err := wrappedModuleFactory(ctx, moduleName, accessor)
 		if err != nil {
 			return nil, err
 		}
-		rec := NewRecovery(wrappedModule.Name(), accessor)
+		rec := NewRecovery(wrappedModule.Info().Name, accessor)
 		m := &module{
 			Module:   wrappedModule,
 			eventsCh: make(chan *core.Event),

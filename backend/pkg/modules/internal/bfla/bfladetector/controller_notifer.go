@@ -17,6 +17,7 @@ package bfladetector
 
 import (
 	"context"
+
 	"github.com/openclarity/apiclarity/api3/global"
 	"github.com/openclarity/apiclarity/api3/notifications"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
@@ -32,14 +33,16 @@ type AuthzModelNotification struct {
 	SpecType   SpecType
 }
 
-func NewControllerNotifier(accessor core.BackendAccessor) *notifier {
+func NewControllerNotifier(moduleName string, accessor core.BackendAccessor) *notifier {
 	return &notifier{
-		accessor: accessor,
+		accessor:   accessor,
+		moduleName: moduleName,
 	}
 }
 
 type notifier struct {
-	accessor core.BackendAccessor
+	accessor   core.BackendAccessor
+	moduleName string
 }
 
 func (n *notifier) Notify(ctx context.Context, apiID uint, notification AuthzModelNotification) error {
@@ -51,7 +54,7 @@ func (n *notifier) Notify(ctx context.Context, apiID uint, notification AuthzMod
 	}); err != nil {
 		return err
 	}
-	return n.accessor.Notify(ctx, ModuleName, apiID, ntf)
+	return n.accessor.Notify(ctx, n.moduleName, apiID, ntf)
 }
 
 func ToGlobalOperations(authzModelOps Operations) (ops []global.AuthorizationModelOperation) {

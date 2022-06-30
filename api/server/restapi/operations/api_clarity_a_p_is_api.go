@@ -93,6 +93,9 @@ func NewAPIClarityAPIsAPI(spec *loads.Document) *APIClarityAPIsAPI {
 		GetDashboardAPIUsageMostUsedHandler: GetDashboardAPIUsageMostUsedHandlerFunc(func(params GetDashboardAPIUsageMostUsedParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetDashboardAPIUsageMostUsed has not yet been implemented")
 		}),
+		GetFeaturesHandler: GetFeaturesHandlerFunc(func(params GetFeaturesParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetFeatures has not yet been implemented")
+		}),
 		PostAPIInventoryHandler: PostAPIInventoryHandlerFunc(func(params PostAPIInventoryParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostAPIInventory has not yet been implemented")
 		}),
@@ -172,6 +175,8 @@ type APIClarityAPIsAPI struct {
 	GetDashboardAPIUsageLatestDiffsHandler GetDashboardAPIUsageLatestDiffsHandler
 	// GetDashboardAPIUsageMostUsedHandler sets the operation handler for the get dashboard API usage most used operation
 	GetDashboardAPIUsageMostUsedHandler GetDashboardAPIUsageMostUsedHandler
+	// GetFeaturesHandler sets the operation handler for the get features operation
+	GetFeaturesHandler GetFeaturesHandler
 	// PostAPIInventoryHandler sets the operation handler for the post API inventory operation
 	PostAPIInventoryHandler PostAPIInventoryHandler
 	// PostAPIInventoryReviewIDApprovedReviewHandler sets the operation handler for the post API inventory review ID approved review operation
@@ -305,6 +310,9 @@ func (o *APIClarityAPIsAPI) Validate() error {
 	}
 	if o.GetDashboardAPIUsageMostUsedHandler == nil {
 		unregistered = append(unregistered, "GetDashboardAPIUsageMostUsedHandler")
+	}
+	if o.GetFeaturesHandler == nil {
+		unregistered = append(unregistered, "GetFeaturesHandler")
 	}
 	if o.PostAPIInventoryHandler == nil {
 		unregistered = append(unregistered, "PostAPIInventoryHandler")
@@ -471,6 +479,10 @@ func (o *APIClarityAPIsAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/dashboard/apiUsage/mostUsed"] = NewGetDashboardAPIUsageMostUsed(o.context, o.GetDashboardAPIUsageMostUsedHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/features"] = NewGetFeatures(o.context, o.GetFeaturesHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}

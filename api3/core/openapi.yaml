@@ -3,6 +3,17 @@ info:
   version: 1.0.0
   title: APIClarity APIs
 paths:
+  /features:
+    get:
+      summary: Get the list of APIClarity features
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIClarityFeatureList"
+
   /apiEvents:
     get:
       summary: Get API events
@@ -772,6 +783,42 @@ components:
         application/json:
           schema:
             $ref: "../common/openapi.yaml#/components/schemas/ApiResponse"
-  schemas: {}
+  schemas: 
+    APIClarityFeatureList:
+      type: 'object'
+      properties:
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/APIClarityFeature'
+    APIClarityFeature:
+      type: 'object'
+      properties:
+        featureName:
+          $ref: '#/components/schemas/APIClarityFeatureEnum'
+        featureDescription:
+          description: "Short human readable description of the feature"
+          type: string
+        hostsToTrace:
+          type: array
+          items:
+            type: string
+      required:
+      - featureName
+
+    APIClarityFeatureEnum:
+      description: 'APIClarity Feature Name'
+      type: string
+      enum:
+        - specreconstructor
+        - specdiffs
+        
+    APIClarityFeatureOperationEnum:
+      description: 'APIClarity Feature Operation Enum'
+      type: string
+      enum: 
+        - REMOVE
+        - SET
+        - ADD
 
   

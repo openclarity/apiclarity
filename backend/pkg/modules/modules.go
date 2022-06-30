@@ -30,9 +30,11 @@ import (
 	//_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/demo"
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer"
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer"
+	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
 )
 
 type (
+	ModuleInfo          = core.ModuleInfo
 	Module              = core.Module
 	MockModule          = core.MockModule
 	Annotation          = core.Annotation
@@ -46,6 +48,6 @@ var (
 	NewMockBackendAccessor = core.NewMockBackendAccessor
 )
 
-func New(ctx context.Context, dbHandler *database.Handler, clientset kubernetes.Interface) Module {
-	return core.New(ctx, core.NewAccessor(dbHandler, clientset))
+func New(ctx context.Context, dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager) (Module, []ModuleInfo) {
+	return core.New(ctx, core.NewAccessor(dbHandler, clientset, samplingManager), samplingManager)
 }

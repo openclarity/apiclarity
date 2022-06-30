@@ -162,7 +162,7 @@ func (a *APIAnnotationGuessableID) ToFinding() utils.Finding {
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
-func (a *APIAnnotationGuessableID) ToAPIFinding() oapicommon.APIFinding {
+func (a *APIAnnotationGuessableID) ToAPIFinding(source string) oapicommon.APIFinding {
 	var additionalInfo *map[string]interface{}
 	if len(a.ParamNames) > 0 {
 		paramNames := []string{}
@@ -174,7 +174,7 @@ func (a *APIAnnotationGuessableID) ToAPIFinding() oapicommon.APIFinding {
 		}
 	}
 	return oapicommon.APIFinding{
-		Source: utils.ModuleName,
+		Source: source,
 
 		Type:        a.Name(),
 		Name:        "Guessable identifier",

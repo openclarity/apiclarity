@@ -13,7 +13,7 @@ import './traceAnalyzer.scss';
 
 const TraceAnalyzerEventDetails = props => {
     const {eventId} = props;
-    const [{loading, data}] = useFetch(`modules/TraceAnalyzer/eventAnnotations/${eventId}`);
+    const [{loading, data}] = useFetch(`modules/traceanalyzer/eventAnnotations/${eventId}`);
 
     if (loading) {
         return <Loader />;
@@ -61,7 +61,7 @@ const TraceDetails = ({trace}) => (
 
 const TraceAnalyzerAPIDetails = props => {
     const {inventoryId} = props;
-    const annsUrl = `modules/TraceAnalyzer/apiAnnotations/${inventoryId}`;
+    const annsUrl = `modules/traceanalyzer/apiAnnotations/${inventoryId}`;
     const [{data}, fetchData] = useFetch(annsUrl);
     const [selectedRowIds, setSelectedRowIds] = useState([]);
 
@@ -111,7 +111,7 @@ const TraceAnalyzerAPIDetails = props => {
 
 const pluginEventDetails = {
     name: 'Trace Analysis',
-    moduleName: 'TraceAnalyzer',
+    moduleName: 'traceanalyzer',
     component: TraceAnalyzerEventDetails,
     endpoint: '/traceanalysis',
     type: MODULE_TYPES.EVENT_DETAILS
@@ -119,7 +119,7 @@ const pluginEventDetails = {
 
 const pluginAPIDetails = {
     name: 'Trace Analysis',
-    moduleName: 'TraceAnalyzer',
+    moduleName: 'traceanalyzer',
     component: TraceAnalyzerAPIDetails,
     endpoint: '/traceanalysis',
     type: MODULE_TYPES.INVENTORY_DETAILS

@@ -752,9 +752,75 @@ func init() {
           }
         }
       }
+    },
+    "/features": {
+      "get": {
+        "summary": "Get the list of APIClarity features",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/APIClarityFeatureList"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
+    "APIClarityFeature": {
+      "type": "object",
+      "required": [
+        "featureName"
+      ],
+      "properties": {
+        "featureDescription": {
+          "description": "Short human readable description of the feature",
+          "type": "string"
+        },
+        "featureName": {
+          "$ref": "#/definitions/APIClarityFeatureEnum"
+        },
+        "hostsToTrace": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "APIClarityFeatureEnum": {
+      "description": "APIClarity Feature Name",
+      "type": "string",
+      "enum": [
+        "specreconstructor",
+        "specdiffs",
+        "traceanalyzer",
+        "bfla",
+        "differ",
+        "fuzzer"
+      ]
+    },
+    "APIClarityFeatureList": {
+      "type": "object",
+      "properties": {
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/APIClarityFeature"
+          }
+        }
+      }
+    },
+    "APIClarityFeatureOperationEnum": {
+      "description": "APIClarity Feature Operation Enum",
+      "type": "string",
+      "enum": [
+        "REMOVE",
+        "SET",
+        "ADD"
+      ]
+    },
     "AlertSeverityEnum": {
       "description": "Level of alert",
       "type": "string",
@@ -2870,9 +2936,75 @@ func init() {
           }
         }
       }
+    },
+    "/features": {
+      "get": {
+        "summary": "Get the list of APIClarity features",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/APIClarityFeatureList"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
+    "APIClarityFeature": {
+      "type": "object",
+      "required": [
+        "featureName"
+      ],
+      "properties": {
+        "featureDescription": {
+          "description": "Short human readable description of the feature",
+          "type": "string"
+        },
+        "featureName": {
+          "$ref": "#/definitions/APIClarityFeatureEnum"
+        },
+        "hostsToTrace": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "APIClarityFeatureEnum": {
+      "description": "APIClarity Feature Name",
+      "type": "string",
+      "enum": [
+        "specreconstructor",
+        "specdiffs",
+        "traceanalyzer",
+        "bfla",
+        "differ",
+        "fuzzer"
+      ]
+    },
+    "APIClarityFeatureList": {
+      "type": "object",
+      "properties": {
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/APIClarityFeature"
+          }
+        }
+      }
+    },
+    "APIClarityFeatureOperationEnum": {
+      "description": "APIClarity Feature Operation Enum",
+      "type": "string",
+      "enum": [
+        "REMOVE",
+        "SET",
+        "ADD"
+      ]
+    },
     "AlertSeverityEnum": {
       "description": "Level of alert",
       "type": "string",

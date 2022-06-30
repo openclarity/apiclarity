@@ -29,18 +29,25 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules"
 	_speculator "github.com/openclarity/speculator/pkg/speculator"
+	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
 )
 
 type Server struct {
-	server     *restapi.Server
-	dbHandler  database.Database
-	speculator *_speculator.Speculator
+	server          *restapi.Server
+	dbHandler       database.Database
+	speculator      *_speculator.Speculator
+	modulesWrapper  modules.Module
+	samplingManager *manager.Manager
+	features        []modules.ModuleInfo
 }
 
-func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *database.Handler, modules modules.Module) (*Server, error) {
+func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *database.Handler, modulesWrapper modules.Module, samplingManager *manager.Manager, features []modules.ModuleInfo) (*Server, error) {
 	s := &Server{
-		speculator: speculator,
-		dbHandler:  dbHandler,
+		speculator:      speculator,
+		dbHandler:       dbHandler,
+		modulesWrapper:  modulesWrapper,
+		samplingManager: samplingManager,
+		features:        features,
 	}
 
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)
@@ -134,6 +141,10 @@ func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *d
 		return s.DeleteAPIInventoryAPIIDSpecsReconstructedSpec(params)
 	})
 
+	api.GetFeaturesHandler = operations.GetFeaturesHandlerFunc(func(params operations.GetFeaturesParams) middleware.Responder {
+		return s.GetFeatures(params)
+	})
+
 	server := restapi.NewServer(api)
 
 	server.ConfigureFlags()
@@ -144,7 +155,7 @@ func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *d
 	newHandler := http.NewServeMux()
 
 	// Enhance the default handler with modules apis handlers
-	newHandler.Handle("/api/modules/", modules.HTTPHandler())
+	newHandler.Handle("/api/modules/", modulesWrapper.HTTPHandler())
 	newHandler.Handle("/", origHandler)
 	server.SetHandler(newHandler)
 	s.server = server

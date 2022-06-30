@@ -342,6 +342,44 @@ components:
             $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
       description: unknown error
   schemas:
+    APIClarityFeature:
+      properties:
+        featureDescription:
+          description: Short human readable description of the feature
+          type: string
+        featureName:
+          $ref: '#/components/schemas/APIClarityFeatureEnum'
+        hostsToTrace:
+          items:
+            type: string
+          type: array
+      required:
+      - featureName
+      type: object
+    APIClarityFeatureEnum:
+      description: APIClarity Feature Name
+      enum:
+      - bfla
+      - differ
+      - fuzzer
+      - specdiffs
+      - specreconstructor
+      - traceanalyzer
+      type: string
+    APIClarityFeatureList:
+      properties:
+        features:
+          items:
+            $ref: '#/components/schemas/APIClarityFeature'
+          type: array
+      type: object
+    APIClarityFeatureOperationEnum:
+      description: APIClarity Feature Operation Enum
+      enum:
+      - REMOVE
+      - SET
+      - ADD
+      type: string
     APIDiffs:
       properties:
         apiInfo:
@@ -1408,6 +1446,16 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       summary: Get most used APIs
+  /features:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIClarityFeatureList'
+          description: Success
+      summary: Get the list of APIClarity features
   /modules/bfla/apiFindings/{apiID}:
     get:
       description: Asks for findings of an APIClarity module, and API. Implemented
@@ -1560,6 +1608,52 @@ paths:
           description: Error response
       tags:
       - local-bfla
+  /modules/bfla/authorizationModel/{apiID}/detection/start:
+    put:
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      tags:
+      - bfla
+  /modules/bfla/authorizationModel/{apiID}/detection/stop:
+    put:
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      tags:
+      - bfla
   /modules/bfla/authorizationModel/{apiID}/learning/reset:
     put:
       parameters:
@@ -2045,6 +2139,54 @@ paths:
                 $ref: '#/components/schemas/Version'
           description: Version of the Module
       summary: Get the version of this Module
+  /modules/traceanalyzer/{apiID}/start:
+    post:
+      description: Start Trace Analysis for an API.
+      operationId: traceanalyzerStartTraceAnalysis
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      summary: Start Trace Analysis for an API
+  /modules/traceanalyzer/{apiID}/stop:
+    post:
+      description: Stop Trace Analysis for an API.
+      operationId: traceanalyzerStopTraceAnalysis
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      summary: Stop Trace Analysis for an API
   /modules/traceanalyzer/apiAnnotations/{apiID}:
     delete:
       description: Get Trace Analyzer Annotations for a specific API

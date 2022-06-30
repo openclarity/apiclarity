@@ -39,6 +39,7 @@ const (
 	rootPath               = "../.."
 	parentNotificationName = "APIClarityNotification"
 	baseNotificationName   = "BaseNotification"
+	featureEnumName        = "APIClarityFeatureEnum"
 )
 
 func loadSpec(path string, fail bool) *openapi3.T {
@@ -85,11 +86,15 @@ func aggregateGlobalSpecs() {
 	/* loading corespec and then enriching it with the module spec elements */
 	coreSpec := loadSpec(rootPath+"/"+coreSpecPath, true)
 
+	featureEnum := coreSpec.Components.Schemas[featureEnumName]
+	_ = featureEnum
+	coreComponents := reflect.ValueOf(coreSpec.Components)
+
 	moduleSpecs := loadModuleSpecs()
 	for module, moduleSpec := range moduleSpecs {
 		log.Infof("Aggregating components for module %s", module)
-		coreComponents := reflect.ValueOf(coreSpec.Components)
 		moduleComponents := reflect.ValueOf(moduleSpec.Components)
+		featureEnum.Value.Enum = append(featureEnum.Value.Enum, module)
 		for i := 0; i < coreComponents.Type().NumField(); i++ {
 			fieldName := coreComponents.Type().Field(i).Name
 			if fieldName == "ExtensionProps" {
@@ -136,6 +141,11 @@ func aggregateGlobalSpecs() {
 			coreSpec.Paths["/modules/"+module+key] = value
 		}
 	}
+
+	/* Sort the elements of the feature enum to force a deterministic outcome */
+	sort.Slice(featureEnum.Value.Enum, func(i, j int) bool {
+		return strings.Compare(string(featureEnum.Value.Enum[i].(string)), featureEnum.Value.Enum[j].(string)) < 0
+	})
 
 	/* now coreSpec holds the new global spec. We can write to file */
 	specout, err := coreSpec.MarshalJSON()
