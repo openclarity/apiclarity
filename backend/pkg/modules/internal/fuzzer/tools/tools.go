@@ -21,10 +21,17 @@ import (
 	"fmt"
 	"strings"
 
+	"encoding/json"
+
+	oapicommon "github.com/openclarity/apiclarity/api3/common"
+	"github.com/openclarity/apiclarity/api3/global"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/config"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/restapi"
 )
+
+// SeverityToNumber A map to used to compare Severity.
+var SeverityToNumber = map[string]int{string(oapicommon.INFO): 1, string(oapicommon.LOW): 2, string(oapicommon.MEDIUM): 3, string(oapicommon.HIGH): 4, string(oapicommon.CRITICAL): 5} // nolint:gomnd
 
 // Create new FuzzingReportPath.
 func NewFuzzingReportPath(result int, verb string, uri string) restapi.FuzzingReportPath {
@@ -61,7 +68,7 @@ func GetAuthStringFromParam(params *restapi.AuthorizationScheme) (string, error)
 
 	discriminator, err := params.Discriminator()
 	if err != nil {
-		return ret, err
+		return ret, fmt.Errorf("failed to get discriminator, err=(%v)", err)
 	}
 
 	switch discriminator {
@@ -124,78 +131,6 @@ func GetTimeBudgetFromParam(param restapi.TestInputDepthEnum) (string, error) {
 	return ret, nil
 }
 
-func GetAuthSchemeFromFuzzTargetParams(params restapi.FuzzTargetParams) (*restapi.AuthorizationScheme, error) {
-
-	if params.Type == nil || *params.Type == "NONE" {
-		return nil, nil
-	}
-
-	authScheme := restapi.AuthorizationScheme{}
-
-	switch {
-	case *params.Type == "apikey":
-
-		if params.Key == nil || params.Value == nil {
-			msg := fmt.Sprintf("Bad (%v) auth format (%v)", *params.Type, params)
-			logging.Logf(msg)
-			return nil, errors.New(msg)
-		}
-		ret := authScheme.FromApiToken(
-			restapi.ApiToken{
-				Key:   *params.Key,
-				Value: *params.Value,
-				Type:  restapi.APITOKEN,
-			},
-		)
-		if ret != nil {
-			return nil, ret
-		}
-
-	case *params.Type == "bearertoken":
-
-		if params.Token == nil {
-			msg := fmt.Sprintf("Bad (%v) auth format (%v)", *params.Type, params)
-			logging.Logf(msg)
-			return nil, errors.New(msg)
-		}
-		ret := authScheme.FromBearerToken(
-			restapi.BearerToken{
-				Token: *params.Token,
-				Type:  restapi.BEARERTOKEN,
-			},
-		)
-		if ret != nil {
-			return nil, ret
-		}
-
-	case *params.Type == "basicauth":
-
-		if params.Username == nil || params.Password == nil {
-			msg := fmt.Sprintf("Bad (%v) auth format (%v)", *params.Type, params)
-			logging.Logf(msg)
-			return nil, errors.New(msg)
-		}
-		ret := authScheme.FromBasicAuth(
-			restapi.BasicAuth{
-				Username: *params.Username,
-				Password: *params.Password,
-				Type:     restapi.BASICAUTH,
-			},
-		)
-		if ret != nil {
-			return nil, ret
-		}
-
-	default:
-
-		msg := fmt.Sprintf("Not supported auth type (%v) auth format (%v)", *params.Type, params)
-		logging.Logf(msg)
-		return nil, errors.New(msg)
-	}
-
-	return &authScheme, nil
-}
-
 func GetBasePathFromURL(URL string) string {
 	if URL == "" || URL == "/" {
 		return ""
@@ -219,4 +154,41 @@ func GetBasePathFromURL(URL string) string {
 	}
 
 	return "/" + path
+}
+
+func ConvertLocalToGlobalReportTag(from *[]restapi.FuzzingReportTag) *[]global.FuzzingReportTag {
+	if from == nil {
+		// If there is no tags on input, no need to convert, result must be null. It is not an error.
+		return nil
+	}
+
+	/*
+	* We need to convert restapi.FuzzingReportTag to global.FuzzingReportTag
+	* It is the same struc, because global.FuzzingReportTag is created from restapi.FuzzingReportTag.
+	* But: We need to use restapi.FuzzingReportTag on restapi.gen.go and Fuzzer functions that use it,
+	* and we need to use global.FuzzingReportTag for notifications.
+	* As it is same struct, it is valid here to unmarshall then marshall things.
+	 */
+	result := []global.FuzzingReportTag{}
+	bytes, err := json.Marshal(from)
+	if err != nil {
+		logging.Errorf("[Fuzzer] ConvertLocalToGlobalReportTag(): Failed to Marshal []restapi.FuzzingReportTag (%v)", err)
+		return nil
+	}
+	err = json.Unmarshal(bytes, &result)
+	if err != nil {
+		logging.Errorf("[Fuzzer] ConvertLocalToGlobalReportTag(): Failed to Unmarshal []global.FuzzingReportTag (%v)", err)
+		return nil
+	}
+	return &result
+}
+
+func IsGreaterSeverity(severity1 oapicommon.Severity, severity2 oapicommon.Severity) bool {
+	/*
+	* Severity comparison operator.
+	* Return true is s1>s2, false otherwise
+	 */
+	s1AsNumber := SeverityToNumber[string(severity1)]
+	s2AsNumber := SeverityToNumber[string(severity2)]
+	return s1AsNumber > s2AsNumber
 }

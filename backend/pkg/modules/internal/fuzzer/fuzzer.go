@@ -23,6 +23,8 @@ import (
 	"net/http"
 
 	oapicommon "github.com/openclarity/apiclarity/api3/common"
+	"github.com/openclarity/apiclarity/api3/global"
+	"github.com/openclarity/apiclarity/api3/notifications"
 
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/clients"
@@ -108,6 +110,68 @@ func (p *pluginFuzzer) EventNotify(ctx context.Context, event *core.Event) {
 
 /*
 *
+*  Manage notifications
+*
+ */
+
+func (p *pluginFuzzer) sendAPIFindingsNotification(ctx context.Context, apiID uint, findings []oapicommon.APIFinding) error {
+	apiFindingsNotification := notifications.ApiFindingsNotification{
+		NotificationType: "ApiFindingsNotification",
+		Items:            &findings,
+	}
+	notification := notifications.APIClarityNotification{}
+	err := notification.FromApiFindingsNotification(apiFindingsNotification)
+	if err != nil {
+		return fmt.Errorf("failed to create 'APIFindings' notification, err=(%v)", err)
+	}
+
+	err = p.accessor.Notify(ctx, ModuleName, apiID, notification)
+
+	return err //nolint:wrapcheck // really want to return the result of the notify
+}
+
+func (p *pluginFuzzer) sendTestReportNotification(ctx context.Context, apiID uint, report restapi.ShortTestReport) error {
+	globalReportTags := tools.ConvertLocalToGlobalReportTag(report.Tags)
+	testReportNotification := notifications.TestReportNotification{
+		ApiID:            report.ApiID,
+		HighestSeverity:  report.HighestSeverity,
+		NotificationType: "TestReportNotification",
+		Starttime:        report.Starttime,
+		Status:           global.FuzzingStatusEnum(report.Status),
+		StatusMessage:    report.StatusMessage,
+		Tags:             globalReportTags,
+	}
+	notification := notifications.APIClarityNotification{}
+	err := notification.FromTestReportNotification(testReportNotification)
+	if err != nil {
+		return fmt.Errorf("failed to create 'TestReport' notification, err=(%v)", err)
+	}
+
+	err = p.accessor.Notify(ctx, ModuleName, apiID, notification)
+
+	return err //nolint:wrapcheck // really want to return the result of the notify
+}
+
+func (p *pluginFuzzer) sendTestProgressNotification(ctx context.Context, apiID uint, report restapi.ShortTestProgress) error {
+	testProgressNotification := notifications.TestProgressNotification{
+		ApiID:            report.ApiID,
+		NotificationType: "TestProgressNotification",
+		Progress:         report.Progress,
+		Starttime:        report.Starttime,
+	}
+	notification := notifications.APIClarityNotification{}
+	err := notification.FromTestProgressNotification(testProgressNotification)
+	if err != nil {
+		return fmt.Errorf("failed to create 'TestProgress' notification, err=(%v)", err)
+	}
+
+	err = p.accessor.Notify(ctx, ModuleName, apiID, notification)
+
+	return err //nolint:wrapcheck // really want to return the result of the notify
+}
+
+/*
+*
 *  Implement Fuzzer module stuff
 *
  */
@@ -178,7 +242,11 @@ type pluginFuzzerHTTPHandler struct {
 func httpError(writer http.ResponseWriter, err error) {
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusBadRequest)
-	_ = json.NewEncoder(writer).Encode(map[string]interface{}{"error": err.Error()})
+	if err2 := json.NewEncoder(writer).Encode(map[string]interface{}{"error": err.Error()}); err2 != nil {
+		// we can't send the error... we can't fo anything else, here, except logging the error
+		logging.Errorf("[Fuzzer] Can't encode the error (%v)", err2)
+		logging.Errorf("[Fuzzer] The original error is (%v)", err)
+	}
 }
 
 func httpResponse(writer http.ResponseWriter, statusCode int, data interface{}) {
@@ -202,59 +270,6 @@ func (*pluginFuzzerHTTPHandler) GetVersion(writer http.ResponseWriter, req *http
 func (p *pluginFuzzerHTTPHandler) GetState(writer http.ResponseWriter, req *http.Request) {
 	state := p.fuzzer.runningState
 	httpResponse(writer, http.StatusOK, state)
-}
-
-//
-// Launch a fuzzing for an API.
-//
-func (p *pluginFuzzerHTTPHandler) FuzzTarget(writer http.ResponseWriter, req *http.Request, apiID oapicommon.ApiID, params restapi.FuzzTargetParams) {
-	logging.Debugf("[Fuzzer] FuzzTarget(%v): -->", apiID)
-
-	// Get the specs here as it need ctx and accessor
-	specsInfo, err := tools.GetAPISpecsInfo(req.Context(), p.fuzzer.accessor, uint(apiID))
-	if err != nil {
-		logging.Errorf("[Fuzzer] FuzzTarget(%v): can't retrieve specs error=(%v)", apiID, err)
-		httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
-		return
-	}
-
-	authScheme, err := tools.GetAuthSchemeFromFuzzTargetParams(params)
-	if err != nil {
-		logging.Errorf("[Fuzzer] FuzzTarget(%v): can't retrieve auth scheme=(%v)", apiID, err)
-		httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
-		return
-	}
-
-	// Store everything we need on a FuzzingInput struct
-	fuzzingInput := model.FuzzingInput{
-		Depth:     restapi.QUICK, // By default
-		Auth:      authScheme,
-		SpecsInfo: specsInfo,
-	}
-
-	_, err = p.fuzzer.FuzzTarget(req.Context(), apiID, &fuzzingInput)
-	if err != nil {
-		writer.Header().Set("Content-Type", "application/json")
-		//nolint: errorlint // no wrapped error here
-		switch err2 := err.(type) {
-		case *NotFoundError:
-			httpResponse(writer, http.StatusNotFound, EmptyJSON)
-		case *InvalidParameterError:
-			httpResponse(writer, http.StatusBadRequest, EmptyJSON)
-		case *PluginError:
-			httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
-		case *NotSupportedError:
-			httpResponse(writer, http.StatusBadRequest, EmptyJSON)
-		default:
-			logging.Errorf("[Fuzzer] FuzzTarget(%v): unexpected error=(%v)", apiID, err2)
-			httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
-		}
-		return
-	}
-
-	// Success
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusNoContent)
 }
 
 //
@@ -297,8 +312,8 @@ func (p *pluginFuzzerHTTPHandler) PostUpdateStatus(writer http.ResponseWriter, r
 		httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
 		return
 	}
-
 	logging.Logf("[Fuzzer] PostUpdateStatus(%v): Received a request of size=(%v)", apiID, len(body))
+
 	/*
 	* Decode the result
 	 */
@@ -309,7 +324,6 @@ func (p *pluginFuzzerHTTPHandler) PostUpdateStatus(writer http.ResponseWriter, r
 		httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
 		return
 	}
-	// Logf("body=%v", data)
 
 	/*
 	* Add the new status to the last Test
@@ -320,18 +334,66 @@ func (p *pluginFuzzerHTTPHandler) PostUpdateStatus(writer http.ResponseWriter, r
 		httpResponse(writer, http.StatusNotFound, EmptyJSON)
 		return
 	}
-	// Logf("[Fuzzer] PostUpdateStatus():: API_id (%v) => API (%v)", apiId, api)
 	api.AddNewStatusReport(data)
 	err = api.StoreReportData(req.Context(), p.fuzzer.accessor, ModuleName, data)
 	if err != nil {
 		logging.Errorf("[Fuzzer] PostUpdateStatus(%v): Can't store report data, error=(%v)", apiID, err)
 		// Not fatal, we can continue
 	}
-	// If the status indicate a completion, close the job
+
+	/*
+	* If the status indicate a completion, close the job
+	 */
 	if data.Progress == 100 && data.Status != "IN_PROGRESS" {
 		err = p.fuzzer.model.StopAPIFuzzing(req.Context(), uint(apiID), nil)
 		if err != nil {
 			logging.Errorf("[Fuzzer] PostUpdateStatus(%v): failed to stop fuzzing status, error=%v", apiID, err)
+		}
+	}
+
+	/*
+	* ... Then check for notifications to send
+	 */
+	shortReport, err := api.GetLastShortStatus()
+	if err != nil {
+		logging.Errorf("[Fuzzer] PostUpdateStatus(%v): Can't get short report for this API", apiID)
+		httpResponse(writer, http.StatusNotFound, EmptyJSON)
+		return
+	}
+	if shortReport.Status == restapi.INPROGRESS {
+		err = p.fuzzer.sendTestProgressNotification(
+			req.Context(),
+			uint(apiID),
+			restapi.ShortTestProgress{
+				ApiID:     &apiID,
+				Progress:  data.Progress,
+				Starttime: shortReport.Starttime,
+			},
+		)
+		if err != nil {
+			// Log the error, but do not block the process as the error seems external to the Fuzzer modue
+			logging.Errorf("[Fuzzer] PostUpdateStatus(%v): Failed to send 'TestProgress' notification, err=(%v)", apiID, err)
+		}
+	} else if shortReport.Status == restapi.DONE || shortReport.Status == restapi.ERROR {
+		// The
+		err = p.fuzzer.sendTestReportNotification(
+			req.Context(),
+			uint(apiID),
+			*shortReport,
+		)
+		if err != nil {
+			// Log the error, but do not block the process as the error seems external to the Fuzzer modue
+			logging.Errorf("[Fuzzer] PostUpdateStatus(%v): Failed to send 'TestReport' notification, err=(%v)", apiID, err)
+		}
+		lastFindings := api.GetLastAPIFindings()
+		err = p.fuzzer.sendAPIFindingsNotification(
+			req.Context(),
+			uint(apiID),
+			*lastFindings,
+		)
+		if err != nil {
+			// Log the error, but do not block the process as the error seems external to the Fuzzer modue
+			logging.Errorf("[Fuzzer] PostUpdateStatus(%v): Failed to send 'APIFindings' notification, err=(%v)", apiID, err)
 		}
 	}
 
@@ -351,29 +413,24 @@ func (p *pluginFuzzerHTTPHandler) GetRawfindings(writer http.ResponseWriter, req
 // Return the findings list for the lastest Test.
 //
 func (p *pluginFuzzerHTTPHandler) GetAPIFindings(writer http.ResponseWriter, req *http.Request, apiID int64, params restapi.GetAPIFindingsParams) {
-	/*logging.Debugf("[Fuzzer] GetFindings(%v): -->", apiID)
+	logging.Debugf("[Fuzzer] GetFindings(%v): -->", apiID)
 	api, err := p.fuzzer.model.GetAPI(req.Context(), uint(apiID))
 	if err != nil {
 		logging.Errorf("[Fuzzer] GetFindings(%v): Can't retrieve api_id=(%v), error=(%v)", apiID, apiID, err)
 		httpResponse(writer, http.StatusNotFound, EmptyJSON)
 		return
 	}
-	logging.Logf("[Fuzzer] GetFindings(%v): API_id (%v) => API (%v)", apiID, apiID, api)
-	var count int
-	result := restapi.Findings{
-		Items: api.GetLastFindings(),
-		Total: &count,
+	lastFindings := api.GetLastAPIFindings()
+	result := oapicommon.APIFindings{
+		Items: lastFindings,
 	}
-	count = len(*(result.Items))
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(writer).Encode(result)
 	if err != nil {
 		logging.Errorf("[Fuzzer] GetFindings(%v): Failed to encode response, error=(%v)", apiID, err)
-	}*/
-	logging.Debugf("[Fuzzer] GetApiFindings(%v): -->", apiID)
-
-	httpResponse(writer, http.StatusNotImplemented, EmptyJSON)
+		httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
+	}
 }
 
 //
@@ -461,7 +518,7 @@ func (p *pluginFuzzerHTTPHandler) GetReport(writer http.ResponseWriter, req *htt
 }
 
 func (p *pluginFuzzerHTTPHandler) GetAnnotatedSpec(writer http.ResponseWriter, req *http.Request, apiID int64) {
-	logging.Logf("[Fuzzer] GetAnnotatedSpec(): called for API_id (%v)", apiID)
+	logging.Logf("[Fuzzer] GetAnnotatedSpec(%v): --> <--", apiID)
 	httpResponse(writer, http.StatusNotImplemented, EmptyJSON)
 }
 
@@ -469,7 +526,7 @@ func (p *pluginFuzzerHTTPHandler) GetAnnotatedSpec(writer http.ResponseWriter, r
 // Return the progress status of the on going test.
 //
 func (p *pluginFuzzerHTTPHandler) GetTestProgress(writer http.ResponseWriter, req *http.Request, apiID int64) {
-	logging.Debugf("[Fuzzer] GetTestProgress(%v): -->", apiID)
+	logging.Debugf("[Fuzzer] GetTestProgress(%v): -->  <--", apiID)
 	httpResponse(writer, http.StatusNotImplemented, EmptyJSON)
 }
 
@@ -477,7 +534,7 @@ func (p *pluginFuzzerHTTPHandler) GetTestProgress(writer http.ResponseWriter, re
 // Start a test.
 //
 func (p *pluginFuzzerHTTPHandler) StartTest(writer http.ResponseWriter, req *http.Request, apiID int64) {
-	logging.Debugf("[Fuzzer] StartTest(%v): -->", apiID)
+	logging.Debugf("[Fuzzer] StartTest(%v): -->  <--", apiID)
 
 	// Decode the restapi.TestInput requesBody
 	body, err := ioutil.ReadAll(req.Body)

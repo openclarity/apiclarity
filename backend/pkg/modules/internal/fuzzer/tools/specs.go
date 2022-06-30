@@ -99,7 +99,7 @@ func IsV3Specification(data []byte) bool {
 
 func LoadSpec(spec []byte) (*openapi3.T, error) {
 	if IsV2Specification(spec) {
-		logging.Logf("[Fuzzer] getDocFromSpec(): spec V2 identified")
+		logging.Debugf("[Fuzzer] getDocFromSpec(): spec V2 identified")
 		loader := openapi3.NewLoader()
 		var docV2 openapi2.T
 		if err := yaml.Unmarshal(spec, &docV2); err != nil {
@@ -116,7 +116,7 @@ func LoadSpec(spec []byte) (*openapi3.T, error) {
 		}
 		return doc, nil
 	} else if IsV3Specification(spec) {
-		logging.Logf("[Fuzzer] getDocFromSpec(): spec V3 identified")
+		logging.Debugf("[Fuzzer] getDocFromSpec(): spec V3 identified")
 		loader := openapi3.NewLoader()
 		doc, err := loader.LoadFromData(spec)
 		if err != nil {

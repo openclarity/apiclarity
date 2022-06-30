@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useRouteMatch, useHistory } from 'react-router-dom';
 
 import classnames from 'classnames';
+import { useFetch, FETCH_METHODS } from 'hooks';
 import { isNull } from 'lodash';
 import Icon, { ICON_NAMES } from 'components/Icon';
 import Modal from 'components/Modal';
@@ -18,8 +19,6 @@ import VulnerabilityCounts from './VulnerabilityCounts';
 import COLORS from 'utils/scss_variables.module.scss';
 
 import './tests.scss';
-import { useFetch } from 'hooks';
-
 
 const TestsTable = ({inventoryId, inventoryName}) => {
 
@@ -122,7 +121,7 @@ const TestsTable = ({inventoryId, inventoryName}) => {
     const [serviceName] = useState(inventoryName.split(".")[0]);
     const [serviceToTest] = useState(serviceName);
 
-    const [{error: fuzzingError}, startFuzzing] = useFetch('modules/fuzzer/fuzz', {loadOnMount: false});
+    const [{error: fuzzingError}, startFuzzing] = useFetch(`modules/fuzzer/fuzz/${inventoryId}/start`, {loadOnMount: false});
 
     useEffect(() => {
         if (fuzzingError) {
@@ -130,12 +129,15 @@ const TestsTable = ({inventoryId, inventoryName}) => {
         }
     }, [fuzzingError]);
 
-    function DoFuzz(apiID, authDetails={}) {
+    function DoFuzz(authDetails, selectedDepth) {
+        const depth = selectedDepth ? selectedDepth.value : "QUICK"
         startFuzzing({
-            formatUrl: url => `${url}/${apiID}`,
-            queryParams: {
-                ...authDetails
-            }
+            submitData: {
+                'auth': authDetails,
+                'depth': depth
+            },
+            headers: { 'Content-Type': 'application/json' },
+            method: FETCH_METHODS.POST
         });
         closeResetConfirmationModal();
     }
@@ -155,7 +157,6 @@ const TestsTable = ({inventoryId, inventoryName}) => {
                 <Table
                     columns={columns}
                     paginationItemsName="Tests"
-                    //url={`/modules/fuzzer/tests/${inventoryId}`}
                     data={data}
                     defaultSortBy={[{ id: "name", desc: true }]}
                     onLineClick={({ report, starttime }) => history.push(`${url}/${starttime}`)}
@@ -166,8 +167,8 @@ const TestsTable = ({inventoryId, inventoryName}) => {
             {!isNull(doFuzzAction) &&
                 <TestingModal
                     title={`Testing API ${inventoryName} (Service '${serviceToTest}')`}
-                    onDone={(authDetails) => {
-                        DoFuzz(inventoryId, authDetails);
+                    onDone={(authDetails, selectedDepth) => {
+                        DoFuzz(authDetails, selectedDepth);
                     }}
                     onClose={closeResetConfirmationModal}
                 />
@@ -184,17 +185,32 @@ const AUTHENTICATION_METHODS = {
     BASIC: {
         value: 'BASIC',
         label: 'Basic Auth',
-        type: 'basicauth'
+        type: 'BasicAuth'
     },
     API_KEY: {
         value: 'API_KEY',
         label: 'API Key',
-        type: 'apikey'
+        type: 'ApiToken'
     },
     BEARER: {
         value: 'BEARER',
         label: 'Bearer Token',
-        type: 'bearertoken'
+        type: 'BearerToken'
+    }
+};
+
+const DEPTH_VALUES = {
+    QUICK: {
+        value: 'QUICK',
+        label: 'Quick',
+    },
+    DEFAULT: {
+        value: 'DEFAULT',
+        label: 'Default',
+    },
+    DEEP: {
+        value: 'DEEP',
+        label: 'Deep',
     }
 };
 
@@ -202,16 +218,18 @@ const TestingModal = ({title, onClose, onDone}) => {
     const [selectedAuth, setSelectedAuth] = useState(AUTHENTICATION_METHODS.NONE);
     const [authDetails, setAuthDetails] = useState();
 
-    const authItems = Object.values(AUTHENTICATION_METHODS);
+    const [selectedDepth, setSelectedDepth] = useState(DEPTH_VALUES.DEFAULT);
 
-    // /fuzz/{apiId}?service={service}&auth={basicauth/apikey/bearertoken}&username={username_encoded}&password={password_encoded}&key={key}&token={token}
+    const authItems = Object.values(AUTHENTICATION_METHODS);
+    const depthItems = Object.values(DEPTH_VALUES);
+
     return (
         <Modal
             title={title}
             onClose={onClose}
             className="do-fuzz-confirmation-modal"
             height={600}
-            onDone={() => onDone(authDetails)}
+            onDone={() => onDone(authDetails, selectedDepth)}
             doneTitle="TEST"
         >
             <div>This will test APIs, providing invalid, unexpected or random data as inputs to a computer program.</div>
@@ -224,6 +242,12 @@ const TestingModal = ({title, onClose, onDone}) => {
                 <div><Icon name={ICON_NAMES.ALERT_ROUND} className={classnames("alert-icon")} /></div>
                 <b>Testing, in case of anomalies, could crash the API.</b>
             </div>
+            <div className="testing-dropdown-title"> <b>Choose the test depth</b></div>
+                <DropdownSelect
+                    items={depthItems}
+                    value={selectedDepth}
+                    onChange={(selected) => setSelectedDepth(selected)}
+                />
             <div className="testing-dropdown-title"> <b>Choose an authentication scheme</b></div>
                 <DropdownSelect
                     items={authItems}

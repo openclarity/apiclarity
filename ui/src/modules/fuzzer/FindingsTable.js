@@ -12,7 +12,7 @@ const FindingsTable = ({inventoryId, inventoryName}) => {
             id: "name",
             accessor: "name",
             canSort: true,
-            width: 50
+            width: 50,
         },
         {
             Header: 'Description',
@@ -21,10 +21,10 @@ const FindingsTable = ({inventoryId, inventoryName}) => {
         },
         {
             Header: 'Risk',
-            id: "risk",
+            id: "severity",
             Cell: ({row}) => {
-                const {risk} = row.original;
-                return (<div className="risk-tag-color"><RiskTag risk={risk.toUpperCase()}/></div>);
+                const {severity} = row.original;
+                return (<div className="risk-tag-color"><RiskTag risk={severity.toUpperCase()}/></div>);
             },
             canSort: true,
             width: 20
@@ -39,7 +39,7 @@ const FindingsTable = ({inventoryId, inventoryName}) => {
             <Table
                 columns={columns}
                 paginationItemsName="Findings"
-                url={`/modules/fuzzer/findings/${inventoryId}`}
+                url={`/modules/fuzzer/apiFindings/${inventoryId}`}
                 defaultSortBy={[{ id: "name", desc: true }]}
                 noResultsTitle={`findings for API '${inventoryName}'`}
             />
