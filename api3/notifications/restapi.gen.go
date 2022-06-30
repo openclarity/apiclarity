@@ -92,6 +92,17 @@ type ShortTestReport struct {
 	Tags          *[]externalRef1.FuzzingReportTag `json:"tags,omitempty"`
 }
 
+// SpecDiffs defines model for SpecDiffs.
+type SpecDiffs struct {
+	Diffs []externalRef1.APIDiffs `json:"diffs"`
+}
+
+// SpecDiffsNotification defines model for SpecDiffsNotification.
+type SpecDiffsNotification struct {
+	Diffs            []externalRef1.APIDiffs `json:"diffs"`
+	NotificationType string                  `json:"notificationType"`
+}
+
 // TestProgressNotification defines model for TestProgressNotification.
 type TestProgressNotification struct {
 	ApiID            *externalRef0.ApiID `json:"apiID,omitempty"`
@@ -155,6 +166,19 @@ func (t *APIClarityNotification) FromAuthorizationModelNotification(v Authorizat
 	return err
 }
 
+func (t APIClarityNotification) AsSpecDiffsNotification() (SpecDiffsNotification, error) {
+	var body SpecDiffsNotification
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+func (t *APIClarityNotification) FromSpecDiffsNotification(v SpecDiffsNotification) error {
+	v.NotificationType = "SpecDiffsNotification"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
 func (t APIClarityNotification) AsTestProgressNotification() (TestProgressNotification, error) {
 	var body TestProgressNotification
 	err := json.Unmarshal(t.union, &body)
@@ -199,6 +223,8 @@ func (t APIClarityNotification) ValueByDiscriminator() (interface{}, error) {
 		return t.AsApiFindingsNotification()
 	case "AuthorizationModelNotification":
 		return t.AsAuthorizationModelNotification()
+	case "SpecDiffsNotification":
+		return t.AsSpecDiffsNotification()
 	case "TestProgressNotification":
 		return t.AsTestProgressNotification()
 	case "TestReportNotification":
@@ -647,23 +673,24 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/8RXS2/bRhD+K4ttj4SkpEUPujlxA+iQ2Kh0C3RYkyNqAu6ju0MlsqD/XuyDD4mULbsx",
-	"chPFeX7zzbfLA8+1NFqBIsfnB+7yLUgRft7cLz5WwiLtv2jCDeaCUCv/pkCXW5SoBGnr/5DCGFRl8DL4",
-	"CVWBqnSnbvy3aZdqmvJML5ln/Kamrbb4GJ4/6wKqq+I97ZXxFTi6t7q04K4q8KJ9DPUPGG3p2kAj1seM",
-	"G6sNWNp/ERL4nKve69XegDfRCu42fP71wH+3sHkpmMfsGb+nQXvO/SJE1ziOQbI+Zp59TS+BcuApZxLA",
-	"N6y0ujZMb9imMWpxRAgeSCBHXSt0dObZ2qZqJxNfrtRqqg0oYXCyF7Iax66t08+J/LzmXFgr9vzY/aEf",
-	"vkFO3uLifhy4qKorhvxBOHjZdHtIRmgH4/bZT9GrQFiVVjr18KB1BSIw1lsG71OkO/TKSj+IqkWvBPUE",
-	"goNy7prwQ0gz7gzkYS1enXDZRPADsvBvjRYKPv/ahT7pMOvAWI8N9Bmderu5DscYxjsINNgBb8H6JkxU",
-	"Fev0nvUlyDFZO2Lwg0AVgy0biFXHF0c2bMUZyAOPMVCXW22pryvDJm7D0wM4RltgJtn5xRaKaVVqVCUj",
-	"cDSoWRhc3L5y24Nr1OwLdd33KvGVpRKk+IGylnz+bjbLuEQVn2YZJ6QK2oZMOlwSJKgISrCB+CQsEUoY",
-	"5lyhBEdCmiZpsD2rYKOtFBRj/vUn7xIvg3GIPMx7viJtET0M1r1YfnDMT461QESJ50+NOZkMGuuFa6P8",
-	"/GFusdyCoyXswNP/ddFa7182qpCX6v8hxZ/qx0dU5TKE+VvVsgv6GZwT5UhD6QXbaMuiKSuABFYuY+iX",
-	"cX9avzeQyScZdr00mpFxEuXPOFxSR5E8KxFDp2JWonThNsBHDu5LpE8Qj1P+MtMvXzvf7HwYamg4Hi7d",
-	"Wt++joTOcX30AKPa6HBaJBg/agvs7uZ+EZjUO4zObt07sC4y791kli4jngd8zv+YzCbvvUII2gbOTPuH",
-	"zfQQtOIYLjvaBbVpj/lF4aVbuxNQokD4eFZIILAuoIM+uc/BM67inV0ky441ZGvI0ueUzzRc6XOhXUd3",
-	"cPRBF0GEcq0IFEWZM1XTxzcX59UFf+b6N/YZF2ZwuslnQJ/2ElbCGa1c1N33s9mLSjy/FAyyL+s8DyT1",
-	"klNLKew+nqY7LICRZjcG80SJ5gpvxXeGytQUOCNYiTtQnjtsccuEczpHQVCw70jb9jU1ChyrcGB3zWRr",
-	"W/E5n3qK/hcAAP//psOo8RkPAAA=",
+	"H4sIAAAAAAAC/8RXS5PaOBD+KyrtHl1Aslt74EYymyoOyVALtxQHYbeNUtZjpTYJQ/Hft/TwA2weM5nZ",
+	"3MDq59dfd0sHmiqhlQSJlk4P1KZbEMz/nC3mH0tmOO6/KOQ5TxlyJd1Jxm1quOCSoTLug2Bac1l4Lc0/",
+	"cZlxWdhTNfrbuHU1jn7Gl8QTOqtwqwx/8v8/qwzKu+xd10roUkP6wPP8ruiGhRO6AosLowoD9i47F+WD",
+	"qX9AK4P3GhqQPiZUG6XB4P4LE0CnVHaOV3sNTkRJeMzp9OuB/m4gf25FjskNvevI31IfhvqW1kVg71Ec",
+	"AnJ9TBzxawQ828GxXceyzEhhVKWJykleCzXoc/AaHEEMqpbc4plmIxujHY1cuELJsdIgmeajPRPlMOJN",
+	"nK666Ko8pcwYtqfH9oPafIMUncTF1jxQVpZ3UOMDs/A8TnSQDND2SOK8n6JXAjMyTpOYw0apEpjnuZP0",
+	"2qdIt+gVpdqwskGvAHkFwV44j7X5PqQJtRpS30wvdrisLbgCGfi34gYyOv3amj7JMGnBWA8V9MaIfLu6",
+	"9svoy9sz1OsBJ0G6IoSVJWlXDekOLktEZZHADwSZ9bqsN+Javlg0vivOQO5pDIG63CqD3bnST+LB/9uA",
+	"JbgFoqOca2wmiZKF4rIgCBZ7MTPN5w8v7HavGib9hbgWnUhcZDEEwX5wUQk6fTeZJFRwGf5NEoocS2gS",
+	"0nElRUi4RCjAeOIjM4hcQN/niguwyISunXrZswhyZQTDYPOvP2nreOmFveW+3/MWaYLoYLDu2HKFI65y",
+	"pAEijHh6rcxRpJdYx1xj5fWLueXFFiwuYQeO/i+z1mj/slJ5v1j9xCj+VD09cVksvZm/ZSVao5/BWlYM",
+	"JBQPSK4MCaIkA2S8tAnhrhn3p/E7ARF1omCbSz0zEoqseI3lEjMK5FmxYDoGs2KF9bcBOrC4L5E+QjxM",
+	"+StMr29W/VWb1Z9/do8u5sHD8UY6weH6WpT/0wprUfGb6/KN/u0i6C2aJpKhB8HbxxEpdFwfXdm4zJVf",
+	"qZFrH5UB8jhbzH27dTb22YNmB8aG9nw3msQbm2MQndI/RpPRezdGGW4928bdjTw++IF69DRV1o/k5i40",
+	"z9x+U/YElDBFnT3DBCAY69HhzrnzQRMqw3OIRcmWi2gqSOJz13nqz73zbbQO6mDxg8r8pE6VRJAYdoEu",
+	"6zy+2VCv1viNO/LQM9vX4HTcnQF9motvNKuVtKG1308mzwrx/ObU876s0tST1M3lSghm9uHKseMZEFRk",
+	"pnkaKVG/cwz7TrjUFXrOMFLwHUjHHTJ/IMxalXKGkJHvHLfNMdZrKkRhwezqylampFM6dhT9LwAA//8U",
+	"4QbQuRAAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
