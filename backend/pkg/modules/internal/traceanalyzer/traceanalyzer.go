@@ -315,7 +315,7 @@ func fromCoreEventAnnotation(coreAnn *core.Annotation) (ann utils.TraceAnalyzerA
 	case weakjwt.JWTSensitiveContentInClaims:
 		a = &weakjwt.AnnotationSensitiveContentInClaims{}
 
-	case sensitive.RegexpMatching:
+	case sensitive.RegexpMatchingType:
 		a = &sensitive.AnnotationRegexpMatching{}
 
 	case nlid.NLIDType:
@@ -368,6 +368,9 @@ func fromCoreAPIAnnotation(coreAnn *core.Annotation) (ann utils.TraceAnalyzerAPI
 		a = &weakbasicauth.APIAnnotationKnownPassword{}
 	case weakbasicauth.KindSamePassword:
 		a = &weakbasicauth.APIAnnotationSamePassword{}
+
+	case sensitive.RegexpMatchingType:
+		a = &sensitive.APIAnnotationRegexpMatching{}
 
 	case nlid.NLIDType:
 		a = &nlid.APIAnnotationNLID{}
