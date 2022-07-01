@@ -310,10 +310,8 @@ func fromCoreEventAnnotation(coreAnn *core.Annotation) (ann utils.TraceAnalyzerA
 		a = &weakjwt.AnnotationExpTooFar{}
 	case weakjwt.JWTWeakSymetricSecret:
 		a = &weakjwt.AnnotationWeakSymetricSecret{}
-	case weakjwt.JWTSensitiveContentInHeaders:
-		a = &weakjwt.AnnotationSensitiveContentInHeaders{}
-	case weakjwt.JWTSensitiveContentInClaims:
-		a = &weakjwt.AnnotationSensitiveContentInClaims{}
+	case weakjwt.JWTSensitiveContent:
+		a = &weakjwt.AnnotationSensitiveContent{}
 
 	case sensitive.RegexpMatchingType:
 		a = &sensitive.AnnotationRegexpMatching{}
@@ -371,6 +369,22 @@ func fromCoreAPIAnnotation(coreAnn *core.Annotation) (ann utils.TraceAnalyzerAPI
 
 	case sensitive.RegexpMatchingType:
 		a = &sensitive.APIAnnotationRegexpMatching{}
+
+	case weakjwt.JWTNoAlgField:
+		a = &weakjwt.APIAnnotationNoAlgField{}
+
+	case weakjwt.JWTAlgFieldNone:
+		a = &weakjwt.APIAnnotationAlgFieldNone{}
+	case weakjwt.JWTNotRecommendedAlg:
+		a = &weakjwt.APIAnnotationNotRecommendedAlg{}
+	case weakjwt.JWTNoExpireClaim:
+		a = &weakjwt.APIAnnotationNoExpireClaim{}
+	case weakjwt.JWTExpTooFar:
+		a = &weakjwt.APIAnnotationExpTooFar{}
+	case weakjwt.JWTWeakSymetricSecret:
+		a = &weakjwt.APIAnnotationWeakSymetricSecret{}
+	case weakjwt.JWTSensitiveContent:
+		a = &weakjwt.APIAnnotationSensitiveContent{}
 
 	case nlid.NLIDType:
 		a = &nlid.APIAnnotationNLID{}
