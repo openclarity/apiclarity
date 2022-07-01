@@ -364,6 +364,9 @@ func fromCoreAPIAnnotation(coreAnn *core.Annotation) (ann utils.TraceAnalyzerAPI
 	switch coreAnn.Name {
 	case nlid.NLIDType:
 		a = &nlid.APIAnnotationNLID{}
+	case guessableid.GuessableType:
+		a = &guessableid.APIAnnotationGuessableID{}
+
 
 	default:
 		return nil, fmt.Errorf("unknown annotation '%s'", coreAnn.Name)
