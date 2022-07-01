@@ -163,12 +163,12 @@ func (w *Sensitive) analyzeSensitive(trace *models.Telemetry) *AnnotationRegexpM
 	return nil
 }
 
-func (w *Sensitive) Analyze(trace *models.Telemetry) (eventAnns []utils.TraceAnalyzerAnnotation, apiAnns []utils.TraceAnalyzerAPIAnnotation) {
+func (w *Sensitive) Analyze(trace *models.Telemetry) (eventAnns []utils.TraceAnalyzerAnnotation) {
 	ann := w.analyzeSensitive(trace)
 
 	if ann != nil {
 		eventAnns = append(eventAnns, ann)
 	}
 
-	return eventAnns, apiAnns
+	return eventAnns
 }

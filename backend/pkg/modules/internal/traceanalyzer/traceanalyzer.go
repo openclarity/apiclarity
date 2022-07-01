@@ -198,19 +198,15 @@ func (p *traceAnalyzer) EventNotify(ctx context.Context, e *core.Event) {
 	event, trace := e.APIEvent, e.Telemetry
 	log.Debugf("[TraceAnalyzer] received a new trace for API(%v) EventID(%v)", event.APIInfoID, event.ID)
 	eventAnns := []utils.TraceAnalyzerAnnotation{}
-	apiAnns := []utils.TraceAnalyzerAPIAnnotation{}
 
-	wbaEventAnns, wbaAPIAnns := p.weakBasicAuth.Analyze(trace)
+	wbaEventAnns := p.weakBasicAuth.Analyze(trace)
 	eventAnns = append(eventAnns, wbaEventAnns...)
-	apiAnns = append(apiAnns, wbaAPIAnns...)
 
-	wjtEventAnns, wjtAPIAnns := p.weakJWT.Analyze(trace)
+	wjtEventAnns := p.weakJWT.Analyze(trace)
 	eventAnns = append(eventAnns, wjtEventAnns...)
-	apiAnns = append(apiAnns, wjtAPIAnns...)
 
-	sensEventAnns, sensAPIAnns := p.sensitive.Analyze(trace)
+	sensEventAnns := p.sensitive.Analyze(trace)
 	eventAnns = append(eventAnns, sensEventAnns...)
-	apiAnns = append(apiAnns, sensAPIAnns...)
 
 	// If the status code starts with 2, it means that the request has been
 	// accepted, hence, the parameters were accepted as well. So, we can look at

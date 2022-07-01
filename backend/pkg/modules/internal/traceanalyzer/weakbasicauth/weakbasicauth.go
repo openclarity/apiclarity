@@ -126,7 +126,7 @@ func (w *WeakBasicAuth) analyzeSameCreds(api utils.API, user string, password st
 	return anns
 }
 
-func (w *WeakBasicAuth) Analyze(trace *models.Telemetry) (eventAnns []utils.TraceAnalyzerAnnotation, apiAnns []utils.TraceAnalyzerAPIAnnotation) {
+func (w *WeakBasicAuth) Analyze(trace *models.Telemetry) (eventAnns []utils.TraceAnalyzerAnnotation) {
 	api := trace.Request.Host
 
 	user, password, found := findBasicAuthToken(trace)
@@ -136,5 +136,5 @@ func (w *WeakBasicAuth) Analyze(trace *models.Telemetry) (eventAnns []utils.Trac
 		eventAnns = append(eventAnns, w.analyzeSameCreds(api, user, password)...)
 	}
 
-	return eventAnns, apiAnns
+	return eventAnns
 }
