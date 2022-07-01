@@ -362,6 +362,13 @@ func (p *traceAnalyzer) toCoreAPIAnnotations(anns []utils.TraceAnalyzerAPIAnnota
 func fromCoreAPIAnnotation(coreAnn *core.Annotation) (ann utils.TraceAnalyzerAPIAnnotation, err error) {
 	var a utils.TraceAnalyzerAPIAnnotation
 	switch coreAnn.Name {
+	case weakbasicauth.KindShortPassword:
+		a = &weakbasicauth.APIAnnotationShortPassword{}
+	case weakbasicauth.KindKnownPassword:
+		a = &weakbasicauth.APIAnnotationKnownPassword{}
+	case weakbasicauth.KindSamePassword:
+		a = &weakbasicauth.APIAnnotationSamePassword{}
+
 	case nlid.NLIDType:
 		a = &nlid.APIAnnotationNLID{}
 	case guessableid.GuessableType:
