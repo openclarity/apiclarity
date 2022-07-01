@@ -242,42 +242,6 @@ paths:
       responses:
         '204':
           description: Successful Response
-
-  /rawfindings/{apiID}:
-    parameters:
-      - name: apiID
-        in: path
-        required: true
-        schema:
-          $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
-    get:
-      operationId: GetRawfindings
-      summary: Retreive list of findings for an API
-      description: Receive list of findings for an API
-      tags:
-        - local-fuzzer
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RawFindingsBundle'
-          description: Raw Finding Bundle
-    post: 
-      operationId: PostRawfindings
-      summary: Receive list of raw findings for an API
-      description: Receive list of raw findings for an API
-      tags:
-        - local-fuzzer
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RawFindingsBundle'
-        required: true
-      responses:
-        '204':
-          description: Successful Response
   
   /tests/{apiID}:
     get:

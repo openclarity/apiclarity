@@ -114,8 +114,11 @@ func NewTest() *TestItem {
 }
 
 func ConvertRawFindingToAPIFinding(finding restapi.RawFindings) *common.APIFinding {
-	additionalInfo := map[string]interface{}{
-		"Description": finding.AdditionalInfo,
+	var additionalInfo *map[string]interface{} // = nil
+	if finding.AdditionalInfo != nil {
+		additionalInfo = &map[string]interface{}{
+			"Description": finding.AdditionalInfo,
+		}
 	}
 	result := common.APIFinding{
 		Type:           *finding.Type,
@@ -123,7 +126,7 @@ func ConvertRawFindingToAPIFinding(finding restapi.RawFindings) *common.APIFindi
 		Source:         *finding.Namespace,
 		Description:    *finding.Description,
 		Severity:       common.Severity(*finding.Request.Severity),
-		AdditionalInfo: &additionalInfo,
+		AdditionalInfo: additionalInfo,
 	}
 	return &result
 }
@@ -369,8 +372,7 @@ func (api *API) AddNewStatusReport(report restapi.FuzzingStatusAndReport) {
 		return
 	}
 
-	// Logf("[Fuzzer] AddNewStatusReport():: api.inFuzzing=%v", api.inFuzzing)
-	// Logf("[Fuzzer] AddNewStatusReport():: len(api.tests)=%v", len(api.tests))
+	logging.Debugf("[Fuzzer] AddNewStatusReport():: Status inFuzzing=(%v), nb of tests=(%v)", api.InFuzzing, len(api.TestsList))
 
 	// Add report contet on test data for the said API
 	if api.InFuzzing && len(api.TestsList) > 0 {
@@ -415,11 +417,10 @@ func (api *API) AddNewStatusReport(report restapi.FuzzingStatusAndReport) {
 			if *reportItem.Name == "restler" && *reportItem.Source == "RESTLER" {
 				for _, finding := range *reportItem.Findings {
 					tokens := strings.Split(*finding.AdditionalInfo, " ")
-					// logging.Logf("[Fuzzer] AddNewStatusReport():: #### AdditionalInfo=%v", *finding.AdditionalInfo)
 					if len(tokens) > 3 && strings.HasPrefix(tokens[2], "HTTP") {
+						logging.Debugf("[Fuzzer] AddNewStatusReport():: Adding new report item (%v %v)", tokens[0], tokens[1])
 						httpcode := tools.GetHTTPCodeFromFindingType(*finding.Type)
 						*reportItem.Paths = append(*reportItem.Paths, tools.NewFuzzingReportPath(httpcode, tokens[0], tokens[1]))
-						// logging.Logf("[Fuzzer] AddNewStatusReport():: #### ... add new path len(api.tests)=%v", (*reportItem.Paths)[len(*reportItem.Paths)-1])
 					}
 				}
 				// It exists only one ""
@@ -467,11 +468,19 @@ func (api *API) AddErrorOnLastTest(fuzzerError error) {
 	}
 }
 
-func (api *API) GetTestContent(timestamp int64) *restapi.TestWithReport {
+func (api *API) GetTestByTimestamp(timestamp int64) *restapi.TestWithReport {
 	for _, testItem := range api.TestsList {
 		if *testItem.Test.Starttime == timestamp {
 			return testItem.Test
 		}
+	}
+	return nil
+}
+
+func (api *API) GetLastTest() *restapi.TestWithReport {
+	if len(api.TestsList) > 0 {
+		index := len(api.TestsList) - 1
+		return api.TestsList[index].Test
 	}
 	return nil
 }

@@ -25,6 +25,7 @@ import (
 
 type Client interface {
 	TriggerFuzzingJob(apiID int64, endpoint string, securityItem string, timeBudget string) error
+	StopFuzzingJob(apiID int64) error
 }
 
 //nolint: ireturn,nolintlint

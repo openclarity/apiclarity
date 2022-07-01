@@ -1995,41 +1995,6 @@ paths:
       summary: Stop (cancel) a running test for an API
       tags:
       - fuzzer
-  /modules/fuzzer/rawfindings/{apiID}:
-    get:
-      description: Receive list of findings for an API
-      operationId: fuzzerGetRawfindings
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RawFindingsBundle'
-          description: Raw Finding Bundle
-      summary: Retreive list of findings for an API
-      tags:
-      - local-fuzzer
-    parameters:
-    - in: path
-      name: apiID
-      required: true
-      schema:
-        $ref: ../common/openapi.yaml#/components/schemas/ApiID
-    post:
-      description: Receive list of raw findings for an API
-      operationId: fuzzerPostRawfindings
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RawFindingsBundle'
-        required: true
-      responses:
-        "204":
-          description: Successful Response
-      summary: Receive list of raw findings for an API
-      tags:
-      - local-fuzzer
   /modules/fuzzer/report/{apiID}/{timestamp}:
     get:
       description: Retreive a report for an API identified by its timestamp
