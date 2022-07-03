@@ -17,6 +17,7 @@ package bfladetector
 
 import (
 	"encoding/json"
+	"fmt"
 
 	log "github.com/sirupsen/logrus"
 
@@ -24,22 +25,31 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 )
 
-func ResolvePath(apiInfo *database.APIInfo, event *database.APIEvent) (urlpath string) {
-	if event.ProvidedPathID != "" && apiInfo.ProvidedSpecInfo != "" {
+func ParseSpecInfo(apiInfo *database.APIInfo) ([]*models.SpecTag, error) {
+	if apiInfo.ProvidedSpecInfo != "" {
 		info := &models.SpecInfo{}
 		if err := json.Unmarshal([]byte(apiInfo.ProvidedSpecInfo), info); err != nil {
-			log.Errorf("unable to unmarshal spec tags: %s", err)
-			return ""
+			return nil, fmt.Errorf("unable to unmarshal spec tags: %s", err)
 		}
-		return resolvePathFromTags(info.Tags, event.ProvidedPathID)
+		return info.Tags, nil
 	}
-	if event.ReconstructedPathID != "" && apiInfo.ReconstructedSpecInfo != "" {
+	if apiInfo.ReconstructedSpecInfo != "" {
 		info := &models.SpecInfo{}
 		if err := json.Unmarshal([]byte(apiInfo.ReconstructedSpecInfo), info); err != nil {
 			log.Errorf("unable to unmarshal spec tags: %s", err)
-			return ""
+			return nil, fmt.Errorf("unable to unmarshal spec tags: %s", err)
 		}
-		return resolvePathFromTags(info.Tags, event.ReconstructedPathID)
+		return info.Tags, nil
+	}
+	return nil, nil
+}
+
+func ResolvePath(tags []*models.SpecTag, event *database.APIEvent) (urlpath string) {
+	if event.ProvidedPathID != "" {
+		return resolvePathFromTags(tags, event.ProvidedPathID)
+	}
+	if event.ReconstructedPathID != "" {
+		return resolvePathFromTags(tags, event.ReconstructedPathID)
 	}
 	return ""
 }
@@ -53,4 +63,15 @@ func resolvePathFromTags(tags []*models.SpecTag, pathID string) string {
 		}
 	}
 	return ""
+}
+
+func resolveTagsForPathAndMethod(tags []*models.SpecTag, path, method string) (tagNames []string) {
+	for _, tag := range tags {
+		for _, methodAndPath := range tag.MethodAndPathList {
+			if path == methodAndPath.Path && method == string(methodAndPath.Method) {
+				tagNames = append(tagNames, tag.Name)
+			}
+		}
+	}
+	return tagNames
 }

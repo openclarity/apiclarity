@@ -36,8 +36,9 @@ import (
 )
 
 const (
-	moduleVersion       = "0.0.0"
-	persistenceInterval = 5 * time.Second
+	moduleVersion            = "0.0.0"
+	persistenceInterval      = 5 * time.Second
+	controllerResyncInterval = 5 * time.Second
 )
 
 type bfla struct {
@@ -65,7 +66,8 @@ func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Modul
 	}
 
 	sp := recovery.NewStatePersister(ctx, accessor, bfladetector.ModuleName, persistenceInterval)
-	p.bflaDetector = bfladetector.NewBFLADetector(ctx, accessor, eventAlerter{accessor}, sp)
+	ctrlNotifier := bfladetector.NewControllerNotifier(accessor)
+	p.bflaDetector = bfladetector.NewBFLADetector(ctx, accessor, eventAlerter{accessor}, ctrlNotifier, sp, controllerResyncInterval)
 
 	handler := &httpHandler{
 		bflaDetector:    p.bflaDetector,
@@ -321,7 +323,7 @@ func (h httpHandler) PostAuthorizationModelApiID(w http.ResponseWriter, r *http.
 	default:
 		specType := bfladetector.SpecTypeNone
 		if apiinfo, err := h.accessor.GetAPIInfo(r.Context(), uint(apiID)); err != nil {
-			log.Error("error getting openAPI spec")
+			log.Errorf("error getting api info; id=%d", apiID)
 		} else {
 			specType = bfladetector.SpecTypeFromAPIInfo(apiinfo)
 		}
@@ -345,11 +347,11 @@ func (h httpHandler) PostAuthorizationModelApiID(w http.ResponseWriter, r *http.
 func (h httpHandler) GetAuthorizationModelApiID(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
 	apiinfo, err := h.accessor.GetAPIInfo(r.Context(), uint(apiID))
 	if err != nil {
-		log.Error("error getting openAPI spec")
+		log.Errorf("error getting api info; id=%d", apiID)
 	}
 	specType := bfladetector.SpecTypeFromAPIInfo(apiinfo)
 	if specType == bfladetector.SpecTypeNone {
-		httpResponse(w, http.StatusOK, &restapi.AuthorizationModel{SpecType: ToRestapiSpecType(specType)})
+		httpResponse(w, http.StatusOK, &restapi.AuthorizationModel{SpecType: bfladetector.ToRestapiSpecType(specType)})
 		return
 	}
 	if h.bflaDetector.IsLearning(uint(apiID)) {
@@ -367,20 +369,8 @@ func (h httpHandler) GetAuthorizationModelApiID(w http.ResponseWriter, r *http.R
 		return
 	}
 	res := ToRestapiAuthorizationModel(authModel)
-	res.SpecType = ToRestapiSpecType(specType)
+	res.SpecType = bfladetector.ToRestapiSpecType(specType)
 	httpResponse(w, http.StatusOK, res)
-}
-
-func ToRestapiSpecType(specType bfladetector.SpecType) restapi.SpecType {
-	switch specType {
-	case bfladetector.SpecTypeNone:
-		return restapi.NONE
-	case bfladetector.SpecTypeProvided:
-		return restapi.PROVIDED
-	case bfladetector.SpecTypeReconstructed:
-		return restapi.RECONSTRUCTED
-	}
-	return restapi.NONE
 }
 
 func FromRestapiAuthorizationModel(am *restapi.AuthorizationModel) bfladetector.AuthorizationModel {
