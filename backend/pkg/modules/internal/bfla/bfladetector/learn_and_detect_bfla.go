@@ -455,9 +455,14 @@ func (l *learnAndDetectBFLA) mustLearn(apiID uint) (decrementFn func(), ok bool)
 
 	tracesInt, _ := tracesToLearn.Get().(int)
 	if !tracesToLearn.Exists() {
-		return nil, false
+		return func() {
+			tracesToLearn.Set(-1)
+		}, true
 	}
 	return func() {
+		if tracesInt == -1 {
+			return
+		}
 		tracesInt--
 		tracesToLearn.Set(tracesInt)
 	}, tracesInt > 0 || tracesInt == -1
