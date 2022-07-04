@@ -388,6 +388,8 @@ components:
           type: string
         method:
           type: string
+        tag:
+          type: string
         audience:
           type: array
           items:

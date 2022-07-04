@@ -49,17 +49,19 @@ const (
 
 var ErrUnsupportedAuthScheme = errors.New("unsupported auth scheme")
 
-func NewBFLADetector(ctx context.Context, apiInfoProvider apiInfoProvider, eventAlerter EventAlerter, sp recovery.StatePersister) BFLADetector {
+func NewBFLADetector(ctx context.Context, apiInfoProvider apiInfoProvider, eventAlerter EventAlerter, ctrlNotifier ControllerNotifier, sp recovery.StatePersister, controllerResyncInterval time.Duration) BFLADetector {
 	l := &learnAndDetectBFLA{
-		tracesCh:         make(chan *CompositeTrace),
-		commandsCh:       make(chan Command),
-		errCh:            make(chan error),
-		apiInfoProvider:  apiInfoProvider,
-		authzModelsMap:   recovery.NewPersistedMap(sp, AuthzModelAnnotationName, reflect.TypeOf(AuthorizationModel{})),
-		tracesCounterMap: recovery.NewPersistedMap(sp, AuthzProcessedTracesAnnotationName, reflect.TypeOf(1)),
-		statePersister:   sp,
-		eventAlerter:     eventAlerter,
-		mu:               &sync.RWMutex{},
+		tracesCh:                 make(chan *CompositeTrace),
+		commandsCh:               make(chan Command),
+		errCh:                    make(chan error),
+		apiInfoProvider:          apiInfoProvider,
+		authzModelsMap:           recovery.NewPersistedMap(sp, AuthzModelAnnotationName, reflect.TypeOf(AuthorizationModel{})),
+		tracesCounterMap:         recovery.NewPersistedMap(sp, AuthzProcessedTracesAnnotationName, reflect.TypeOf(1)),
+		statePersister:           sp,
+		eventAlerter:             eventAlerter,
+		controllerNotifier:       ctrlNotifier,
+		controllerResyncInterval: controllerResyncInterval,
+		mu:                       &sync.RWMutex{},
 	}
 	go func() {
 		for {
@@ -72,6 +74,7 @@ func NewBFLADetector(ctx context.Context, apiInfoProvider apiInfoProvider, event
 			}
 		}
 	}()
+	go l.ctrlNotifier(ctx)
 	go l.run(ctx)
 	return l
 }
@@ -162,8 +165,10 @@ type learnAndDetectBFLA struct {
 
 	statePersister recovery.StatePersister
 
-	eventAlerter EventAlerter
-	mu           *sync.RWMutex
+	eventAlerter             EventAlerter
+	controllerNotifier       ControllerNotifier
+	controllerResyncInterval time.Duration
+	mu                       *sync.RWMutex
 }
 
 type CompositeTrace struct {
@@ -173,8 +178,15 @@ type CompositeTrace struct {
 	DetectedUser              *DetectedUser
 }
 
+func (l *learnAndDetectBFLA) logError(err error) {
+	if err != nil {
+		log.Error(err)
+	}
+}
+
 func (l *learnAndDetectBFLA) run(ctx context.Context) {
 	defer log.Info("ending learnFromTracesAndDetectBFLA")
+
 	for {
 		select {
 		case feedback, ok := <-l.commandsCh:
@@ -209,9 +221,29 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 	defer runtimeRecover()
 	switch cmd := command.(type) {
 	case *MarkLegitimateCommand:
-		err = l.updateAuthorizationModel(cmd.path, cmd.method, cmd.clientRef, cmd.apiID, cmd.detectedUser, true, true)
+		apiInfo, err := l.apiInfoProvider.GetAPIInfo(ctx, cmd.apiID)
+		if err != nil {
+			return fmt.Errorf("unable to get api info: %w", err)
+		}
+		tags, err := ParseSpecInfo(apiInfo)
+		if err != nil {
+			return fmt.Errorf("unable to parse spec info: %w", err)
+		}
+		err = l.updateAuthorizationModel(tags, cmd.path, cmd.method, cmd.clientRef, cmd.apiID, cmd.detectedUser, true, true)
+		l.logError(l.notifyController(ctx, cmd.apiID))
+
 	case *MarkIllegitimateCommand:
-		err = l.updateAuthorizationModel(cmd.path, cmd.method, cmd.clientRef, cmd.apiID, cmd.detectedUser, false, true)
+		apiInfo, err := l.apiInfoProvider.GetAPIInfo(ctx, cmd.apiID)
+		if err != nil {
+			return fmt.Errorf("unable to get api info: %w", err)
+		}
+		tags, err := ParseSpecInfo(apiInfo)
+		if err != nil {
+			return fmt.Errorf("unable to parse spec info: %w", err)
+		}
+		err = l.updateAuthorizationModel(tags, cmd.path, cmd.method, cmd.clientRef, cmd.apiID, cmd.detectedUser, false, true)
+		l.logError(l.notifyController(ctx, cmd.apiID))
+
 	case *StopLearningCommand:
 		counter, err := l.tracesCounterMap.Get(cmd.apiID)
 		if err != nil {
@@ -219,6 +251,8 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		}
 
 		counter.Set(0)
+		l.logError(l.notifyController(ctx, cmd.apiID))
+
 	case *StartLearningCommand:
 		tracesToProcess, err := l.tracesCounterMap.Get(cmd.apiID)
 		if err != nil {
@@ -243,6 +277,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 			return fmt.Errorf("unable to get authz model state: %w", err)
 		}
 		authzModel.Set(AuthorizationModel{})
+		l.logError(l.notifyController(ctx, cmd.apiID))
 
 	case *ProvideAuthzModelCommand:
 		pv, err := l.authzModelsMap.Get(cmd.apiID)
@@ -318,15 +353,19 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	defer l.statePersister.AckSubmit(trace.APIEvent.ID)
 	apiID := trace.APIEvent.APIInfoID
 	log.Infof("bfla received event: %d", apiID)
-	// load the model from store in case the it is not already present in memory or don't do anything if the model with id does not exist
+	// load the model from store in the case it's not already present in memory or don't do anything if the model with id does not exist
 	apiInfo, err := l.apiInfoProvider.GetAPIInfo(ctx, apiID)
 	if err != nil {
 		return fmt.Errorf("unable to get api info: %w", err)
 	}
-	resolvedPath := ResolvePath(apiInfo, trace.APIEvent)
+	tags, err := ParseSpecInfo(apiInfo)
+	if err != nil {
+		return fmt.Errorf("unable to parse spec info: %w", err)
+	}
+	resolvedPath := ResolvePath(tags, trace.APIEvent)
 
 	if SpecTypeFromAPIInfo(apiInfo) == SpecTypeNone {
-		return fmt.Errorf("spec not present cannot learn BFLA")
+		return fmt.Errorf("spec not present cannot learn BFLA; apiID=%d", trace.APIEvent.APIInfoID)
 	}
 	var tracesProcessed int
 	tracesProcessedEntry, err := l.tracesCounterMap.Get(apiID)
@@ -339,7 +378,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	if decrement, ok := l.mustLearn(apiID); ok {
 		log.Debugf("api %d; processed: %d", trace.APIEvent.APIInfoID, tracesProcessed)
 		// to still learn
-		err := l.updateAuthorizationModel(resolvedPath, string(trace.APIEvent.Method),
+		err := l.updateAuthorizationModel(tags, resolvedPath, string(trace.APIEvent.Method),
 			trace.K8SSource, trace.APIEvent.APIInfoID, trace.DetectedUser, true, false)
 		if err != nil {
 			return err
@@ -348,7 +387,8 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		decrement()
 		return nil
 	}
-	if err := l.updateAuthorizationModel(resolvedPath, string(trace.APIEvent.Method), trace.K8SSource, trace.APIEvent.APIInfoID, trace.DetectedUser, false, false); err != nil {
+	if err := l.updateAuthorizationModel(tags, resolvedPath, string(trace.APIEvent.Method),
+		trace.K8SSource, trace.APIEvent.APIInfoID, trace.DetectedUser, false, false); err != nil {
 		return err
 	}
 	var srcUid string
@@ -379,6 +419,33 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	return nil
 }
 
+func (l *learnAndDetectBFLA) notifyController(ctx context.Context, apiID uint) error {
+	ntf := AuthzModelNotification{}
+
+	if l.IsLearning(apiID) {
+		ntf.Learning = true
+	} else {
+		v, err := l.authzModelsMap.Get(apiID)
+		if err != nil {
+			return fmt.Errorf("unable to geet authz model %w", err)
+		}
+		if !v.Exists() {
+			return fmt.Errorf("authorization model not found")
+		}
+
+		apiInfo, err := l.apiInfoProvider.GetAPIInfo(ctx, apiID)
+		if err != nil {
+			return fmt.Errorf("unable to get api info: %w", err)
+		}
+		specType := SpecTypeFromAPIInfo(apiInfo)
+		ntf.SpecType = specType
+		if specType != SpecTypeNone {
+			ntf.AuthzModel, _ = v.Get().(AuthorizationModel)
+		}
+	}
+	return l.controllerNotifier.Notify(ctx, apiID, ntf)
+}
+
 func (l *learnAndDetectBFLA) mustLearn(apiID uint) (decrementFn func(), ok bool) {
 	tracesToLearn, err := l.tracesCounterMap.Get(apiID)
 	if err != nil {
@@ -388,15 +455,20 @@ func (l *learnAndDetectBFLA) mustLearn(apiID uint) (decrementFn func(), ok bool)
 
 	tracesInt, _ := tracesToLearn.Get().(int)
 	if !tracesToLearn.Exists() {
-		return nil, false
+		return func() {
+			tracesToLearn.Set(-1)
+		}, true
 	}
 	return func() {
+		if tracesInt == -1 {
+			return
+		}
 		tracesInt--
 		tracesToLearn.Set(tracesInt)
 	}, tracesInt > 0 || tracesInt == -1
 }
 
-func (l *learnAndDetectBFLA) updateAuthorizationModel(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser, authorize, updateAuthorized bool) error {
+func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser, authorize, updateAuthorized bool) error {
 	external := clientRef == nil
 	authzModelEntry, err := l.authzModelsMap.Get(apiID)
 	if err != nil {
@@ -408,6 +480,7 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(path, method string, clien
 			Operations: []*Operation{{
 				Method:   method,
 				Path:     path,
+				Tags:     resolveTagsForPathAndMethod(tags, path, method),
 				Audience: []*SourceObject{{External: external, K8sObject: clientRef, Authorized: authorize}},
 			}},
 		}
@@ -425,6 +498,7 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(path, method string, clien
 		op = &Operation{
 			Method:   method,
 			Path:     path,
+			Tags:     resolveTagsForPathAndMethod(tags, path, method),
 			Audience: []*SourceObject{{External: external, K8sObject: clientRef, Authorized: authorize}},
 		}
 		if user != nil {
@@ -578,6 +652,23 @@ func (l *learnAndDetectBFLA) ProvideAuthzModel(apiID uint, am AuthorizationModel
 	l.commandsCh <- &ProvideAuthzModelCommand{
 		apiID:      apiID,
 		authzModel: am,
+	}
+}
+
+func (l *learnAndDetectBFLA) ctrlNotifier(ctx context.Context) {
+	t := time.NewTicker(l.controllerResyncInterval)
+	defer t.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			log.Errorf("Controller notifier finished working %s", ctx.Err())
+			return
+		case <-t.C:
+			for _, key := range l.authzModelsMap.Keys() {
+				l.logError(l.notifyController(ctx, key))
+			}
+		}
 	}
 }
 
