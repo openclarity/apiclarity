@@ -51,7 +51,7 @@ func ResolvePath(tags []*models.SpecTag, event *database.APIEvent) (urlpath stri
 	if event.ReconstructedPathID != "" {
 		return resolvePathFromTags(tags, event.ReconstructedPathID)
 	}
-	return ""
+	return event.Path
 }
 
 func resolvePathFromTags(tags []*models.SpecTag, pathID string) string {
@@ -68,7 +68,7 @@ func resolvePathFromTags(tags []*models.SpecTag, pathID string) string {
 func resolveTagsForPathAndMethod(tags []*models.SpecTag, path, method string) (tagNames []string) {
 	for _, tag := range tags {
 		for _, methodAndPath := range tag.MethodAndPathList {
-			if path == methodAndPath.Path && method == string(methodAndPath.Method) {
+			if path == methodAndPath.Path && string(methodAndPath.Method) == method {
 				tagNames = append(tagNames, tag.Name)
 			}
 		}

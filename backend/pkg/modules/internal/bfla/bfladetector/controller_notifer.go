@@ -5,7 +5,6 @@ import (
 	"github.com/openclarity/apiclarity/api3/global"
 	"github.com/openclarity/apiclarity/api3/notifications"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
-	log "github.com/sirupsen/logrus"
 )
 
 type ControllerNotifier interface {
@@ -29,7 +28,6 @@ type notifier struct {
 }
 
 func (n *notifier) Notify(ctx context.Context, apiID uint, notification AuthzModelNotification) error {
-	log.Infof("Notify controller apiID=%d", apiID)
 	ntf := notifications.APIClarityNotification{}
 	if err := ntf.FromAuthorizationModelNotification(notifications.AuthorizationModelNotification{
 		Learning:   notification.Learning,

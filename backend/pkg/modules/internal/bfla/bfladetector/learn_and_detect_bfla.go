@@ -660,7 +660,6 @@ func (l *learnAndDetectBFLA) ctrlNotifier(ctx context.Context) {
 			log.Errorf("Controller notifier finished working %s", ctx.Err())
 			return
 		case <-t.C:
-			log.Infof("Trying to sync with controller!")
 			for _, key := range l.authzModelsMap.Keys() {
 				l.logError(l.notifyController(ctx, key))
 			}

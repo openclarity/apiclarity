@@ -303,7 +303,11 @@ func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID in
 		return
 	}
 
-	resolvedPath := bfladetector.ResolvePath(apiinfo, event)
+	tags, err := bfladetector.ParseSpecInfo(apiinfo)
+	if err != nil {
+		log.Warnf("tags for apiID=%d not found", event.APIInfoID)
+	}
+	resolvedPath := bfladetector.ResolvePath(tags, event)
 	if obj, err := h.bflaDetector.FindSourceObj(resolvedPath, string(event.Method), src.Uid, event.APIInfoID); err != nil {
 		log.Error(err)
 	} else if !obj.Authorized {
@@ -574,7 +578,11 @@ func (h httpHandler) PutEventIdOperation(w http.ResponseWriter, r *http.Request,
 	ctx := r.Context()
 	go func() {
 		log.Infof("apply %s operation on trace=%d", operation, eventID)
-		resolvedPath := bfladetector.ResolvePath(apiInfo, apiEvent)
+		tags, err := bfladetector.ParseSpecInfo(apiInfo)
+		if err != nil {
+			log.Warnf("tags for apiID=%d not found", apiEvent.APIInfoID)
+		}
+		resolvedPath := bfladetector.ResolvePath(tags, apiEvent)
 		switch operation {
 		case restapi.Approve:
 			h.bflaDetector.ApproveTrace(resolvedPath, string(apiEvent.Method), src, apiEvent.APIInfoID, nil)
