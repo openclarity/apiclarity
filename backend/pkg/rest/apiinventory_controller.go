@@ -104,9 +104,9 @@ func (s *Server) GetAPIInventoryAPIIDFromHostAndPort(params operations.GetAPIInv
 }
 
 func (s *Server) GetAPIInventoryAPIIDAPIInfo(params operations.GetAPIInventoryAPIIDAPIInfoParams) middleware.Responder {
-	apiInfo, err := s.dbHandler.APIInventoryTable().GetAPISpecs(params.APIID)
-	if err != nil {
-		log.Errorf("Failed to get API specs: %v", err)
+	apiInfo := &_database.APIInfo{}
+	if err := s.dbHandler.APIInventoryTable().First(apiInfo, params.APIID); err != nil {
+		log.Errorf("Failed to retrieve API info for apiID=%v: %v", params.APIID, err)
 		return operations.NewGetAPIInventoryAPIIDAPIInfoDefault(http.StatusInternalServerError)
 	}
 
