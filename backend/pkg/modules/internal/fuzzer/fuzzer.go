@@ -135,6 +135,7 @@ func (p *pluginFuzzer) sendAPIFindingsNotification(ctx context.Context, apiID ui
 }
 
 func (p *pluginFuzzer) sendTestReportNotification(ctx context.Context, apiID uint, report restapi.ShortTestReport) error {
+	logging.Logf("[Fuzzer] sendTestReportNotification(%v): --> <--", apiID)
 	globalReportTags := tools.ConvertLocalToGlobalReportTag(report.Tags)
 	testReportNotification := notifications.TestReportNotification{
 		ApiID:            report.ApiID,
@@ -157,6 +158,7 @@ func (p *pluginFuzzer) sendTestReportNotification(ctx context.Context, apiID uin
 }
 
 func (p *pluginFuzzer) sendTestProgressNotification(ctx context.Context, apiID uint, report restapi.ShortTestProgress) error {
+	logging.Logf("[Fuzzer] sendTestProgressNotification(%v): (%v%%)--> <--", apiID, report.Progress)
 	testProgressNotification := notifications.TestProgressNotification{
 		ApiID:            report.ApiID,
 		NotificationType: "TestProgressNotification",
@@ -258,7 +260,7 @@ func (p *pluginFuzzer) StopFuzzing(ctx context.Context, apiID oapicommon.ApiID) 
 	// Check we are yet in fuzzing
 	if !api.InFuzzing {
 		logging.Errorf("[Fuzzer] StopFuzzing(%v): API (%v) not in Fuzzing", apiID, apiID)
-		return &InvalidParameterError{msg: err.Error()}
+		return &InvalidParameterError{msg: ""}
 	}
 
 	err = p.model.StopAPIFuzzing(ctx, uint(apiID), nil)
@@ -354,7 +356,6 @@ func (p *pluginFuzzerHTTPHandler) PostUpdateStatus(writer http.ResponseWriter, r
 		httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
 		return
 	}
-	logging.Logf("[Fuzzer] PostUpdateStatus(%v): Received a request of size=(%v)", apiID, len(body))
 
 	/*
 	* Decode the result
@@ -366,6 +367,7 @@ func (p *pluginFuzzerHTTPHandler) PostUpdateStatus(writer http.ResponseWriter, r
 		httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
 		return
 	}
+	logging.Logf("[Fuzzer] PostUpdateStatus(%v): Received a request of size=(%v), progress=(%v%%) and status=(%v)", apiID, len(body), data.Progress, data.Status)
 
 	/*
 	* Add the new status to the last Test
