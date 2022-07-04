@@ -21,6 +21,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-openapi/jsonpointer"
+
+	oapicommon "github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
 )
 
@@ -31,9 +34,8 @@ const (
 	JWTNoExpireClaim     = "JWT_NO_EXPIRE_CLAIM"
 	JWTExpTooFar         = "JWT_EXP_TOO_FAR"
 	//nolint:gosec
-	JWTWeakSymetricSecret        = "JWT_WEAK_SYMETRIC_SECRET"
-	JWTSensitiveContentInHeaders = "JWT_SENSITIVE_CONTENT_IN_HEADERS"
-	JWTSensitiveContentInClaims  = "JWT_SENSITIVE_CONTENT_IN_CLAIMS"
+	JWTWeakSymetricSecret = "JWT_WEAK_SYMETRIC_SECRET"
+	JWTSensitiveContent   = "JWT_SENSITIVE_CONTENT"
 )
 
 type AnnotationNoAlgField struct{}
@@ -41,7 +43,10 @@ type AnnotationNoAlgField struct{}
 func NewAnnotationNoAlgField() *AnnotationNoAlgField {
 	return &AnnotationNoAlgField{}
 }
-func (a *AnnotationNoAlgField) Name() string               { return JWTNoAlgField }
+func (a *AnnotationNoAlgField) Name() string { return JWTNoAlgField }
+func (a *AnnotationNoAlgField) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
+	return NewAPIAnnotationNoAlgField(path, method)
+}
 func (a *AnnotationNoAlgField) Severity() string           { return utils.SeverityHigh }
 func (a *AnnotationNoAlgField) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *AnnotationNoAlgField) Deserialize(serialized []byte) error {
@@ -63,12 +68,80 @@ func (a *AnnotationNoAlgField) ToFinding() utils.Finding {
 	}
 }
 
+type APIAnnotationNoAlgField struct {
+	SpecLocation string `json:"spec_location"`
+}
+
+func NewAPIAnnotationNoAlgField(path, method string) *APIAnnotationNoAlgField {
+	pointerTokens := []string{
+		jsonpointer.Escape("paths"),
+		jsonpointer.Escape(path),
+		jsonpointer.Escape(strings.ToLower(method)),
+	}
+	pointer := strings.Join(pointerTokens, "/")
+	return &APIAnnotationNoAlgField{
+		SpecLocation: pointer,
+	}
+}
+func (a *APIAnnotationNoAlgField) Name() string { return JWTNoAlgField }
+func (a *APIAnnotationNoAlgField) Aggregate(ann utils.TraceAnalyzerAnnotation) (updated bool) {
+	_, valid := ann.(*AnnotationNoAlgField)
+	if !valid {
+		panic("invalid type")
+	}
+
+	return false
+}
+
+func (a *APIAnnotationNoAlgField) Severity() string   { return utils.SeverityInfo }
+func (a *APIAnnotationNoAlgField) TTL() time.Duration { return 24 * time.Hour }
+
+func (a *APIAnnotationNoAlgField) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a *APIAnnotationNoAlgField) Deserialize(serialized []byte) error {
+	var tmp APIAnnotationNoAlgField
+	err := json.Unmarshal(serialized, &tmp)
+	*a = tmp
+
+	return err
+}
+func (a APIAnnotationNoAlgField) Redacted() utils.TraceAnalyzerAPIAnnotation {
+	newA := a
+	return &newA
+}
+func (a *APIAnnotationNoAlgField) ToFinding() utils.Finding {
+	return utils.Finding{
+		ShortDesc:    "JWT has no algorithm specified",
+		DetailedDesc: "The JOSE header of the JWT header does not contain an 'alg' field",
+		Severity:     a.Severity(),
+		Alert:        utils.SeverityToAlert(a.Severity()),
+	}
+}
+func (a *APIAnnotationNoAlgField) ToAPIFinding() oapicommon.APIFinding {
+	return oapicommon.APIFinding{
+		Source: utils.ModuleName,
+
+		Type:        a.Name(),
+		Name:        "JWT has no algorithm specified",
+		Description: "The JOSE header of the JWT header does not contain an 'alg' field",
+
+		ProvidedSpecLocation:      &a.SpecLocation,
+		ReconstructedSpecLocation: &a.SpecLocation,
+
+		Severity: oapicommon.INFO,
+
+		AdditionalInfo: nil,
+	}
+}
+
 type AnnotationAlgFieldNone struct{}
 
 func NewAnnotationAlgFieldNone() *AnnotationAlgFieldNone {
 	return &AnnotationAlgFieldNone{}
 }
-func (a *AnnotationAlgFieldNone) Name() string               { return JWTAlgFieldNone }
+func (a *AnnotationAlgFieldNone) Name() string { return JWTAlgFieldNone }
+func (a *AnnotationAlgFieldNone) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
+	return nil
+}
 func (a *AnnotationAlgFieldNone) Severity() string           { return utils.SeverityHigh }
 func (a *AnnotationAlgFieldNone) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *AnnotationAlgFieldNone) Deserialize(serialized []byte) error {
@@ -90,6 +163,71 @@ func (a *AnnotationAlgFieldNone) ToFinding() utils.Finding {
 	}
 }
 
+type APIAnnotationAlgFieldNone struct {
+	SpecLocation string `json:"spec_location"`
+}
+
+func NewAPIAnnotationAlgFieldNone(path, method string) *APIAnnotationAlgFieldNone {
+	pointerTokens := []string{
+		jsonpointer.Escape("paths"),
+		jsonpointer.Escape(path),
+		jsonpointer.Escape(strings.ToLower(method)),
+	}
+	pointer := strings.Join(pointerTokens, "/")
+	return &APIAnnotationAlgFieldNone{
+		SpecLocation: pointer,
+	}
+}
+func (a *APIAnnotationAlgFieldNone) Name() string { return JWTAlgFieldNone }
+func (a *APIAnnotationAlgFieldNone) Aggregate(ann utils.TraceAnalyzerAnnotation) (updated bool) {
+	_, valid := ann.(*AnnotationAlgFieldNone)
+	if !valid {
+		panic("invalid type")
+	}
+
+	return false
+}
+
+func (a *APIAnnotationAlgFieldNone) Severity() string   { return utils.SeverityInfo }
+func (a *APIAnnotationAlgFieldNone) TTL() time.Duration { return 24 * time.Hour }
+
+func (a *APIAnnotationAlgFieldNone) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a *APIAnnotationAlgFieldNone) Deserialize(serialized []byte) error {
+	var tmp APIAnnotationAlgFieldNone
+	err := json.Unmarshal(serialized, &tmp)
+	*a = tmp
+
+	return err
+}
+func (a APIAnnotationAlgFieldNone) Redacted() utils.TraceAnalyzerAPIAnnotation {
+	newA := a
+	return &newA
+}
+func (a *APIAnnotationAlgFieldNone) ToFinding() utils.Finding {
+	return utils.Finding{
+		ShortDesc:    "'alg' field set to None",
+		DetailedDesc: fmt.Sprintf("The JOSE header of the JWT header contains an 'alg' field but it's set to none"),
+		Severity:     a.Severity(),
+		Alert:        utils.SeverityToAlert(a.Severity()),
+	}
+}
+func (a *APIAnnotationAlgFieldNone) ToAPIFinding() oapicommon.APIFinding {
+	return oapicommon.APIFinding{
+		Source: utils.ModuleName,
+
+		Type:        a.Name(),
+		Name:        "'alg' field set to None",
+		Description: fmt.Sprintf("The JOSE header of the JWT header contains an 'alg' field but it's set to none"),
+
+		ProvidedSpecLocation:      &a.SpecLocation,
+		ReconstructedSpecLocation: &a.SpecLocation,
+
+		Severity: oapicommon.INFO,
+
+		AdditionalInfo: nil,
+	}
+}
+
 type AnnotationNotRecommendedAlg struct {
 	Algorithm       string   `json:"algorithm"`
 	RecommendedAlgs []string `json:"recommended_algs"`
@@ -98,7 +236,10 @@ type AnnotationNotRecommendedAlg struct {
 func NewAnnotationNotRecommendedAlg(alg string, recommended []string) *AnnotationNotRecommendedAlg {
 	return &AnnotationNotRecommendedAlg{Algorithm: alg, RecommendedAlgs: recommended}
 }
-func (a *AnnotationNotRecommendedAlg) Name() string               { return JWTNotRecommendedAlg }
+func (a *AnnotationNotRecommendedAlg) Name() string { return JWTNotRecommendedAlg }
+func (a *AnnotationNotRecommendedAlg) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
+	return NewAPIAnnotationNotRecommendedAlg(path, method)
+}
 func (a *AnnotationNotRecommendedAlg) Severity() string           { return utils.SeverityHigh }
 func (a *AnnotationNotRecommendedAlg) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *AnnotationNotRecommendedAlg) Deserialize(serialized []byte) error {
@@ -120,12 +261,97 @@ func (a *AnnotationNotRecommendedAlg) ToFinding() utils.Finding {
 	}
 }
 
+type APIAnnotationNotRecommendedAlg struct {
+	SpecLocation       string          `json:"spec_location"`
+	NotRecommendedAlgs map[string]bool `json:"not_recommended"`
+}
+
+func NewAPIAnnotationNotRecommendedAlg(path, method string) *APIAnnotationNotRecommendedAlg {
+	pointerTokens := []string{
+		jsonpointer.Escape("paths"),
+		jsonpointer.Escape(path),
+		jsonpointer.Escape(strings.ToLower(method)),
+	}
+	pointer := strings.Join(pointerTokens, "/")
+	return &APIAnnotationNotRecommendedAlg{
+		SpecLocation:       pointer,
+		NotRecommendedAlgs: map[string]bool{},
+	}
+}
+func (a *APIAnnotationNotRecommendedAlg) Name() string { return JWTNotRecommendedAlg }
+func (a *APIAnnotationNotRecommendedAlg) Aggregate(ann utils.TraceAnalyzerAnnotation) (updated bool) {
+	apiAnn, valid := ann.(*AnnotationNotRecommendedAlg)
+	if !valid {
+		panic("invalid type")
+	}
+	initialSize := len(a.NotRecommendedAlgs)
+
+	a.NotRecommendedAlgs[apiAnn.Algorithm] = true
+
+	return initialSize != len(a.NotRecommendedAlgs)
+}
+
+func (a *APIAnnotationNotRecommendedAlg) Severity() string   { return utils.SeverityInfo }
+func (a *APIAnnotationNotRecommendedAlg) TTL() time.Duration { return 24 * time.Hour }
+
+func (a *APIAnnotationNotRecommendedAlg) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a *APIAnnotationNotRecommendedAlg) Deserialize(serialized []byte) error {
+	var tmp APIAnnotationNotRecommendedAlg
+	err := json.Unmarshal(serialized, &tmp)
+	*a = tmp
+
+	return err
+}
+func (a APIAnnotationNotRecommendedAlg) Redacted() utils.TraceAnalyzerAPIAnnotation {
+	newA := a
+	return &newA
+}
+func (a *APIAnnotationNotRecommendedAlg) ToFinding() utils.Finding {
+	return utils.Finding{
+		ShortDesc:    "Not a recommanded JWT signing algorithm",
+		DetailedDesc: "Signing algorithms that are not recommended were used",
+		Severity:     a.Severity(),
+		Alert:        utils.SeverityToAlert(a.Severity()),
+	}
+}
+func (a *APIAnnotationNotRecommendedAlg) ToAPIFinding() oapicommon.APIFinding {
+	var additionalInfo *map[string]interface{}
+	description := "Signing algorithms that are not recommended were used"
+	if len(a.NotRecommendedAlgs) > 0 {
+		not_recommended := []string{}
+		for name := range a.NotRecommendedAlgs {
+			not_recommended = append(not_recommended, name)
+		}
+		additionalInfo = &map[string]interface{}{
+			"not_recommended": not_recommended,
+		}
+		description = fmt.Sprintf("Signing algorithms (%s) are not recommended", strings.Join(not_recommended, ","))
+	}
+	return oapicommon.APIFinding{
+		Source: utils.ModuleName,
+
+		Type:        a.Name(),
+		Name:        "Not a recommanded JWT signing algorithm",
+		Description: description,
+
+		ProvidedSpecLocation:      &a.SpecLocation,
+		ReconstructedSpecLocation: &a.SpecLocation,
+
+		Severity: oapicommon.INFO,
+
+		AdditionalInfo: additionalInfo,
+	}
+}
+
 type AnnotationNoExpireClaim struct{}
 
 func NewAnnotationNoExpireClaim() *AnnotationNoExpireClaim {
 	return &AnnotationNoExpireClaim{}
 }
-func (a *AnnotationNoExpireClaim) Name() string               { return JWTNoExpireClaim }
+func (a *AnnotationNoExpireClaim) Name() string { return JWTNoExpireClaim }
+func (a *AnnotationNoExpireClaim) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
+	return NewAPIAnnotationNoExpireClaim(path, method)
+}
 func (a *AnnotationNoExpireClaim) Severity() string           { return utils.SeverityLow }
 func (a *AnnotationNoExpireClaim) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *AnnotationNoExpireClaim) Deserialize(serialized []byte) error {
@@ -147,9 +373,86 @@ func (a *AnnotationNoExpireClaim) ToFinding() utils.Finding {
 	}
 }
 
+type APIAnnotationNoExpireClaim struct {
+	SpecLocation string `json:"spec_location"`
+}
+
+func NewAPIAnnotationNoExpireClaim(path, method string) *APIAnnotationNoExpireClaim {
+	pointerTokens := []string{
+		jsonpointer.Escape("paths"),
+		jsonpointer.Escape(path),
+		jsonpointer.Escape(strings.ToLower(method)),
+	}
+	pointer := strings.Join(pointerTokens, "/")
+	return &APIAnnotationNoExpireClaim{
+		SpecLocation: pointer,
+	}
+}
+func (a *APIAnnotationNoExpireClaim) Name() string { return JWTNoExpireClaim }
+func (a *APIAnnotationNoExpireClaim) Aggregate(ann utils.TraceAnalyzerAnnotation) (updated bool) {
+	_, valid := ann.(*AnnotationNoExpireClaim)
+	if !valid {
+		panic("invalid type")
+	}
+
+	return false
+}
+
+func (a *APIAnnotationNoExpireClaim) Severity() string   { return utils.SeverityInfo }
+func (a *APIAnnotationNoExpireClaim) TTL() time.Duration { return 24 * time.Hour }
+
+func (a *APIAnnotationNoExpireClaim) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a *APIAnnotationNoExpireClaim) Deserialize(serialized []byte) error {
+	var tmp APIAnnotationNoExpireClaim
+	err := json.Unmarshal(serialized, &tmp)
+	*a = tmp
+
+	return err
+}
+func (a APIAnnotationNoExpireClaim) Redacted() utils.TraceAnalyzerAPIAnnotation {
+	newA := a
+	return &newA
+}
+func (a *APIAnnotationNoExpireClaim) ToFinding() utils.Finding {
+	return utils.Finding{
+		ShortDesc:    "JWT does not have any expire claims",
+		DetailedDesc: "JWT does not have any expire claims",
+		Severity:     a.Severity(),
+		Alert:        utils.SeverityToAlert(a.Severity()),
+	}
+}
+func (a *APIAnnotationNoExpireClaim) ToAPIFinding() oapicommon.APIFinding {
+	return oapicommon.APIFinding{
+		Source: utils.ModuleName,
+
+		Type:        a.Name(),
+		Name:        "JWT does not have any expire claims",
+		Description: "JWT does not have any expire claims",
+
+		ProvidedSpecLocation:      &a.SpecLocation,
+		ReconstructedSpecLocation: &a.SpecLocation,
+
+		Severity: oapicommon.INFO,
+
+		AdditionalInfo: nil,
+	}
+}
+
 type AnnotationExpTooFar struct {
 	ExpireAt time.Time     `json:"expire_at"`
 	ExpireIn time.Duration `json:"expire_in"`
+}
+
+func expireString(expireIn time.Duration) string {
+	var expireString string
+	daysToExpiration := int(expireIn.Hours() / 24)
+	if daysToExpiration > 2 {
+		expireString = fmt.Sprintf("%d days", daysToExpiration)
+	} else {
+		expireString = expireIn.String()
+	}
+
+	return expireString
 }
 
 func NewAnnotationExpTooFar(expireAt time.Time) *AnnotationExpTooFar {
@@ -158,7 +461,10 @@ func NewAnnotationExpTooFar(expireAt time.Time) *AnnotationExpTooFar {
 		ExpireIn: time.Until(expireAt),
 	}
 }
-func (a *AnnotationExpTooFar) Name() string               { return JWTExpTooFar }
+func (a *AnnotationExpTooFar) Name() string { return JWTExpTooFar }
+func (a *AnnotationExpTooFar) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
+	return NewAPIAnnotationExpTooFar(path, method)
+}
 func (a *AnnotationExpTooFar) Severity() string           { return utils.SeverityLow }
 func (a *AnnotationExpTooFar) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *AnnotationExpTooFar) Deserialize(serialized []byte) error {
@@ -172,18 +478,86 @@ func (a AnnotationExpTooFar) Redacted() utils.TraceAnalyzerAnnotation {
 	return &a
 }
 func (a *AnnotationExpTooFar) ToFinding() utils.Finding {
-	var expireString string
-	daysToExpiration := int(a.ExpireIn.Hours() / 24)
-	if daysToExpiration > 2 {
-		expireString = fmt.Sprintf("%d days", daysToExpiration)
-	} else {
-		expireString = a.ExpireIn.String()
-	}
 	return utils.Finding{
 		ShortDesc:    "JWT expire too far in the future",
-		DetailedDesc: fmt.Sprintf("The JWT expire in %s", expireString),
+		DetailedDesc: fmt.Sprintf("The JWT expire in %s", expireString(a.ExpireIn)),
 		Severity:     a.Severity(),
 		Alert:        utils.SeverityToAlert(a.Severity()),
+	}
+}
+
+type APIAnnotationExpTooFar struct {
+	SpecLocation    string        `json:"spec_location"`
+	ExpireInExample time.Duration `json:"expire_in_example"`
+}
+
+func NewAPIAnnotationExpTooFar(path, method string) *APIAnnotationExpTooFar {
+	pointerTokens := []string{
+		jsonpointer.Escape("paths"),
+		jsonpointer.Escape(path),
+		jsonpointer.Escape(strings.ToLower(method)),
+	}
+	pointer := strings.Join(pointerTokens, "/")
+	return &APIAnnotationExpTooFar{
+		SpecLocation: pointer,
+	}
+}
+func (a *APIAnnotationExpTooFar) Name() string { return JWTExpTooFar }
+func (a *APIAnnotationExpTooFar) Aggregate(ann utils.TraceAnalyzerAnnotation) (updated bool) {
+	eventAnn, valid := ann.(*AnnotationExpTooFar)
+	if !valid {
+		panic("invalid type")
+	}
+
+	if a.ExpireInExample == 0 {
+		a.ExpireInExample = eventAnn.ExpireIn
+		return true
+	}
+
+	return false
+}
+
+func (a *APIAnnotationExpTooFar) Severity() string   { return utils.SeverityInfo }
+func (a *APIAnnotationExpTooFar) TTL() time.Duration { return 24 * time.Hour }
+
+func (a *APIAnnotationExpTooFar) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a *APIAnnotationExpTooFar) Deserialize(serialized []byte) error {
+	var tmp APIAnnotationExpTooFar
+	err := json.Unmarshal(serialized, &tmp)
+	*a = tmp
+
+	return err
+}
+func (a APIAnnotationExpTooFar) Redacted() utils.TraceAnalyzerAPIAnnotation {
+	newA := a
+	return &newA
+}
+
+func (a *APIAnnotationExpTooFar) ToFinding() utils.Finding {
+	return utils.Finding{
+		ShortDesc:    "JWT expire too far in the future",
+		DetailedDesc: fmt.Sprintf("It has been observed JWT which expire far in the future (ex: %s)", expireString(a.ExpireInExample)),
+		Severity:     a.Severity(),
+		Alert:        utils.SeverityToAlert(a.Severity()),
+	}
+}
+func (a *APIAnnotationExpTooFar) ToAPIFinding() oapicommon.APIFinding {
+	additionalInfo := &map[string]interface{}{
+		"expire_in_example": a.ExpireInExample.Seconds(),
+	}
+	return oapicommon.APIFinding{
+		Source: utils.ModuleName,
+
+		Type:        a.Name(),
+		Name:        "JWT does not have any expire claims",
+		Description: fmt.Sprintf("It has been observed JWT which expire far in the future (ex: %s)", expireString(a.ExpireInExample)),
+
+		ProvidedSpecLocation:      &a.SpecLocation,
+		ReconstructedSpecLocation: &a.SpecLocation,
+
+		Severity: oapicommon.INFO,
+
+		AdditionalInfo: additionalInfo,
 	}
 }
 
@@ -198,7 +572,10 @@ func NewAnnotationWeakSymetricSecret(weakKey []byte) *AnnotationWeakSymetricSecr
 		WeakKeyLen: len(weakKey),
 	}
 }
-func (a *AnnotationWeakSymetricSecret) Name() string               { return JWTWeakSymetricSecret }
+func (a *AnnotationWeakSymetricSecret) Name() string { return JWTWeakSymetricSecret }
+func (a *AnnotationWeakSymetricSecret) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
+	return NewAPIAnnotationWeakSymetricSecret(path, method)
+}
 func (a *AnnotationWeakSymetricSecret) Severity() string           { return utils.SeverityMedium }
 func (a *AnnotationWeakSymetricSecret) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *AnnotationWeakSymetricSecret) Deserialize(serialized []byte) error {
@@ -233,76 +610,180 @@ func (a *AnnotationWeakSymetricSecret) ToFinding() utils.Finding {
 	}
 }
 
-type AnnotationSensitiveContentInHeaders struct {
-	SensitiveWords []string `json:"sensitive_words"`
+type APIAnnotationWeakSymetricSecret struct {
+	SpecLocation string `json:"spec_location"`
 }
 
-func NewAnnotationSensitiveContentInHeaders(sensitive_words []string) *AnnotationSensitiveContentInHeaders {
-	return &AnnotationSensitiveContentInHeaders{
-		SensitiveWords: sensitive_words,
+func NewAPIAnnotationWeakSymetricSecret(path, method string) *APIAnnotationWeakSymetricSecret {
+	pointerTokens := []string{
+		jsonpointer.Escape("paths"),
+		jsonpointer.Escape(path),
+		jsonpointer.Escape(strings.ToLower(method)),
+	}
+	pointer := strings.Join(pointerTokens, "/")
+	return &APIAnnotationWeakSymetricSecret{
+		SpecLocation: pointer,
 	}
 }
-func (a *AnnotationSensitiveContentInHeaders) Name() string               { return JWTSensitiveContentInHeaders }
-func (a *AnnotationSensitiveContentInHeaders) Severity() string           { return utils.SeverityMedium }
-func (a *AnnotationSensitiveContentInHeaders) Serialize() ([]byte, error) { return json.Marshal(a) }
-func (a *AnnotationSensitiveContentInHeaders) Deserialize(serialized []byte) error {
-	var tmp AnnotationSensitiveContentInHeaders
+func (a *APIAnnotationWeakSymetricSecret) Name() string { return JWTWeakSymetricSecret }
+func (a *APIAnnotationWeakSymetricSecret) Aggregate(ann utils.TraceAnalyzerAnnotation) (updated bool) {
+	_, valid := ann.(*AnnotationWeakSymetricSecret)
+	if !valid {
+		panic("invalid type")
+	}
+	return false
+}
+
+func (a *APIAnnotationWeakSymetricSecret) Severity() string   { return utils.SeverityInfo }
+func (a *APIAnnotationWeakSymetricSecret) TTL() time.Duration { return 24 * time.Hour }
+
+func (a *APIAnnotationWeakSymetricSecret) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a *APIAnnotationWeakSymetricSecret) Deserialize(serialized []byte) error {
+	var tmp APIAnnotationWeakSymetricSecret
 	err := json.Unmarshal(serialized, &tmp)
 	*a = tmp
 
 	return err
 }
-func (a AnnotationSensitiveContentInHeaders) Redacted() utils.TraceAnalyzerAnnotation {
-	redacted := make([]string, len(a.SensitiveWords))
-	for i, r := range a.SensitiveWords {
-		// Only provide the first character
-		redacted[i] = r[:1] + "...[redacted]"
-	}
-
-	return NewAnnotationSensitiveContentInHeaders(redacted)
+func (a APIAnnotationWeakSymetricSecret) Redacted() utils.TraceAnalyzerAPIAnnotation {
+	newA := a
+	return &newA
 }
-func (a *AnnotationSensitiveContentInHeaders) ToFinding() utils.Finding {
+
+func (a *APIAnnotationWeakSymetricSecret) ToFinding() utils.Finding {
 	return utils.Finding{
-		ShortDesc:    "JWT headers may contain sensitive content",
-		DetailedDesc: fmt.Sprintf("JWT are signed, not encrypted, hence sensitive information can be seen in clear by a potential attacker. Here, '%s' seems sensitive", strings.Join(a.SensitiveWords, ",")),
+		ShortDesc:    "JWT signed with a weak key",
+		DetailedDesc: "It has been observed one or more JWT with weak, known keys",
 		Severity:     a.Severity(),
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
+func (a *APIAnnotationWeakSymetricSecret) ToAPIFinding() oapicommon.APIFinding {
+	return oapicommon.APIFinding{
+		Source: utils.ModuleName,
 
-type AnnotationSensitiveContentInClaims struct {
-	SensitiveWords []string `json:"sensitive_words"`
-}
+		Type:        a.Name(),
+		Name:        "JWT signed with a weak key",
+		Description: "It has been observed one or more JWT with weak, known keys",
 
-func NewAnnotationSensitiveContentInClaims(sensitive_words []string) *AnnotationSensitiveContentInClaims {
-	return &AnnotationSensitiveContentInClaims{
-		SensitiveWords: sensitive_words,
+		ProvidedSpecLocation:      &a.SpecLocation,
+		ReconstructedSpecLocation: &a.SpecLocation,
+
+		Severity: oapicommon.INFO,
+
+		AdditionalInfo: nil,
 	}
 }
-func (a *AnnotationSensitiveContentInClaims) Name() string               { return JWTSensitiveContentInClaims }
-func (a *AnnotationSensitiveContentInClaims) Severity() string           { return utils.SeverityMedium }
-func (a *AnnotationSensitiveContentInClaims) Serialize() ([]byte, error) { return json.Marshal(a) }
-func (a *AnnotationSensitiveContentInClaims) Deserialize(serialized []byte) error {
-	var tmp AnnotationSensitiveContentInClaims
+
+type AnnotationSensitiveContent struct {
+	SensitiveWordsInHeaders []string `json:"sensitive_words_in_headers"`
+	SensitiveWordsInClaims  []string `json:"sensitive_words_in_claims"`
+}
+
+func NewAnnotationSensitiveContent(sensitiveInHeaders, sensitiveInClaims []string) *AnnotationSensitiveContent {
+	return &AnnotationSensitiveContent{
+		SensitiveWordsInHeaders: sensitiveInHeaders,
+		SensitiveWordsInClaims:  sensitiveInClaims,
+	}
+}
+func (a *AnnotationSensitiveContent) Name() string { return JWTSensitiveContent }
+func (a *AnnotationSensitiveContent) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
+	return NewAPIAnnotationSensitiveContent(path, method)
+}
+func (a *AnnotationSensitiveContent) Severity() string           { return utils.SeverityMedium }
+func (a *AnnotationSensitiveContent) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a *AnnotationSensitiveContent) Deserialize(serialized []byte) error {
+	var tmp AnnotationSensitiveContent
 	err := json.Unmarshal(serialized, &tmp)
 	*a = tmp
 
 	return err
 }
-func (a AnnotationSensitiveContentInClaims) Redacted() utils.TraceAnalyzerAnnotation {
-	redacted := make([]string, len(a.SensitiveWords))
-	for i, r := range a.SensitiveWords {
+func (a AnnotationSensitiveContent) Redacted() utils.TraceAnalyzerAnnotation {
+	redactedHeaders := make([]string, len(a.SensitiveWordsInHeaders))
+	for i, r := range a.SensitiveWordsInHeaders {
 		// Only provide the first character
-		redacted[i] = r[:1] + "...[redacted]"
+		redactedHeaders[i] = r[:1] + "...[redacted]"
+	}
+	redactedClaims := make([]string, len(a.SensitiveWordsInClaims))
+	for i, r := range a.SensitiveWordsInClaims {
+		// Only provide the first character
+		redactedClaims[i] = r[:1] + "...[redacted]"
 	}
 
-	return NewAnnotationSensitiveContentInClaims(redacted)
+	return NewAnnotationSensitiveContent(redactedHeaders, redactedClaims)
 }
-func (a *AnnotationSensitiveContentInClaims) ToFinding() utils.Finding {
+func (a *AnnotationSensitiveContent) ToFinding() utils.Finding {
+	words := append(a.SensitiveWordsInHeaders, a.SensitiveWordsInClaims...)
 	return utils.Finding{
-		ShortDesc:    "JWT claims may contains sensitive content",
-		DetailedDesc: fmt.Sprintf("JWT are signed, not encrypted, hence sensitive information can be seen in clear by a potential attacker. Here, '%s' seems sensitive", strings.Join(a.SensitiveWords, ",")),
+		ShortDesc:    "JWT claims or headers may contains sensitive content",
+		DetailedDesc: fmt.Sprintf("JWT are signed, not encrypted, hence sensitive information can be seen in clear by a potential attacker. Here, '%s' seems sensitive", strings.Join(words, ",")),
 		Severity:     a.Severity(),
 		Alert:        utils.SeverityToAlert(a.Severity()),
+	}
+}
+
+type APIAnnotationSensitiveContent struct {
+	SpecLocation string `json:"spec_location"`
+}
+
+func NewAPIAnnotationSensitiveContent(path, method string) *APIAnnotationSensitiveContent {
+	pointerTokens := []string{
+		jsonpointer.Escape("paths"),
+		jsonpointer.Escape(path),
+		jsonpointer.Escape(strings.ToLower(method)),
+	}
+	pointer := strings.Join(pointerTokens, "/")
+	return &APIAnnotationSensitiveContent{
+		SpecLocation: pointer,
+	}
+}
+func (a *APIAnnotationSensitiveContent) Name() string { return JWTSensitiveContent }
+func (a *APIAnnotationSensitiveContent) Aggregate(ann utils.TraceAnalyzerAnnotation) (updated bool) {
+	_, valid := ann.(*AnnotationSensitiveContent)
+	if !valid {
+		panic("invalid type")
+	}
+
+	return false
+}
+
+func (a *APIAnnotationSensitiveContent) Severity() string   { return utils.SeverityInfo }
+func (a *APIAnnotationSensitiveContent) TTL() time.Duration { return 24 * time.Hour }
+
+func (a *APIAnnotationSensitiveContent) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a *APIAnnotationSensitiveContent) Deserialize(serialized []byte) error {
+	var tmp APIAnnotationSensitiveContent
+	err := json.Unmarshal(serialized, &tmp)
+	*a = tmp
+
+	return err
+}
+func (a APIAnnotationSensitiveContent) Redacted() utils.TraceAnalyzerAPIAnnotation {
+	newA := a
+	return &newA
+}
+func (a *APIAnnotationSensitiveContent) ToFinding() utils.Finding {
+	return utils.Finding{
+		ShortDesc:    "JWT claims or headers may contains sensitive content",
+		DetailedDesc: "JWT are signed, not encrypted, hence sensitive information can be seen in clear by a potential attacker",
+		Severity:     a.Severity(),
+		Alert:        utils.SeverityToAlert(a.Severity()),
+	}
+}
+func (a *APIAnnotationSensitiveContent) ToAPIFinding() oapicommon.APIFinding {
+	return oapicommon.APIFinding{
+		Source: utils.ModuleName,
+
+		Type:        a.Name(),
+		Name:        "JWT claims or headers may contains sensitive content",
+		Description: "JWT are signed, not encrypted, hence sensitive information can be seen in clear by a potential attacker",
+
+		ProvidedSpecLocation:      &a.SpecLocation,
+		ReconstructedSpecLocation: &a.SpecLocation,
+
+		Severity: oapicommon.INFO,
+
+		AdditionalInfo: nil,
 	}
 }
