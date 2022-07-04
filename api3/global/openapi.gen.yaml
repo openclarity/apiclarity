@@ -468,6 +468,8 @@ components:
           type: string
         path:
           type: string
+        tag:
+          type: string
       required:
       - path
       - method
