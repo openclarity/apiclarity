@@ -60,6 +60,7 @@ paths:
           required: true
           schema:
             $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+        - $ref: '#/components/parameters/redacted'
       responses:
         '200':
           description: Annotation

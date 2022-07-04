@@ -44,6 +44,11 @@ type DeleteAPIAnnotationsParams struct {
 	Name string `form:"name" json:"name"`
 }
 
+// GetAPIAnnotationsParams defines parameters for GetAPIAnnotations.
+type GetAPIAnnotationsParams struct {
+	Redacted *Redacted `form:"redacted,omitempty" json:"redacted,omitempty"`
+}
+
 // GetApiFindingsParams defines parameters for GetApiFindings.
 type GetApiFindingsParams struct {
 	// Should findings include sensitive data ?
@@ -62,7 +67,7 @@ type ServerInterface interface {
 	DeleteAPIAnnotations(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params DeleteAPIAnnotationsParams)
 	// Get Annotations for an API
 	// (GET /apiAnnotations/{apiID})
-	GetAPIAnnotations(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
+	GetAPIAnnotations(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params GetAPIAnnotationsParams)
 	// Get findings for an API and module
 	// (GET /apiFindings/{apiID})
 	GetApiFindings(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params GetApiFindingsParams)
@@ -138,8 +143,22 @@ func (siw *ServerInterfaceWrapper) GetAPIAnnotations(w http.ResponseWriter, r *h
 		return
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetAPIAnnotationsParams
+
+	// ------------- Optional query parameter "redacted" -------------
+	if paramValue := r.URL.Query().Get("redacted"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "redacted", r.URL.Query(), &params.Redacted)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "redacted", Err: err})
+		return
+	}
+
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetAPIAnnotations(w, r, apiID)
+		siw.Handler.GetAPIAnnotations(w, r, apiID, params)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -361,19 +380,19 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/9RWwW7bMAz9FYHb0bCztdght2ztihwGBGtvRQ+qTSdqbUmV6ABeoX8fJCuxE7tdh27D",
-	"ChSoLTLk4yMfrUfIVa2VREkW5o+gueE1EprwZrDgOWHhn4WEOTw0aFpIQPIaYd7bE7D5BmvuHQsseVMR",
-	"zEteWUyAWu19b5WqkEtwzu28Q46FlIo4CSVDfqM0GhIYbPzAFgNZMkKuwSVwL2QxaejgTRgsbtEIaieM",
-	"LgGDD40wvtxrEMWuzGQIYxAi5r/ZV6hu7zAnn6avyY6LEoT14cN7gyXM4V3W9yKLDGUDetw+EzeGt+Fd",
-	"Ea860m1uhO6ogit/zHCLklgP3rJcNZJgH0ZIwjWaUe1d1HFh3k/IUo0TLlbLLxX3tLArw3NkC8mr9gca",
-	"9k0VTYVssVr6vIIqfIE7JLBFY7vYs3SWfvDFKo2SawFzOEln6QkkoDltAoMZ12JAevbItVieuQ5ohYRj",
-	"yBdIx8kHEVipDOPMasxFKfKI37cx2JcFzOEsRF6slsN2JwcSuo668UB72QRwMOScTINDDcWJSNPs6I9r",
-	"ceLHpFYyi3ykLa+r6dkJeZxLjmv3OJgqGW2QHQz3lMijCJ4GeyykG+9stZK2G/iPs9Mx/ZdNnqO1ZVOx",
-	"0KEw4F6hTV1z0+7pHTdFhma4BNZIf6OtF0hvoKdjkmf+X64koQy8cK0rkYcSsjvbrdARml/sHNuJ/kjs",
-	"g5V00DHP/VPtckkQ6VchCyHXBwqd7OPC3ncByvgLP69dsN3qqMOuSBiXhT9O2bLWFdYoCQt22zLk+SY6",
-	"TTa5R/O/qvZ1AfuSskuUVpDYIvypwXltkavlnvzJEfMdZTsX9rmRRYUQ/OLt4t9D1uJ7JG4K8rkxyjDT",
-	"exwrYz/IvSzC6MYJDQoJn+yDD1k4eU4ov7fwQrgpNZwfZX6RJCK4Z0VRKlNz6m4bn04nLx/T22gwvvt7",
-	"5ltaex3Vzjn3MwAA//8t7HDxZQsAAA==",
+	"H4sIAAAAAAAC/9xWTW/bMAz9KwK3o2Fna7FDbtnaFTkMCNbeih5Um07U2pIq0QG8Qv99kKzETux23Se2",
+	"AQVqWwz5+Pge7UfIVa2VREkW5o+gueE1EppwZ7DgOWHhr4WEOTw0aFpIQPIaYd6fJ2DzDdbcBxZY8qYi",
+	"mJe8spgAtdrH3ipVIZfgnNtFhxoLKRVxEkqG+kZpNCQwnPGDs5jIkhFyDS6BeyGLyYMO3sSBxS0aQe3E",
+	"oUvA4EMjjG/3GkSxazMZwhikiPVv9h2q2zvMyZfpe7LjpgRhfXjx2mAJc3iV9bPIIkPZgB63r8SN4W24",
+	"V8SrjnSbG6E7quDKP2a4RUmsB29ZrhpJsE8jJOEazaj3Luu4MR8nZKnGBRer5YeKe1rYleE5soXkVfsF",
+	"DfukiqZCtlgtfV1BFb4gHBLYorFd7lk6S9/4ZpVGybWAOZyks/QEEtCcNoHBjGsxID175Fosz1wHtELC",
+	"MeQLpOPigwysVIZxZjXmohR5xO/HGM6XBczhLGRerJbDcScHFrqOvvFAe9sEcDDknEyDQw9FRaRpdvTH",
+	"tTjxMqmVzCIfacvralo7oY5zyXHvHgdTJaMNsgNxT5k8muBpsMdGuvHBVitpO8G/nZ2O6b9s8hytLZuK",
+	"hQkFgXuHNnXNTbundzwUGYbhElgj/Y6xXiD9GzOdWhs90Gy/nCcGMvP/ciUJZeCQa12JPLSb3dlu3Y6Q",
+	"f2M/2W5BHC2Gwfo6mK6f01OjdUkw9EchCyHXB26enPnC3ncJyvgLr+0u2W7N1GGvJIzLwj9O2bLWFdYo",
+	"CQt22zLk+SYGTQqiR/OXq+EHEw50c4nSChJb/GXC+dkmV8s9+ZMS8xNluxD2vpFFhRDi4pfIn4esxedI",
+	"3BTkc2OUYaaPOHbGXsi9LYJ0o0KDQ8Lr/eClF548Z5TvW44h3ZQbzo8qv8gSEdyzpiiVqTl1XybvTic/",
+	"VP7PtddR7ZxzXwMAAP//b2aJ3ZELAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

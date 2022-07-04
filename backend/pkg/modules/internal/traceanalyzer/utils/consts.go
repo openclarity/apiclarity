@@ -13,6 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package core
+package utils
 
-//go:generate go run github.com/golang/mock/mockgen -destination=./mocks.gen.go -package=core . Module,BackendAccessor
+const (
+	ModuleName = "TraceAnalyzer"
+)

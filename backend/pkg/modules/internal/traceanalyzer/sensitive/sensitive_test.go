@@ -174,7 +174,7 @@ func TestSensitive(t *testing.T) {
 
 	for _, tc := range testCases {
 		trace := createTrace(tc.headersReq, tc.headersRes, tc.bodyReq, tc.bodyRes)
-		eventAnns, _ := sensitive.Analyze(trace)
+		eventAnns := sensitive.Analyze(trace)
 		if !sameRegexpMatches(eventAnns, tc.wanted) {
 			for _, ea := range eventAnns {
 				t.Logf("   Got: %+v", ea)

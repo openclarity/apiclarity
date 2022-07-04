@@ -186,10 +186,7 @@ func (w *WeakJWT) analyzeSensitive(token *jwt.Token) []utils.TraceAnalyzerAnnota
 			sensitiveHeader = append(sensitiveHeader, headerK)
 		}
 	}
-	if len(sensitiveHeader) > 0 {
-		sort.Strings(sensitiveHeader)
-		anns = append(anns, NewAnnotationSensitiveContentInHeaders(sensitiveHeader))
-	}
+	sort.Strings(sensitiveHeader)
 
 	for claimK := range token.Claims.(jwt.MapClaims) {
 		matches := w.sensitiveKeywords.FindAll(claimK)
@@ -197,14 +194,16 @@ func (w *WeakJWT) analyzeSensitive(token *jwt.Token) []utils.TraceAnalyzerAnnota
 			sensitiveClaims = append(sensitiveClaims, claimK)
 		}
 	}
-	if len(sensitiveClaims) > 0 {
-		sort.Strings(sensitiveClaims)
-		anns = append(anns, NewAnnotationSensitiveContentInClaims(sensitiveClaims))
+	sort.Strings(sensitiveClaims)
+
+	if len(sensitiveHeader) > 0 || len(sensitiveClaims) > 0 {
+		anns = append(anns, NewAnnotationSensitiveContent(sensitiveHeader, sensitiveClaims))
 	}
+
 	return anns
 }
 
-func (w *WeakJWT) Analyze(trace *models.Telemetry) (eventAnns []utils.TraceAnalyzerAnnotation, apiAnns []utils.TraceAnalyzerAnnotation) {
+func (w *WeakJWT) Analyze(trace *models.Telemetry) (eventAnns []utils.TraceAnalyzerAnnotation) {
 	JWTToken, eventAnns := findJWTToken(trace)
 	if JWTToken != nil {
 		eventAnns = append(eventAnns, w.analyzeAlg(JWTToken)...)
@@ -213,5 +212,5 @@ func (w *WeakJWT) Analyze(trace *models.Telemetry) (eventAnns []utils.TraceAnaly
 		eventAnns = append(eventAnns, w.analyzeSensitive(JWTToken)...)
 	}
 
-	return eventAnns, apiAnns
+	return eventAnns
 }

@@ -468,6 +468,8 @@ components:
           type: string
         path:
           type: string
+        tag:
+          type: string
       required:
       - path
       - method
@@ -2069,6 +2071,7 @@ paths:
         required: true
         schema:
           $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      - $ref: '#/components/parameters/redacted'
       responses:
         "200":
           content:
