@@ -32,6 +32,7 @@ var spaceRegex = regexp.MustCompile("\\s+")
 type Operation struct {
 	Method   string   `json:"method"`
 	Path     string   `json:"path"`
+	Tags     []string `json:"tags"`
 	Audience Audience `json:"audience"`
 }
 
@@ -157,4 +158,16 @@ func (aud Audience) Find(fn func(sa *SourceObject) bool) (int, *SourceObject) {
 		}
 	}
 	return 0, nil
+}
+
+func ToRestapiSpecType(specType SpecType) restapi.SpecType {
+	switch specType {
+	case SpecTypeNone:
+		return restapi.NONE
+	case SpecTypeProvided:
+		return restapi.PROVIDED
+	case SpecTypeReconstructed:
+		return restapi.RECONSTRUCTED
+	}
+	return restapi.NONE
 }
