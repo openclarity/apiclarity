@@ -110,10 +110,10 @@ func (l *K8sClient) StopFuzzingJob(apiID int64) error {
 		PropagationPolicy:  &policy,
 	}
 	err := l.hClient.BatchV1().Jobs(l.currentJob.Namespace).Delete(context.TODO(), l.currentJob.Name, *deleteOptions)
-	l.currentJob = nil
 	if err != nil {
-		return fmt.Errorf("failed to stop k8s fuzzer job")
+		return fmt.Errorf("failed to stop k8s fuzzer job: %v", err)
 	}
+	l.currentJob = nil
 	return nil
 }
 
