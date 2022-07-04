@@ -26,10 +26,9 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	log "github.com/sirupsen/logrus"
 
-	speculatorspec "github.com/openclarity/speculator/pkg/spec"
-
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
+	speculatorspec "github.com/openclarity/speculator/pkg/spec"
 )
 
 type swaggerType string
