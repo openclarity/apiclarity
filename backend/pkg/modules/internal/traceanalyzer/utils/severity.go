@@ -13,6 +13,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package restapi
+package utils
 
-//go:generate go run github.com/deepmap/oapi-codegen/cmd/oapi-codegen -old-config-style -generate chi-server,types,spec,skip-prune -package restapi -o restapi.gen.go --import-mapping=../../../../../../api3/common/openapi.yaml:github.com/openclarity/apiclarity/api3/common openapi.yaml
+import (
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
+)
+
+
+const (
+	SeverityInfo     = "INFO"
+	SeverityLow      = "LOW"
+	SeverityMedium   = "MEDIUM"
+	SeverityHigh     = "HIGH"
+	SeverityCritical = "CRITICAL"
+)
+
+
+func SeverityToAlert(severity string) core.AlertSeverity {
+	switch severity {
+	case SeverityInfo, SeverityLow:
+		return core.AlertInfo
+	case SeverityMedium, SeverityHigh:
+		return core.AlertWarn
+	case SeverityCritical:
+		return core.AlertCritical
+	}
+
+	return core.AlertInfo
+}

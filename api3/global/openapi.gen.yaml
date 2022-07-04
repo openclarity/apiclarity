@@ -219,6 +219,12 @@ components:
         items:
           type: string
         type: array
+    redacted:
+      in: query
+      name: redacted
+      schema:
+        default: false
+        type: boolean
     reviewId:
       in: path
       name: reviewId
@@ -336,6 +342,18 @@ components:
             $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
       description: unknown error
   schemas:
+    APIDiffs:
+      properties:
+        apiInfo:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiInfo
+        diffs:
+          items:
+            $ref: '#/components/schemas/Diff'
+          type: array
+      required:
+      - apiInfo
+      - diffs
+      type: object
     APIEventAnnotations:
       properties:
         bflaStatus:
@@ -526,6 +544,27 @@ components:
       - id
       - source
       - ip_address
+    Diff:
+      properties:
+        diffType:
+          $ref: ../common/openapi.yaml#/components/schemas/DiffType
+        lastSeen:
+          description: Timestamp of the time that the diff was last seen
+          format: int64
+          title: Last seen time
+          type: integer
+        newSpec:
+          description: New spec json string
+          type: string
+        oldSpec:
+          description: Old spec json string
+          type: string
+      required:
+      - lastSeen
+      - diffType
+      - oldSpec
+      - newSpec
+      type: object
     Finding:
       properties:
         description:
@@ -602,8 +641,6 @@ components:
       required:
       - operation
       - requestsCount
-      - findings
-      - highestSeverity
       title: Report tag operation
       type: object
     FuzzingReportPath:
@@ -638,7 +675,6 @@ components:
       required:
       - name
       - operations
-      - highestSeverity
       title: Report tag item
       type: object
     FuzzingStatusAndReport:
@@ -812,10 +848,21 @@ components:
       required:
       - starttime
       - status
-      - tags
-      - highestSeverity
       title: Short Test Report
       type: object
+    SpecDiffs:
+      properties:
+        diffs:
+          items:
+            $ref: '#/components/schemas/APIDiffs'
+          type: array
+      required:
+      - diffs
+      type: object
+    SpecDiffsNotification:
+      allOf:
+      - $ref: ../common/openapi.yaml#/components/schemas/BaseNotification
+      - $ref: '#/components/schemas/SpecDiffs'
     SpecType:
       enum:
       - NONE
@@ -1646,6 +1693,20 @@ paths:
       summary: Get the version of this Module
       tags:
       - local-bfla
+  /modules/differ/version:
+    get:
+      description: Get the version of this Module
+      operationId: differgetVersion
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ModuleVersion
+          description: Version of the Module
+      summary: Get the version of this Module
+      tags:
+      - local-differ
   /modules/fuzzer/annotatedspec/{apiID}:
     get:
       description: Retreive the annotated spec for an API if any, 404 Not Found otherwise
@@ -1678,7 +1739,7 @@ paths:
     get:
       description: Asks for findings of an APIClarity module, and API. Implemented
         by each module
-      operationId: fuzzerGetApiFindings
+      operationId: fuzzerGetAPIFindings
       parameters:
       - in: path
         name: apiID
@@ -1700,78 +1761,6 @@ paths:
                 $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
           description: Error response
       summary: Get findings for an API and module
-  /modules/fuzzer/fuzz/{apiID}:
-    get:
-      description: Fuzz a Target
-      operationId: fuzzerfuzzTarget
-      parameters:
-      - in: path
-        name: apiID
-        required: true
-        schema:
-          $ref: ../common/openapi.yaml#/components/schemas/ApiID
-      - description: service for the service to test
-        in: query
-        name: service
-        schema:
-          type: string
-      - description: type of auth
-        in: query
-        name: type
-        schema:
-          type: string
-      - description: username
-        in: query
-        name: username
-        schema:
-          type: string
-      - description: password
-        in: query
-        name: password
-        schema:
-          type: string
-      - description: key
-        in: query
-        name: key
-        schema:
-          type: string
-      - description: value for key
-        in: query
-        name: value
-        schema:
-          type: string
-      - description: token
-        in: query
-        name: token
-        schema:
-          type: string
-      responses:
-        "204":
-          description: Successful Response
-        "400":
-          content:
-            application/json:
-              schema:
-                description: error message
-                type: string
-          description: Bad formated namespace
-        "404":
-          content:
-            application/json:
-              schema:
-                description: error message
-                type: string
-          description: Service not found
-        "500":
-          content:
-            application/json:
-              schema:
-                description: error message
-                type: string
-          description: Internal Error
-      summary: Fuzz a Target
-      tags:
-      - local-fuzzer
   /modules/fuzzer/fuzz/{apiID}/progress:
     get:
       description: Start a test for an API
@@ -2125,6 +2114,7 @@ paths:
         schema:
           format: int64
           type: integer
+      - $ref: '#/components/parameters/redacted'
       responses:
         "200":
           content:

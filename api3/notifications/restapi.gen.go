@@ -79,7 +79,7 @@ type ShortTestReport struct {
 	ApiID *externalRef0.ApiID `json:"apiID,omitempty"`
 
 	// Severity of a finding
-	HighestSeverity externalRef0.Severity `json:"highestSeverity"`
+	HighestSeverity *externalRef0.Severity `json:"highestSeverity,omitempty"`
 
 	// Timestamp of the start of the test
 	Starttime int64 `json:"starttime"`
@@ -88,8 +88,19 @@ type ShortTestReport struct {
 	Status externalRef1.FuzzingStatusEnum `json:"status"`
 
 	// Message for status details, if any
-	StatusMessage *string                         `json:"statusMessage,omitempty"`
-	Tags          []externalRef1.FuzzingReportTag `json:"tags"`
+	StatusMessage *string                          `json:"statusMessage,omitempty"`
+	Tags          *[]externalRef1.FuzzingReportTag `json:"tags,omitempty"`
+}
+
+// SpecDiffs defines model for SpecDiffs.
+type SpecDiffs struct {
+	Diffs []externalRef1.APIDiffs `json:"diffs"`
+}
+
+// SpecDiffsNotification defines model for SpecDiffsNotification.
+type SpecDiffsNotification struct {
+	Diffs            []externalRef1.APIDiffs `json:"diffs"`
+	NotificationType string                  `json:"notificationType"`
 }
 
 // TestProgressNotification defines model for TestProgressNotification.
@@ -109,8 +120,8 @@ type TestReportNotification struct {
 	ApiID *externalRef0.ApiID `json:"apiID,omitempty"`
 
 	// Severity of a finding
-	HighestSeverity  externalRef0.Severity `json:"highestSeverity"`
-	NotificationType string                `json:"notificationType"`
+	HighestSeverity  *externalRef0.Severity `json:"highestSeverity,omitempty"`
+	NotificationType string                 `json:"notificationType"`
 
 	// Timestamp of the start of the test
 	Starttime int64 `json:"starttime"`
@@ -119,8 +130,8 @@ type TestReportNotification struct {
 	Status externalRef1.FuzzingStatusEnum `json:"status"`
 
 	// Message for status details, if any
-	StatusMessage *string                         `json:"statusMessage,omitempty"`
-	Tags          []externalRef1.FuzzingReportTag `json:"tags"`
+	StatusMessage *string                          `json:"statusMessage,omitempty"`
+	Tags          *[]externalRef1.FuzzingReportTag `json:"tags,omitempty"`
 }
 
 // PostNotificationApiIDJSONBody defines parameters for PostNotificationApiID.
@@ -150,6 +161,19 @@ func (t APIClarityNotification) AsAuthorizationModelNotification() (Authorizatio
 
 func (t *APIClarityNotification) FromAuthorizationModelNotification(v AuthorizationModelNotification) error {
 	v.NotificationType = "AuthorizationModelNotification"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+func (t APIClarityNotification) AsSpecDiffsNotification() (SpecDiffsNotification, error) {
+	var body SpecDiffsNotification
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+func (t *APIClarityNotification) FromSpecDiffsNotification(v SpecDiffsNotification) error {
+	v.NotificationType = "SpecDiffsNotification"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -199,6 +223,8 @@ func (t APIClarityNotification) ValueByDiscriminator() (interface{}, error) {
 		return t.AsApiFindingsNotification()
 	case "AuthorizationModelNotification":
 		return t.AsAuthorizationModelNotification()
+	case "SpecDiffsNotification":
+		return t.AsSpecDiffsNotification()
 	case "TestProgressNotification":
 		return t.AsTestProgressNotification()
 	case "TestReportNotification":
@@ -647,23 +673,24 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/8RXS2/bOBD+KwR3j4Ltdhd78C1ttoAPbYK1b4UPjDSWpxAfS47cOob/+4IU9bApJ062",
-	"QW+WNc9vvvlIHXiupdEKFDk+P3CXb0GK8PPmfvGxEhZp/0UTbjAXhFr5NwW63KJEJUhb/4cUxqAqg5fB",
-	"T6gKVKU7deO/TftU05hnesk84zc1bbXFx/D8WRdQXRXvaa+Mr8DRvdWlBXdVgRftm1D/gNGWrg00Yn3M",
-	"uLHagKX9FyGBz7kavF7tDXgTreBuw+dfD/x3C5uXgnnMnvF7GrTn3C9CdI3jGCTrY+bZ1/YSKAeeciYC",
-	"fMNKq2vD9IZtWqMOR4TggQRy1LVCR2eenW2sdjLx5UqtptqAEgYneyGrcey6Ov2cyM9rzoW1Ys+P/R/6",
-	"4Rvk5C0u7seBi6q6YsgfhIOXTXeAZANtMm6f/RS9CoRVcaVjDw9aVyACY71l8D5FukevrPSDqDr0SlBP",
-	"IJiUc9eGTyHNuDOQh7V4dcJlG8EPyMK/NVoo+PxrH/qkw6wHYz020Gd06u3mmo4xjDcJlOyAt2BDEyaq",
-	"ivV6z4YS5JisHTH4QaCKZMsSser54siGrTgDOfEYA3W51ZaGupI2cRueHsAx2gIz0c4vtlBMq1KjKhmB",
-	"o6RmYXBx+8ptD66NZl+o635Qia8sliDFD5S15PN3s1nGJarmaZZxQqqga8jEwyVCgoqgBBuIT8ISoYQ0",
-	"5wolOBLStEmD7VkFG22loCbmX3/yPvEyGIfIad7zFemKGGCwHsTyg2N+cqwDopF4/tSYo0nS2CBcF+Xn",
-	"D3OL5RYcLWEHnv6vi9Z5/7JRhbxU/w8p/lQ/PqIqlyHM36qWfdDP4JwoRxqKL9hGW9aYsgJIYOUyhn4Z",
-	"96f1ewMZfaJh30urGRknUf6MwyV21JBnJZrQsZiVKF24DfCRg/sS6SPEscCUO+O7cHkFLt9H3+zgSMU1",
-	"nBuXrrNvX0dE57g+euRRbXQ4RiKMH7UFdndzvwgUG5xSZ9fxHVjXUPLdZBZvKZ4gfM7/mMwm7710CNoG",
-	"Mk2Hp9D0EETkGG5B2gUZ6s7/ReE1XbsTUBrl8PGskEBgXUAHfXKfg2dcNZd5ES17OpGtIYvfWT5Tuuvn",
-	"Crxu3MHRB10Edcq1IlDU6J+p2j6+uWZeffBn7oVj33dhBqcrfgb0aS9hV5zRyjWC/H42e1GJ57eFJPuy",
-	"zvNAUq9FtZTC7ptjdocFMNLsxmAeKdHe7a34zlCZmgJnBCtxB8pzhy1umXBO5ygICvYdadu9plaamyoc",
-	"2F072dpWfM6nnqL/BQAA//9TEzQkMg8AAA==",
+	"H4sIAAAAAAAC/8RXS5PaOBD+KyrtHl1Aslt74EYymyoOyVALtxQHYbeNUtZjpTYJQ/Hft/TwA2weM5nZ",
+	"3MDq59dfd0sHmiqhlQSJlk4P1KZbEMz/nC3mH0tmOO6/KOQ5TxlyJd1Jxm1quOCSoTLug2Bac1l4Lc0/",
+	"cZlxWdhTNfrbuHU1jn7Gl8QTOqtwqwx/8v8/qwzKu+xd10roUkP6wPP8ruiGhRO6AosLowoD9i47F+WD",
+	"qX9AK4P3GhqQPiZUG6XB4P4LE0CnVHaOV3sNTkRJeMzp9OuB/m4gf25FjskNvevI31IfhvqW1kVg71Ec",
+	"AnJ9TBzxawQ828GxXceyzEhhVKWJykleCzXoc/AaHEEMqpbc4plmIxujHY1cuELJsdIgmeajPRPlMOJN",
+	"nK666Ko8pcwYtqfH9oPafIMUncTF1jxQVpZ3UOMDs/A8TnSQDND2SOK8n6JXAjMyTpOYw0apEpjnuZP0",
+	"2qdIt+gVpdqwskGvAHkFwV44j7X5PqQJtRpS30wvdrisLbgCGfi34gYyOv3amj7JMGnBWA8V9MaIfLu6",
+	"9svoy9sz1OsBJ0G6IoSVJWlXDekOLktEZZHADwSZ9bqsN+Javlg0vivOQO5pDIG63CqD3bnST+LB/9uA",
+	"JbgFoqOca2wmiZKF4rIgCBZ7MTPN5w8v7HavGib9hbgWnUhcZDEEwX5wUQk6fTeZJFRwGf5NEoocS2gS",
+	"0nElRUi4RCjAeOIjM4hcQN/niguwyISunXrZswhyZQTDYPOvP2nreOmFveW+3/MWaYLoYLDu2HKFI65y",
+	"pAEijHh6rcxRpJdYx1xj5fWLueXFFiwuYQeO/i+z1mj/slJ5v1j9xCj+VD09cVksvZm/ZSVao5/BWlYM",
+	"JBQPSK4MCaIkA2S8tAnhrhn3p/E7ARF1omCbSz0zEoqseI3lEjMK5FmxYDoGs2KF9bcBOrC4L5E+QjxM",
+	"+StMr29W/VWb1Z9/do8u5sHD8UY6weH6WpT/0wprUfGb6/KN/u0i6C2aJpKhB8HbxxEpdFwfXdm4zJVf",
+	"qZFrH5UB8jhbzH27dTb22YNmB8aG9nw3msQbm2MQndI/RpPRezdGGW4928bdjTw++IF69DRV1o/k5i40",
+	"z9x+U/YElDBFnT3DBCAY69HhzrnzQRMqw3OIRcmWi2gqSOJz13nqz73zbbQO6mDxg8r8pE6VRJAYdoEu",
+	"6zy+2VCv1viNO/LQM9vX4HTcnQF9motvNKuVtKG1308mzwrx/ObU876s0tST1M3lSghm9uHKseMZEFRk",
+	"pnkaKVG/cwz7TrjUFXrOMFLwHUjHHTJ/IMxalXKGkJHvHLfNMdZrKkRhwezqylampFM6dhT9LwAA//8U",
+	"4QbQuRAAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

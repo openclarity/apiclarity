@@ -13,6 +13,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package restapi
+package utils
 
-//go:generate go run github.com/deepmap/oapi-codegen/cmd/oapi-codegen -old-config-style -generate chi-server,types,spec,skip-prune -package restapi -o restapi.gen.go --import-mapping=../../../../../../api3/common/openapi.yaml:github.com/openclarity/apiclarity/api3/common openapi.yaml
+import (
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
+)
+
+type TraceAnalyzerAnnotation interface {
+	Name() string
+	Severity() string
+	Serialize() ([]byte, error)
+	Deserialize([]byte) error
+	Redacted() TraceAnalyzerAnnotation
+	ToFinding() Finding
+}
+
+// A finding is an interpreted annotation.
+type Finding struct {
+	ShortDesc    string
+	DetailedDesc string
+	Severity     string
+	Alert        core.AlertSeverity
+}

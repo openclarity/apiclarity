@@ -1,12 +1,29 @@
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package model
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 	"time"
+
+	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/getkin/kin-openapi/routers/gorillamux"
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api3/common"
@@ -39,23 +56,28 @@ const (
 	AnnotationReportName      = "fuzzer_report"
 	AnnotationFindingsName    = "fuzzer_findings"
 	OneHundredPercentConstant = 100
+	ReportNameCRUDPrefix      = "definitions:"
+	ReportNameSCNFuzzerPrefix = "path:"
+	ReportNameRestlerPrefix   = "restler"
+	MinLocationTokensNumber   = 4
 )
 
+/*
+* A TestItem will link a report with the corresponding spec that generate the report.
+ */
 type TestItem struct {
-	Test              *restapi.TestWithReport
-	ProvidedSpec      *models.SpecInfo
-	ReconstructedSpec *models.SpecInfo
+	Test      *restapi.TestWithReport
+	SpecsInfo *tools.FuzzerSpecsInfo
 }
 
 type API struct {
-	Id        uint
+	ID        uint
 	Name      string
 	Port      uint
 	Namespace string
 	Fuzzed    bool
 	InFuzzing bool
 	TestsList []*TestItem
-	//tests     []restapi.TestWithReport // List of tests as displayed on Tests Subtab
 }
 
 /*
@@ -64,14 +86,13 @@ type API struct {
 
 func NewAPI(id uint, name string, port uint, namespace string) API {
 	return API{
-		Id:        id,
+		ID:        id,
 		Name:      name,
 		Port:      port,
 		Namespace: namespace,
 		Fuzzed:    false,
 		InFuzzing: false,
 		TestsList: []*TestItem{},
-		//tests:     []restapi.TestWithReport{},
 	}
 }
 
@@ -88,9 +109,23 @@ func NewTest() *TestItem {
 			LastReportTime:  &lastReportTime,
 			ErrorMessage:    new(string),
 		},
-		ProvidedSpec:      &(models.SpecInfo{}),
-		ReconstructedSpec: &(models.SpecInfo{}),
+		SpecsInfo: &(tools.FuzzerSpecsInfo{}),
 	}
+}
+
+func ConvertRawFindingToAPIFinding(finding restapi.RawFindings) *common.APIFinding {
+	additionalInfo := map[string]interface{}{
+		"Description": finding.AdditionalInfo,
+	}
+	result := common.APIFinding{
+		Type:           *finding.Type,
+		Name:           typeToNameMap[*finding.Type],
+		Source:         *finding.Namespace,
+		Description:    *finding.Description,
+		Severity:       common.Severity(*finding.Request.Severity),
+		AdditionalInfo: &additionalInfo,
+	}
+	return &result
 }
 
 /*
@@ -111,65 +146,118 @@ func (api *API) GetLastShortStatus() (*restapi.ShortTestReport, error) {
 		lastTest := api.TestsList[index].Test
 		lastReport := lastTest.Report
 
-		// Create the shortreport structure
+		// Create the shortreport structure to fill
 		shortReport := restapi.ShortTestReport{
 			Starttime:     *lastTest.Starttime,
 			Status:        lastReport.Status,
 			StatusMessage: lastTest.ErrorMessage,
-			Tags:          []restapi.FuzzingReportTag{},
+			Tags:          &[]restapi.FuzzingReportTag{},
 		}
 
-		// Prepare on the shortreport structure the list of tags/operations from the provided spec content
-		specInfo := api.TestsList[index].ProvidedSpec
+		// Get current spec informations
+		var specInfo *models.SpecInfo
+		logging.Debugf("[Fuzzer] API(%v).GetLastShortStatus(): specInfo Provided(len=%v), Reconstructed(len=%v)", api.ID, len(api.TestsList[index].SpecsInfo.ProvidedSpec), len(api.TestsList[index].SpecsInfo.ReconstructedSpec))
+		if api.TestsList[index].SpecsInfo.ProvidedSpec != "" {
+			specInfo = api.TestsList[index].SpecsInfo.ProvidedSpecInfo
+		} else if api.TestsList[index].SpecsInfo.ReconstructedSpec != "" {
+			specInfo = api.TestsList[index].SpecsInfo.ReconstructedSpecInfo
+		} else {
+			return nil, fmt.Errorf("no spec information")
+		}
+
+		// Prepare on the shortreport structure the list of tags/operations from the spec content
 		if specInfo.Tags != nil {
 			for _, tag := range specInfo.Tags {
-				logging.Logf("[Fuzzer] API(%v).StartFuzzing(): ... tag (%v)", api.Id, tag.Name)
-				fuzzingReportTag := restapi.FuzzingReportTag{Name: tag.Name, Operations: []restapi.FuzzingReportOperation{}}
-				for _, op := range tag.MethodAndPathList {
-					logging.Logf("[Fuzzer] API(%v).StartFuzzing(): ... ... method %v %v", api.Id, op.Method, op.Path)
+				logging.Debugf("[Fuzzer] API(%v).GetLastShortStatus(): ... tag (%v)", api.ID, tag.Name)
+				fuzzingReportTag := restapi.FuzzingReportTag{
+					Name:            tag.Name,
+					Operations:      []restapi.FuzzingReportOperation{},
+					HighestSeverity: nil,
 				}
-				shortReport.Tags = append(shortReport.Tags, fuzzingReportTag)
+				for _, op := range tag.MethodAndPathList {
+					logging.Debugf("[Fuzzer] API(%v).GetLastShortStatus(): ... ... method %v %v", api.ID, op.Method, op.Path)
+					fuzzingReportTag.Operations = append(fuzzingReportTag.Operations, restapi.FuzzingReportOperation{
+						Operation: common.MethodAndPath{
+							Method: (*common.HttpMethod)(&op.Method),
+							Path:   &op.Path,
+						},
+						RequestsCount:   0,
+						Findings:        &[]common.APIFinding{},
+						HighestSeverity: nil,
+					})
+				}
+				*shortReport.Tags = append(*shortReport.Tags, fuzzingReportTag)
 			}
+		} else {
+			return nil, fmt.Errorf("invalid or no existing spec content")
 		}
 
 		// Then iterate on the regular report items and verse it on the shortdemo structure
 		for _, reportItem := range lastTest.Report.Report {
-			if strings.HasPrefix(*reportItem.Name, "definitions:") {
-				/*tokens := strings.Split(*reportItem.Name, ":")
-				if len(tokens) > 1 {
-					desc := fmt.Sprintf("Tests for the object '%v'", tokens[1])
-					reportItem.Description = &desc
-				}*/
-				//Todo
-			} else if strings.HasPrefix(*reportItem.Name, "path:") {
+			if strings.HasPrefix(*reportItem.Name, ReportNameCRUDPrefix) {
+				// Come from the 'crud' fuzzer
+				// TODO
+			} else if strings.HasPrefix(*reportItem.Name, ReportNameSCNFuzzerPrefix) {
+				// Come from the 'scn-fuzzer' fuzzer
 				tokens := strings.Split(*reportItem.Name, ":")
 				if len(tokens) > 1 {
-					//desc := fmt.Sprintf("Tests on path '%v'", tokens[1])
-					//reportItem.Description = &desc
 					opPath := tokens[1]
 					for _, path := range *reportItem.Paths {
 						// Report this path in shortreport
 						err := updateRequestCounter(&shortReport, opPath, *path.Verb)
 						if err != nil {
-							panic(err)
+							// The error has been already logged, then simply skip the current request
+							continue
 						}
 					}
 				}
-			} else if strings.HasPrefix(*reportItem.Name, "restler") {
-				//desc := "Set of tests made automatically by Restler based on the specs"
-				//reportItem.Description = &desc
-				//Todo
+			} else if strings.HasPrefix(*reportItem.Name, ReportNameRestlerPrefix) {
+				// The set of tests made automatically by Restler based on the specs
+				err := updateRequestCountersForRestler(&shortReport, reportItem, api.TestsList[index].SpecsInfo.ProvidedSpec)
+				if err != nil {
+					// The error has been already logged, then simply skip the current report item
+					continue
+				}
 			}
+		}
+
+		// Then redo the same for findings (I know, it can be done on the loop above, but I prefer separate the job)
+		for _, reportItem := range lastTest.Report.Report {
+			for _, finding := range *reportItem.Findings {
+				// finding.Location is something like &[OASv3Spec paths /user/logout get]
+				if len(*finding.Location) < MinLocationTokensNumber {
+					logging.Errorf("[Fuzzer] API(%v).GetLastShortStatus(): Found an invalid finding location (%v)", api.ID, finding.Location)
+					continue
+				}
+				verb := (*finding.Location)[3]
+				method := (*finding.Location)[2]
+				verb = strings.ToUpper(verb)
+				err := AddFindingOnShortReport(&shortReport, method, verb, finding)
+				if err != nil {
+					// The error has been already logged, then simply skip the current report item
+					continue
+				}
+			}
+		}
+
+		// Some guys ask to not have Tags item if no tags on it...
+		if len(*shortReport.Tags) == 0 {
+			shortReport.Tags = nil
 		}
 
 		return &shortReport, nil
 	}
-	return nil, fmt.Errorf("No existing tests for api(%v)", api.Id)
+	return nil, fmt.Errorf("no existing tests for api(%v)", api.ID)
 }
 
 func updateRequestCounter(shortReport *restapi.ShortTestReport, path string, verb string) error {
-	for idx1 := range shortReport.Tags {
-		tag := &shortReport.Tags[idx1]
+	if *shortReport.Tags == nil {
+		// No tags, then no operations and no request counter to update
+		return nil
+	}
+
+	for idx1 := range *shortReport.Tags {
+		tag := &(*shortReport.Tags)[idx1]
 		for idx2 := range tag.Operations {
 			ops := &tag.Operations[idx2]
 			if *ops.Operation.Path == path && *ops.Operation.Method == common.HttpMethod(verb) {
@@ -179,13 +267,105 @@ func updateRequestCounter(shortReport *restapi.ShortTestReport, path string, ver
 		}
 	}
 	// Not found
-	logging.Errorf("[Fuzzer] Can't find operation(%v %v) in spec", verb, path)
+	logging.Errorf("[Fuzzer] Can't find operation(%v %v) in spec to update requests counter", verb, path)
+	return fmt.Errorf("can't find operation(%v %v) in spec to update requests counter", verb, path)
+}
+
+func AddFindingOnShortReport(shortReport *restapi.ShortTestReport, path string, verb string, finding restapi.RawFindings) error {
+	if *shortReport.Tags == nil {
+		// No tags, then no operations on which to add findings
+		return nil
+	}
+
+	for idx1 := range *shortReport.Tags {
+		tag := &(*shortReport.Tags)[idx1]
+		for idx2 := range tag.Operations {
+			ops := &tag.Operations[idx2]
+			if *ops.Operation.Path == path && *ops.Operation.Method == common.HttpMethod(verb) {
+				// Add the finding
+				commonFinding := ConvertRawFindingToAPIFinding(finding)
+				*ops.Findings = append(*ops.Findings, *commonFinding)
+				// Update higestSeverity for operation
+				if ops.HighestSeverity == nil || tools.IsGreaterSeverity(commonFinding.Severity, *ops.HighestSeverity) {
+					ops.HighestSeverity = &commonFinding.Severity
+					// Check for higestSeverity at tags level
+					if tag.HighestSeverity == nil || tools.IsGreaterSeverity(commonFinding.Severity, *tag.HighestSeverity) {
+						tag.HighestSeverity = &commonFinding.Severity
+						// Lastly... test at report level
+						if shortReport.HighestSeverity == nil || tools.IsGreaterSeverity(commonFinding.Severity, *shortReport.HighestSeverity) {
+							shortReport.HighestSeverity = &commonFinding.Severity
+						}
+					}
+				}
+				return nil
+			}
+		}
+	}
+	// Not found
+	logging.Errorf("[Fuzzer] Can't find operation(%v %v) in spec to store the finding", verb, path)
+	return fmt.Errorf("can't find operation(%v %v) in spec to store the finding", verb, path)
+}
+
+func updateRequestCountersForRestler(shortReport *restapi.ShortTestReport, reportItem restapi.FuzzingReportItem, spec string) error {
+	if *shortReport.Tags == nil {
+		// No tags, then no operations and no request counter to update
+		return nil
+	}
+
+	logging.Debugf("[Fuzzer] updateRequestCountersForRestler(): spec len=(%v)", len(spec))
+	doc, err := tools.LoadSpec([]byte(spec))
+	if err != nil {
+		logging.Errorf("[Fuzzer] updateRequestCountersForRestler(): Invalid Spec err=(%v)", err)
+		return fmt.Errorf("invalid Spec")
+	}
+
+	// Find basepaths from servers list, then save it before reset
+	basePaths := tools.GetBasePathsFromServers(&doc.Servers)
+	logging.Debugf("[Fuzzer] updateRequestCountersForRestler(): basePaths (%v)", basePaths)
+	doc.Servers = openapi3.Servers{}
+
+	// Create the router
+	router, err := gorillamux.NewRouter(doc)
+	if err != nil {
+		return fmt.Errorf("can't create router, err=(%v)", err)
+	}
+
+	for _, path := range *reportItem.Paths {
+		// Patch for Fuzzer improper verb
+		verb := *path.Verb
+		if verb[0:1] == "'" {
+			verb = strings.TrimPrefix(verb, "'")
+		}
+
+		URIsToTest := []string{}
+		URIsToTest = append(URIsToTest, *path.Uri)
+		for _, basepath := range basePaths {
+			if strings.HasPrefix(*path.Uri, basepath) {
+				URIsToTest = append(URIsToTest, strings.TrimPrefix(*path.Uri, basepath))
+			}
+		}
+		logging.Debugf("[Fuzzer] updateRequestCountersForRestler(): process paths (%v %v)", verb, URIsToTest)
+		for _, uri := range URIsToTest {
+			route, err := tools.FindRoute(&router, verb, uri)
+			if err != nil {
+				// Not an error, that can occurs, specially when we manage some basepath. Simply skip it.
+				logging.Debugf("[Fuzzer] updateRequestCountersForRestler(): ... can't find it err=(%v)", err)
+				continue
+			}
+			err = updateRequestCounter(shortReport, route.Path, route.Method)
+			if err != nil {
+				logging.Errorf("[Fuzzer] updateRequestCountersForRestler(): can't update request counter err=(%v)", err)
+			}
+			break
+		}
+	}
+
 	return nil
 }
 
 func (api *API) AddNewStatusReport(report restapi.FuzzingStatusAndReport) {
 	if !api.InFuzzing {
-		logging.Logf("[Fuzzer] AddNewStatusReport():: API id (%v) not in Fuzzing... did you triggered it from HTTP?", api.Id)
+		logging.Logf("[Fuzzer] AddNewStatusReport():: API id (%v) not in Fuzzing... did you triggered it from HTTP?", api.ID)
 		return
 	}
 
@@ -309,7 +489,7 @@ func (api *API) GetTestsList() *[]restapi.Test {
 			fuzzerError := fmt.Errorf("a timeout occurred: it seems we can't receive response from Fuzzer workload")
 			err := api.StopFuzzing(fuzzerError)
 			if err != nil {
-				logging.Errorf("[Fuzzer] API(%v).GetTestsList(): error occurred when trying to stop fuzzing, err=%v", api.Id, err)
+				logging.Errorf("[Fuzzer] API(%v).GetTestsList(): error occurred when trying to stop fuzzing, err=%v", api.ID, err)
 			}
 		}
 	}
@@ -344,6 +524,43 @@ func (api *API) GetLastFindings() *[]restapi.Finding {
 	return &(findingList)
 }
 
+func (api *API) GetLastAPIFindings() *[]common.APIFinding {
+	var findingList []common.APIFinding
+
+	if len(api.TestsList) > 0 {
+		index := len(api.TestsList) - 1
+		lastTestItem := api.TestsList[index].Test
+		if lastTestItem.Report != nil {
+			for _, reportItem := range lastTestItem.Report.Report {
+				for _, finding := range *reportItem.Findings {
+					findingName := typeToNameMap[*finding.Type]
+					findingDescription := ""
+					if finding.Description != nil {
+						findingDescription = *finding.Description
+					}
+					risk := *(finding.Request.Severity)
+					additionalInfo := map[string]interface{}{
+						"Description": finding.AdditionalInfo,
+					}
+					APIFinding := common.APIFinding{
+						AdditionalInfo:            &additionalInfo,
+						Description:               findingDescription,
+						Name:                      findingName,
+						ProvidedSpecLocation:      new(string),
+						ReconstructedSpecLocation: new(string),
+						Severity:                  common.Severity(risk),
+						Source:                    *finding.Namespace,
+						Type:                      *finding.Type,
+					}
+					findingList = append(findingList, APIFinding)
+				}
+			}
+		}
+	}
+
+	return &(findingList)
+}
+
 func (api *API) ForceProgressForLastTest(progress int) error {
 	if len(api.TestsList) > 0 {
 		index := len(api.TestsList) - 1
@@ -353,30 +570,22 @@ func (api *API) ForceProgressForLastTest(progress int) error {
 	return nil
 }
 
-func (api *API) StartFuzzing(specsInfo *models.OpenAPISpecs) error {
-	logging.Logf("[Fuzzer] API(%v).StartFuzzing(): Start fuzzing", api.Id)
+func (api *API) StartFuzzing(params *FuzzingInput) (FuzzingTimestamp, error) {
+	logging.Logf("[Fuzzer] API(%v).StartFuzzing(): Start fuzzing", api.ID)
 	if api.InFuzzing {
-		logging.Errorf("[Fuzzer] API(%v).StartFuzzing(): A fuzzing is already started", api.Id)
-		return fmt.Errorf("a fuzzing is already started for api(%v)", api.Id)
+		logging.Errorf("[Fuzzer] API(%v).StartFuzzing(): A fuzzing is already started", api.ID)
+		return ZeroTime, fmt.Errorf("a fuzzing is already started for api(%v)", api.ID)
 	}
 	api.InFuzzing = true
 	// Add a new Test item with progress 0% and No report
 	testItem := NewTest()
-	testItem.ProvidedSpec = specsInfo.ProvidedSpec
-	testItem.ReconstructedSpec = specsInfo.ReconstructedSpec
-	/*logging.Logf("[Fuzzer] API(%v).StartFuzzing(): specsInfo.ProvidedSpec=(%v)", api.Id, specsInfo.ProvidedSpec)
-	for _, tag := range specsInfo.ProvidedSpec.Tags {
-		logging.Logf("[Fuzzer] API(%v).StartFuzzing(): ... tag (%v)", api.Id, tag.Name)
-		for _, op := range tag.MethodAndPathList {
-			logging.Logf("[Fuzzer] API(%v).StartFuzzing(): ... ... method %v %v", api.Id, op.Method, op.Path)
-		}
-	}*/
+	testItem.SpecsInfo = params.SpecsInfo
 	api.TestsList = append(api.TestsList, testItem)
-	return nil
+	return *testItem.Test.Starttime, nil
 }
 
 func (api *API) StopFuzzing(fuzzerError error) error {
-	logging.Logf("[Fuzzer] API(%v).StopFuzzing(): Stop fuzzing, with error(%v)", api.Id, fuzzerError)
+	logging.Logf("[Fuzzer] API(%v).StopFuzzing(): Stop fuzzing, with error(%v)", api.ID, fuzzerError)
 	api.InFuzzing = false
 	api.Fuzzed = true
 	// Force the last test progress to 100%
@@ -385,8 +594,7 @@ func (api *API) StopFuzzing(fuzzerError error) error {
 		api.AddErrorOnLastTest(fuzzerError)
 	}
 	if err != nil {
-		log.Fatalln(err)
-		return fmt.Errorf("can't set the progress status for last test of api (%v)", api.Id)
+		return fmt.Errorf("can't set the progress status for last test of api (%v)", api.ID)
 	}
 	return nil
 }
@@ -394,35 +602,35 @@ func (api *API) StopFuzzing(fuzzerError error) error {
 func (api *API) StoreReportData(ctx context.Context, accessor core.BackendAccessor, moduleName string, data restapi.FuzzingStatusAndReport) error {
 	bytes, err := json.Marshal(data)
 	if err != nil {
-		return fmt.Errorf("can't decode report data for api(%v), err=%v", api.Id, err.Error())
+		return fmt.Errorf("can't decode report data for api(%v), err=%v", api.ID, err)
 	}
-	err = accessor.StoreAPIInfoAnnotations(ctx, moduleName, api.Id, core.Annotation{Name: AnnotationReportName, Annotation: bytes})
+	err = accessor.StoreAPIInfoAnnotations(ctx, moduleName, api.ID, core.Annotation{Name: AnnotationReportName, Annotation: bytes})
 	if err != nil {
-		return fmt.Errorf("can't store report data for api(%v), err=%v", api.Id, err.Error())
+		return fmt.Errorf("can't store report data for api(%v), err=%v", api.ID, err)
 	}
 	return nil
 }
 
 func (api *API) StoreLastFindingsData(ctx context.Context, accessor core.BackendAccessor, moduleName string, data []byte) error {
-	err := accessor.StoreAPIInfoAnnotations(ctx, moduleName, api.Id, core.Annotation{Name: AnnotationFindingsName, Annotation: data})
+	err := accessor.StoreAPIInfoAnnotations(ctx, moduleName, api.ID, core.Annotation{Name: AnnotationFindingsName, Annotation: data})
 	if err != nil {
-		return fmt.Errorf("can't store report data for api(%v), err=%v", api.Id, err.Error())
+		return fmt.Errorf("can't store report data for api(%v), err=%v", api.ID, err)
 	}
 	return nil
 }
 
 func (api *API) RetrieveInfoFromStore(ctx context.Context, accessor core.BackendAccessor, moduleName string) error {
-	dbAnns, err := accessor.ListAPIInfoAnnotations(ctx, moduleName, api.Id)
+	dbAnns, err := accessor.ListAPIInfoAnnotations(ctx, moduleName, api.ID)
 	if err != nil {
-		return fmt.Errorf("can't retrieve annotation for api(%v), err=%v", api.Id, err.Error())
+		return fmt.Errorf("can't retrieve annotation for api(%v), err=%v", api.ID, err)
 	}
 	for _, annotation := range dbAnns {
 		if annotation.Name == AnnotationReportName {
-			logging.Logf("[Fuzzer] API(%v).RetrieveInfoFromStore(): Found Annotation Name=(%v), size=(%v)", api.Id, annotation.Name, len(annotation.Annotation))
+			logging.Logf("[Fuzzer] API(%v).RetrieveInfoFromStore(): Found Annotation Name=(%v), size=(%v)", api.ID, annotation.Name, len(annotation.Annotation))
 			var data restapi.FuzzingStatusAndReport
 			err = json.Unmarshal(annotation.Annotation, &data)
 			if err != nil {
-				logging.Errorf("[Fuzzer] API(%v).RetrieveInfoFromStore(): failed to decode the annotation body, error=%v", api.Id, err)
+				logging.Errorf("[Fuzzer] API(%v).RetrieveInfoFromStore(): failed to decode the annotation body, error=%v", api.ID, err)
 				break
 			}
 			// Before ingest any report, we must be "in fuzzing" mode
@@ -436,7 +644,7 @@ func (api *API) RetrieveInfoFromStore(ctx context.Context, accessor core.Backend
 			api.InFuzzing = false
 		}
 		if annotation.Name == "Fuzzer report" || annotation.Name == "Fuzzer findings" {
-			logging.Logf("[Fuzzer] API(%v).RetrieveInfoFromStore(): Found Annotation Name=(%v), size=(%v)", api.Id, annotation.Name, len(annotation.Annotation))
+			logging.Logf("[Fuzzer] API(%v).RetrieveInfoFromStore(): Found Annotation Name=(%v), size=(%v)", api.ID, annotation.Name, len(annotation.Annotation))
 			// Nothing to do for now, we don't use it
 		}
 	}

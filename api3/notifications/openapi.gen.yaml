@@ -5,12 +5,14 @@ components:
         mapping:
           ApiFindingsNotification: '#/components/schemas/ApiFindingsNotification'
           AuthorizationModelNotification: '#/components/schemas/AuthorizationModelNotification'
+          SpecDiffsNotification: '#/components/schemas/SpecDiffsNotification'
           TestProgressNotification: '#/components/schemas/TestProgressNotification'
           TestReportNotification: '#/components/schemas/TestReportNotification'
         propertyName: notificationType
       oneOf:
       - $ref: '#/components/schemas/ApiFindingsNotification'
       - $ref: '#/components/schemas/AuthorizationModelNotification'
+      - $ref: '#/components/schemas/SpecDiffsNotification'
       - $ref: '#/components/schemas/TestProgressNotification'
       - $ref: '#/components/schemas/TestReportNotification'
     APIFindings:
@@ -100,10 +102,21 @@ components:
       required:
       - starttime
       - status
-      - tags
-      - highestSeverity
       title: Short Test Report
       type: object
+    SpecDiffs:
+      properties:
+        diffs:
+          items:
+            $ref: ../global/openapi.gen.yaml#/components/schemas/APIDiffs
+          type: array
+      required:
+      - diffs
+      type: object
+    SpecDiffsNotification:
+      allOf:
+      - $ref: '#/components/schemas/BaseNotification'
+      - $ref: '#/components/schemas/SpecDiffs'
     TestProgressNotification:
       allOf:
       - $ref: '#/components/schemas/BaseNotification'

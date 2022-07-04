@@ -1,12 +1,37 @@
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package tools
 
 import (
 	b64 "encoding/base64"
+	"errors"
 	"fmt"
+	"strings"
 
+	"encoding/json"
+
+	oapicommon "github.com/openclarity/apiclarity/api3/common"
+	"github.com/openclarity/apiclarity/api3/global"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/config"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/restapi"
 )
+
+// SeverityToNumber A map to used to compare Severity.
+var SeverityToNumber = map[string]int{string(oapicommon.INFO): 1, string(oapicommon.LOW): 2, string(oapicommon.MEDIUM): 3, string(oapicommon.HIGH): 4, string(oapicommon.CRITICAL): 5} // nolint:gomnd
 
 // Create new FuzzingReportPath.
 func NewFuzzingReportPath(result int, verb string, uri string) restapi.FuzzingReportPath {
@@ -34,89 +59,136 @@ func GetHTTPCodeFromFindingType(findingtype string) int {
 Create a string that contain the user auth material, on Fuzzer format.
 This will be usedto send in ENV parameter to fuzzer.
 */
-func GetAuthStringFromParam(params restapi.FuzzTargetParams) (string, error) {
+func GetAuthStringFromParam(params *restapi.AuthorizationScheme) (string, error) {
 	ret := ""
 
-	if params.Type == nil || *params.Type == "NONE" {
+	if params == nil {
 		return ret, nil
 	}
 
-	switch {
-	case *params.Type == "apikey":
+	discriminator, err := params.Discriminator()
+	if err != nil {
+		return ret, fmt.Errorf("failed to get discriminator, err=(%v)", err)
+	}
 
-		if params.Key == nil || params.Value == nil {
-			logging.Logf("Bad (%v) auth format (%v)", *params.Type, params)
-			return ret, nil
+	switch discriminator {
+	case "ApiToken":
+
+		apiToken, err := params.AsApiToken()
+		if err != nil {
+			msg := fmt.Sprintf("Bad ApiToken auth format (%v)", params)
+			logging.Logf(msg)
+			return ret, errors.New(msg)
 		}
-		sEncKey := b64.StdEncoding.EncodeToString([]byte(*params.Key))
-		sEncValue := b64.StdEncoding.EncodeToString([]byte(*params.Value))
+		sEncKey := b64.StdEncoding.EncodeToString([]byte(apiToken.Key))
+		sEncValue := b64.StdEncoding.EncodeToString([]byte(apiToken.Value))
 		ret = fmt.Sprintf("APIKey:%s:%s:Header", sEncKey, sEncValue)
 
-	case *params.Type == "bearertoken":
+	case "BasicAuth":
 
-		if params.Token == nil {
-			logging.Logf("Bad (%v) auth format (%v)", *params.Type, params)
-			return ret, nil
+		basicAuth, err := params.AsBasicAuth()
+		if err != nil {
+			msg := fmt.Sprintf("Bad BasicAuth auth format (%v)", params)
+			logging.Logf(msg)
+			return ret, errors.New(msg)
 		}
-		sEncToken := b64.StdEncoding.EncodeToString([]byte(*params.Token))
-		ret = fmt.Sprintf("BearerToken:%s", sEncToken)
-
-	case *params.Type == "basicauth":
-
-		if params.Username == nil || params.Password == nil {
-			logging.Logf("Bad (%v) auth format (%v)", *params.Type, params)
-			return ret, nil
-		}
-		sEncUser := b64.StdEncoding.EncodeToString([]byte(*params.Username))
-		sEncPass := b64.StdEncoding.EncodeToString([]byte(*params.Password))
+		sEncUser := b64.StdEncoding.EncodeToString([]byte(basicAuth.Username))
+		sEncPass := b64.StdEncoding.EncodeToString([]byte(basicAuth.Password))
 		ret = fmt.Sprintf("BasicAuth:%s:%s:Header", sEncUser, sEncPass)
 
-	default:
+	case "BearerToken":
 
-		logging.Logf("Not supported auth type (%v) auth format (%v)", *params.Type, params)
+		bearerToken, err := params.AsBearerToken()
+		if err != nil {
+			msg := fmt.Sprintf("Bad BearerToken auth format (%v)", params)
+			logging.Logf(msg)
+			return ret, errors.New(msg)
+		}
+		sEncToken := b64.StdEncoding.EncodeToString([]byte(bearerToken.Token))
+		ret = fmt.Sprintf("BearerToken:%s", sEncToken)
+
+	default:
+		return ret, fmt.Errorf("unknown discriminator value: (%v)", discriminator)
 	}
 
 	return ret, nil
 }
 
-func DumpHTTPFuzzParam(params restapi.FuzzTargetParams) string {
-	ret := "{"
-	// No ternary operator in golang... :-(
-	if params.Service == nil {
-		ret = ret + "Service=<nil>"
-	} else {
-		ret = ret + fmt.Sprintf("Service=%s", *params.Service)
+func GetTimeBudgetFromParam(param restapi.TestInputDepthEnum) (string, error) {
+	ret := config.RestlerDefaultTimeBudget
+
+	switch param {
+	case restapi.QUICK:
+		ret = config.RestlerQuickTimeBudget
+	case restapi.DEFAULT:
+		ret = config.RestlerDefaultTimeBudget
+	case restapi.DEEP:
+		ret = config.RestlerDeepTimeBudget
+	default:
+		return ret, fmt.Errorf("unknown test depth value: (%v)", string(param))
 	}
-	if params.Type == nil {
-		ret = ret + ", Authentication=<nil>"
-	} else {
-		ret = ret + fmt.Sprintf(", Authentication=%s", *params.Type)
+
+	return ret, nil
+}
+
+func GetBasePathFromURL(URL string) string {
+	if URL == "" || URL == "/" {
+		return ""
 	}
-	if params.Token == nil {
-		ret = ret + ", Token=<nil>"
-	} else {
-		ret = ret + fmt.Sprintf(", Token=%s", *params.Token)
+
+	// strip scheme if exits
+	urlNoScheme := URL
+	schemeSplittedURL := strings.Split(URL, "://")
+	if len(schemeSplittedURL) > 1 {
+		urlNoScheme = schemeSplittedURL[1]
 	}
-	if params.Key == nil {
-		ret = ret + ", Key=<nil>"
-	} else {
-		ret = ret + fmt.Sprintf(", Key=%s", *params.Key)
+
+	// get path
+	var path string
+	splittedURLNoScheme := strings.SplitN(urlNoScheme, "/", 2) // nolint:gomnd
+	if len(splittedURLNoScheme) > 1 {
+		path = splittedURLNoScheme[1]
 	}
-	if params.Value == nil {
-		ret = ret + ", Value=<nil>"
-	} else {
-		ret = ret + fmt.Sprintf(", Value=%s", *params.Value)
+	if path == "" {
+		return ""
 	}
-	if params.Username == nil {
-		ret = ret + ", Username=<nil>"
-	} else {
-		ret = ret + fmt.Sprintf(", Username=%s", *params.Username)
+
+	return "/" + path
+}
+
+func ConvertLocalToGlobalReportTag(from *[]restapi.FuzzingReportTag) *[]global.FuzzingReportTag {
+	if from == nil {
+		// If there is no tags on input, no need to convert, result must be null. It is not an error.
+		return nil
 	}
-	if params.Password == nil {
-		ret = ret + ", Password=<nil>"
-	} else {
-		ret = ret + fmt.Sprintf(", Password=%s", *params.Password)
+
+	/*
+	* We need to convert restapi.FuzzingReportTag to global.FuzzingReportTag
+	* It is the same struc, because global.FuzzingReportTag is created from restapi.FuzzingReportTag.
+	* But: We need to use restapi.FuzzingReportTag on restapi.gen.go and Fuzzer functions that use it,
+	* and we need to use global.FuzzingReportTag for notifications.
+	* As it is same struct, it is valid here to unmarshall then marshall things.
+	 */
+	result := []global.FuzzingReportTag{}
+	bytes, err := json.Marshal(from)
+	if err != nil {
+		logging.Errorf("[Fuzzer] ConvertLocalToGlobalReportTag(): Failed to Marshal []restapi.FuzzingReportTag (%v)", err)
+		return nil
 	}
-	ret = ret + "}"
-	return ret
+	err = json.Unmarshal(bytes, &result)
+	if err != nil {
+		logging.Errorf("[Fuzzer] ConvertLocalToGlobalReportTag(): Failed to Unmarshal []global.FuzzingReportTag (%v)", err)
+		return nil
+	}
+	return &result
+}
+
+func IsGreaterSeverity(severity1 oapicommon.Severity, severity2 oapicommon.Severity) bool {
+	/*
+	* Severity comparison operator.
+	* Return true is s1>s2, false otherwise
+	 */
+	s1AsNumber := SeverityToNumber[string(severity1)]
+	s2AsNumber := SeverityToNumber[string(severity2)]
+	return s1AsNumber > s2AsNumber
 }

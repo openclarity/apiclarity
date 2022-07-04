@@ -1,0 +1,68 @@
+openapi: 3.0.3
+info:
+  title: APIClarity Differ
+  version: 0.0.1
+  description: APIClarity Module API
+paths:
+  /version:
+    get:
+      operationId: getVersion
+      summary: Get the version of this Module
+      description: Get the version of this Module
+      tags:
+      - local-differ
+      responses:
+        '200':
+          description: Version of the Module
+          content:
+            application/json:
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ModuleVersion'
+components:
+  schemas:
+    Diff:
+      type: object
+      properties:
+        lastSeen:
+          description: Timestamp of the time that the diff was last seen
+          format: int64
+          title: Last seen time
+          type: integer
+        diffType:
+          $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/DiffType'
+        oldSpec:
+          description: 'Old spec json string'
+          type: 'string'
+        newSpec:
+          description: 'New spec json string'
+          type: 'string'
+      required:
+        - lastSeen
+        - diffType
+        - oldSpec
+        - newSpec
+    APIDiffs:
+      type: object
+      properties:
+        apiInfo:
+          $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiInfo'
+        diffs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Diff'
+      required:
+        - apiInfo
+        - diffs
+    SpecDiffs:
+      type: object
+      properties:
+        diffs:
+          type: array
+          items:
+            $ref: '#/components/schemas/APIDiffs'
+      required:
+        - diffs
+    SpecDiffsNotification:
+      allOf:
+        - $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/BaseNotification'
+        - $ref: '#/components/schemas/SpecDiffs'

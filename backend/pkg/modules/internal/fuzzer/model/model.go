@@ -1,20 +1,49 @@
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package model
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"time"
 
-	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/restapi"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/tools"
 )
 
+// FuzzingTimestamp the type used for our Timestamp.
+type FuzzingTimestamp = int64
+
+// ZeroTime The zero timestamp to use.
+var ZeroTime = time.Time{}.Unix()
+
+// Model: The Model struct.
 type Model struct {
 	db       []API
 	accessor core.BackendAccessor
+}
+
+// FuzzingInput: a struct to store all input parameters for fuzzing.
+type FuzzingInput struct {
+	Auth      *restapi.AuthorizationScheme
+	Depth     restapi.TestInputDepthEnum
+	SpecsInfo *tools.FuzzerSpecsInfo
 }
 
 /*
@@ -80,7 +109,7 @@ func (m *Model) GetAPI(ctx context.Context, apiID uint) (*API, error) {
 	* Try to retrieve it from the cache
 	 */
 	for index, api := range m.db {
-		if api.Id == apiID {
+		if api.ID == apiID {
 			return &m.db[index], nil
 		}
 	}
@@ -93,8 +122,7 @@ func (m *Model) GetAPI(ctx context.Context, apiID uint) (*API, error) {
 	apiInfo, err := m.accessor.GetAPIInfo(ctx, apiID)
 	logging.Logf("[model.GetAPI(%v)]: get apiInfo=(%v)", apiID, apiInfo)
 	if err != nil {
-		log.Fatalln(err)
-		return nil, fmt.Errorf("Error when retrieve api %v: %v", apiID, err)
+		return nil, fmt.Errorf("error when retrieve api %v: %v", apiID, err)
 	}
 
 	newAPI := NewAPI(apiInfo.ID, apiInfo.Name, uint(apiInfo.Port), apiInfo.DestinationNamespace)
@@ -107,19 +135,19 @@ func (m *Model) AddAPITest(apiID uint, message string) error {
 	return nil
 }
 
-func (m *Model) StartAPIFuzzing(ctx context.Context, apiID uint, specsInfo *models.OpenAPISpecs) error {
+func (m *Model) StartAPIFuzzing(ctx context.Context, apiID uint, params *FuzzingInput) (FuzzingTimestamp, error) {
 	// Get Api
 	api, err := m.GetAPI(ctx, apiID)
 	if err != nil {
-		return fmt.Errorf("API not found (%v)", apiID)
+		return ZeroTime, fmt.Errorf("API not found (%v)", apiID)
 	}
 	// Start fuzzing
-	err = api.StartFuzzing(specsInfo)
+	timestamp, err := api.StartFuzzing(params)
 	if err != nil {
-		return fmt.Errorf("can't start fuzzing (%v)", apiID)
+		return ZeroTime, fmt.Errorf("can't start fuzzing (%v)", apiID)
 	}
 	//dumpSlice(m.db)
-	return nil
+	return timestamp, nil
 }
 
 func (m *Model) StopAPIFuzzing(ctx context.Context, apiID uint, fuzzerError error) error {
@@ -170,14 +198,14 @@ func (m *Model) ReceiveFullReport(ctx context.Context, apiID uint, body []byte) 
 	return nil
 }
 
-//nolint:unused,deadcode
+//nolint:unused,deadcode // used for debug only
 func dumpSlice(s []API) {
 	/*
 	* Debug only, dump the list of APIs
 	 */
 	logging.Logf("len=%d cap=%d", len(s), cap(s))
 	for _, api := range s {
-		logging.Logf("... API {id(%v), name(%v), port(%d), fuzzed(%v), inFuzzing(%v), namespace(%v), tests(%v)}", api.Id, api.Name, api.Port, api.Fuzzed, api.InFuzzing, api.Namespace, len(api.TestsList))
+		logging.Logf("... API {id(%v), name(%v), port(%d), fuzzed(%v), inFuzzing(%v), namespace(%v), tests(%v)}", api.ID, api.Name, api.Port, api.Fuzzed, api.InFuzzing, api.Namespace, len(api.TestsList))
 		for _, testItem := range api.TestsList {
 			logging.Logf("... ... test {progress(%v), start(%v), lastReport(%d), vulns(%d/%d/%d/%d/%d)}",
 				testItem.Test.Progress,

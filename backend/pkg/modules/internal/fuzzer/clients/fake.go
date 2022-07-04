@@ -1,3 +1,18 @@
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package clients
 
 import (
@@ -42,13 +57,17 @@ var staticFakeData = [...]string{
 	"{\"report\":{\"path:/user\":{\"name\":\"path:/user\",\"source\":\"SCN-FUZER\",\"paths\":[{\"result\":404,\"verb\":\"POST\",\"uri\":\"http://localhost:5000/user\"}],\"findings\":[],\"status\":\"DONE\"},\"definitions:Order\":{\"name\":\"definitions:Order\",\"source\":\"CRUD\",\"paths\":[],\"findings\":[{\"namespace\":\"api-fuzzer\",\"location\":[\"OASv2Spec\",\"/store/order\",\"POST\"],\"type\":\"CRUD_LIFE_CYCLE\",\"description\":\"For object '/store/order',' The fuzzer can't create/read/update/delete the object.\",\"request\":{\"severity\":\"high\"},\"additionalInfo\":\"Can't build the object\"},{\"namespace\":\"api-fuzzer\",\"location\":[\"OASv2Spec\",\"Order\",\"\"],\"type\":\"CRUD_NOT_ENOUGH_DATA\",\"description\":\"For object 'Order',' The fuzzer have not enough information to start the test.\",\"request\":{\"severity\":\"low\"},\"additionalInfo\":\"Object 'Order' have no 'CRUD_UPDATE' operation for test #CRUDFuzzCampaignTest01, aborting test #CRUDFuzzCampaignTest01\"}],\"status\":\"DONE\"},\"definitions:Pet\":{\"name\":\"definitions:Pet\",\"source\":\"CRUD\",\"paths\":[],\"findings\":[{\"namespace\":\"api-fuzzer\",\"location\":[\"OASv2Spec\",\"/pet\",\"POST\"],\"type\":\"CRUD_LIFE_CYCLE\",\"description\":\"For object '/pet',' The fuzzer can't create/read/update/delete the object.\",\"request\":{\"severity\":\"high\"},\"additionalInfo\":\"Can't build the object\"}],\"status\":\"DONE\"},\"path:/user/createWithArray\":{\"name\":\"path:/user/createWithArray\",\"source\":\"SCN-FUZER\",\"paths\":[{\"result\":404,\"verb\":\"POST\",\"uri\":\"http://localhost:5000/user/createWithArray\"}],\"findings\":[],\"status\":\"DONE\"},\"path:/user/{username}\":{\"name\":\"path:/user/{username}\",\"source\":\"SCN-FUZER\",\"paths\":[{\"result\":404,\"verb\":\"DELETE\",\"uri\":\"http://localhost:5000/user/veryLongFixedStringveryLongFixedStringveryLongFixedStringveryLongFixedStringveryLongFixedStringveryLongFixedStringveryLongFixedStringveryLongFixedStringveryLongFixedStringveryLongFixedStringveryLongFixedStringveryLongFixedStringveryLongFixedStringveryLongFixedStringveryLongFixedStringveryLongFixedStringveryLongFixedString\"},{\"result\":404,\"verb\":\"PUT\",\"uri\":\"http://localhost:5000/user/\"},{\"result\":404,\"verb\":\"GET\",\"uri\":\"http://localhost:5000/user/\"}],\"findings\":[],\"status\":\"DONE\"},\"definitions:User\":{\"name\":\"definitions:User\",\"source\":\"CRUD\",\"paths\":[],\"findings\":[],\"status\":\"DONE\"},\"path:/store/inventory\":{\"name\":\"path:/store/inventory\",\"source\":\"SCN-FUZER\",\"paths\":[{\"result\":404,\"verb\":\"GET\",\"uri\":\"http://localhost:5000/store/inventory\"}],\"findings\":[],\"status\":\"DONE\"},\"restler\":{\"name\":\"restler\",\"source\":\"RESTLER\",\"paths\":[],\"findings\":[{\"namespace\":\"api-fuzzer\",\"location\":[\"OASv3Spec\",\"paths\",\"\",\"get\"],\"type\":\"NOT_IMPLEMENTED_ERROR\",\"description\":\"For path '/v2/pet/findByTags?tags=fuzzstring',' The fuzzer found something not implemented on the server side (receive a 501 error).\",\"request\":{\"severity\":\"high\"},\"additionalInfo\":\"GET /v2/pet/findByTags?tags=fuzzstring HTTP/1.1\\\\r\\\\nAccept: application/json\\\\r\\\\nHost: localhost:5000\\\\r\\\\n\\\\r\\\\n\"},{\"namespace\":\"api-fuzzer\",\"location\":[\"OASv3Spec\",\"paths\",\"\",\"post\"],\"type\":\"NOT_IMPLEMENTED_ERROR\",\"description\":\"For path '/v2/pet/1',' The fuzzer found something not implemented on the server side (receive a 501 error).\",\"request\":{\"severity\":\"high\"},\"additionalInfo\":\"POST /v2/pet/1 HTTP/1.1\\\\r\\\\nAccept: application/json\\\\r\\\\nHost: localhost:5000\\\\r\\\\n\\\\r\\\\n\"},{\"namespace\":\"api-fuzzer\",\"location\":[\"OASv3Spec\",\"paths\",\"\",\"put\"],\"type\":\"PAYLOAD_BODY_NOT_IMPLEMENTED\",\"description\":\"For path '/v2/user/username',' The fuzzer found something not implemented on the server side (receive a 501 error).\",\"request\":{\"severity\":\"high\"},\"additionalInfo\":\"PUT /v2/user/username HTTP/1.1\\\\r\\\\nAccept: application/json\\\\r\\\\nHost: localhost:5000\\\\r\\\\nContent-Type: application/json\\\\r\\\\n\\\\r\\\\n{\\\"email\\\":\\\"fuzzstring\\\",\\\"firstName\\\":\\\"fuzzstring\\\",\\\"id\\\":0,\\\"lastName\\\":\\\"fuzzstring\\\",\\\"password\\\":\\\"fuzzstring\\\",\\\"phone\\\":\\\"fuzzstring\\\",\\\"userStatus\\\":0,\\\"username\\\":\\\"fuzzstring\\\"}\"},{\"namespace\":\"api-fuzzer\",\"location\":[\"OASv3Spec\",\"paths\",\"\",\"put\"],\"type\":\"NOT_IMPLEMENTED_ERROR\",\"description\":\"For path '/v2/user/username',' The fuzzer found something not implemented on the server side (receive a 501 error).\",\"request\":{\"severity\":\"high\"},\"additionalInfo\":\"PUT /v2/user/username HTTP/1.1\\\\r\\\\nAccept: application/json\\\\r\\\\nHost: localhost:5000\\\\r\\\\nContent-Type: application/json\\\\r\\\\n\\\\r\\\\n{\\\\n    \\\"email\\\":fuzzstring,\\\\n    \\\"firstName\\\":fuzzstring,\\\\n    \\\"id\\\":1,\\\\n    \\\"lastName\\\":fuzzstring,\\\\n    \\\"password\\\":fuzzstring,\\\\n    \\\"phone\\\":fuzzstring,\\\\n    \\\"userStatus\\\":1,\\\\n    \\\"username\\\":fuzzstring}\\\\r\\\\n\"},{\"namespace\":\"api-fuzzer\",\"location\":[\"OASv3Spec\",\"paths\",\"\",\"post\"],\"type\":\"PAYLOAD_BODY_NOT_IMPLEMENTED\",\"description\":\"For path '/v2/store/order',' The fuzzer found something not implemented on the server side (receive a 501 error).\",\"request\":{\"severity\":\"high\"},\"additionalInfo\":\"POST /v2/store/order HTTP/1.1\\\\r\\\\nAccept: application/json\\\\r\\\\nHost: localhost:5000\\\\r\\\\nContent-Type: application/json\\\\r\\\\n\\\\r\\\\n{\\\"complete\\\":false,\\\"id\\\":0,\\\"petId\\\":0,\\\"quantity\\\":0,\\\"shipDate\\\":\\\"fuzzstring\\\",\\\"status\\\":\\\"placed\\\"}\"}],\"status\":\"DONE\"},\"path:/pet\":{\"name\":\"path:/pet\",\"source\":\"SCN-FUZER\",\"paths\":[{\"result\":404,\"verb\":\"POST\",\"uri\":\"http://localhost:5000/pet\"},{\"result\":404,\"verb\":\"PUT\",\"uri\":\"http://localhost:5000/pet\"}],\"findings\":[],\"status\":\"DONE\"},\"path:/pet/{petId}\":{\"name\":\"path:/pet/{petId}\",\"source\":\"SCN-FUZER\",\"paths\":[{\"result\":404,\"verb\":\"GET\",\"uri\":\"http://localhost:5000/pet/-10\"},{\"result\":404,\"verb\":\"POST\",\"uri\":\"http://localhost:5000/pet/1\"}],\"findings\":[],\"status\":\"DONE\"},\"path:/store/order/{orderId}\":{\"name\":\"path:/store/order/{orderId}\",\"source\":\"SCN-FUZER\",\"paths\":[{\"result\":404,\"verb\":\"DELETE\",\"uri\":\"http://localhost:5000/store/order/-10\"},{\"result\":404,\"verb\":\"GET\",\"uri\":\"http://localhost:5000/store/order/0\"}],\"findings\":[],\"status\":\"DONE\"},\"path:/user/logout\":{\"name\":\"path:/user/logout\",\"source\":\"SCN-FUZER\",\"paths\":[{\"result\":404,\"verb\":\"GET\",\"uri\":\"http://localhost:5000/user/logout\"}],\"findings\":[],\"status\":\"DONE\"},\"path:/user/createWithList\":{\"name\":\"path:/user/createWithList\",\"source\":\"SCN-FUZER\",\"paths\":[{\"result\":404,\"verb\":\"POST\",\"uri\":\"http://localhost:5000/user/createWithList\"}],\"findings\":[],\"status\":\"DONE\"},\"path:/store/order\":{\"name\":\"path:/store/order\",\"source\":\"SCN-FUZER\",\"paths\":[{\"result\":404,\"verb\":\"POST\",\"uri\":\"http://localhost:5000/store/order\"}],\"findings\":[],\"status\":\"DONE\"}},\"progress\":100,\"status\":\"DONE\"}",
 }
 
+const (
+	MaxScannerCapacity = 10 * 1024 * 1024 // 10Mb must be ok for most use case. Keep in mind it is not used in production, user can manage the provided report file to properly size lines.
+)
+
 type FakeClient struct {
 	testFileName string
 	remoteHost   string
 }
 
-func (c *FakeClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem string) error {
-	logging.Logf("[Fuzzer][FakeClient] TriggerFuzzingJob(%v, %v, %v):: -->", apiID, endpoint, securityItem)
+func (c *FakeClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem string, timeBudget string) error {
+	logging.Logf("[Fuzzer][FakeClient] TriggerFuzzingJob(%v, %v, %v, %v):: -->", apiID, endpoint, securityItem, timeBudget)
 	go FakeTriggerFuzzingJob(context.TODO(), c.testFileName, uint(apiID), c.remoteHost)
 	logging.Logf("[Fuzzer][FakeClient] TriggerFuzzingJob():: <--")
 	return nil
@@ -76,11 +95,13 @@ func FakeTriggerFuzzingJob(ctx context.Context, testFilename string, apiID uint,
 	file, err := os.Open(testFilename)
 	if err == nil {
 		defer file.Close()
-		logging.Logf("[Fuzzer] Use data from (%v)", testFilename)
+		logging.Logf("[Fuzzer][FakeClient] Use data from (%v)", testFilename)
 		scanner := bufio.NewScanner(file)
-		// optionally, resize scanner's capacity for lines over 64K
+		// Use a predefined capacity. If failure, update the fixed report file to make sure line size not exceed MaxScannerCapacity
+		buf := make([]byte, 0, MaxScannerCapacity)
+		scanner.Buffer(buf, MaxScannerCapacity)
 		for scanner.Scan() {
-			logging.Logf("[Fuzzer] inject (%v)", scanner.Text())
+			logging.Logf("[Fuzzer][FakeClient] inject data len=(%v)", len(scanner.Text()))
 			err = SendReport(ctx, remoteHost, apiID, scanner.Bytes()) // TODO handle error
 			if err != nil {
 				logging.Errorf("Failed to send report to (%v): %v", remoteHost, err)
@@ -92,10 +113,10 @@ func FakeTriggerFuzzingJob(ctx context.Context, testFilename string, apiID uint,
 			logging.Errorf("can't read file (%v): %v", testFilename, err)
 		}
 	} else {
-		logging.Logf("[Fuzzer] err=(%v)", err)
-		logging.Logf("[Fuzzer] Use staticFakeData")
+		logging.Logf("[Fuzzer][FakeClient] err=(%v)", err)
+		logging.Logf("[Fuzzer][FakeClient] Use staticFakeData")
 		for _, item := range staticFakeData {
-			logging.Logf("[Fuzzer] inject (%v)", item)
+			logging.Logf("[Fuzzer][FakeClient] inject (%v)", item)
 			err = SendReport(ctx, remoteHost, apiID, []byte(item)) // TODO handle error
 			if err != nil {
 				logging.Errorf("Failed to send report to (%v): %v", remoteHost, err)
