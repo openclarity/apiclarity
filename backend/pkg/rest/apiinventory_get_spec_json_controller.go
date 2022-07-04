@@ -16,16 +16,19 @@
 package rest
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
-	"github.com/go-openapi/loads"
+	"github.com/getkin/kin-openapi/openapi2"
+	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/ghodss/yaml"
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/spec"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
+	speculatorspec "github.com/openclarity/speculator/pkg/spec"
 )
 
 type swaggerType string
@@ -63,28 +66,49 @@ func (s *Server) GetAPIProvidedSwaggerJSON(params operations.GetAPIInventoryAPII
 	return operations.NewGetAPIInventoryAPIIDProvidedSwaggerJSONOK().WithPayload(swaggerJSON)
 }
 
-func (s *Server) getAPISwaggerJSON(apiID uint32, typ swaggerType) (*spec.Swagger, error) {
+func (s *Server) getAPISwaggerJSON(apiID uint32, typ swaggerType) (interface{}, error) {
 	apiSpecFromDB, err := s.dbHandler.APIInventoryTable().GetAPISpecs(apiID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get api specs from DB: %v", err)
 	}
 
-	var specToReturn string
+	var specToReturn []byte
 	switch typ {
 	case swaggerTypeProvided:
-		specToReturn = apiSpecFromDB.ProvidedSpec
+		specToReturn = []byte(apiSpecFromDB.ProvidedSpec)
 	case swaggerTypeReconstructed:
-		specToReturn = apiSpecFromDB.ReconstructedSpec
+		specToReturn = []byte(apiSpecFromDB.ReconstructedSpec)
 	}
 
-	if specToReturn == "" {
+	if len(specToReturn) == 0 {
 		return nil, fmt.Errorf("%v spec not found", typ)
 	}
 
-	analyzed, err := loads.Analyzed([]byte(specToReturn), "")
+	specToReturn, err = yaml.YAMLToJSON(specToReturn)
 	if err != nil {
-		return nil, fmt.Errorf("failed to analyzed spec: %v", err)
+		return nil, fmt.Errorf("failed to convert spec into json (%s): %v", specToReturn, err)
 	}
 
-	return analyzed.Spec(), nil
+	oasVersion, err := speculatorspec.GetJSONSpecVersion(specToReturn)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get spec version: %v", err)
+	}
+
+	// nolint:exhaustive
+	switch oasVersion {
+	case speculatorspec.OASv2:
+		var doc openapi2.T
+		if err = json.Unmarshal(specToReturn, &doc); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal to v2 spec: %v", err)
+		}
+
+		return doc, nil
+	default:
+		var doc *openapi3.T
+		doc, _, err = speculatorspec.LoadAndValidateRawJSONSpec(specToReturn)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load spec and validate spec: %v", err)
+		}
+		return doc, nil
+	}
 }

@@ -28,7 +28,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/go-openapi/spec"
+	"github.com/getkin/kin-openapi/openapi2conv"
+	spec "github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-openapi/strfmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -196,17 +197,17 @@ func Run() {
 
 type eventDiff struct {
 	Path     string
-	PathItem *spec.PathItem
+	PathItem interface{}
 }
 
-func convertSpecDiffToEventDiff(diff *_spec.APIDiff) (originalRet, modifiedRet []byte, err error) {
+func convertSpecDiffToEventDiff(diff *_spec.APIDiff, version _spec.OASVersion) (originalRet, modifiedRet []byte, err error) {
 	original := eventDiff{
 		Path:     diff.Path,
-		PathItem: diff.OriginalPathItem,
+		PathItem: getPathItemForVersionOrOriginal(diff.OriginalPathItem, version),
 	}
 	modified := eventDiff{
 		Path:     diff.Path,
-		PathItem: diff.ModifiedPathItem,
+		PathItem: getPathItemForVersionOrOriginal(diff.ModifiedPathItem, version),
 	}
 	originalRet, err = yaml.Marshal(original)
 	if err != nil {
@@ -220,9 +221,33 @@ func convertSpecDiffToEventDiff(diff *_spec.APIDiff) (originalRet, modifiedRet [
 	return originalRet, modifiedRet, nil
 }
 
+func getPathItemForVersionOrOriginal(v3PathItem *spec.PathItem, version _spec.OASVersion) interface{} {
+	if v3PathItem == nil {
+		return v3PathItem
+	}
+
+	switch version {
+	case _spec.OASv2:
+		log.Errorf("Converting to OASv2 path item")
+		v2PathItem, err := openapi2conv.FromV3PathItem(&spec.T{Components: spec.Components{}}, v3PathItem)
+		if err != nil {
+			log.Errorf("Failed to convert v3 path item to v2, keeping v3: %v", err)
+			return v3PathItem
+		}
+
+		return v2PathItem
+	case _spec.OASv3:
+		return v3PathItem
+	case _spec.Unknown:
+		log.Warnf("Unknown spec version, using v3. version=%v", version)
+	default:
+		log.Warnf("Unknown spec version, using v3. version=%v", version)
+	}
+
+	return v3PathItem
+}
+
 func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Telemetry) error {
-	var reconstructedDiff *_spec.APIDiff
-	var providedDiff *_spec.APIDiff
 	var err error
 
 	log.Debugf("Handling telemetry: %+v", trace)
@@ -270,6 +295,9 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 	}
 
 	isNonAPI := isNonAPI(telemetry)
+
+	var reconstructedDiff, providedDiff *_spec.APIDiff
+	var reconstructedSpecVersion, providedSpecVersion _spec.OASVersion
 	// Don't link non APIs to an API in the inventory
 	if !isNonAPI {
 		// lock the API inventory to avoid creating API entries twice on trace handling races
@@ -288,12 +316,14 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 			if err != nil {
 				return fmt.Errorf("failed to diff telemetry against provided spec: %v", err)
 			}
+			providedSpecVersion = b.speculator.GetProvidedSpecVersion(specKey)
 		}
 		if b.speculator.HasApprovedSpec(specKey) {
 			reconstructedDiff, err = b.speculator.DiffTelemetry(telemetry, _spec.DiffSourceReconstructed)
 			if err != nil {
 				return fmt.Errorf("failed to diff telemetry against approved spec: %v", err)
 			}
+			reconstructedSpecVersion = b.speculator.GetApprovedSpecVersion(specKey)
 		} else {
 			err := b.speculator.LearnTelemetry(telemetry)
 			if err != nil {
@@ -329,7 +359,8 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 	reconstructedDiffType := models.DiffTypeNODIFF
 	if reconstructedDiff != nil {
 		if reconstructedDiff.Type != _spec.DiffTypeNoDiff {
-			original, modified, err := convertSpecDiffToEventDiff(reconstructedDiff)
+			log.Debugf("Creating event diff for approved spec version %q", reconstructedSpecVersion)
+			original, modified, err := convertSpecDiffToEventDiff(reconstructedDiff, reconstructedSpecVersion)
 			if err != nil {
 				return fmt.Errorf("failed to convert spec diff to event diff: %v", err)
 			}
@@ -345,7 +376,8 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 	providedDiffType := models.DiffTypeNODIFF
 	if providedDiff != nil {
 		if providedDiff.Type != _spec.DiffTypeNoDiff {
-			original, modified, err := convertSpecDiffToEventDiff(providedDiff)
+			log.Debugf("Creating event diff for provided spec version %q", providedSpecVersion)
+			original, modified, err := convertSpecDiffToEventDiff(providedDiff, providedSpecVersion)
 			if err != nil {
 				return fmt.Errorf("failed to convert spec diff to event diff: %v", err)
 			}

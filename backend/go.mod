@@ -5,25 +5,25 @@ go 1.17
 require (
 	github.com/bxcodec/faker/v3 v3.6.0
 	github.com/deepmap/oapi-codegen v1.9.1
-	github.com/getkin/kin-openapi v0.87.0
+	github.com/getkin/kin-openapi v0.97.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-chi/chi/v5 v5.0.0
 	github.com/go-openapi/loads v0.21.0
 	github.com/go-openapi/runtime v0.21.0
-	github.com/go-openapi/spec v0.20.4
 	github.com/go-openapi/strfmt v0.21.0
-	github.com/go-openapi/validate v0.20.3
+	github.com/golang-jwt/jwt/v4 v4.4.1
 	github.com/golang/mock v1.6.0
-	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/hbollon/go-edlib v1.6.0
 	github.com/openclarity/apiclarity/api v0.0.0
 	github.com/openclarity/apiclarity/plugins/api v0.0.0
-	github.com/openclarity/speculator v0.0.5
+	github.com/openclarity/speculator v0.1.0
 	github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220503091058-2730f5ebad2c
-	github.com/rs/cors v1.8.0 // indirect
+	github.com/petar-dambovaliev/aho-corasick v0.0.0-20211021192214-5ab2d9280aa9
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.8.1
 	github.com/urfave/cli v1.22.5
+	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/postgres v1.1.1
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.21.15
@@ -33,13 +33,6 @@ require (
 	k8s.io/apimachinery v0.23.5
 	k8s.io/client-go v0.23.5
 	sigs.k8s.io/yaml v1.2.0
-)
-
-require (
-	github.com/golang-jwt/jwt/v4 v4.4.1
-	github.com/hbollon/go-edlib v1.6.0
-	github.com/petar-dambovaliev/aho-corasick v0.0.0-20211021192214-5ab2d9280aa9
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
 
 require (
@@ -57,7 +50,9 @@ require (
 	github.com/go-openapi/errors v0.20.1 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
+	github.com/go-openapi/spec v0.20.4 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
+	github.com/go-openapi/validate v0.20.3 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
@@ -67,6 +62,7 @@ require (
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.5 // indirect
+	github.com/invopop/yaml v0.1.0 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.10.0 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
@@ -83,6 +79,7 @@ require (
 	github.com/labstack/echo/v4 v4.6.3 // indirect
 	github.com/labstack/gommon v0.3.1 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
+	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/mattn/go-colorable v0.1.11 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-sqlite3 v1.14.5 // indirect
@@ -93,6 +90,7 @@ require (
 	github.com/openclarity/trace-sampling-manager/api v0.0.0 // indirect
 	github.com/pelletier/go-toml v1.9.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/rs/cors v1.8.2 // indirect
 	github.com/russross/blackfriday/v2 v2.0.1 // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
