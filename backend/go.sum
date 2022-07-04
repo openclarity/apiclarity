@@ -586,10 +586,8 @@ github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7J
 github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
 github.com/onsi/gomega v1.14.0 h1:ep6kpPVwmr/nTbklSx2nrLNSIO62DoYAhnPNIMhK8gI=
 github.com/onsi/gomega v1.14.0/go.mod h1:cIuvLEne0aoVhAgh/O6ac0Op8WWw9H6eYCriF+tEHG0=
-github.com/openclarity/speculator v0.0.6-0.20220612121056-810f61b1ac95 h1:bOBrVHVKWoRxzX00EScmoUzBcuxiAkutq5hhFv1tRwM=
-github.com/openclarity/speculator v0.0.6-0.20220612121056-810f61b1ac95/go.mod h1:oaNhO8FQkC05J1YDwrudXTZHDOJLFKjCeKjq94dZK+I=
-github.com/openclarity/speculator v0.0.6-0.20220612171332-0cd58714efd0 h1:xnQr+SfH1OqCjQtY/VlFsArax0kxP01x8+rFLJqAUkM=
-github.com/openclarity/speculator v0.0.6-0.20220612171332-0cd58714efd0/go.mod h1:oaNhO8FQkC05J1YDwrudXTZHDOJLFKjCeKjq94dZK+I=
+github.com/openclarity/speculator v0.1.0 h1:VOtRcP9d2Z1oj4snVamM/y3lNVlagj4TffPMXRZSx/s=
+github.com/openclarity/speculator v0.1.0/go.mod h1:oaNhO8FQkC05J1YDwrudXTZHDOJLFKjCeKjq94dZK+I=
 github.com/openclarity/trace-sampling-manager/api v0.0.0-20220503091058-2730f5ebad2c h1:05Yo4yesB2dOmvUcCfq90BFD1lvqhX1WNUnlVjVaY54=
 github.com/openclarity/trace-sampling-manager/api v0.0.0-20220503091058-2730f5ebad2c/go.mod h1:yw7gPOl7tMaCSoJA+iQ4dTqQEFO19za94A0QKGb9eZM=
 github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220503091058-2730f5ebad2c h1:TpAnMFRtSCX/w5I5GS3Y/1HfPSROju2qtcbaQ/+x8qs=
