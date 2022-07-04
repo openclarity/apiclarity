@@ -120,7 +120,7 @@ func (m *Model) GetAPI(ctx context.Context, apiID uint) (*API, error) {
 	* Try to retrieve it from backend
 	 */
 	apiInfo, err := m.accessor.GetAPIInfo(ctx, apiID)
-	logging.Logf("[model.GetAPI(%v)]: get apiInfo=(%v)", apiID, apiInfo)
+	logging.Debugf("[model.GetAPI(%v)]: get apiInfo=(%v)", apiID, apiInfo)
 	if err != nil {
 		return nil, fmt.Errorf("error when retrieve api %v: %v", apiID, err)
 	}

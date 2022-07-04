@@ -93,10 +93,10 @@ func newFuzzer(ctx context.Context, moduleName string, accessor core.BackendAcce
 	// Create the client according to the configuration
 	plugin.fuzzerClient, err = clients.NewClient(plugin.config, accessor)
 	if err != nil {
-		logging.Errorf("[testing] Error, failed to create a client")
+		logging.Errorf("[Fuzzer] Error, failed to create a client")
 		return nil, fmt.Errorf("ignoring fuzzer module due to missing fuzzer client")
 	}
-	logging.Logf("[testing] Client (%v) creation, ok", plugin.config.GetDeploymentType())
+	logging.Logf("[Fuzzer] Client (%v) creation, ok", plugin.config.GetDeploymentType())
 
 	logging.Logf("[Fuzzer] Start():: <--")
 
