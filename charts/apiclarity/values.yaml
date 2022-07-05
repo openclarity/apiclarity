@@ -90,9 +90,9 @@ apiclarity:
 apiclarity-postgresql:
   enabled: true
 
+  image:
   ## Use specified image tag
-  # image:
-  #   tag: 14.4.0-debian-11-r4
+    # tag: 14.4.0-debian-11-r4
 
   ## initdb parameters
   # initdb:
