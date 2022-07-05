@@ -19,6 +19,28 @@ paths:
               schema:
                 $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ModuleVersion'
 
+  /api/findings/{apiID}:
+    get:
+      operationId: GetAPIFindingsForAPI
+      summary: 'Get Findings for an API'
+      description: 'Asks APIClarity for all findings of all modules of a specific API. Implemented at the core of APIClarity.'
+      parameters:
+        - $ref: '../../../../../../api3/common/openapi.yaml#/components/parameters/ApiID'
+        - $ref: '../../../../../../api3/common/openapi.yaml#/components/parameters/Sensitive'
+      responses:
+        '200':
+          description: 'An API Bundle'
+          content:
+            application/json:
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/APIFindings'
+        default:
+          description: 'Error response'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+
   /authorizationModel/{apiID}:
     post:
       parameters:

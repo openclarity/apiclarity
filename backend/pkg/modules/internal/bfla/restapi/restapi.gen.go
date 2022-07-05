@@ -92,6 +92,7 @@ type AuthorizationModelOperation struct {
 	Audience []AuthorizationModelAudience `json:"audience"`
 	Method   string                       `json:"method"`
 	Path     string                       `json:"path"`
+	Tag      *string                      `json:"tag,omitempty"`
 }
 
 // BFLAStatus defines model for BFLAStatus.
@@ -121,6 +122,12 @@ type OperationEnum string
 
 // SpecType defines model for SpecType.
 type SpecType string
+
+// GetAPIFindingsForAPIParams defines parameters for GetAPIFindingsForAPI.
+type GetAPIFindingsForAPIParams struct {
+	// Should findings include sensitive data ?
+	Sensitive *externalRef0.Sensitive `form:"sensitive,omitempty" json:"sensitive,omitempty"`
+}
 
 // GetApiFindingsParams defines parameters for GetApiFindings.
 type GetApiFindingsParams struct {
@@ -160,6 +167,9 @@ type PostAuthorizationModelApiIDJSONRequestBody = PostAuthorizationModelApiIDJSO
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Get Findings for an API
+	// (GET /api/findings/{apiID})
+	GetAPIFindingsForAPI(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params GetAPIFindingsForAPIParams)
 	// Get findings for an API and module
 	// (GET /apiFindings/{apiID})
 	GetApiFindings(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params GetApiFindingsParams)
@@ -203,6 +213,46 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// GetAPIFindingsForAPI operation middleware
+func (siw *ServerInterfaceWrapper) GetAPIFindingsForAPI(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetAPIFindingsForAPIParams
+
+	// ------------- Optional query parameter "sensitive" -------------
+	if paramValue := r.URL.Query().Get("sensitive"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "sensitive", r.URL.Query(), &params.Sensitive)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sensitive", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAPIFindingsForAPI(w, r, apiID, params)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
 
 // GetApiFindings operation middleware
 func (siw *ServerInterfaceWrapper) GetApiFindings(w http.ResponseWriter, r *http.Request) {
@@ -734,6 +784,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/api/findings/{apiID}", wrapper.GetAPIFindingsForAPI)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/apiFindings/{apiID}", wrapper.GetApiFindings)
 	})
 	r.Group(func(r chi.Router) {
@@ -773,30 +826,31 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+xa3W7bOBN9FYHfd6la6fam8J1ju6m2jW1YdneBojAYaRyzkUiWpNL1Gnr3BalfS0zi",
-	"JO3W7RooUIsaDs+cOUNSZHYoZAlnFKiSqL9DMtxAgs3Pwcwf3wJVA0qZwoowapq5YByEImCertYxDhRW",
-	"qXn6v4A16qP/ebVTr/Donb95PygsMxdFIBWhxuu713J69RlC9ZCHynAO69yHglBBtJQgHuo7atpmLoK/",
-	"FAiKY91PbTmgPrpiLAZM9duEyASrcANREDKeR9q1kiwVITwRfuYiAV9SIiBC/Y9NHhvgLEg+ZS4apGrD",
-	"BPnb0HfJIoi7iYkBC0rotR26tqxTShQkD+avO+i0dKI9FmNgIfDWkMMhXJi2+90GpV2bkcrBHlq3DuxT",
-	"NSjL+bcyM0gjAjSELkO4sNXD2TgCGq1SCeJwitoia3Nyv+huXssVe1IhxFiqBUlMjGsmEqxQH0VYwQul",
-	"WysgUglNnM6OkdqQRdDAQqiC6xz515zjx1d2K4k1h26T7z2JN7C0Bz4sxROmyJqEuRR1YuN4ukb9jxXq",
-	"Xs9r/cOcvNKhJIx6jAPFnPS2OInt8WEJe2Nk7mNLBWX2uq1LyCLPWrhPLNBK+xYtJqA2rKn8Whwcq43l",
-	"RSu1xqry49Z4bUlrSKS/Q0DTRLuYTFfBbDxELno/Hswn/uTC/LzwF/7lYDFGLgqWwcwf+tNlsLocj/zl",
-	"5X7bW//ibWO8OoRRa2nYp5bY4yZ8haNIgJTW1/l038T/+x8L5KLzQeDrGN5NJxerP1fD6SRYXo7nK39k",
-	"gdYikWjmCsd7ALRc9sq8qw9OPoCQhXY6aG8ItUdJcQJ3vpAch/a3qZW0VjipiccMXQzUdOs2MdtUUlXD",
-	"2BBcE405F+xWe4iAbo0j02DmlqI1/20TQ9BYimrpTbS+ZvPpB380HiEXzcc6c4v5crgYWzOnFULXTHuJ",
-	"QIaC8Lxw9UZpGGNB1Na5ZFEagzOY+XrWJSqG/fe6DpCLbsvEobPeWe9lsSLrWQj10aveWe8VysvQZFrP",
-	"Vm8IjQi9lt4Oc+KPMt1+DcoCRt5IZ82Esy56OGztYOo0QCQGpOtgGunmnuMnPIYEqILIudo6gMNNYdRc",
-	"fP0I9dEFqEGNxqAUOAFllsmPO0Q0hmJqyJWGDGDUFIoSKbjFVrMxqz1zmh6YcbLG5PxEh3VIXgBUEkVu",
-	"AWWfdASSMyrz+vvt7Ez/FzKqgKq8InlcLBHeZ5nX5TcPcuZX5BtJtrJvEu2UJs55SqMY8s3yGqex+hGQ",
-	"OZkXxNkgj4VgwhG1hYtkmiRYbHO51ULWqs6VbKRbKFR38HBn7bMUSlfJ3RWz0Orxqfobye/g/Uo3UUEa",
-	"hnpp+snEpPC1LL+wzLLKmbTIYcbkz6eHLylIdc6i7XeWQtYR38vjy/2voc/7ZzOv3Anp7WBqk3F6l4oH",
-	"1R7qKJdsg+JLCmJbw6i+Le7G0dmP2j0V4T3bz81rOYwJULUkj8N1JLuHX7qCYhbi+MVhdWS+Ix5fRKP8",
-	"8+NUQacK+q9XUHkO6wmQ+f76kbX0vnAwN/1/oqKiYqUEDkF//nb0Wh2ingR7NJumSqpSYfEcqQam/0mq",
-	"J6n+C1Jl/FlKZfxXPsc4Se0wqcEtUOXtSHTvQZi55z9ILodt2r75zHLXWWjnDxRsZ6Iz3zF2zleiNg7e",
-	"s24fNqoNOFAb68dGB3PuqNl1ZHlXf+fWqWbe21WEZ/eVtAHpR/Wd4PdIiGv1whpjPjgTWJOxf3dzqvMf",
-	"sl2/rS8ErZdDpcILO4etHbUhsri2sl32lNd1R5HNHGYJycLVh2ZcUIZlr/I7ObCzm2X/BAAA//94AEcY",
-	"KyUAAA==",
+	"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",
+	"BQAA///qAtJYQCgAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

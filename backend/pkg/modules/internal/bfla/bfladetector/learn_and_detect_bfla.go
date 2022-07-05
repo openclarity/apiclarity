@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openclarity/apiclarity/api3/common"
 	"reflect"
 	"runtime/debug"
 	"strconv"
@@ -45,6 +46,7 @@ const (
 	AuthzModelAnnotationName           = "authz_model"
 	AuthzProcessedTracesAnnotationName = "authz_processed_traces"
 	AuthzTracesToLearnAnnotationName   = "authz_traces_to_learn"
+	BFLAFindingsAnnotationName         = "bfla_findings"
 )
 
 var ErrUnsupportedAuthScheme = errors.New("unsupported auth scheme")
@@ -57,6 +59,7 @@ func NewBFLADetector(ctx context.Context, apiInfoProvider apiInfoProvider, event
 		apiInfoProvider:          apiInfoProvider,
 		authzModelsMap:           recovery.NewPersistedMap(sp, AuthzModelAnnotationName, reflect.TypeOf(AuthorizationModel{})),
 		tracesCounterMap:         recovery.NewPersistedMap(sp, AuthzProcessedTracesAnnotationName, reflect.TypeOf(1)),
+		findingsMap:              recovery.NewPersistedMap(sp, BFLAFindingsAnnotationName, reflect.TypeOf(1)),
 		statePersister:           sp,
 		eventAlerter:             eventAlerter,
 		controllerNotifier:       ctrlNotifier,
@@ -162,6 +165,7 @@ type learnAndDetectBFLA struct {
 
 	authzModelsMap   recovery.PersistedMap
 	tracesCounterMap recovery.PersistedMap
+	findingsMap      recovery.PersistedMap
 
 	statePersister recovery.StatePersister
 
@@ -410,6 +414,20 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 
 		if err := l.eventAlerter.SetEventAlert(ctx, ModuleName, trace.APIEvent.ID, severity); err != nil {
 			return fmt.Errorf("unable to set alert annotation: %w", err)
+		}
+		pv, err := l.findingsMap.Get(apiID)
+		if err != nil {
+			log.Warn("error getting findings annotation")
+		} else {
+			var findings common.APIFindings
+			if pv.Exists() {
+				findings, _ = pv.Get().(common.APIFindings)
+			}
+			mm := map[string]common.APIFinding{}
+			for _, finding := range *findings.Items {
+				mm[*finding.ProvidedSpecLocation] = finding
+			}
+
 		}
 		aud.WarningStatus = ResolveBFLAStatusInt(int(trace.APIEvent.StatusCode))
 	}

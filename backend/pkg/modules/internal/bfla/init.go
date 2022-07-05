@@ -250,6 +250,11 @@ type httpHandler struct {
 	accessor        core.BackendAccessor
 }
 
+func (h httpHandler) GetAPIFindingsForAPI(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.GetAPIFindingsForAPIParams) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID int) {
 	uEventID := uint32(eventID)
 	events, err := h.accessor.GetAPIEvents(r.Context(), database.GetAPIEventsQuery{EventID: &uEventID})

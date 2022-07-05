@@ -395,6 +395,12 @@ components:
       type: integer
       format: int64
   parameters:
+    ApiID:
+      name: apiID
+      description: "The path parameter for apiID type"
+      in: path
+      schema:
+        $ref: '#/components/schemas/ApiID'
     Sensitive:
       name: sensitive
       description: 'Should findings include sensitive data ?'
