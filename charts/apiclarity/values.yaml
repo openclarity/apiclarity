@@ -90,6 +90,10 @@ apiclarity:
 apiclarity-postgresql:
   enabled: true
 
+  ## Use specified image tag
+  # image:
+  #   tag: 14.4.0-debian-11-r4
+
   ## ConfigMap with scripts to be run at first boot
   ## NOTE: This will override initdbScripts
   # initdbScriptsConfigMap:
@@ -103,8 +107,9 @@ apiclarity-postgresql:
   # initdbPassword:
 
   ## Setup database name and password
-  existingSecret: apiclarity-postgresql-secret
-  postgresqlDatabase: apiclarity
+  auth:
+    existingSecret: apiclarity-postgresql-secret
+    database: apiclarity
 
   ## Enable security context
   containerSecurityContext:
