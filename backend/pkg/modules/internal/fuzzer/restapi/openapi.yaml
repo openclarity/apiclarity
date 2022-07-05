@@ -103,6 +103,13 @@ paths:
               schema:
                 description: 'error message'
                 type: 'string'
+        '400':
+          description: Status Bad Request
+          content:
+            application/json:
+              schema:
+                description: 'error message'
+                type: 'string'
         '500':
           description: Internal Error
           content:

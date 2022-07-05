@@ -1978,6 +1978,13 @@ paths:
       responses:
         "204":
           description: Successful Response
+        "400":
+          content:
+            application/json:
+              schema:
+                description: error message
+                type: string
+          description: Status Bad Request
         "404":
           content:
             application/json:
