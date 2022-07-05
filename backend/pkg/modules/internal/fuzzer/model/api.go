@@ -60,6 +60,7 @@ const (
 	ReportNameSCNFuzzerPrefix = "path:"
 	ReportNameRestlerPrefix   = "restler"
 	MinLocationTokensNumber   = 4
+	DefaultErrorMsg           = "An error occured during the test"
 )
 
 /*
@@ -135,12 +136,65 @@ func ConvertRawFindingToAPIFinding(finding restapi.RawFindings) *common.APIFindi
 * API
  */
 
-func (api *API) GetLastStatus() *restapi.FuzzingStatusAndReport {
+func (api *API) GetLastReport() *restapi.FuzzingStatusAndReport {
 	if len(api.TestsList) > 0 {
 		index := len(api.TestsList) - 1
 		return api.TestsList[index].Test.Report
 	}
 	return nil
+}
+
+func (api *API) GetLastStatus() (restapi.FuzzingStatusEnum, error) {
+	if len(api.TestsList) > 0 {
+		index := len(api.TestsList) - 1
+		report := api.TestsList[index].Test.Report
+		if report == nil {
+			// Must not happen as we create a default empty report at test creation
+			return restapi.ERROR, fmt.Errorf("no report for last test for the api")
+		}
+		return report.Status, nil
+	}
+	return restapi.ERROR, fmt.Errorf("no test for the api")
+}
+
+func (api *API) SetErrorForLastStatus(msg string) error {
+	if len(api.TestsList) > 0 {
+		index := len(api.TestsList) - 1
+		lastTest := api.TestsList[index].Test
+		report := lastTest.Report
+		if report == nil {
+			// Must not happen as we create a default empty report at test creation
+			return fmt.Errorf("no report for last test for the api")
+		}
+		report.Status = restapi.ERROR
+		lastTest.ErrorMessage = &msg
+		return nil
+	}
+	return fmt.Errorf("no test for the api")
+}
+
+func (api *API) GetShortStatusOnError(msg string) (*restapi.ShortTestReport, error) {
+	// Retreive a ShortStatus, even if there is no valid report, with error status inside
+	// Use by default msg as error message. If empty, try to use lastTest.ErrorMessage is any
+	if len(api.TestsList) > 0 {
+		index := len(api.TestsList) - 1
+		lastTest := api.TestsList[index].Test
+
+		msgToSend := msg
+		if len(msg) == 0 && lastTest.ErrorMessage != nil && len(*lastTest.ErrorMessage) > 0 {
+			msgToSend = *lastTest.ErrorMessage
+		}
+
+		// Create the shortreport structure to fill
+		shortReport := restapi.ShortTestReport{
+			Starttime:     *lastTest.Starttime,
+			Status:        restapi.ERROR,
+			StatusMessage: &msgToSend,
+			Tags:          &[]restapi.FuzzingReportTag{},
+		}
+		return &shortReport, nil
+	}
+	return nil, fmt.Errorf("no existing tests for api(%v)", api.ID)
 }
 
 func (api *API) GetLastShortStatus() (*restapi.ShortTestReport, error) {
@@ -366,10 +420,10 @@ func updateRequestCountersForRestler(shortReport *restapi.ShortTestReport, repor
 	return nil
 }
 
-func (api *API) AddNewStatusReport(report restapi.FuzzingStatusAndReport) {
+func (api *API) AddNewStatusReport(report restapi.FuzzingStatusAndReport) error {
 	if !api.InFuzzing {
 		logging.Logf("[Fuzzer] AddNewStatusReport():: API id (%v) not in Fuzzing... did you triggered it from HTTP?", api.ID)
-		return
+		return fmt.Errorf("API not in fuzzing")
 	}
 
 	logging.Debugf("[Fuzzer] AddNewStatusReport():: Status inFuzzing=(%v), nb of tests=(%v)", api.InFuzzing, len(api.TestsList))
@@ -382,6 +436,11 @@ func (api *API) AddNewStatusReport(report restapi.FuzzingStatusAndReport) {
 		lastTest.Progress = &report.Progress
 		lastTest.Report = &report
 		lastTest.LastReportTime = &now
+
+		if report.Status == restapi.ERROR {
+			// Put a default message here. Must be updated when Fuzzer will be able to return a proper error message
+			*lastTest.ErrorMessage = DefaultErrorMsg
+		}
 
 		// Update main vulnerabilities for the test
 		total, critical, high, medium, low := 0, 0, 0, 0, 0
@@ -450,6 +509,7 @@ func (api *API) AddNewStatusReport(report restapi.FuzzingStatusAndReport) {
 			report.Report[key] = reportItem
 		}
 	}
+	return nil
 }
 
 func (api *API) AddErrorOnLastTest(fuzzerError error) {

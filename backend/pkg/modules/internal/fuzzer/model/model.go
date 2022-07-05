@@ -159,9 +159,12 @@ func (m *Model) StopAPIFuzzing(ctx context.Context, apiID uint, fuzzerError erro
 	// Stop fuzzing
 	err = api.StopFuzzing(fuzzerError)
 	if err != nil {
+		err2 := api.SetErrorForLastStatus("failed to stop Fuzzing")
+		if err2 != nil {
+			logging.Errorf("[Fuzzer] StopAPIFuzzing(): can't set last status error for API (%v), err=(%v)", apiID, err)
+		}
 		return fmt.Errorf("can't stop fuzzing (%v)", apiID)
 	}
-	//dumpSlice(m.db)
 	return nil
 }
 

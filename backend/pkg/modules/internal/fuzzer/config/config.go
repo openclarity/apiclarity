@@ -51,7 +51,7 @@ const (
 	DebugMode                = false
 	RestlerTimeBudget        = "0.005" // In hours =~ 20s
 	TokenInjectorPath        = "/app/"
-	TestReportTimeout        = 30      // In seconds
+	TestReportTimeout        = 60      // In seconds
 	RestlerQuickTimeBudget   = "0.016" // In hours =~ 1mn
 	RestlerDefaultTimeBudget = "0.16"  // In hours =~ 10mn
 	RestlerDeepTimeBudget    = "1"     // In hours

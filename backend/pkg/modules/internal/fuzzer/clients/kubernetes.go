@@ -100,6 +100,7 @@ func (l *K8sClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem
 }
 
 func (l *K8sClient) StopFuzzingJob(apiID int64) error {
+	logging.Logf("[Fuzzer][K8sClient] StopFuzzingJob(%v): -->", apiID)
 	if l.currentJob == nil {
 		return fmt.Errorf("no current k8s job to terminate")
 	}
@@ -111,9 +112,10 @@ func (l *K8sClient) StopFuzzingJob(apiID int64) error {
 	}
 	err := l.hClient.BatchV1().Jobs(l.currentJob.Namespace).Delete(context.TODO(), l.currentJob.Name, *deleteOptions)
 	if err != nil {
-		return fmt.Errorf("failed to stop k8s fuzzer job: %v", err)
+		logging.Logf("[Fuzzer][K8sClient] StopFuzzingJob(%v): failed to stop k8s fuzzer job: %v", apiID, err)
 	}
 	l.currentJob = nil
+	logging.Logf("[Fuzzer][K8sClient] StopFuzzingJob(%v): <--", apiID)
 	return nil
 }
 

@@ -130,7 +130,7 @@ func (c *DockerClient) StopFuzzingJob(apiID int64) error {
 	containerName := ContainerNameDefault // TODO must be unique. For demo only
 
 	if err := cli.ContainerStop(ctx, containerName, nil); err != nil {
-		logging.Errorf("unable to stop container %s: %s", containerName, err)
+		logging.Logf("[Fuzzer][DockerClient] StopFuzzingJob(%v): can't stop container %s (already stopped?): %v", apiID, containerName, err)
 	}
 
 	removeOptions := types.ContainerRemoveOptions{
@@ -139,7 +139,7 @@ func (c *DockerClient) StopFuzzingJob(apiID int64) error {
 	}
 	if err := cli.ContainerRemove(ctx, containerName, removeOptions); err != nil {
 		// Just log this as warning, as it's not an error, specially if the container has "autoremove" flag
-		logging.Warningf("unable to remove container: %s", err)
+		logging.Logf("[Fuzzer][DockerClient] StopFuzzingJob(%v): can't remove container (already removed?): %v", apiID, err)
 	}
 	logging.Logf("[Fuzzer][DockerClient] StopFuzzingJob(%v): <--", apiID)
 	return nil
