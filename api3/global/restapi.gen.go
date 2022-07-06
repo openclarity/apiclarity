@@ -25,16 +25,6 @@ import (
 	externalRef0 "github.com/openclarity/apiclarity/api3/common"
 )
 
-// Defines values for APIClarityFeatureEnum.
-const (
-	Bfla              APIClarityFeatureEnum = "bfla"
-	Differ            APIClarityFeatureEnum = "differ"
-	Fuzzer            APIClarityFeatureEnum = "fuzzer"
-	Specdiffs         APIClarityFeatureEnum = "specdiffs"
-	Specreconstructor APIClarityFeatureEnum = "specreconstructor"
-	Traceanalyzer     APIClarityFeatureEnum = "traceanalyzer"
-)
-
 // Defines values for AuthorizationTypeEnum.
 const (
 	APITOKEN    AuthorizationTypeEnum = "APITOKEN"
@@ -124,24 +114,6 @@ const (
 	ASC  GetApiInventoryParamsSortDir = "ASC"
 	DESC GetApiInventoryParamsSortDir = "DESC"
 )
-
-// Description of APIClarity feature and the list of API hosts (in the form 'host:port') the feature requires to get trace for
-type APIClarityFeature struct {
-	// Short human readable description of the feature
-	FeatureDescription *string `json:"featureDescription,omitempty"`
-
-	// APIClarity Feature Name
-	FeatureName  APIClarityFeatureEnum `json:"featureName"`
-	HostsToTrace *[]string             `json:"hostsToTrace,omitempty"`
-}
-
-// APIClarity Feature Name
-type APIClarityFeatureEnum string
-
-// List of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for
-type APIClarityFeatureList struct {
-	Features *[]APIClarityFeature `json:"features,omitempty"`
-}
 
 // APIDiffs defines model for APIDiffs.
 type APIDiffs struct {
@@ -915,6 +887,9 @@ type FuzzerGetAPIFindingsParams struct {
 // FuzzerStartTestJSONBody defines parameters for FuzzerStartTest.
 type FuzzerStartTestJSONBody = TestInput
 
+// FuzzerPostRawfindingsJSONBody defines parameters for FuzzerPostRawfindings.
+type FuzzerPostRawfindingsJSONBody = RawFindingsBundle
+
 // FuzzerPostUpdateStatusJSONBody defines parameters for FuzzerPostUpdateStatus.
 type FuzzerPostUpdateStatusJSONBody = FuzzingStatusAndReport
 
@@ -954,6 +929,9 @@ type PostModulesBflaAuthorizationModelApiIDJSONRequestBody = PostModulesBflaAuth
 
 // FuzzerStartTestJSONRequestBody defines body for FuzzerStartTest for application/json ContentType.
 type FuzzerStartTestJSONRequestBody = FuzzerStartTestJSONBody
+
+// FuzzerPostRawfindingsJSONRequestBody defines body for FuzzerPostRawfindings for application/json ContentType.
+type FuzzerPostRawfindingsJSONRequestBody = FuzzerPostRawfindingsJSONBody
 
 // FuzzerPostUpdateStatusJSONRequestBody defines body for FuzzerPostUpdateStatus for application/json ContentType.
 type FuzzerPostUpdateStatusJSONRequestBody = FuzzerPostUpdateStatusJSONBody
@@ -1165,9 +1143,6 @@ type ClientInterface interface {
 	// GetDashboardApiUsageMostUsed request
 	GetDashboardApiUsageMostUsed(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetFeatures request
-	GetFeatures(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// BflaGetApiFindings request
 	BflaGetApiFindings(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetApiFindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1184,12 +1159,6 @@ type ClientInterface interface {
 
 	// PutModulesBflaAuthorizationModelApiIDDeny request
 	PutModulesBflaAuthorizationModelApiIDDeny(ctx context.Context, apiID externalRef0.ApiID, params *PutModulesBflaAuthorizationModelApiIDDenyParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PutModulesBflaAuthorizationModelApiIDDetectionStart request
-	PutModulesBflaAuthorizationModelApiIDDetectionStart(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PutModulesBflaAuthorizationModelApiIDDetectionStop request
-	PutModulesBflaAuthorizationModelApiIDDetectionStop(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PutModulesBflaAuthorizationModelApiIDLearningReset request
 	PutModulesBflaAuthorizationModelApiIDLearningReset(ctx context.Context, apiID externalRef0.ApiID, params *PutModulesBflaAuthorizationModelApiIDLearningResetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1232,6 +1201,14 @@ type ClientInterface interface {
 	// FuzzerStopTest request
 	FuzzerStopTest(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// FuzzerGetRawfindings request
+	FuzzerGetRawfindings(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// FuzzerPostRawfindings request with any body
+	FuzzerPostRawfindingsWithBody(ctx context.Context, apiID externalRef0.ApiID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	FuzzerPostRawfindings(ctx context.Context, apiID externalRef0.ApiID, body FuzzerPostRawfindingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// FuzzerGetReport request
 	FuzzerGetReport(ctx context.Context, apiID externalRef0.ApiID, timestamp int64, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1258,17 +1235,14 @@ type ClientInterface interface {
 	// TraceanalyzerGetAPIAnnotations request
 	TraceanalyzerGetAPIAnnotations(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerGetAPIAnnotationsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// TraceanalyzerDeleteApiFindings request
+	TraceanalyzerDeleteApiFindings(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// TraceanalyzerGetApiFindings request
 	TraceanalyzerGetApiFindings(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerGetApiFindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// TraceanalyzerGetEventAnnotations request
 	TraceanalyzerGetEventAnnotations(ctx context.Context, eventID int64, params *TraceanalyzerGetEventAnnotationsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// TraceanalyzerStartTraceAnalysis request
-	TraceanalyzerStartTraceAnalysis(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// TraceanalyzerStopTraceAnalysis request
-	TraceanalyzerStopTraceAnalysis(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) GetApiEvents(ctx context.Context, params *GetApiEventsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -1523,18 +1497,6 @@ func (c *Client) GetDashboardApiUsageMostUsed(ctx context.Context, reqEditors ..
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetFeatures(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetFeaturesRequest(c.Server)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 func (c *Client) BflaGetApiFindings(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetApiFindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewBflaGetApiFindingsRequest(c.Server, apiID, params)
 	if err != nil {
@@ -1597,30 +1559,6 @@ func (c *Client) PutModulesBflaAuthorizationModelApiIDApprove(ctx context.Contex
 
 func (c *Client) PutModulesBflaAuthorizationModelApiIDDeny(ctx context.Context, apiID externalRef0.ApiID, params *PutModulesBflaAuthorizationModelApiIDDenyParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutModulesBflaAuthorizationModelApiIDDenyRequest(c.Server, apiID, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PutModulesBflaAuthorizationModelApiIDDetectionStart(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutModulesBflaAuthorizationModelApiIDDetectionStartRequest(c.Server, apiID)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PutModulesBflaAuthorizationModelApiIDDetectionStop(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutModulesBflaAuthorizationModelApiIDDetectionStopRequest(c.Server, apiID)
 	if err != nil {
 		return nil, err
 	}
@@ -1799,6 +1737,42 @@ func (c *Client) FuzzerStopTest(ctx context.Context, apiID externalRef0.ApiID, r
 	return c.Client.Do(req)
 }
 
+func (c *Client) FuzzerGetRawfindings(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFuzzerGetRawfindingsRequest(c.Server, apiID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) FuzzerPostRawfindingsWithBody(ctx context.Context, apiID externalRef0.ApiID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFuzzerPostRawfindingsRequestWithBody(c.Server, apiID, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) FuzzerPostRawfindings(ctx context.Context, apiID externalRef0.ApiID, body FuzzerPostRawfindingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFuzzerPostRawfindingsRequest(c.Server, apiID, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) FuzzerGetReport(ctx context.Context, apiID externalRef0.ApiID, timestamp int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewFuzzerGetReportRequest(c.Server, apiID, timestamp)
 	if err != nil {
@@ -1907,6 +1881,18 @@ func (c *Client) TraceanalyzerGetAPIAnnotations(ctx context.Context, apiID exter
 	return c.Client.Do(req)
 }
 
+func (c *Client) TraceanalyzerDeleteApiFindings(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewTraceanalyzerDeleteApiFindingsRequest(c.Server, apiID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) TraceanalyzerGetApiFindings(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerGetApiFindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewTraceanalyzerGetApiFindingsRequest(c.Server, apiID, params)
 	if err != nil {
@@ -1921,30 +1907,6 @@ func (c *Client) TraceanalyzerGetApiFindings(ctx context.Context, apiID external
 
 func (c *Client) TraceanalyzerGetEventAnnotations(ctx context.Context, eventID int64, params *TraceanalyzerGetEventAnnotationsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewTraceanalyzerGetEventAnnotationsRequest(c.Server, eventID, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) TraceanalyzerStartTraceAnalysis(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewTraceanalyzerStartTraceAnalysisRequest(c.Server, apiID)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) TraceanalyzerStopTraceAnalysis(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewTraceanalyzerStopTraceAnalysisRequest(c.Server, apiID)
 	if err != nil {
 		return nil, err
 	}
@@ -3761,33 +3723,6 @@ func NewGetDashboardApiUsageMostUsedRequest(server string) (*http.Request, error
 	return req, nil
 }
 
-// NewGetFeaturesRequest generates requests for GetFeatures
-func NewGetFeaturesRequest(server string) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/features")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 // NewBflaGetApiFindingsRequest generates requests for BflaGetApiFindings
 func NewBflaGetApiFindingsRequest(server string, apiID externalRef0.ApiID, params *BflaGetApiFindingsParams) (*http.Request, error) {
 	var err error
@@ -4062,74 +3997,6 @@ func NewPutModulesBflaAuthorizationModelApiIDDenyRequest(server string, apiID ex
 	}
 
 	queryURL.RawQuery = queryValues.Encode()
-
-	req, err := http.NewRequest("PUT", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewPutModulesBflaAuthorizationModelApiIDDetectionStartRequest generates requests for PutModulesBflaAuthorizationModelApiIDDetectionStart
-func NewPutModulesBflaAuthorizationModelApiIDDetectionStartRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/modules/bfla/authorizationModel/%s/detection/start", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("PUT", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewPutModulesBflaAuthorizationModelApiIDDetectionStopRequest generates requests for PutModulesBflaAuthorizationModelApiIDDetectionStop
-func NewPutModulesBflaAuthorizationModelApiIDDetectionStopRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/modules/bfla/authorizationModel/%s/detection/stop", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
 
 	req, err := http.NewRequest("PUT", queryURL.String(), nil)
 	if err != nil {
@@ -4647,6 +4514,87 @@ func NewFuzzerStopTestRequest(server string, apiID externalRef0.ApiID) (*http.Re
 	return req, nil
 }
 
+// NewFuzzerGetRawfindingsRequest generates requests for FuzzerGetRawfindings
+func NewFuzzerGetRawfindingsRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/modules/fuzzer/rawfindings/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewFuzzerPostRawfindingsRequest calls the generic FuzzerPostRawfindings builder with application/json body
+func NewFuzzerPostRawfindingsRequest(server string, apiID externalRef0.ApiID, body FuzzerPostRawfindingsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewFuzzerPostRawfindingsRequestWithBody(server, apiID, "application/json", bodyReader)
+}
+
+// NewFuzzerPostRawfindingsRequestWithBody generates requests for FuzzerPostRawfindings with any type of body
+func NewFuzzerPostRawfindingsRequestWithBody(server string, apiID externalRef0.ApiID, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/modules/fuzzer/rawfindings/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewFuzzerGetReportRequest generates requests for FuzzerGetReport
 func NewFuzzerGetReportRequest(server string, apiID externalRef0.ApiID, timestamp int64) (*http.Request, error) {
 	var err error
@@ -4961,6 +4909,40 @@ func NewTraceanalyzerGetAPIAnnotationsRequest(server string, apiID externalRef0.
 	return req, nil
 }
 
+// NewTraceanalyzerDeleteApiFindingsRequest generates requests for TraceanalyzerDeleteApiFindings
+func NewTraceanalyzerDeleteApiFindingsRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/modules/traceanalyzer/apiFindings/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewTraceanalyzerGetApiFindingsRequest generates requests for TraceanalyzerGetApiFindings
 func NewTraceanalyzerGetApiFindingsRequest(server string, apiID externalRef0.ApiID, params *TraceanalyzerGetApiFindingsParams) (*http.Request, error) {
 	var err error
@@ -5062,74 +5044,6 @@ func NewTraceanalyzerGetEventAnnotationsRequest(server string, eventID int64, pa
 	queryURL.RawQuery = queryValues.Encode()
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewTraceanalyzerStartTraceAnalysisRequest generates requests for TraceanalyzerStartTraceAnalysis
-func NewTraceanalyzerStartTraceAnalysisRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/modules/traceanalyzer/%s/start", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewTraceanalyzerStopTraceAnalysisRequest generates requests for TraceanalyzerStopTraceAnalysis
-func NewTraceanalyzerStopTraceAnalysisRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/modules/traceanalyzer/%s/stop", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -5240,9 +5154,6 @@ type ClientWithResponsesInterface interface {
 	// GetDashboardApiUsageMostUsed request
 	GetDashboardApiUsageMostUsedWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetDashboardApiUsageMostUsedResponse, error)
 
-	// GetFeatures request
-	GetFeaturesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFeaturesResponse, error)
-
 	// BflaGetApiFindings request
 	BflaGetApiFindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetApiFindingsParams, reqEditors ...RequestEditorFn) (*BflaGetApiFindingsResponse, error)
 
@@ -5259,12 +5170,6 @@ type ClientWithResponsesInterface interface {
 
 	// PutModulesBflaAuthorizationModelApiIDDeny request
 	PutModulesBflaAuthorizationModelApiIDDenyWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *PutModulesBflaAuthorizationModelApiIDDenyParams, reqEditors ...RequestEditorFn) (*PutModulesBflaAuthorizationModelApiIDDenyResponse, error)
-
-	// PutModulesBflaAuthorizationModelApiIDDetectionStart request
-	PutModulesBflaAuthorizationModelApiIDDetectionStartWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*PutModulesBflaAuthorizationModelApiIDDetectionStartResponse, error)
-
-	// PutModulesBflaAuthorizationModelApiIDDetectionStop request
-	PutModulesBflaAuthorizationModelApiIDDetectionStopWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*PutModulesBflaAuthorizationModelApiIDDetectionStopResponse, error)
 
 	// PutModulesBflaAuthorizationModelApiIDLearningReset request
 	PutModulesBflaAuthorizationModelApiIDLearningResetWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *PutModulesBflaAuthorizationModelApiIDLearningResetParams, reqEditors ...RequestEditorFn) (*PutModulesBflaAuthorizationModelApiIDLearningResetResponse, error)
@@ -5307,6 +5212,14 @@ type ClientWithResponsesInterface interface {
 	// FuzzerStopTest request
 	FuzzerStopTestWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*FuzzerStopTestResponse, error)
 
+	// FuzzerGetRawfindings request
+	FuzzerGetRawfindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*FuzzerGetRawfindingsResponse, error)
+
+	// FuzzerPostRawfindings request with any body
+	FuzzerPostRawfindingsWithBodyWithResponse(ctx context.Context, apiID externalRef0.ApiID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*FuzzerPostRawfindingsResponse, error)
+
+	FuzzerPostRawfindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, body FuzzerPostRawfindingsJSONRequestBody, reqEditors ...RequestEditorFn) (*FuzzerPostRawfindingsResponse, error)
+
 	// FuzzerGetReport request
 	FuzzerGetReportWithResponse(ctx context.Context, apiID externalRef0.ApiID, timestamp int64, reqEditors ...RequestEditorFn) (*FuzzerGetReportResponse, error)
 
@@ -5333,17 +5246,14 @@ type ClientWithResponsesInterface interface {
 	// TraceanalyzerGetAPIAnnotations request
 	TraceanalyzerGetAPIAnnotationsWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerGetAPIAnnotationsParams, reqEditors ...RequestEditorFn) (*TraceanalyzerGetAPIAnnotationsResponse, error)
 
+	// TraceanalyzerDeleteApiFindings request
+	TraceanalyzerDeleteApiFindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*TraceanalyzerDeleteApiFindingsResponse, error)
+
 	// TraceanalyzerGetApiFindings request
 	TraceanalyzerGetApiFindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerGetApiFindingsParams, reqEditors ...RequestEditorFn) (*TraceanalyzerGetApiFindingsResponse, error)
 
 	// TraceanalyzerGetEventAnnotations request
 	TraceanalyzerGetEventAnnotationsWithResponse(ctx context.Context, eventID int64, params *TraceanalyzerGetEventAnnotationsParams, reqEditors ...RequestEditorFn) (*TraceanalyzerGetEventAnnotationsResponse, error)
-
-	// TraceanalyzerStartTraceAnalysis request
-	TraceanalyzerStartTraceAnalysisWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*TraceanalyzerStartTraceAnalysisResponse, error)
-
-	// TraceanalyzerStopTraceAnalysis request
-	TraceanalyzerStopTraceAnalysisWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*TraceanalyzerStopTraceAnalysisResponse, error)
 }
 
 type GetApiEventsResponse struct {
@@ -5773,28 +5683,6 @@ func (r GetDashboardApiUsageMostUsedResponse) StatusCode() int {
 	return 0
 }
 
-type GetFeaturesResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *APIClarityFeatureList
-}
-
-// Status returns HTTPResponse.Status
-func (r GetFeaturesResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetFeaturesResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type BflaGetApiFindingsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -5904,52 +5792,6 @@ func (r PutModulesBflaAuthorizationModelApiIDDenyResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PutModulesBflaAuthorizationModelApiIDDenyResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PutModulesBflaAuthorizationModelApiIDDetectionStartResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *externalRef0.ApiResponse
-	JSONDefault  *externalRef0.ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r PutModulesBflaAuthorizationModelApiIDDetectionStartResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PutModulesBflaAuthorizationModelApiIDDetectionStartResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PutModulesBflaAuthorizationModelApiIDDetectionStopResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *externalRef0.ApiResponse
-	JSONDefault  *externalRef0.ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r PutModulesBflaAuthorizationModelApiIDDetectionStopResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PutModulesBflaAuthorizationModelApiIDDetectionStopResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -6212,7 +6054,6 @@ type FuzzerStartTestResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *TestHandle
-	JSON400      *string
 	JSON404      *string
 	JSON500      *string
 }
@@ -6236,7 +6077,6 @@ func (r FuzzerStartTestResponse) StatusCode() int {
 type FuzzerStopTestResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON400      *string
 	JSON404      *string
 	JSON500      *string
 }
@@ -6251,6 +6091,49 @@ func (r FuzzerStopTestResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r FuzzerStopTestResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type FuzzerGetRawfindingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *RawFindingsBundle
+}
+
+// Status returns HTTPResponse.Status
+func (r FuzzerGetRawfindingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r FuzzerGetRawfindingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type FuzzerPostRawfindingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r FuzzerPostRawfindingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r FuzzerPostRawfindingsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -6431,6 +6314,28 @@ func (r TraceanalyzerGetAPIAnnotationsResponse) StatusCode() int {
 	return 0
 }
 
+type TraceanalyzerDeleteApiFindingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSONDefault  *externalRef0.ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r TraceanalyzerDeleteApiFindingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r TraceanalyzerDeleteApiFindingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type TraceanalyzerGetApiFindingsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -6470,52 +6375,6 @@ func (r TraceanalyzerGetEventAnnotationsResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r TraceanalyzerGetEventAnnotationsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type TraceanalyzerStartTraceAnalysisResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *externalRef0.ApiResponse
-	JSONDefault  *externalRef0.ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r TraceanalyzerStartTraceAnalysisResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r TraceanalyzerStartTraceAnalysisResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type TraceanalyzerStopTraceAnalysisResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *externalRef0.ApiResponse
-	JSONDefault  *externalRef0.ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r TraceanalyzerStopTraceAnalysisResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r TraceanalyzerStopTraceAnalysisResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -6708,15 +6567,6 @@ func (c *ClientWithResponses) GetDashboardApiUsageMostUsedWithResponse(ctx conte
 	return ParseGetDashboardApiUsageMostUsedResponse(rsp)
 }
 
-// GetFeaturesWithResponse request returning *GetFeaturesResponse
-func (c *ClientWithResponses) GetFeaturesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFeaturesResponse, error) {
-	rsp, err := c.GetFeatures(ctx, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetFeaturesResponse(rsp)
-}
-
 // BflaGetApiFindingsWithResponse request returning *BflaGetApiFindingsResponse
 func (c *ClientWithResponses) BflaGetApiFindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetApiFindingsParams, reqEditors ...RequestEditorFn) (*BflaGetApiFindingsResponse, error) {
 	rsp, err := c.BflaGetApiFindings(ctx, apiID, params, reqEditors...)
@@ -6768,24 +6618,6 @@ func (c *ClientWithResponses) PutModulesBflaAuthorizationModelApiIDDenyWithRespo
 		return nil, err
 	}
 	return ParsePutModulesBflaAuthorizationModelApiIDDenyResponse(rsp)
-}
-
-// PutModulesBflaAuthorizationModelApiIDDetectionStartWithResponse request returning *PutModulesBflaAuthorizationModelApiIDDetectionStartResponse
-func (c *ClientWithResponses) PutModulesBflaAuthorizationModelApiIDDetectionStartWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*PutModulesBflaAuthorizationModelApiIDDetectionStartResponse, error) {
-	rsp, err := c.PutModulesBflaAuthorizationModelApiIDDetectionStart(ctx, apiID, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePutModulesBflaAuthorizationModelApiIDDetectionStartResponse(rsp)
-}
-
-// PutModulesBflaAuthorizationModelApiIDDetectionStopWithResponse request returning *PutModulesBflaAuthorizationModelApiIDDetectionStopResponse
-func (c *ClientWithResponses) PutModulesBflaAuthorizationModelApiIDDetectionStopWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*PutModulesBflaAuthorizationModelApiIDDetectionStopResponse, error) {
-	rsp, err := c.PutModulesBflaAuthorizationModelApiIDDetectionStop(ctx, apiID, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePutModulesBflaAuthorizationModelApiIDDetectionStopResponse(rsp)
 }
 
 // PutModulesBflaAuthorizationModelApiIDLearningResetWithResponse request returning *PutModulesBflaAuthorizationModelApiIDLearningResetResponse
@@ -6913,6 +6745,32 @@ func (c *ClientWithResponses) FuzzerStopTestWithResponse(ctx context.Context, ap
 	return ParseFuzzerStopTestResponse(rsp)
 }
 
+// FuzzerGetRawfindingsWithResponse request returning *FuzzerGetRawfindingsResponse
+func (c *ClientWithResponses) FuzzerGetRawfindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*FuzzerGetRawfindingsResponse, error) {
+	rsp, err := c.FuzzerGetRawfindings(ctx, apiID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFuzzerGetRawfindingsResponse(rsp)
+}
+
+// FuzzerPostRawfindingsWithBodyWithResponse request with arbitrary body returning *FuzzerPostRawfindingsResponse
+func (c *ClientWithResponses) FuzzerPostRawfindingsWithBodyWithResponse(ctx context.Context, apiID externalRef0.ApiID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*FuzzerPostRawfindingsResponse, error) {
+	rsp, err := c.FuzzerPostRawfindingsWithBody(ctx, apiID, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFuzzerPostRawfindingsResponse(rsp)
+}
+
+func (c *ClientWithResponses) FuzzerPostRawfindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, body FuzzerPostRawfindingsJSONRequestBody, reqEditors ...RequestEditorFn) (*FuzzerPostRawfindingsResponse, error) {
+	rsp, err := c.FuzzerPostRawfindings(ctx, apiID, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFuzzerPostRawfindingsResponse(rsp)
+}
+
 // FuzzerGetReportWithResponse request returning *FuzzerGetReportResponse
 func (c *ClientWithResponses) FuzzerGetReportWithResponse(ctx context.Context, apiID externalRef0.ApiID, timestamp int64, reqEditors ...RequestEditorFn) (*FuzzerGetReportResponse, error) {
 	rsp, err := c.FuzzerGetReport(ctx, apiID, timestamp, reqEditors...)
@@ -6993,6 +6851,15 @@ func (c *ClientWithResponses) TraceanalyzerGetAPIAnnotationsWithResponse(ctx con
 	return ParseTraceanalyzerGetAPIAnnotationsResponse(rsp)
 }
 
+// TraceanalyzerDeleteApiFindingsWithResponse request returning *TraceanalyzerDeleteApiFindingsResponse
+func (c *ClientWithResponses) TraceanalyzerDeleteApiFindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*TraceanalyzerDeleteApiFindingsResponse, error) {
+	rsp, err := c.TraceanalyzerDeleteApiFindings(ctx, apiID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseTraceanalyzerDeleteApiFindingsResponse(rsp)
+}
+
 // TraceanalyzerGetApiFindingsWithResponse request returning *TraceanalyzerGetApiFindingsResponse
 func (c *ClientWithResponses) TraceanalyzerGetApiFindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerGetApiFindingsParams, reqEditors ...RequestEditorFn) (*TraceanalyzerGetApiFindingsResponse, error) {
 	rsp, err := c.TraceanalyzerGetApiFindings(ctx, apiID, params, reqEditors...)
@@ -7009,24 +6876,6 @@ func (c *ClientWithResponses) TraceanalyzerGetEventAnnotationsWithResponse(ctx c
 		return nil, err
 	}
 	return ParseTraceanalyzerGetEventAnnotationsResponse(rsp)
-}
-
-// TraceanalyzerStartTraceAnalysisWithResponse request returning *TraceanalyzerStartTraceAnalysisResponse
-func (c *ClientWithResponses) TraceanalyzerStartTraceAnalysisWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*TraceanalyzerStartTraceAnalysisResponse, error) {
-	rsp, err := c.TraceanalyzerStartTraceAnalysis(ctx, apiID, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseTraceanalyzerStartTraceAnalysisResponse(rsp)
-}
-
-// TraceanalyzerStopTraceAnalysisWithResponse request returning *TraceanalyzerStopTraceAnalysisResponse
-func (c *ClientWithResponses) TraceanalyzerStopTraceAnalysisWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*TraceanalyzerStopTraceAnalysisResponse, error) {
-	rsp, err := c.TraceanalyzerStopTraceAnalysis(ctx, apiID, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseTraceanalyzerStopTraceAnalysisResponse(rsp)
 }
 
 // ParseGetApiEventsResponse parses an HTTP response from a GetApiEventsWithResponse call
@@ -7642,32 +7491,6 @@ func ParseGetDashboardApiUsageMostUsedResponse(rsp *http.Response) (*GetDashboar
 	return response, nil
 }
 
-// ParseGetFeaturesResponse parses an HTTP response from a GetFeaturesWithResponse call
-func ParseGetFeaturesResponse(rsp *http.Response) (*GetFeaturesResponse, error) {
-	bodyBytes, err := ioutil.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetFeaturesResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest APIClarityFeatureList
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParseBflaGetApiFindingsResponse parses an HTTP response from a BflaGetApiFindingsWithResponse call
 func ParseBflaGetApiFindingsResponse(rsp *http.Response) (*BflaGetApiFindingsResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
@@ -7809,72 +7632,6 @@ func ParsePutModulesBflaAuthorizationModelApiIDDenyResponse(rsp *http.Response) 
 	}
 
 	response := &PutModulesBflaAuthorizationModelApiIDDenyResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePutModulesBflaAuthorizationModelApiIDDetectionStartResponse parses an HTTP response from a PutModulesBflaAuthorizationModelApiIDDetectionStartWithResponse call
-func ParsePutModulesBflaAuthorizationModelApiIDDetectionStartResponse(rsp *http.Response) (*PutModulesBflaAuthorizationModelApiIDDetectionStartResponse, error) {
-	bodyBytes, err := ioutil.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PutModulesBflaAuthorizationModelApiIDDetectionStartResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePutModulesBflaAuthorizationModelApiIDDetectionStopResponse parses an HTTP response from a PutModulesBflaAuthorizationModelApiIDDetectionStopWithResponse call
-func ParsePutModulesBflaAuthorizationModelApiIDDetectionStopResponse(rsp *http.Response) (*PutModulesBflaAuthorizationModelApiIDDetectionStopResponse, error) {
-	bodyBytes, err := ioutil.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PutModulesBflaAuthorizationModelApiIDDetectionStopResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -8276,13 +8033,6 @@ func ParseFuzzerStartTestResponse(rsp *http.Response) (*FuzzerStartTestResponse,
 		}
 		response.JSON200 = &dest
 
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest string
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest string
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -8316,13 +8066,6 @@ func ParseFuzzerStopTestResponse(rsp *http.Response) (*FuzzerStopTestResponse, e
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest string
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest string
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -8337,6 +8080,48 @@ func ParseFuzzerStopTestResponse(rsp *http.Response) (*FuzzerStopTestResponse, e
 		}
 		response.JSON500 = &dest
 
+	}
+
+	return response, nil
+}
+
+// ParseFuzzerGetRawfindingsResponse parses an HTTP response from a FuzzerGetRawfindingsWithResponse call
+func ParseFuzzerGetRawfindingsResponse(rsp *http.Response) (*FuzzerGetRawfindingsResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &FuzzerGetRawfindingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RawFindingsBundle
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseFuzzerPostRawfindingsResponse parses an HTTP response from a FuzzerPostRawfindingsWithResponse call
+func ParseFuzzerPostRawfindingsResponse(rsp *http.Response) (*FuzzerPostRawfindingsResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &FuzzerPostRawfindingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
 	}
 
 	return response, nil
@@ -8530,6 +8315,32 @@ func ParseTraceanalyzerGetAPIAnnotationsResponse(rsp *http.Response) (*Traceanal
 	return response, nil
 }
 
+// ParseTraceanalyzerDeleteApiFindingsResponse parses an HTTP response from a TraceanalyzerDeleteApiFindingsWithResponse call
+func ParseTraceanalyzerDeleteApiFindingsResponse(rsp *http.Response) (*TraceanalyzerDeleteApiFindingsResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &TraceanalyzerDeleteApiFindingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseTraceanalyzerGetApiFindingsResponse parses an HTTP response from a TraceanalyzerGetApiFindingsWithResponse call
 func ParseTraceanalyzerGetApiFindingsResponse(rsp *http.Response) (*TraceanalyzerGetApiFindingsResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
@@ -8583,72 +8394,6 @@ func ParseTraceanalyzerGetEventAnnotationsResponse(rsp *http.Response) (*Tracean
 			return nil, err
 		}
 		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseTraceanalyzerStartTraceAnalysisResponse parses an HTTP response from a TraceanalyzerStartTraceAnalysisWithResponse call
-func ParseTraceanalyzerStartTraceAnalysisResponse(rsp *http.Response) (*TraceanalyzerStartTraceAnalysisResponse, error) {
-	bodyBytes, err := ioutil.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &TraceanalyzerStartTraceAnalysisResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseTraceanalyzerStopTraceAnalysisResponse parses an HTTP response from a TraceanalyzerStopTraceAnalysisWithResponse call
-func ParseTraceanalyzerStopTraceAnalysisResponse(rsp *http.Response) (*TraceanalyzerStopTraceAnalysisResponse, error) {
-	bodyBytes, err := ioutil.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &TraceanalyzerStopTraceAnalysisResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
 
 	}
 
@@ -8711,9 +8456,6 @@ type ServerInterface interface {
 	// Get most used APIs
 	// (GET /dashboard/apiUsage/mostUsed)
 	GetDashboardApiUsageMostUsed(w http.ResponseWriter, r *http.Request)
-	// Get the list of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for
-	// (GET /features)
-	GetFeatures(w http.ResponseWriter, r *http.Request)
 	// Get findings for an API and module
 	// (GET /modules/bfla/apiFindings/{apiID})
 	BflaGetApiFindings(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params BflaGetApiFindingsParams)
@@ -8729,12 +8471,6 @@ type ServerInterface interface {
 
 	// (PUT /modules/bfla/authorizationModel/{apiID}/deny)
 	PutModulesBflaAuthorizationModelApiIDDeny(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params PutModulesBflaAuthorizationModelApiIDDenyParams)
-
-	// (PUT /modules/bfla/authorizationModel/{apiID}/detection/start)
-	PutModulesBflaAuthorizationModelApiIDDetectionStart(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
-
-	// (PUT /modules/bfla/authorizationModel/{apiID}/detection/stop)
-	PutModulesBflaAuthorizationModelApiIDDetectionStop(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 
 	// (PUT /modules/bfla/authorizationModel/{apiID}/learning/reset)
 	PutModulesBflaAuthorizationModelApiIDLearningReset(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params PutModulesBflaAuthorizationModelApiIDLearningResetParams)
@@ -8774,6 +8510,12 @@ type ServerInterface interface {
 	// Stop (cancel) a running test for an API
 	// (POST /modules/fuzzer/fuzz/{apiID}/stop)
 	FuzzerStopTest(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
+	// Retreive list of findings for an API
+	// (GET /modules/fuzzer/rawfindings/{apiID})
+	FuzzerGetRawfindings(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
+	// Receive list of raw findings for an API
+	// (POST /modules/fuzzer/rawfindings/{apiID})
+	FuzzerPostRawfindings(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 	// Retreive a report for an API
 	// (GET /modules/fuzzer/report/{apiID}/{timestamp})
 	FuzzerGetReport(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, timestamp int64)
@@ -8798,18 +8540,15 @@ type ServerInterface interface {
 	// Get Annotations for an API
 	// (GET /modules/traceanalyzer/apiAnnotations/{apiID})
 	TraceanalyzerGetAPIAnnotations(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params TraceanalyzerGetAPIAnnotationsParams)
+	// Delete all API findings for an API
+	// (DELETE /modules/traceanalyzer/apiFindings/{apiID})
+	TraceanalyzerDeleteApiFindings(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 	// Get findings for an API and module
 	// (GET /modules/traceanalyzer/apiFindings/{apiID})
 	TraceanalyzerGetApiFindings(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params TraceanalyzerGetApiFindingsParams)
 	// Get Annotations for an event
 	// (GET /modules/traceanalyzer/eventAnnotations/{eventID})
 	TraceanalyzerGetEventAnnotations(w http.ResponseWriter, r *http.Request, eventID int64, params TraceanalyzerGetEventAnnotationsParams)
-	// Start Trace Analysis for an API
-	// (POST /modules/traceanalyzer/{apiID}/start)
-	TraceanalyzerStartTraceAnalysis(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
-	// Stop Trace Analysis for an API
-	// (POST /modules/traceanalyzer/{apiID}/stop)
-	TraceanalyzerStopTraceAnalysis(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -10135,21 +9874,6 @@ func (siw *ServerInterfaceWrapper) GetDashboardApiUsageMostUsed(w http.ResponseW
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// GetFeatures operation middleware
-func (siw *ServerInterfaceWrapper) GetFeatures(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetFeatures(w, r)
-	})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r.WithContext(ctx))
-}
-
 // BflaGetApiFindings operation middleware
 func (siw *ServerInterfaceWrapper) BflaGetApiFindings(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -10375,58 +10099,6 @@ func (siw *ServerInterfaceWrapper) PutModulesBflaAuthorizationModelApiIDDeny(w h
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PutModulesBflaAuthorizationModelApiIDDeny(w, r, apiID, params)
-	})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r.WithContext(ctx))
-}
-
-// PutModulesBflaAuthorizationModelApiIDDetectionStart operation middleware
-func (siw *ServerInterfaceWrapper) PutModulesBflaAuthorizationModelApiIDDetectionStart(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var err error
-
-	// ------------- Path parameter "apiID" -------------
-	var apiID externalRef0.ApiID
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
-		return
-	}
-
-	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PutModulesBflaAuthorizationModelApiIDDetectionStart(w, r, apiID)
-	})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r.WithContext(ctx))
-}
-
-// PutModulesBflaAuthorizationModelApiIDDetectionStop operation middleware
-func (siw *ServerInterfaceWrapper) PutModulesBflaAuthorizationModelApiIDDetectionStop(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var err error
-
-	// ------------- Path parameter "apiID" -------------
-	var apiID externalRef0.ApiID
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
-		return
-	}
-
-	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PutModulesBflaAuthorizationModelApiIDDetectionStop(w, r, apiID)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -10803,6 +10475,58 @@ func (siw *ServerInterfaceWrapper) FuzzerStopTest(w http.ResponseWriter, r *http
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// FuzzerGetRawfindings operation middleware
+func (siw *ServerInterfaceWrapper) FuzzerGetRawfindings(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.FuzzerGetRawfindings(w, r, apiID)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// FuzzerPostRawfindings operation middleware
+func (siw *ServerInterfaceWrapper) FuzzerPostRawfindings(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.FuzzerPostRawfindings(w, r, apiID)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 // FuzzerGetReport operation middleware
 func (siw *ServerInterfaceWrapper) FuzzerGetReport(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -11029,6 +10753,32 @@ func (siw *ServerInterfaceWrapper) TraceanalyzerGetAPIAnnotations(w http.Respons
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// TraceanalyzerDeleteApiFindings operation middleware
+func (siw *ServerInterfaceWrapper) TraceanalyzerDeleteApiFindings(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.TraceanalyzerDeleteApiFindings(w, r, apiID)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 // TraceanalyzerGetApiFindings operation middleware
 func (siw *ServerInterfaceWrapper) TraceanalyzerGetApiFindings(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -11100,58 +10850,6 @@ func (siw *ServerInterfaceWrapper) TraceanalyzerGetEventAnnotations(w http.Respo
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.TraceanalyzerGetEventAnnotations(w, r, eventID, params)
-	})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r.WithContext(ctx))
-}
-
-// TraceanalyzerStartTraceAnalysis operation middleware
-func (siw *ServerInterfaceWrapper) TraceanalyzerStartTraceAnalysis(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var err error
-
-	// ------------- Path parameter "apiID" -------------
-	var apiID externalRef0.ApiID
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
-		return
-	}
-
-	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.TraceanalyzerStartTraceAnalysis(w, r, apiID)
-	})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r.WithContext(ctx))
-}
-
-// TraceanalyzerStopTraceAnalysis operation middleware
-func (siw *ServerInterfaceWrapper) TraceanalyzerStopTraceAnalysis(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var err error
-
-	// ------------- Path parameter "apiID" -------------
-	var apiID externalRef0.ApiID
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
-		return
-	}
-
-	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.TraceanalyzerStopTraceAnalysis(w, r, apiID)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -11329,9 +11027,6 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/dashboard/apiUsage/mostUsed", wrapper.GetDashboardApiUsageMostUsed)
 	})
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/features", wrapper.GetFeatures)
-	})
-	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/modules/bfla/apiFindings/{apiID}", wrapper.BflaGetApiFindings)
 	})
 	r.Group(func(r chi.Router) {
@@ -11345,12 +11040,6 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/modules/bfla/authorizationModel/{apiID}/deny", wrapper.PutModulesBflaAuthorizationModelApiIDDeny)
-	})
-	r.Group(func(r chi.Router) {
-		r.Put(options.BaseURL+"/modules/bfla/authorizationModel/{apiID}/detection/start", wrapper.PutModulesBflaAuthorizationModelApiIDDetectionStart)
-	})
-	r.Group(func(r chi.Router) {
-		r.Put(options.BaseURL+"/modules/bfla/authorizationModel/{apiID}/detection/stop", wrapper.PutModulesBflaAuthorizationModelApiIDDetectionStop)
 	})
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/modules/bfla/authorizationModel/{apiID}/learning/reset", wrapper.PutModulesBflaAuthorizationModelApiIDLearningReset)
@@ -11392,6 +11081,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/modules/fuzzer/fuzz/{apiID}/stop", wrapper.FuzzerStopTest)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/modules/fuzzer/rawfindings/{apiID}", wrapper.FuzzerGetRawfindings)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/modules/fuzzer/rawfindings/{apiID}", wrapper.FuzzerPostRawfindings)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/modules/fuzzer/report/{apiID}/{timestamp}", wrapper.FuzzerGetReport)
 	})
 	r.Group(func(r chi.Router) {
@@ -11416,16 +11111,13 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/modules/traceanalyzer/apiAnnotations/{apiID}", wrapper.TraceanalyzerGetAPIAnnotations)
 	})
 	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/modules/traceanalyzer/apiFindings/{apiID}", wrapper.TraceanalyzerDeleteApiFindings)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/modules/traceanalyzer/apiFindings/{apiID}", wrapper.TraceanalyzerGetApiFindings)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/modules/traceanalyzer/eventAnnotations/{eventID}", wrapper.TraceanalyzerGetEventAnnotations)
-	})
-	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/modules/traceanalyzer/{apiID}/start", wrapper.TraceanalyzerStartTraceAnalysis)
-	})
-	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/modules/traceanalyzer/{apiID}/stop", wrapper.TraceanalyzerStopTraceAnalysis)
 	})
 
 	return r
@@ -11434,111 +11126,108 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"tMEAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

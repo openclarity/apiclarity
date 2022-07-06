@@ -2203,6 +2203,24 @@ paths:
           description: Annotation
       summary: Get Annotations for an API
   /modules/traceanalyzer/apiFindings/{apiID}:
+    delete:
+      operationId: traceanalyzerDeleteApiFindings
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "204":
+          description: Deleted
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      summary: Delete all API findings for an API
     get:
       description: Asks for findings of an APIClarity module, and API. Implemented
         by each module

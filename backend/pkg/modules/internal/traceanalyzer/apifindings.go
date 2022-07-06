@@ -65,6 +65,10 @@ func (r *APIsFindingsRepo) GetAPIFindings(apiID uint64) (apiFindings []utils.Tra
 	return
 }
 
+func (r *APIsFindingsRepo) ResetAPIFindings(apiID uint64) {
+	delete(r.apis, apiID)
+}
+
 func (r *APIsFindingsRepo) aggregate(apiID uint64, path, method string, ann utils.TraceAnalyzerAnnotation) (updated bool) {
 	// Check if we already have an entry for this apiID
 	findings, found := r.apis[apiID]
