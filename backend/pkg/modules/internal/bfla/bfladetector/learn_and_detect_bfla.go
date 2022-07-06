@@ -88,9 +88,9 @@ type BFLADetector interface {
 	ApproveTrace(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser)
 	DenyTrace(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser)
 
-	ResetLearning(apiID uint, numberOfTraces int)
-	StartLearning(apiID uint, numberOfTraces int)
-	StopLearning(apiID uint)
+	ResetLearning(apiID uint, numberOfTraces int) error
+	StartLearning(apiID uint, numberOfTraces int) error
+	StopLearning(apiID uint) error
 
 	ProvideAuthzModel(apiID uint, am AuthorizationModel)
 }
@@ -101,18 +101,36 @@ type apiInfoProvider interface {
 
 type Command interface{ isCommand() }
 
+type CommandWithError interface {
+	Command
+
+	Close()
+	SendError(err error)
+	RcvError() error
+}
+
+type ErrorChan chan error
+
+func NewErrorChan() ErrorChan           { return make(chan error, 1) }
+func (e ErrorChan) SendError(err error) { e <- err }
+func (e ErrorChan) Close()              { close(e) }
+func (e ErrorChan) RcvError() error     { return <-e }
+
 type StopLearningCommand struct {
 	apiID uint
+	ErrorChan
 }
 
 type StartLearningCommand struct {
 	apiID          uint
 	numberOfTraces int
+	ErrorChan
 }
 
 type ResetLearningCommand struct {
 	apiID          uint
 	numberOfTraces int
+	ErrorChan
 }
 
 type MarkLegitimateCommand struct {
@@ -156,7 +174,7 @@ type EventAlerter interface {
 
 type learnAndDetectBFLA struct {
 	tracesCh        chan *CompositeTrace
-	commandsCh      chan Command
+	commandsCh      CommandsChan
 	errCh           chan error
 	apiInfoProvider apiInfoProvider
 
@@ -169,6 +187,18 @@ type learnAndDetectBFLA struct {
 	controllerNotifier       ControllerNotifier
 	controllerResyncInterval time.Duration
 	mu                       *sync.RWMutex
+}
+
+type CommandsChan chan Command
+
+func (c CommandsChan) Send(cmd Command) {
+	c <- cmd
+}
+
+func (c CommandsChan) SendAndReplyErr(cmd CommandWithError) error {
+	defer cmd.Close()
+	c <- cmd
+	return cmd.RcvError()
 }
 
 type CompositeTrace struct {
@@ -189,9 +219,13 @@ func (l *learnAndDetectBFLA) run(ctx context.Context) {
 
 	for {
 		select {
-		case feedback, ok := <-l.commandsCh:
+		case command, ok := <-l.commandsCh:
 			if ok {
-				if err := l.commandsRunner(ctx, feedback); err != nil {
+				err := l.commandsRunner(ctx, command)
+				if cmdErr, ok := command.(CommandWithError); ok {
+					cmdErr.SendError(err)
+				}
+				if err != nil {
 					l.errCh <- err
 				}
 				continue
@@ -411,6 +445,8 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		if err := l.eventAlerter.SetEventAlert(ctx, ModuleName, trace.APIEvent.ID, severity); err != nil {
 			return fmt.Errorf("unable to set alert annotation: %w", err)
 		}
+
+		l.logError(l.notifyController(ctx, trace.APIEvent.APIInfoID))
 		aud.WarningStatus = ResolveBFLAStatusInt(int(trace.APIEvent.StatusCode))
 	}
 	aud.StatusCode = trace.APIEvent.StatusCode
@@ -552,6 +588,8 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, pa
 }
 
 func (l *learnAndDetectBFLA) IsLearning(apiID uint) bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	_, ok := l.mustLearn(apiID)
 	return ok
 }
@@ -601,58 +639,59 @@ func (l *learnAndDetectBFLA) SendTrace(trace *CompositeTrace) {
 }
 
 func (l *learnAndDetectBFLA) ApproveTrace(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser) {
-	l.commandsCh <- &MarkLegitimateCommand{
+	l.commandsCh.Send(&MarkLegitimateCommand{
 		detectedUser: user,
 		path:         path,
 		method:       method,
 		clientRef:    clientRef,
 		apiID:        apiID,
-	}
+	})
 }
 
 func (l *learnAndDetectBFLA) DenyTrace(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser) {
-	l.commandsCh <- &MarkIllegitimateCommand{
+	l.commandsCh.Send(&MarkIllegitimateCommand{
 		detectedUser: user,
 		path:         path,
 		method:       method,
 		clientRef:    clientRef,
 		apiID:        apiID,
-	}
+	})
 }
 
-func (l *learnAndDetectBFLA) ResetLearning(apiID uint, numberOfTraces int) {
+func (l *learnAndDetectBFLA) ResetLearning(apiID uint, numberOfTraces int) error {
 	if numberOfTraces < -1 {
-		log.Errorf("value %v not allowed", numberOfTraces)
-		return
+		return fmt.Errorf("value %v not allowed", numberOfTraces)
 	}
-	l.commandsCh <- &ResetLearningCommand{
+	return l.commandsCh.SendAndReplyErr(&ResetLearningCommand{
 		apiID:          apiID,
 		numberOfTraces: numberOfTraces,
-	}
+		ErrorChan:      NewErrorChan(),
+	})
 }
 
-func (l *learnAndDetectBFLA) StopLearning(apiID uint) {
-	l.commandsCh <- &StopLearningCommand{
-		apiID: apiID,
-	}
+func (l *learnAndDetectBFLA) StopLearning(apiID uint) error {
+	return l.commandsCh.SendAndReplyErr(&StopLearningCommand{
+		apiID:     apiID,
+		ErrorChan: NewErrorChan(),
+	})
 }
 
-func (l *learnAndDetectBFLA) StartLearning(apiID uint, numberOfTraces int) {
+func (l *learnAndDetectBFLA) StartLearning(apiID uint, numberOfTraces int) error {
 	if numberOfTraces < -1 {
-		log.Errorf("value %v not allowed", numberOfTraces)
-		return
+		return fmt.Errorf("value %v not allowed", numberOfTraces)
 	}
-	l.commandsCh <- &StartLearningCommand{
+	return l.commandsCh.SendAndReplyErr(&StartLearningCommand{
 		apiID:          apiID,
 		numberOfTraces: numberOfTraces,
-	}
+		ErrorChan:      NewErrorChan(),
+	})
 }
 
 func (l *learnAndDetectBFLA) ProvideAuthzModel(apiID uint, am AuthorizationModel) {
-	l.commandsCh <- &ProvideAuthzModelCommand{
+	l.commandsCh.Send(&ProvideAuthzModelCommand{
 		apiID:      apiID,
 		authzModel: am,
-	}
+	})
 }
 
 func (l *learnAndDetectBFLA) ctrlNotifier(ctx context.Context) {
