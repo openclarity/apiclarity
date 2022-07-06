@@ -430,21 +430,16 @@ func ToRestapiAuthorizationModel(am *bfladetector.AuthorizationModel) *restapi.A
 
 // nolint:stylecheck,revive
 func (h httpHandler) PutAuthorizationModelApiIDApprove(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.PutAuthorizationModelApiIDApproveParams) {
-	done := make(chan struct{})
 	ctx := r.Context()
 	clientRef := &k8straceannotator.K8sObjectRef{Uid: params.K8sClientUid} // TODO this looks wrong.
-	go func() {
-		log.Infof("approve operation on api=%d path=%s method=%s ", apiID, params.Path, params.Method)
-		h.bflaDetector.ApproveTrace(params.Path, strings.ToUpper(params.Method), clientRef, uint(apiID), nil)
-		done <- struct{}{}
-	}()
-
 	select {
 	case <-ctx.Done():
 		err := ctx.Err()
 		log.Error(err)
 		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
-	case <-done:
+	default:
+		log.Infof("approve operation on api=%d path=%s method=%s ", apiID, params.Path, params.Method)
+		h.bflaDetector.ApproveTrace(params.Path, strings.ToUpper(params.Method), clientRef, uint(apiID), nil)
 		log.Infof("approve applied successfully on api=%d path=%s method=%s ", apiID, params.Path, params.Method)
 		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Requested approve operation on api event"})
 	}
@@ -452,21 +447,17 @@ func (h httpHandler) PutAuthorizationModelApiIDApprove(w http.ResponseWriter, r 
 
 // nolint:stylecheck,revive
 func (h httpHandler) PutAuthorizationModelApiIDDeny(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.PutAuthorizationModelApiIDDenyParams) {
-	done := make(chan struct{})
 	ctx := r.Context()
 	clientRef := &k8straceannotator.K8sObjectRef{Uid: params.K8sClientUid} // TODO this looks wrong.
-	go func() {
-		log.Infof("deny operation on api=%d path=%s method=%s ", apiID, params.Path, params.Method)
-		h.bflaDetector.DenyTrace(params.Path, strings.ToUpper(params.Method), clientRef, uint(apiID), nil)
-		done <- struct{}{}
-	}()
 
 	select {
 	case <-ctx.Done():
 		err := ctx.Err()
 		log.Error(err)
 		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
-	case <-done:
+	default:
+		log.Infof("deny operation on api=%d path=%s method=%s ", apiID, params.Path, params.Method)
+		h.bflaDetector.DenyTrace(params.Path, strings.ToUpper(params.Method), clientRef, uint(apiID), nil)
 		log.Infof("deny applied successfully on api=%d path=%s method=%s ", apiID, params.Path, params.Method)
 		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Reqested deny operation on api event"})
 	}
@@ -474,24 +465,25 @@ func (h httpHandler) PutAuthorizationModelApiIDDeny(w http.ResponseWriter, r *ht
 
 // nolint:stylecheck,revive
 func (h httpHandler) PutAuthorizationModelApiIDLearningReset(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.PutAuthorizationModelApiIDLearningResetParams) {
-	done := make(chan struct{})
 	ctx := r.Context()
-	go func() {
-		log.Infof("reset learning api=%d", apiID)
-		if params.NrTraces == nil {
-			h.bflaDetector.ResetLearning(uint(apiID), -1)
-		} else {
-			h.bflaDetector.ResetLearning(uint(apiID), *params.NrTraces)
-		}
-		done <- struct{}{}
-	}()
-
 	select {
 	case <-ctx.Done():
 		err := ctx.Err()
 		log.Error(err)
 		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
-	case <-done:
+	default:
+		log.Infof("reset learning api=%d", apiID)
+		if params.NrTraces == nil {
+			if err := h.bflaDetector.ResetLearning(uint(apiID), -1); err != nil {
+				httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
+				return
+			}
+		} else {
+			if err := h.bflaDetector.ResetLearning(uint(apiID), *params.NrTraces); err != nil {
+				httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
+				return
+			}
+		}
 		log.Infof("reset learning applied successfully on api=%d", apiID)
 		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Reqested reset learning operation on api event"})
 	}
@@ -499,24 +491,25 @@ func (h httpHandler) PutAuthorizationModelApiIDLearningReset(w http.ResponseWrit
 
 // nolint:stylecheck,revive
 func (h httpHandler) PutAuthorizationModelApiIDLearningStart(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.PutAuthorizationModelApiIDLearningStartParams) {
-	done := make(chan struct{})
 	ctx := r.Context()
-	go func() {
-		log.Infof("start learning api=%d", apiID)
-		if params.NrTraces == nil {
-			h.bflaDetector.StartLearning(uint(apiID), -1)
-		} else {
-			h.bflaDetector.StartLearning(uint(apiID), *params.NrTraces)
-		}
-		done <- struct{}{}
-	}()
-
 	select {
 	case <-ctx.Done():
 		err := ctx.Err()
 		log.Error(err)
 		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
-	case <-done:
+	default:
+		log.Infof("start learning api=%d", apiID)
+		if params.NrTraces == nil {
+			if err := h.bflaDetector.StartLearning(uint(apiID), -1); err != nil {
+				httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
+				return
+			}
+		} else {
+			if err := h.bflaDetector.StartLearning(uint(apiID), *params.NrTraces); err != nil {
+				httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
+				return
+			}
+		}
 		log.Infof("start learning applied successfully on api=%d", apiID)
 		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Reqested start learning operation on api event"})
 	}
@@ -524,20 +517,18 @@ func (h httpHandler) PutAuthorizationModelApiIDLearningStart(w http.ResponseWrit
 
 // nolint:stylecheck,revive
 func (h httpHandler) PutAuthorizationModelApiIDLearningStop(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
-	done := make(chan struct{})
 	ctx := r.Context()
-	go func() {
-		log.Infof("stop learning api=%d", apiID)
-		h.bflaDetector.StopLearning(uint(apiID))
-		done <- struct{}{}
-	}()
-
 	select {
 	case <-ctx.Done():
 		err := ctx.Err()
 		log.Error(err)
 		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
-	case <-done:
+	default:
+		log.Infof("stop learning api=%d", apiID)
+		if err := h.bflaDetector.StopLearning(uint(apiID)); err != nil {
+			httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
+			return
+		}
 		log.Infof("stop learning applied successfully on api=%d", apiID)
 		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Reqested stop learning operation on api event"})
 	}
@@ -574,9 +565,13 @@ func (h httpHandler) PutEventIdOperation(w http.ResponseWriter, r *http.Request,
 		})
 		return
 	}
-	done := make(chan struct{})
 	ctx := r.Context()
-	go func() {
+	select {
+	case <-ctx.Done():
+		err := ctx.Err()
+		log.Error(err)
+		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
+	default:
 		log.Infof("apply %s operation on trace=%d", operation, eventID)
 		tags, err := bfladetector.ParseSpecInfo(apiInfo)
 		if err != nil {
@@ -593,15 +588,6 @@ func (h httpHandler) PutEventIdOperation(w http.ResponseWriter, r *http.Request,
 		case restapi.DenyUser:
 			h.bflaDetector.DenyTrace(resolvedPath, string(apiEvent.Method), src, apiEvent.APIInfoID, user)
 		}
-		done <- struct{}{}
-	}()
-
-	select {
-	case <-ctx.Done():
-		err := ctx.Err()
-		log.Error(err)
-		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
-	case <-done:
 		log.Infof("%s operation applied successfully on trace=%d", operation, eventID)
 		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Reqested %s operation on api event", operation)})
 	}
