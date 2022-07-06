@@ -343,6 +343,8 @@ components:
       description: unknown error
   schemas:
     APIClarityFeature:
+      description: List of APIClarity features and for each feature the API hosts
+        the feature requires to get trace for
       properties:
         featureDescription:
           description: Short human readable description of the feature
@@ -373,13 +375,6 @@ components:
             $ref: '#/components/schemas/APIClarityFeature'
           type: array
       type: object
-    APIClarityFeatureOperationEnum:
-      description: APIClarity Feature Operation Enum
-      enum:
-      - REMOVE
-      - SET
-      - ADD
-      type: string
     APIDiffs:
       properties:
         apiInfo:
@@ -1455,7 +1450,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/APIClarityFeatureList'
           description: Success
-      summary: Get the list of APIClarity features
+      summary: Get the list of APIClarity features and for each feature lists the
+        API hosts the feature requires to get trace for
   /modules/bfla/apiFindings/{apiID}:
     get:
       description: Asks for findings of an APIClarity module, and API. Implemented

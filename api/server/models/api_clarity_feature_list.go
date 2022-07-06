@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// APIClarityFeatureList API clarity feature list
+// APIClarityFeatureList List of APIClarity features and for each feature the API hosts the feature requires to get trace for
 //
 // swagger:model APIClarityFeatureList
 type APIClarityFeatureList struct {

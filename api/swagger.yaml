@@ -345,6 +345,7 @@ definitions:
         $ref: '#/definitions/AlertSeverityEnum'
   APIClarityFeatureList:
     type: 'object'
+    description: List of APIClarity features and for each feature the API hosts the feature requires to get trace for
     properties:
       features:
         type: array
@@ -375,13 +376,6 @@ definitions:
       - differ
       - fuzzer
       
-  APIClarityFeatureOperationEnum:
-    description: 'APIClarity Feature Operation Enum'
-    type: string
-    enum: &APIClarityFeatureOperationEnum
-      - REMOVE
-      - SET
-      - ADD        
 
 paths:
   /apiEvents:
@@ -589,7 +583,7 @@ paths:
           
   /features:
     get:
-      summary: 'Get the list of APIClarity features'
+      summary: Get the list of APIClarity features and for each feature the API hosts the feature requires to get trace for
       responses:
         '200':
           description: 'Success'

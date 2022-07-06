@@ -31,7 +31,7 @@ func NewGetFeatures(ctx *middleware.Context, handler GetFeaturesHandler) *GetFea
 
 /* GetFeatures swagger:route GET /features getFeatures
 
-Get the list of APIClarity features
+Get the list of APIClarity features and for each feature the API hosts the feature requires to get trace for
 
 */
 type GetFeatures struct {

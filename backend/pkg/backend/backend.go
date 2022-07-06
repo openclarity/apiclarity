@@ -89,7 +89,7 @@ const defaultChanSize = 100
 func getCoreFeatures() []modules.ModuleInfo {
 	features := []modules.ModuleInfo{
 		{
-			Name:        "specreconstructor",
+			Name:        string(models.APIClarityFeatureEnumSpecreconstructor),
 			Description: "Reconstructs OAPI specifications from traces",
 		},
 	}

@@ -755,7 +755,7 @@ func init() {
     },
     "/features": {
       "get": {
-        "summary": "Get the list of APIClarity features",
+        "summary": "Get the list of APIClarity features and for each feature the API hosts the feature requires to get trace for",
         "responses": {
           "200": {
             "description": "Success",
@@ -802,6 +802,7 @@ func init() {
       ]
     },
     "APIClarityFeatureList": {
+      "description": "List of APIClarity features and for each feature the API hosts the feature requires to get trace for",
       "type": "object",
       "properties": {
         "features": {
@@ -811,15 +812,6 @@ func init() {
           }
         }
       }
-    },
-    "APIClarityFeatureOperationEnum": {
-      "description": "APIClarity Feature Operation Enum",
-      "type": "string",
-      "enum": [
-        "REMOVE",
-        "SET",
-        "ADD"
-      ]
     },
     "AlertSeverityEnum": {
       "description": "Level of alert",
@@ -2939,7 +2931,7 @@ func init() {
     },
     "/features": {
       "get": {
-        "summary": "Get the list of APIClarity features",
+        "summary": "Get the list of APIClarity features and for each feature the API hosts the feature requires to get trace for",
         "responses": {
           "200": {
             "description": "Success",
@@ -2986,6 +2978,7 @@ func init() {
       ]
     },
     "APIClarityFeatureList": {
+      "description": "List of APIClarity features and for each feature the API hosts the feature requires to get trace for",
       "type": "object",
       "properties": {
         "features": {
@@ -2995,15 +2988,6 @@ func init() {
           }
         }
       }
-    },
-    "APIClarityFeatureOperationEnum": {
-      "description": "APIClarity Feature Operation Enum",
-      "type": "string",
-      "enum": [
-        "REMOVE",
-        "SET",
-        "ADD"
-      ]
     },
     "AlertSeverityEnum": {
       "description": "Level of alert",
