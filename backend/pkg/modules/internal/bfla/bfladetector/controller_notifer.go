@@ -56,7 +56,11 @@ func (n *notifier) Notify(ctx context.Context, apiID uint, notification AuthzMod
 
 func ToGlobalOperations(authzModelOps Operations) (ops []global.AuthorizationModelOperation) {
 	for _, o := range authzModelOps {
-		resOp := global.AuthorizationModelOperation{Method: o.Method, Path: o.Path}
+		resOp := global.AuthorizationModelOperation{
+			Method: o.Method,
+			Path:   o.Path,
+			Tags:   o.Tags,
+		}
 		for _, aud := range o.Audience {
 			resAud := global.AuthorizationModelAudience{
 				Authorized:    aud.Authorized,

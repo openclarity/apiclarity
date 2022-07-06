@@ -382,14 +382,16 @@ components:
 
     AuthorizationModelOperation:
       type: object
-      required: [path, method, audience]
+      required: [path, method, audience, tags]
       properties:
         path:
           type: string
         method:
           type: string
-        tag:
-          type: string
+        tags:
+          items:
+            type: string
+          type: array
         audience:
           type: array
           items:

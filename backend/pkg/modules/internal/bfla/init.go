@@ -404,7 +404,11 @@ func FromRestapiAuthorizationModel(am *restapi.AuthorizationModel) bfladetector.
 func ToRestapiAuthorizationModel(am *bfladetector.AuthorizationModel) *restapi.AuthorizationModel {
 	res := &restapi.AuthorizationModel{}
 	for _, o := range am.Operations {
-		resOp := restapi.AuthorizationModelOperation{Method: o.Method, Path: o.Path}
+		resOp := restapi.AuthorizationModelOperation{
+			Method: o.Method,
+			Path:   o.Path,
+			Tags:   o.Tags,
+		}
 		for _, aud := range o.Audience {
 			resAud := restapi.AuthorizationModelAudience{
 				Authorized:    aud.Authorized,
