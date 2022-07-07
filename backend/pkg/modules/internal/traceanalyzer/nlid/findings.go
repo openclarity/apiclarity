@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/go-openapi/jsonpointer"
 
@@ -84,20 +83,14 @@ func (a *AnnotationNLID) ToFinding() utils.Finding {
 }
 
 type APIAnnotationNLID struct {
-	SpecLocation string          `json:"spec_location"`
-	ParamNames   map[string]bool `json:"parameters"`
+	utils.BaseTraceAnalyzerAPIAnnotation
+	ParamNames map[string]bool `json:"parameters"`
 }
 
 func NewAPIAnnotationNLID(path, method string) *APIAnnotationNLID {
-	pointerTokens := []string{
-		jsonpointer.Escape("paths"),
-		jsonpointer.Escape(path),
-		jsonpointer.Escape(strings.ToLower(method)),
-	}
-	pointer := strings.Join(pointerTokens, "/")
 	return &APIAnnotationNLID{
-		SpecLocation: pointer,
-		ParamNames:   make(map[string]bool),
+		BaseTraceAnalyzerAPIAnnotation: utils.BaseTraceAnalyzerAPIAnnotation{SpecPath: path, SpecMethod: method},
+		ParamNames:                     make(map[string]bool),
 	}
 }
 func (a *APIAnnotationNLID) Name() string { return NLIDType }
@@ -115,10 +108,8 @@ func (a *APIAnnotationNLID) Aggregate(ann utils.TraceAnalyzerAnnotation) (update
 	return initialSize != len(a.ParamNames)
 }
 
-func (a *APIAnnotationNLID) Severity() string   { return utils.SeverityInfo }
-func (a *APIAnnotationNLID) TTL() time.Duration { return 24 * time.Hour }
+func (a APIAnnotationNLID) Serialize() ([]byte, error) { return json.Marshal(a) }
 
-func (a *APIAnnotationNLID) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *APIAnnotationNLID) Deserialize(serialized []byte) error {
 	var tmp APIAnnotationNLID
 	err := json.Unmarshal(serialized, &tmp)
@@ -137,9 +128,9 @@ func (a *APIAnnotationNLID) ToFinding() utils.Finding {
 		for name := range a.ParamNames {
 			paramNames = append(paramNames, name)
 		}
-		detailedDesc = fmt.Sprintf("In call '%s', parameter(s) '%s' were used but not previously retrieved. Potential BOLA.", a.SpecLocation, strings.Join(paramNames, ","))
+		detailedDesc = fmt.Sprintf("In call '%s %s', parameter(s) '%s' were used but not previously retrieved. Potential BOLA.", a.SpecMethod, a.SpecPath, strings.Join(paramNames, ","))
 	} else {
-		detailedDesc = fmt.Sprintf("In call '%s', parameter(s) were used but not previously retrieved. Potential BOLA.", a.SpecLocation)
+		detailedDesc = fmt.Sprintf("In call '%s %s', parameter(s) were used but not previously retrieved. Potential BOLA.", a.SpecMethod, a.SpecPath)
 	}
 
 	return utils.Finding{
@@ -160,6 +151,7 @@ func (a *APIAnnotationNLID) ToAPIFinding() oapicommon.APIFinding {
 			"parameters": paramNames,
 		}
 	}
+	jsonPointer := a.SpecLocation()
 	return oapicommon.APIFinding{
 		Source: utils.ModuleName,
 
@@ -167,8 +159,8 @@ func (a *APIAnnotationNLID) ToAPIFinding() oapicommon.APIFinding {
 		Name:        "NLID (Non learnt Identifier)",
 		Description: "Parameters were used but not previously retrieved. Potential BOLA",
 
-		ProvidedSpecLocation:      &a.SpecLocation,
-		ReconstructedSpecLocation: &a.SpecLocation,
+		ProvidedSpecLocation:      &jsonPointer,
+		ReconstructedSpecLocation: &jsonPointer,
 
 		Severity: oapicommon.INFO,
 

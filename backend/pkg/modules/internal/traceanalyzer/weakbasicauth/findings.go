@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	oapicommon "github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
@@ -69,14 +68,12 @@ func (a *AnnotationShortPassword) ToFinding() utils.Finding {
 }
 
 type APIAnnotationShortPassword struct {
-	SpecLocation string `json:"spec_location"`
+	utils.BaseTraceAnalyzerAPIAnnotation
 }
 
 func NewAPIAnnotationShortPassword(path, method string) *APIAnnotationShortPassword {
-	pointerTokens := []string{}
-	pointer := strings.Join(pointerTokens, "/")
 	return &APIAnnotationShortPassword{
-		SpecLocation: pointer,
+		BaseTraceAnalyzerAPIAnnotation: utils.BaseTraceAnalyzerAPIAnnotation{SpecPath: path, SpecMethod: method},
 	}
 }
 func (a *APIAnnotationShortPassword) Name() string { return KindShortPassword }
@@ -89,10 +86,8 @@ func (a *APIAnnotationShortPassword) Aggregate(ann utils.TraceAnalyzerAnnotation
 	return false
 }
 
-func (a *APIAnnotationShortPassword) Severity() string   { return utils.SeverityInfo }
-func (a *APIAnnotationShortPassword) TTL() time.Duration { return 24 * time.Hour }
+func (a APIAnnotationShortPassword) Serialize() ([]byte, error) { return json.Marshal(a) }
 
-func (a *APIAnnotationShortPassword) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *APIAnnotationShortPassword) Deserialize(serialized []byte) error {
 	var tmp APIAnnotationShortPassword
 	err := json.Unmarshal(serialized, &tmp)
@@ -113,6 +108,7 @@ func (a *APIAnnotationShortPassword) ToFinding() utils.Finding {
 	}
 }
 func (a *APIAnnotationShortPassword) ToAPIFinding() oapicommon.APIFinding {
+	jsonPointer := a.SpecLocation()
 	return oapicommon.APIFinding{
 		Source: utils.ModuleName,
 
@@ -120,8 +116,8 @@ func (a *APIAnnotationShortPassword) ToAPIFinding() oapicommon.APIFinding {
 		Name:        "Too short Basic Auth password",
 		Description: "Traces were observed with a too short Basic Auth password",
 
-		ProvidedSpecLocation:      &a.SpecLocation,
-		ReconstructedSpecLocation: &a.SpecLocation,
+		ProvidedSpecLocation:      &jsonPointer,
+		ReconstructedSpecLocation: &jsonPointer,
 
 		Severity: oapicommon.INFO,
 
@@ -162,14 +158,12 @@ func (a *AnnotationKnownPassword) ToFinding() utils.Finding {
 }
 
 type APIAnnotationKnownPassword struct {
-	SpecLocation string `json:"spec_location"`
+	utils.BaseTraceAnalyzerAPIAnnotation
 }
 
 func NewAPIAnnotationKnownPassword(path, method string) *APIAnnotationKnownPassword {
-	pointerTokens := []string{}
-	pointer := strings.Join(pointerTokens, "/")
 	return &APIAnnotationKnownPassword{
-		SpecLocation: pointer,
+		BaseTraceAnalyzerAPIAnnotation: utils.BaseTraceAnalyzerAPIAnnotation{SpecPath: path, SpecMethod: method},
 	}
 }
 func (a *APIAnnotationKnownPassword) Name() string { return KindKnownPassword }
@@ -182,10 +176,8 @@ func (a *APIAnnotationKnownPassword) Aggregate(ann utils.TraceAnalyzerAnnotation
 	return false
 }
 
-func (a *APIAnnotationKnownPassword) Severity() string   { return utils.SeverityInfo }
-func (a *APIAnnotationKnownPassword) TTL() time.Duration { return 24 * time.Hour }
+func (a APIAnnotationKnownPassword) Serialize() ([]byte, error) { return json.Marshal(a) }
 
-func (a *APIAnnotationKnownPassword) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *APIAnnotationKnownPassword) Deserialize(serialized []byte) error {
 	var tmp APIAnnotationKnownPassword
 	err := json.Unmarshal(serialized, &tmp)
@@ -206,6 +198,7 @@ func (a *APIAnnotationKnownPassword) ToFinding() utils.Finding {
 	}
 }
 func (a *APIAnnotationKnownPassword) ToAPIFinding() oapicommon.APIFinding {
+	jsonPointer := a.SpecLocation()
 	return oapicommon.APIFinding{
 		Source: utils.ModuleName,
 
@@ -213,8 +206,8 @@ func (a *APIAnnotationKnownPassword) ToAPIFinding() oapicommon.APIFinding {
 		Name:        "Weak Basic Auth password (found in dictionary)",
 		Description: "Traces were observed with known Basic Auth passwords",
 
-		ProvidedSpecLocation:      &a.SpecLocation,
-		ReconstructedSpecLocation: &a.SpecLocation,
+		ProvidedSpecLocation:      &jsonPointer,
+		ReconstructedSpecLocation: &jsonPointer,
 
 		Severity: oapicommon.INFO,
 
@@ -257,11 +250,14 @@ func (a *AnnotationSamePassword) ToFinding() utils.Finding {
 }
 
 type APIAnnotationSamePassword struct {
+	utils.BaseTraceAnalyzerAPIAnnotation
 	APIs []string
 }
 
 func NewAPIAnnotationSamePassword(path, method string) *APIAnnotationSamePassword {
-	return &APIAnnotationSamePassword{}
+	return &APIAnnotationSamePassword{
+		BaseTraceAnalyzerAPIAnnotation: utils.BaseTraceAnalyzerAPIAnnotation{SpecPath: path, SpecMethod: method},
+	}
 }
 func (a *APIAnnotationSamePassword) Name() string { return KindSamePassword }
 func (a *APIAnnotationSamePassword) Aggregate(ann utils.TraceAnalyzerAnnotation) (updated bool) {
@@ -283,10 +279,8 @@ func (a *APIAnnotationSamePassword) Aggregate(ann utils.TraceAnalyzerAnnotation)
 	return updated
 }
 
-func (a *APIAnnotationSamePassword) Severity() string   { return utils.SeverityInfo }
-func (a *APIAnnotationSamePassword) TTL() time.Duration { return 24 * time.Hour }
+func (a APIAnnotationSamePassword) Serialize() ([]byte, error) { return json.Marshal(a) }
 
-func (a *APIAnnotationSamePassword) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *APIAnnotationSamePassword) Deserialize(serialized []byte) error {
 	var tmp APIAnnotationSamePassword
 	err := json.Unmarshal(serialized, &tmp)

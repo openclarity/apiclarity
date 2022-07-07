@@ -21,8 +21,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-openapi/jsonpointer"
-
 	oapicommon "github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
 )
@@ -69,18 +67,12 @@ func (a *AnnotationNoAlgField) ToFinding() utils.Finding {
 }
 
 type APIAnnotationNoAlgField struct {
-	SpecLocation string `json:"spec_location"`
+	utils.BaseTraceAnalyzerAPIAnnotation
 }
 
 func NewAPIAnnotationNoAlgField(path, method string) *APIAnnotationNoAlgField {
-	pointerTokens := []string{
-		jsonpointer.Escape("paths"),
-		jsonpointer.Escape(path),
-		jsonpointer.Escape(strings.ToLower(method)),
-	}
-	pointer := strings.Join(pointerTokens, "/")
 	return &APIAnnotationNoAlgField{
-		SpecLocation: pointer,
+		BaseTraceAnalyzerAPIAnnotation: utils.BaseTraceAnalyzerAPIAnnotation{SpecPath: path, SpecMethod: method},
 	}
 }
 func (a *APIAnnotationNoAlgField) Name() string { return JWTNoAlgField }
@@ -93,10 +85,8 @@ func (a *APIAnnotationNoAlgField) Aggregate(ann utils.TraceAnalyzerAnnotation) (
 	return false
 }
 
-func (a *APIAnnotationNoAlgField) Severity() string   { return utils.SeverityInfo }
-func (a *APIAnnotationNoAlgField) TTL() time.Duration { return 24 * time.Hour }
+func (a APIAnnotationNoAlgField) Serialize() ([]byte, error) { return json.Marshal(a) }
 
-func (a *APIAnnotationNoAlgField) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *APIAnnotationNoAlgField) Deserialize(serialized []byte) error {
 	var tmp APIAnnotationNoAlgField
 	err := json.Unmarshal(serialized, &tmp)
@@ -117,6 +107,7 @@ func (a *APIAnnotationNoAlgField) ToFinding() utils.Finding {
 	}
 }
 func (a *APIAnnotationNoAlgField) ToAPIFinding() oapicommon.APIFinding {
+	jsonPointer := a.SpecLocation()
 	return oapicommon.APIFinding{
 		Source: utils.ModuleName,
 
@@ -124,8 +115,8 @@ func (a *APIAnnotationNoAlgField) ToAPIFinding() oapicommon.APIFinding {
 		Name:        "JWT has no algorithm specified",
 		Description: "The JOSE header of the JWT header does not contain an 'alg' field",
 
-		ProvidedSpecLocation:      &a.SpecLocation,
-		ReconstructedSpecLocation: &a.SpecLocation,
+		ProvidedSpecLocation:      &jsonPointer,
+		ReconstructedSpecLocation: &jsonPointer,
 
 		Severity: oapicommon.INFO,
 
@@ -164,18 +155,12 @@ func (a *AnnotationAlgFieldNone) ToFinding() utils.Finding {
 }
 
 type APIAnnotationAlgFieldNone struct {
-	SpecLocation string `json:"spec_location"`
+	utils.BaseTraceAnalyzerAPIAnnotation
 }
 
 func NewAPIAnnotationAlgFieldNone(path, method string) *APIAnnotationAlgFieldNone {
-	pointerTokens := []string{
-		jsonpointer.Escape("paths"),
-		jsonpointer.Escape(path),
-		jsonpointer.Escape(strings.ToLower(method)),
-	}
-	pointer := strings.Join(pointerTokens, "/")
 	return &APIAnnotationAlgFieldNone{
-		SpecLocation: pointer,
+		BaseTraceAnalyzerAPIAnnotation: utils.BaseTraceAnalyzerAPIAnnotation{SpecPath: path, SpecMethod: method},
 	}
 }
 func (a *APIAnnotationAlgFieldNone) Name() string { return JWTAlgFieldNone }
@@ -188,10 +173,8 @@ func (a *APIAnnotationAlgFieldNone) Aggregate(ann utils.TraceAnalyzerAnnotation)
 	return false
 }
 
-func (a *APIAnnotationAlgFieldNone) Severity() string   { return utils.SeverityInfo }
-func (a *APIAnnotationAlgFieldNone) TTL() time.Duration { return 24 * time.Hour }
+func (a APIAnnotationAlgFieldNone) Serialize() ([]byte, error) { return json.Marshal(a) }
 
-func (a *APIAnnotationAlgFieldNone) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *APIAnnotationAlgFieldNone) Deserialize(serialized []byte) error {
 	var tmp APIAnnotationAlgFieldNone
 	err := json.Unmarshal(serialized, &tmp)
@@ -212,6 +195,7 @@ func (a *APIAnnotationAlgFieldNone) ToFinding() utils.Finding {
 	}
 }
 func (a *APIAnnotationAlgFieldNone) ToAPIFinding() oapicommon.APIFinding {
+	jsonPointer := a.SpecLocation()
 	return oapicommon.APIFinding{
 		Source: utils.ModuleName,
 
@@ -219,8 +203,8 @@ func (a *APIAnnotationAlgFieldNone) ToAPIFinding() oapicommon.APIFinding {
 		Name:        "'alg' field set to None",
 		Description: fmt.Sprintf("The JOSE header of the JWT header contains an 'alg' field but it's set to none"),
 
-		ProvidedSpecLocation:      &a.SpecLocation,
-		ReconstructedSpecLocation: &a.SpecLocation,
+		ProvidedSpecLocation:      &jsonPointer,
+		ReconstructedSpecLocation: &jsonPointer,
 
 		Severity: oapicommon.INFO,
 
@@ -262,20 +246,14 @@ func (a *AnnotationNotRecommendedAlg) ToFinding() utils.Finding {
 }
 
 type APIAnnotationNotRecommendedAlg struct {
-	SpecLocation       string          `json:"spec_location"`
+	utils.BaseTraceAnalyzerAPIAnnotation
 	NotRecommendedAlgs map[string]bool `json:"not_recommended"`
 }
 
 func NewAPIAnnotationNotRecommendedAlg(path, method string) *APIAnnotationNotRecommendedAlg {
-	pointerTokens := []string{
-		jsonpointer.Escape("paths"),
-		jsonpointer.Escape(path),
-		jsonpointer.Escape(strings.ToLower(method)),
-	}
-	pointer := strings.Join(pointerTokens, "/")
 	return &APIAnnotationNotRecommendedAlg{
-		SpecLocation:       pointer,
-		NotRecommendedAlgs: map[string]bool{},
+		BaseTraceAnalyzerAPIAnnotation: utils.BaseTraceAnalyzerAPIAnnotation{SpecPath: path, SpecMethod: method},
+		NotRecommendedAlgs:             map[string]bool{},
 	}
 }
 func (a *APIAnnotationNotRecommendedAlg) Name() string { return JWTNotRecommendedAlg }
@@ -291,10 +269,8 @@ func (a *APIAnnotationNotRecommendedAlg) Aggregate(ann utils.TraceAnalyzerAnnota
 	return initialSize != len(a.NotRecommendedAlgs)
 }
 
-func (a *APIAnnotationNotRecommendedAlg) Severity() string   { return utils.SeverityInfo }
-func (a *APIAnnotationNotRecommendedAlg) TTL() time.Duration { return 24 * time.Hour }
+func (a APIAnnotationNotRecommendedAlg) Serialize() ([]byte, error) { return json.Marshal(a) }
 
-func (a *APIAnnotationNotRecommendedAlg) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *APIAnnotationNotRecommendedAlg) Deserialize(serialized []byte) error {
 	var tmp APIAnnotationNotRecommendedAlg
 	err := json.Unmarshal(serialized, &tmp)
@@ -327,6 +303,7 @@ func (a *APIAnnotationNotRecommendedAlg) ToAPIFinding() oapicommon.APIFinding {
 		}
 		description = fmt.Sprintf("Signing algorithms (%s) are not recommended", strings.Join(not_recommended, ","))
 	}
+	jsonPointer := a.SpecLocation()
 	return oapicommon.APIFinding{
 		Source: utils.ModuleName,
 
@@ -334,8 +311,8 @@ func (a *APIAnnotationNotRecommendedAlg) ToAPIFinding() oapicommon.APIFinding {
 		Name:        "Not a recommanded JWT signing algorithm",
 		Description: description,
 
-		ProvidedSpecLocation:      &a.SpecLocation,
-		ReconstructedSpecLocation: &a.SpecLocation,
+		ProvidedSpecLocation:      &jsonPointer,
+		ReconstructedSpecLocation: &jsonPointer,
 
 		Severity: oapicommon.INFO,
 
@@ -374,18 +351,12 @@ func (a *AnnotationNoExpireClaim) ToFinding() utils.Finding {
 }
 
 type APIAnnotationNoExpireClaim struct {
-	SpecLocation string `json:"spec_location"`
+	utils.BaseTraceAnalyzerAPIAnnotation
 }
 
 func NewAPIAnnotationNoExpireClaim(path, method string) *APIAnnotationNoExpireClaim {
-	pointerTokens := []string{
-		jsonpointer.Escape("paths"),
-		jsonpointer.Escape(path),
-		jsonpointer.Escape(strings.ToLower(method)),
-	}
-	pointer := strings.Join(pointerTokens, "/")
 	return &APIAnnotationNoExpireClaim{
-		SpecLocation: pointer,
+		BaseTraceAnalyzerAPIAnnotation: utils.BaseTraceAnalyzerAPIAnnotation{SpecPath: path, SpecMethod: method},
 	}
 }
 func (a *APIAnnotationNoExpireClaim) Name() string { return JWTNoExpireClaim }
@@ -398,10 +369,8 @@ func (a *APIAnnotationNoExpireClaim) Aggregate(ann utils.TraceAnalyzerAnnotation
 	return false
 }
 
-func (a *APIAnnotationNoExpireClaim) Severity() string   { return utils.SeverityInfo }
-func (a *APIAnnotationNoExpireClaim) TTL() time.Duration { return 24 * time.Hour }
+func (a APIAnnotationNoExpireClaim) Serialize() ([]byte, error) { return json.Marshal(a) }
 
-func (a *APIAnnotationNoExpireClaim) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *APIAnnotationNoExpireClaim) Deserialize(serialized []byte) error {
 	var tmp APIAnnotationNoExpireClaim
 	err := json.Unmarshal(serialized, &tmp)
@@ -422,6 +391,7 @@ func (a *APIAnnotationNoExpireClaim) ToFinding() utils.Finding {
 	}
 }
 func (a *APIAnnotationNoExpireClaim) ToAPIFinding() oapicommon.APIFinding {
+	jsonPointer := a.SpecLocation()
 	return oapicommon.APIFinding{
 		Source: utils.ModuleName,
 
@@ -429,8 +399,8 @@ func (a *APIAnnotationNoExpireClaim) ToAPIFinding() oapicommon.APIFinding {
 		Name:        "JWT does not have any expire claims",
 		Description: "JWT does not have any expire claims",
 
-		ProvidedSpecLocation:      &a.SpecLocation,
-		ReconstructedSpecLocation: &a.SpecLocation,
+		ProvidedSpecLocation:      &jsonPointer,
+		ReconstructedSpecLocation: &jsonPointer,
 
 		Severity: oapicommon.INFO,
 
@@ -487,19 +457,13 @@ func (a *AnnotationExpTooFar) ToFinding() utils.Finding {
 }
 
 type APIAnnotationExpTooFar struct {
-	SpecLocation    string        `json:"spec_location"`
+	utils.BaseTraceAnalyzerAPIAnnotation
 	ExpireInExample time.Duration `json:"expire_in_example"`
 }
 
 func NewAPIAnnotationExpTooFar(path, method string) *APIAnnotationExpTooFar {
-	pointerTokens := []string{
-		jsonpointer.Escape("paths"),
-		jsonpointer.Escape(path),
-		jsonpointer.Escape(strings.ToLower(method)),
-	}
-	pointer := strings.Join(pointerTokens, "/")
 	return &APIAnnotationExpTooFar{
-		SpecLocation: pointer,
+		BaseTraceAnalyzerAPIAnnotation: utils.BaseTraceAnalyzerAPIAnnotation{SpecPath: path, SpecMethod: method},
 	}
 }
 func (a *APIAnnotationExpTooFar) Name() string { return JWTExpTooFar }
@@ -517,10 +481,8 @@ func (a *APIAnnotationExpTooFar) Aggregate(ann utils.TraceAnalyzerAnnotation) (u
 	return false
 }
 
-func (a *APIAnnotationExpTooFar) Severity() string   { return utils.SeverityInfo }
-func (a *APIAnnotationExpTooFar) TTL() time.Duration { return 24 * time.Hour }
+func (a APIAnnotationExpTooFar) Serialize() ([]byte, error) { return json.Marshal(a) }
 
-func (a *APIAnnotationExpTooFar) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *APIAnnotationExpTooFar) Deserialize(serialized []byte) error {
 	var tmp APIAnnotationExpTooFar
 	err := json.Unmarshal(serialized, &tmp)
@@ -543,8 +505,9 @@ func (a *APIAnnotationExpTooFar) ToFinding() utils.Finding {
 }
 func (a *APIAnnotationExpTooFar) ToAPIFinding() oapicommon.APIFinding {
 	additionalInfo := &map[string]interface{}{
-		"expire_in_example": a.ExpireInExample.Seconds(),
+		"expire_in_example": uint64(a.ExpireInExample.Seconds()),
 	}
+	jsonPointer := a.SpecLocation()
 	return oapicommon.APIFinding{
 		Source: utils.ModuleName,
 
@@ -552,8 +515,8 @@ func (a *APIAnnotationExpTooFar) ToAPIFinding() oapicommon.APIFinding {
 		Name:        "JWT does not have any expire claims",
 		Description: fmt.Sprintf("It has been observed JWT which expire far in the future (ex: %s)", expireString(a.ExpireInExample)),
 
-		ProvidedSpecLocation:      &a.SpecLocation,
-		ReconstructedSpecLocation: &a.SpecLocation,
+		ProvidedSpecLocation:      &jsonPointer,
+		ReconstructedSpecLocation: &jsonPointer,
 
 		Severity: oapicommon.INFO,
 
@@ -611,18 +574,12 @@ func (a *AnnotationWeakSymetricSecret) ToFinding() utils.Finding {
 }
 
 type APIAnnotationWeakSymetricSecret struct {
-	SpecLocation string `json:"spec_location"`
+	utils.BaseTraceAnalyzerAPIAnnotation
 }
 
 func NewAPIAnnotationWeakSymetricSecret(path, method string) *APIAnnotationWeakSymetricSecret {
-	pointerTokens := []string{
-		jsonpointer.Escape("paths"),
-		jsonpointer.Escape(path),
-		jsonpointer.Escape(strings.ToLower(method)),
-	}
-	pointer := strings.Join(pointerTokens, "/")
 	return &APIAnnotationWeakSymetricSecret{
-		SpecLocation: pointer,
+		BaseTraceAnalyzerAPIAnnotation: utils.BaseTraceAnalyzerAPIAnnotation{SpecPath: path, SpecMethod: method},
 	}
 }
 func (a *APIAnnotationWeakSymetricSecret) Name() string { return JWTWeakSymetricSecret }
@@ -634,10 +591,8 @@ func (a *APIAnnotationWeakSymetricSecret) Aggregate(ann utils.TraceAnalyzerAnnot
 	return false
 }
 
-func (a *APIAnnotationWeakSymetricSecret) Severity() string   { return utils.SeverityInfo }
-func (a *APIAnnotationWeakSymetricSecret) TTL() time.Duration { return 24 * time.Hour }
+func (a APIAnnotationWeakSymetricSecret) Serialize() ([]byte, error) { return json.Marshal(a) }
 
-func (a *APIAnnotationWeakSymetricSecret) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *APIAnnotationWeakSymetricSecret) Deserialize(serialized []byte) error {
 	var tmp APIAnnotationWeakSymetricSecret
 	err := json.Unmarshal(serialized, &tmp)
@@ -659,6 +614,7 @@ func (a *APIAnnotationWeakSymetricSecret) ToFinding() utils.Finding {
 	}
 }
 func (a *APIAnnotationWeakSymetricSecret) ToAPIFinding() oapicommon.APIFinding {
+	jsonPointer := a.SpecLocation()
 	return oapicommon.APIFinding{
 		Source: utils.ModuleName,
 
@@ -666,8 +622,8 @@ func (a *APIAnnotationWeakSymetricSecret) ToAPIFinding() oapicommon.APIFinding {
 		Name:        "JWT signed with a weak key",
 		Description: "It has been observed one or more JWT with weak, known keys",
 
-		ProvidedSpecLocation:      &a.SpecLocation,
-		ReconstructedSpecLocation: &a.SpecLocation,
+		ProvidedSpecLocation:      &jsonPointer,
+		ReconstructedSpecLocation: &jsonPointer,
 
 		Severity: oapicommon.INFO,
 
@@ -724,18 +680,12 @@ func (a *AnnotationSensitiveContent) ToFinding() utils.Finding {
 }
 
 type APIAnnotationSensitiveContent struct {
-	SpecLocation string `json:"spec_location"`
+	utils.BaseTraceAnalyzerAPIAnnotation
 }
 
 func NewAPIAnnotationSensitiveContent(path, method string) *APIAnnotationSensitiveContent {
-	pointerTokens := []string{
-		jsonpointer.Escape("paths"),
-		jsonpointer.Escape(path),
-		jsonpointer.Escape(strings.ToLower(method)),
-	}
-	pointer := strings.Join(pointerTokens, "/")
 	return &APIAnnotationSensitiveContent{
-		SpecLocation: pointer,
+		BaseTraceAnalyzerAPIAnnotation: utils.BaseTraceAnalyzerAPIAnnotation{SpecPath: path, SpecMethod: method},
 	}
 }
 func (a *APIAnnotationSensitiveContent) Name() string { return JWTSensitiveContent }
@@ -772,6 +722,7 @@ func (a *APIAnnotationSensitiveContent) ToFinding() utils.Finding {
 	}
 }
 func (a *APIAnnotationSensitiveContent) ToAPIFinding() oapicommon.APIFinding {
+	jsonPointer := a.SpecLocation()
 	return oapicommon.APIFinding{
 		Source: utils.ModuleName,
 
@@ -779,8 +730,8 @@ func (a *APIAnnotationSensitiveContent) ToAPIFinding() oapicommon.APIFinding {
 		Name:        "JWT claims or headers may contains sensitive content",
 		Description: "JWT are signed, not encrypted, hence sensitive information can be seen in clear by a potential attacker",
 
-		ProvidedSpecLocation:      &a.SpecLocation,
-		ReconstructedSpecLocation: &a.SpecLocation,
+		ProvidedSpecLocation:      &jsonPointer,
+		ReconstructedSpecLocation: &jsonPointer,
 
 		Severity: oapicommon.INFO,
 
