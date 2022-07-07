@@ -85,8 +85,12 @@ func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface, sa
 		n = notifier.NewNotifier(notificationPrefix, 100, 10)
 		n.Start(context.Background())
 	}
-
-	return &accessor{dbHandler, clientset, n, samplingManager}
+	return &accessor{
+		dbHandler:       dbHandler,
+		clientset:       clientset,
+		notifier:        n,
+		samplingManager: samplingManager,
+	}
 }
 
 type accessor struct {

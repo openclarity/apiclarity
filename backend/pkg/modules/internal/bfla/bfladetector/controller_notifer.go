@@ -23,7 +23,7 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 )
 
-type ControllerNotifier interface {
+type BFLANotifier interface {
 	Notify(ctx context.Context, apiID uint, notification AuthzModelNotification) error
 }
 
@@ -33,7 +33,7 @@ type AuthzModelNotification struct {
 	SpecType   SpecType
 }
 
-func NewControllerNotifier(moduleName string, accessor core.BackendAccessor) *notifier {
+func NewBFLANotifier(moduleName string, accessor core.BackendAccessor) *notifier {
 	return &notifier{
 		accessor:   accessor,
 		moduleName: moduleName,

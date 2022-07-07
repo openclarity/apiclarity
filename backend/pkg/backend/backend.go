@@ -58,17 +58,17 @@ type Backend struct {
 	monitor             *k8smonitor.Monitor
 	apiInventoryLock    sync.RWMutex
 	dbHandler           _database.Database
-	modulesWrapper      modules.Module
+	modulesManager      modules.ModulesManager
 }
 
-func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, dbHandler *_database.Handler, modulesWrapper modules.Module) *Backend {
+func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, dbHandler *_database.Handler, modulesManager modules.ModulesManager) *Backend {
 	return &Backend{
 		speculator:          speculator,
 		stateBackupInterval: time.Second * time.Duration(config.StateBackupIntervalSec),
 		stateBackupFileName: config.StateBackupFileName,
 		monitor:             monitor,
 		dbHandler:           dbHandler,
-		modulesWrapper:      modulesWrapper,
+		modulesManager:      modulesManager,
 	}
 }
 
@@ -386,7 +386,7 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 
 	b.dbHandler.APIEventsTable().CreateAPIEvent(event)
 
-	b.modulesWrapper.EventNotify(ctx, &modules.Event{APIEvent: event, Telemetry: trace})
+	b.modulesManager.EventNotify(ctx, &modules.Event{APIEvent: event, Telemetry: trace})
 
 	return nil
 }

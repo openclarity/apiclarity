@@ -49,20 +49,20 @@ const (
 
 var ErrUnsupportedAuthScheme = errors.New("unsupported auth scheme")
 
-func NewBFLADetector(ctx context.Context, modName string, apiInfoProvider apiInfoProvider, eventAlerter EventAlerter, ctrlNotifier ControllerNotifier, sp recovery.StatePersister, controllerResyncInterval time.Duration) BFLADetector {
+func NewBFLADetector(ctx context.Context, modName string, apiInfoProvider apiInfoProvider, eventAlerter EventAlerter, bflaNotifier BFLANotifier, sp recovery.StatePersister, notifierResyncInterval time.Duration) BFLADetector {
 	l := &learnAndDetectBFLA{
-		tracesCh:                 make(chan *CompositeTrace),
-		commandsCh:               make(chan Command),
-		errCh:                    make(chan error),
-		apiInfoProvider:          apiInfoProvider,
-		authzModelsMap:           recovery.NewPersistedMap(sp, AuthzModelAnnotationName, reflect.TypeOf(AuthorizationModel{})),
-		tracesCounterMap:         recovery.NewPersistedMap(sp, AuthzProcessedTracesAnnotationName, reflect.TypeOf(1)),
-		statePersister:           sp,
-		eventAlerter:             eventAlerter,
-		controllerNotifier:       ctrlNotifier,
-		controllerResyncInterval: controllerResyncInterval,
-		mu:                       &sync.RWMutex{},
-		modName:                  modName,
+		tracesCh:               make(chan *CompositeTrace),
+		commandsCh:             make(chan Command),
+		errCh:                  make(chan error),
+		apiInfoProvider:        apiInfoProvider,
+		authzModelsMap:         recovery.NewPersistedMap(sp, AuthzModelAnnotationName, reflect.TypeOf(AuthorizationModel{})),
+		tracesCounterMap:       recovery.NewPersistedMap(sp, AuthzProcessedTracesAnnotationName, reflect.TypeOf(1)),
+		statePersister:         sp,
+		eventAlerter:           eventAlerter,
+		bflaNotifier:           bflaNotifier,
+		notifierResyncInterval: notifierResyncInterval,
+		mu:                     &sync.RWMutex{},
+		modName:                modName,
 	}
 	go func() {
 		for {
@@ -75,7 +75,7 @@ func NewBFLADetector(ctx context.Context, modName string, apiInfoProvider apiInf
 			}
 		}
 	}()
-	go l.ctrlNotifier(ctx)
+	go l.notifier(ctx)
 	go l.run(ctx)
 	return l
 }
@@ -184,11 +184,11 @@ type learnAndDetectBFLA struct {
 
 	statePersister recovery.StatePersister
 
-	eventAlerter             EventAlerter
-	controllerNotifier       ControllerNotifier
-	controllerResyncInterval time.Duration
-	mu                       *sync.RWMutex
-	modName                  string
+	eventAlerter           EventAlerter
+	bflaNotifier           BFLANotifier
+	notifierResyncInterval time.Duration
+	mu                     *sync.RWMutex
+	modName                string
 }
 
 type CommandsChan chan Command
@@ -266,7 +266,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 			return fmt.Errorf("unable to parse spec info: %w", err)
 		}
 		err = l.updateAuthorizationModel(tags, cmd.path, cmd.method, cmd.clientRef, cmd.apiID, cmd.detectedUser, true, true)
-		l.logError(l.notifyController(ctx, cmd.apiID))
+		l.logError(l.notify(ctx, cmd.apiID))
 
 	case *MarkIllegitimateCommand:
 		apiInfo, err := l.apiInfoProvider.GetAPIInfo(ctx, cmd.apiID)
@@ -278,7 +278,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 			return fmt.Errorf("unable to parse spec info: %w", err)
 		}
 		err = l.updateAuthorizationModel(tags, cmd.path, cmd.method, cmd.clientRef, cmd.apiID, cmd.detectedUser, false, true)
-		l.logError(l.notifyController(ctx, cmd.apiID))
+		l.logError(l.notify(ctx, cmd.apiID))
 
 	case *StopLearningCommand:
 		counter, err := l.tracesCounterMap.Get(cmd.apiID)
@@ -287,7 +287,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		}
 
 		counter.Set(0)
-		l.logError(l.notifyController(ctx, cmd.apiID))
+		l.logError(l.notify(ctx, cmd.apiID))
 
 	case *StartLearningCommand:
 		tracesToProcess, err := l.tracesCounterMap.Get(cmd.apiID)
@@ -313,7 +313,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 			return fmt.Errorf("unable to get authz model state: %w", err)
 		}
 		authzModel.Set(AuthorizationModel{})
-		l.logError(l.notifyController(ctx, cmd.apiID))
+		l.logError(l.notify(ctx, cmd.apiID))
 
 	case *ProvideAuthzModelCommand:
 		pv, err := l.authzModelsMap.Get(cmd.apiID)
@@ -448,7 +448,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			return fmt.Errorf("unable to set alert annotation: %w", err)
 		}
 
-		l.logError(l.notifyController(ctx, trace.APIEvent.APIInfoID))
+		l.logError(l.notify(ctx, trace.APIEvent.APIInfoID))
 		aud.WarningStatus = ResolveBFLAStatusInt(int(trace.APIEvent.StatusCode))
 	}
 	aud.StatusCode = trace.APIEvent.StatusCode
@@ -457,7 +457,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	return nil
 }
 
-func (l *learnAndDetectBFLA) notifyController(ctx context.Context, apiID uint) error {
+func (l *learnAndDetectBFLA) notify(ctx context.Context, apiID uint) error {
 	ntf := AuthzModelNotification{}
 
 	if l.IsLearning(apiID) {
@@ -481,7 +481,7 @@ func (l *learnAndDetectBFLA) notifyController(ctx context.Context, apiID uint) e
 			ntf.AuthzModel, _ = v.Get().(AuthorizationModel)
 		}
 	}
-	return l.controllerNotifier.Notify(ctx, apiID, ntf)
+	return l.bflaNotifier.Notify(ctx, apiID, ntf)
 }
 
 func (l *learnAndDetectBFLA) mustLearn(apiID uint) (decrementFn func(), ok bool) {
@@ -696,18 +696,18 @@ func (l *learnAndDetectBFLA) ProvideAuthzModel(apiID uint, am AuthorizationModel
 	})
 }
 
-func (l *learnAndDetectBFLA) ctrlNotifier(ctx context.Context) {
-	t := time.NewTicker(l.controllerResyncInterval)
+func (l *learnAndDetectBFLA) notifier(ctx context.Context) {
+	t := time.NewTicker(l.notifierResyncInterval)
 	defer t.Stop()
 
 	for {
 		select {
 		case <-ctx.Done():
-			log.Errorf("Controller notifier finished working %s", ctx.Err())
+			log.Errorf("Bfla notifier finished working %s", ctx.Err())
 			return
 		case <-t.C:
 			for _, key := range l.authzModelsMap.Keys() {
-				l.logError(l.notifyController(ctx, key))
+				l.logError(l.notify(ctx, key))
 			}
 		}
 	}

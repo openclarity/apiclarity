@@ -73,7 +73,7 @@ func newModule(ctx context.Context, modName string, accessor core.BackendAccesso
 	}
 
 	sp := recovery.NewStatePersister(ctx, accessor, modName, persistenceInterval)
-	ctrlNotifier := bfladetector.NewControllerNotifier(modName, accessor)
+	ctrlNotifier := bfladetector.NewBFLANotifier(modName, accessor)
 	p.bflaDetector = bfladetector.NewBFLADetector(ctx, modName, accessor, eventAlerter{accessor}, ctrlNotifier, sp, controllerResyncInterval)
 
 	handler := &httpHandler{

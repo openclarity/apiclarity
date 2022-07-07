@@ -115,9 +115,9 @@ func initBFLADetector(ctrl *gomock.Controller, backendAccessor *core.MockBackend
 	}).AnyTimes()
 	backendAccessor.EXPECT().CreateAPIEventAnnotations(ctx, gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	backendAccessor.EXPECT().GetAPIInfoAnnotation(ctx, gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	ctrlNotifier := bfladetector.NewControllerNotifier("bfla", backendAccessor)
+	bflaNotifier := bfladetector.NewBFLANotifier(string(models.APIClarityFeatureEnumBfla), backendAccessor)
 
-	return bfladetector.NewBFLADetector(ctx, "bfla", backendAccessor, eventAlerter, ctrlNotifier, statePersister, 5*time.Second)
+	return bfladetector.NewBFLADetector(ctx, string(models.APIClarityFeatureEnumBfla), backendAccessor, eventAlerter, bflaNotifier, statePersister, 5*time.Second)
 }
 
 func Test_learnAndDetectBFLA_BuildAuthzModel(t *testing.T) {

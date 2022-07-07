@@ -36,16 +36,16 @@ type Server struct {
 	server          *restapi.Server
 	dbHandler       database.Database
 	speculator      *_speculator.Speculator
-	modulesWrapper  modules.Module
+	modulesManager  modules.ModulesManager
 	samplingManager *manager.Manager
 	features        []modules.ModuleInfo
 }
 
-func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *database.Handler, modulesWrapper modules.Module, samplingManager *manager.Manager, features []modules.ModuleInfo) (*Server, error) {
+func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *database.Handler, modulesManager modules.ModulesManager, samplingManager *manager.Manager, features []modules.ModuleInfo) (*Server, error) {
 	s := &Server{
 		speculator:      speculator,
 		dbHandler:       dbHandler,
-		modulesWrapper:  modulesWrapper,
+		modulesManager:  modulesManager,
 		samplingManager: samplingManager,
 		features:        features,
 	}
@@ -155,7 +155,7 @@ func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *d
 	newHandler := http.NewServeMux()
 
 	// Enhance the default handler with modules apis handlers
-	newHandler.Handle("/api/modules/", modulesWrapper.HTTPHandler())
+	newHandler.Handle("/api/modules/", modulesManager.HTTPHandler())
 	newHandler.Handle("/", origHandler)
 	server.SetHandler(newHandler)
 	s.server = server

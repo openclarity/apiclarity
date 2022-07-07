@@ -35,7 +35,7 @@ import (
 
 type (
 	ModuleInfo          = core.ModuleInfo
-	Module              = core.Module
+	ModulesManager      = core.Module
 	MockModule          = core.MockModule
 	Annotation          = core.Annotation
 	BackendAccessor     = core.BackendAccessor
@@ -44,10 +44,10 @@ type (
 )
 
 var (
-	NewMockModule          = core.NewMockModule
+	NewMockModulesManager  = core.NewMockModule
 	NewMockBackendAccessor = core.NewMockBackendAccessor
 )
 
-func New(ctx context.Context, dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager) (Module, []ModuleInfo) {
+func New(ctx context.Context, dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager) (ModulesManager, []ModuleInfo) {
 	return core.New(ctx, core.NewAccessor(dbHandler, clientset, samplingManager), samplingManager)
 }

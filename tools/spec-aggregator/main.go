@@ -87,7 +87,6 @@ func aggregateGlobalSpecs() {
 	coreSpec := loadSpec(rootPath+"/"+coreSpecPath, true)
 
 	featureEnum := coreSpec.Components.Schemas[featureEnumName]
-	_ = featureEnum
 	coreComponents := reflect.ValueOf(coreSpec.Components)
 
 	moduleSpecs := loadModuleSpecs()
