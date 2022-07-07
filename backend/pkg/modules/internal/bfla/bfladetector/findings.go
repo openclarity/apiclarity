@@ -3,12 +3,14 @@ package bfladetector
 import (
 	"fmt"
 	"github.com/openclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/recovery"
+	"reflect"
 	"strings"
 
 	"github.com/openclarity/apiclarity/api3/common"
 )
 
-func APIFindingBFLAScopesMismatch(isReconstructed bool, path string, method models.HTTPMethod) common.APIFinding {
+func APIFindingBFLAScopesMismatch(specType SpecType, path string, method models.HTTPMethod) common.APIFinding {
 	f := common.APIFinding{
 		Name:        "Scopes mismatch",
 		Description: "The scopes detected in the token do not match the scopes defined in the openapi specification",
@@ -16,15 +18,16 @@ func APIFindingBFLAScopesMismatch(isReconstructed bool, path string, method mode
 		Source:      ModuleName,
 		Type:        "BFLA_SCOPES_MISMATCH",
 	}
-	if isReconstructed {
+	switch specType {
+	case SpecTypeReconstructed:
 		f.ReconstructedSpecLocation = getLocation(path, method)
-	} else {
+	case SpecTypeProvided:
 		f.ProvidedSpecLocation = getLocation(path, method)
 	}
 	return f
 }
 
-func APIFindingBFLASuspiciousCallMedium(isReconstructed bool, path string, method models.HTTPMethod) common.APIFinding {
+func APIFindingBFLASuspiciousCallMedium(specType SpecType, path string, method models.HTTPMethod) common.APIFinding {
 	f := common.APIFinding{
 		Name:        "Suspicious Source Denied",
 		Description: "This call looks suspicious, as it would represent a violation of the current authorization model. The API server correctly rejected the call.",
@@ -32,15 +35,16 @@ func APIFindingBFLASuspiciousCallMedium(isReconstructed bool, path string, metho
 		Source:      ModuleName,
 		Type:        "BFLA_SUSPICIOUS_CALL_MEDIUM",
 	}
-	if isReconstructed {
+	switch specType {
+	case SpecTypeReconstructed:
 		f.ReconstructedSpecLocation = getLocation(path, method)
-	} else {
+	case SpecTypeProvided:
 		f.ProvidedSpecLocation = getLocation(path, method)
 	}
 	return f
 }
 
-func APIFindingBFLASuspiciousTraceHigh(isReconstructed bool, path string, method models.HTTPMethod) common.APIFinding {
+func APIFindingBFLASuspiciousCallHigh(specType SpecType, path string, method models.HTTPMethod) common.APIFinding {
 	f := common.APIFinding{
 		Description: "Suspicious Source Allowed",
 		Name:        "This call looks suspicious, as it represents a violation of the current authorization model. Moreover, the API server accepted the call, which implies a possible Broken Function Level Authorisation. Please verify authorisation implementation in the API server.",
@@ -48,9 +52,10 @@ func APIFindingBFLASuspiciousTraceHigh(isReconstructed bool, path string, method
 		Source:      ModuleName,
 		Type:        "BFLA_SUSPICIOUS_CALL_HIGH",
 	}
-	if isReconstructed {
+	switch specType {
+	case SpecTypeReconstructed:
 		f.ReconstructedSpecLocation = getLocation(path, method)
-	} else {
+	case SpecTypeProvided:
 		f.ProvidedSpecLocation = getLocation(path, method)
 	}
 	return f
@@ -59,4 +64,78 @@ func APIFindingBFLASuspiciousTraceHigh(isReconstructed bool, path string, method
 func getLocation(path string, method models.HTTPMethod) *string {
 	s := fmt.Sprintf("/paths/%s/%s", path, strings.ToLower(string(method)))
 	return &s
+}
+
+type FindingsRegistry interface {
+	Add(apiID uint, finding common.APIFinding) error
+	GetAll(apiID uint) ([]common.APIFinding, error)
+}
+
+func NewFindingsRegistry(sp recovery.StatePersister) FindingsRegistry {
+	return findingsRegistry{
+		findingsMap:          recovery.NewPersistedMap(sp, BFLAFindingsAnnotationName, reflect.TypeOf(common.APIFindings{})),
+		findingsByTypeAndLoc: map[typeAndLoc]struct{}{},
+	}
+}
+
+type findingsRegistry struct {
+	findingsMap          recovery.PersistedMap
+	findingsByTypeAndLoc map[typeAndLoc]struct{}
+}
+
+type typeAndLoc struct {
+	typ string
+	loc string
+}
+
+func (f findingsRegistry) Add(apiID uint, ff common.APIFinding) error {
+	pv, err := f.findingsMap.Get(apiID)
+	if err != nil {
+		return fmt.Errorf("error getting findings annotation")
+	}
+	var findings common.APIFindings
+	if pv.Exists() {
+		findings, _ = pv.Get().(common.APIFindings)
+	} else {
+		findings.Items = &[]common.APIFinding{}
+	}
+
+	for _, finding := range *findings.Items {
+		f.findingsByTypeAndLoc[getTypeAndLoc(finding)] = struct{}{}
+	}
+	_, ok := f.findingsByTypeAndLoc[getTypeAndLoc(ff)]
+	if !ok {
+		*findings.Items = append(*findings.Items, ff)
+		pv.Set(findings)
+	}
+	return nil
+}
+
+func getTypeAndLoc(f common.APIFinding) typeAndLoc {
+	key := typeAndLoc{typ: f.Type}
+	if f.ProvidedSpecLocation != nil {
+		key.loc = *f.ProvidedSpecLocation
+		return key
+	}
+	if f.ReconstructedSpecLocation != nil {
+		key.loc = *f.ReconstructedSpecLocation
+		return key
+	}
+	return key
+}
+
+func (f findingsRegistry) GetAll(apiID uint) ([]common.APIFinding, error) {
+	pv, err := f.findingsMap.Get(apiID)
+	if err != nil {
+		return nil, fmt.Errorf("error getting findings annotation")
+	}
+	if !pv.Exists() {
+		return nil, nil
+	}
+
+	findings, _ := pv.Get().(common.APIFindings)
+	if *findings.Items != nil {
+		return *findings.Items, nil
+	}
+	return nil, nil
 }

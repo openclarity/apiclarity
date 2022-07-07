@@ -171,6 +171,7 @@ type learnAndDetectBFLA struct {
 
 	eventAlerter             EventAlerter
 	controllerNotifier       ControllerNotifier
+	findingsRegistry         FindingsRegistry
 	controllerResyncInterval time.Duration
 	mu                       *sync.RWMutex
 }
@@ -368,7 +369,8 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	}
 	resolvedPath := ResolvePath(tags, trace.APIEvent)
 
-	if SpecTypeFromAPIInfo(apiInfo) == SpecTypeNone {
+	specType := SpecTypeFromAPIInfo(apiInfo)
+	if specType == SpecTypeNone {
 		return fmt.Errorf("spec not present cannot learn BFLA; apiID=%d", trace.APIEvent.APIInfoID)
 	}
 	var tracesProcessed int
@@ -406,29 +408,24 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	aud.WarningStatus = restapi.LEGITIMATE
 	if !aud.Authorized {
 		// updates the auth model but this time as unauthorized
-		severity := core.AlertWarn
+		var severity core.AlertSeverity
+		var finding common.APIFinding
 		code := trace.APIEvent.StatusCode
 		if 200 > code || code > 299 {
 			severity = core.AlertInfo
-		}
-
-		if err := l.eventAlerter.SetEventAlert(ctx, ModuleName, trace.APIEvent.ID, severity); err != nil {
-			return fmt.Errorf("unable to set alert annotation: %w", err)
-		}
-		pv, err := l.findingsMap.Get(apiID)
-		if err != nil {
-			log.Warn("error getting findings annotation")
+			finding = APIFindingBFLASuspiciousCallMedium(specType, resolvedPath, trace.APIEvent.Method)
 		} else {
-			var findings common.APIFindings
-			if pv.Exists() {
-				findings, _ = pv.Get().(common.APIFindings)
-			}
-			mm := map[string]common.APIFinding{}
-			for _, finding := range *findings.Items {
-				mm[*finding.ProvidedSpecLocation] = finding
-			}
-
+			severity = core.AlertWarn
+			finding = APIFindingBFLASuspiciousCallHigh(specType, resolvedPath, trace.APIEvent.Method)
 		}
+
+		if err := l.findingsRegistry.Add(trace.APIEvent.APIInfoID, finding); err != nil {
+			log.Warnf("unable to add findings: %s", err)
+		}
+		if err := l.eventAlerter.SetEventAlert(ctx, ModuleName, trace.APIEvent.ID, severity); err != nil {
+			log.Warnf("unable to set alert annotation: %s", err)
+		}
+
 		aud.WarningStatus = ResolveBFLAStatusInt(int(trace.APIEvent.StatusCode))
 	}
 	aud.StatusCode = trace.APIEvent.StatusCode
