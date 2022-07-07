@@ -68,15 +68,21 @@ type ServerInterface interface {
 	// Get Annotations for an API
 	// (GET /apiAnnotations/{apiID})
 	GetAPIAnnotations(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params GetAPIAnnotationsParams)
-	// Delete all API findings for an API
-	// (DELETE /apiFindings/{apiID})
-	DeleteApiFindings(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 	// Get findings for an API and module
 	// (GET /apiFindings/{apiID})
 	GetApiFindings(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params GetApiFindingsParams)
+	// Delete all API findings for an API
+	// (POST /apiFindings/{apiID}/reset)
+	ResetApiFindings(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 	// Get Annotations for an event
 	// (GET /eventAnnotations/{eventID})
 	GetEventAnnotations(w http.ResponseWriter, r *http.Request, eventID int64, params GetEventAnnotationsParams)
+	// Start Trace Analysis for an API
+	// (POST /{apiID}/start)
+	StartTraceAnalysis(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
+	// Stop Trace Analysis for an API
+	// (POST /{apiID}/stop)
+	StopTraceAnalysis(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -171,32 +177,6 @@ func (siw *ServerInterfaceWrapper) GetAPIAnnotations(w http.ResponseWriter, r *h
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// DeleteApiFindings operation middleware
-func (siw *ServerInterfaceWrapper) DeleteApiFindings(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var err error
-
-	// ------------- Path parameter "apiID" -------------
-	var apiID externalRef0.ApiID
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
-		return
-	}
-
-	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.DeleteApiFindings(w, r, apiID)
-	})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r.WithContext(ctx))
-}
-
 // GetApiFindings operation middleware
 func (siw *ServerInterfaceWrapper) GetApiFindings(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -237,6 +217,32 @@ func (siw *ServerInterfaceWrapper) GetApiFindings(w http.ResponseWriter, r *http
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// ResetApiFindings operation middleware
+func (siw *ServerInterfaceWrapper) ResetApiFindings(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ResetApiFindings(w, r, apiID)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 // GetEventAnnotations operation middleware
 func (siw *ServerInterfaceWrapper) GetEventAnnotations(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -268,6 +274,58 @@ func (siw *ServerInterfaceWrapper) GetEventAnnotations(w http.ResponseWriter, r 
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetEventAnnotations(w, r, eventID, params)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// StartTraceAnalysis operation middleware
+func (siw *ServerInterfaceWrapper) StartTraceAnalysis(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StartTraceAnalysis(w, r, apiID)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// StopTraceAnalysis operation middleware
+func (siw *ServerInterfaceWrapper) StopTraceAnalysis(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StopTraceAnalysis(w, r, apiID)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -397,13 +455,19 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/apiAnnotations/{apiID}", wrapper.GetAPIAnnotations)
 	})
 	r.Group(func(r chi.Router) {
-		r.Delete(options.BaseURL+"/apiFindings/{apiID}", wrapper.DeleteApiFindings)
-	})
-	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/apiFindings/{apiID}", wrapper.GetApiFindings)
 	})
 	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/apiFindings/{apiID}/reset", wrapper.ResetApiFindings)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/eventAnnotations/{eventID}", wrapper.GetEventAnnotations)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/{apiID}/start", wrapper.StartTraceAnalysis)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/{apiID}/stop", wrapper.StopTraceAnalysis)
 	})
 
 	return r
@@ -412,19 +476,21 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"AA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

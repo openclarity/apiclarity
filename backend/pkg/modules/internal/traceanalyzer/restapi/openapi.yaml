@@ -29,8 +29,9 @@ paths:
             'application/json':
               schema:
                 $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
-    delete:
-      operationId: DeleteApiFindings
+  /apiFindings/{apiID}/reset:
+    post:
+      operationId: ResetApiFindings
       summary: 'Delete all API findings for an API'
       parameters:
         - name: apiID
@@ -40,7 +41,7 @@ paths:
             $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID'
       responses:
         '204':
-          description: 'Deleted'
+          description: 'Reset'
         default:
           description: 'Error response'
           content:

@@ -666,7 +666,7 @@ func httpResponse(w http.ResponseWriter, code int, v interface{}) {
 	}
 }
 
-func (h httpHandler) DeleteApiFindings(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
+func (h httpHandler) ResetApiFindings(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
 	h.ta.aggregator.ResetAPIFindings(uint64(apiID))
 
 	err := h.ta.accessor.DeleteAllAPIInfoAnnotations(r.Context(), utils.ModuleName, uint(apiID))
