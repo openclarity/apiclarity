@@ -468,12 +468,15 @@ components:
           type: string
         path:
           type: string
-        tag:
-          type: string
+        tags:
+          items:
+            type: string
+          type: array
       required:
       - path
       - method
       - audience
+      - tags
       type: object
     AuthorizationScheme:
       discriminator:
