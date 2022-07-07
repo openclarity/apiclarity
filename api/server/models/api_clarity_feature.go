@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// APIClarityFeature API clarity feature
+// APIClarityFeature Description of APIClarity feature and the list of API hosts (in the form 'host:port') the feature requires to get trace for
 //
 // swagger:model APIClarityFeature
 type APIClarityFeature struct {

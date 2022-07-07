@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/openclarity/apiclarity/backend/pkg/config"
@@ -94,10 +95,23 @@ func (c *Core) Info() ModuleInfo {
 	}
 }
 
-func shouldTrace(host string, hosts []string) bool {
+func shouldTrace(host string, port int64, hosts []string) bool {
 	for _, h := range hosts {
-		if h == "*" || h == host {
+		if h == "*" {
 			return true
+		}
+		hp := strings.Split(h, ":")
+		if hp[0] == "*" || hp[0] == host {
+			if len(hp) == 1 {
+				return true
+			}
+			if hp[1] == "*" {
+				return true
+			}
+			p, err := strconv.Atoi(hp[1])
+			if err == nil && int64(p) == port {
+				return true
+			}
 		}
 	}
 	return false
@@ -106,9 +120,11 @@ func shouldTrace(host string, hosts []string) bool {
 func (c *Core) EventNotify(ctx context.Context, event *Event) {
 
 	host := event.APIEvent.HostSpecName
+	port := event.APIEvent.DestinationPort
+
 	for modName, mod := range c.Modules {
 
-		if !shouldTrace(host, c.samplingManager.HostsToTraceByComponentID(modName)) {
+		if !shouldTrace(host, port, c.samplingManager.HostsToTraceByComponentID(modName)) {
 			log.Debugf("Trace of host %s should NOT be sent to module %s.", host, modName)
 			continue
 		}

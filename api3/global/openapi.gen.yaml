@@ -343,8 +343,8 @@ components:
       description: unknown error
   schemas:
     APIClarityFeature:
-      description: List of APIClarity features and for each feature the API hosts
-        the feature requires to get trace for
+      description: Description of APIClarity feature and the list of API hosts (in
+        the form 'host:port') the feature requires to get trace for
       properties:
         featureDescription:
           description: Short human readable description of the feature
@@ -369,6 +369,8 @@ components:
       - traceanalyzer
       type: string
     APIClarityFeatureList:
+      description: List of APIClarity features and for each feature the list of API
+        hosts (in the form 'host:port') the feature requires to get trace for
       properties:
         features:
           items:
@@ -1450,8 +1452,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/APIClarityFeatureList'
           description: Success
-      summary: Get the list of APIClarity features and for each feature lists the
-        API hosts the feature requires to get trace for
+      summary: Get the list of APIClarity features and for each feature the list of
+        API hosts (in the form 'host:port') the feature requires to get trace for
   /modules/bfla/apiFindings/{apiID}:
     get:
       description: Asks for findings of an APIClarity module, and API. Implemented

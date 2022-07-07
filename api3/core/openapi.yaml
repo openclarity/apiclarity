@@ -5,7 +5,7 @@ info:
 paths:
   /features:
     get:
-      summary: Get the list of APIClarity features and for each feature lists the API hosts the feature requires to get trace for
+      summary: Get the list of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for
       responses:
         "200":
           description: Success
@@ -786,6 +786,7 @@ components:
   schemas: 
     APIClarityFeatureList:
       type: 'object'
+      description: List of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for
       properties:
         features:
           type: array
@@ -793,7 +794,7 @@ components:
             $ref: '#/components/schemas/APIClarityFeature'
     APIClarityFeature:
       type: 'object'
-      description: List of APIClarity features and for each feature the API hosts the feature requires to get trace for
+      description: Description of APIClarity feature and the list of API hosts (in the form 'host:port') the feature requires to get trace for
       properties:
         featureName:
           $ref: '#/components/schemas/APIClarityFeatureEnum'

@@ -755,7 +755,7 @@ func init() {
     },
     "/features": {
       "get": {
-        "summary": "Get the list of APIClarity features and for each feature the API hosts the feature requires to get trace for",
+        "summary": "Get the list of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for",
         "responses": {
           "200": {
             "description": "Success",
@@ -769,6 +769,7 @@ func init() {
   },
   "definitions": {
     "APIClarityFeature": {
+      "description": "Description of APIClarity feature and the list of API hosts (in the form 'host:port') the feature requires to get trace for",
       "type": "object",
       "required": [
         "featureName"
@@ -802,7 +803,7 @@ func init() {
       ]
     },
     "APIClarityFeatureList": {
-      "description": "List of APIClarity features and for each feature the API hosts the feature requires to get trace for",
+      "description": "List of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for",
       "type": "object",
       "properties": {
         "features": {
@@ -2931,7 +2932,7 @@ func init() {
     },
     "/features": {
       "get": {
-        "summary": "Get the list of APIClarity features and for each feature the API hosts the feature requires to get trace for",
+        "summary": "Get the list of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for",
         "responses": {
           "200": {
             "description": "Success",
@@ -2945,6 +2946,7 @@ func init() {
   },
   "definitions": {
     "APIClarityFeature": {
+      "description": "Description of APIClarity feature and the list of API hosts (in the form 'host:port') the feature requires to get trace for",
       "type": "object",
       "required": [
         "featureName"
@@ -2978,7 +2980,7 @@ func init() {
       ]
     },
     "APIClarityFeatureList": {
-      "description": "List of APIClarity features and for each feature the API hosts the feature requires to get trace for",
+      "description": "List of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for",
       "type": "object",
       "properties": {
         "features": {

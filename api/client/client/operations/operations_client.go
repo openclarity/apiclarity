@@ -705,7 +705,7 @@ func (a *Client) GetDashboardAPIUsageMostUsed(params *GetDashboardAPIUsageMostUs
 }
 
 /*
-  GetFeatures gets the list of API clarity features and for each feature the API hosts the feature requires to get trace for
+  GetFeatures gets the list of API clarity features and for each feature the list of API hosts in the form host port the feature requires to get trace for
 */
 func (a *Client) GetFeatures(params *GetFeaturesParams, opts ...ClientOption) (*GetFeaturesOK, error) {
 	// TODO: Validate the params before sending
