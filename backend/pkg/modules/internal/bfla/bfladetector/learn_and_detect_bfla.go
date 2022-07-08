@@ -451,7 +451,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 func (l *learnAndDetectBFLA) notifyController(ctx context.Context, apiID uint) error {
 	ntf := AuthzModelNotification{}
 
-	if l.IsLearning(apiID) {
+	if _, ok := l.mustLearn(apiID); ok {
 		ntf.Learning = true
 	} else {
 		v, err := l.authzModelsMap.Get(apiID)
