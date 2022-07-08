@@ -66,14 +66,15 @@ func (a *AnnotationGuessableID) NewAPIAnnotation(path, method string) utils.Trac
 	return NewAPIAnnotationGuessableID(path, method)
 }
 func (a *AnnotationGuessableID) Severity() string           { return utils.SeverityInfo }
-func (a *AnnotationGuessableID) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a *AnnotationGuessableID) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 func (a *AnnotationGuessableID) Deserialize(serialized []byte) error {
 	var tmp AnnotationGuessableID
 	err := json.Unmarshal(serialized, &tmp)
 	*a = tmp
 
-	return err
+	return err //nolint:wrapcheck
 }
+
 func (a AnnotationGuessableID) Redacted() utils.TraceAnalyzerAnnotation {
 	newA := a
 	for i := range newA.Params {
@@ -81,6 +82,7 @@ func (a AnnotationGuessableID) Redacted() utils.TraceAnalyzerAnnotation {
 	}
 	return &newA
 }
+
 func (a *AnnotationGuessableID) ToFinding() utils.Finding {
 	paramNames := []string{}
 	for _, p := range a.Params {
@@ -121,19 +123,21 @@ func (a *APIAnnotationGuessableID) Aggregate(ann utils.TraceAnalyzerAnnotation) 
 	return initialSize != len(a.ParamNames)
 }
 
-func (a APIAnnotationGuessableID) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a APIAnnotationGuessableID) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 
 func (a *APIAnnotationGuessableID) Deserialize(serialized []byte) error {
 	var tmp APIAnnotationGuessableID
 	err := json.Unmarshal(serialized, &tmp)
 	*a = tmp
 
-	return err
+	return err //nolint:wrapcheck
 }
+
 func (a APIAnnotationGuessableID) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
 	return &newA
 }
+
 func (a *APIAnnotationGuessableID) ToFinding() utils.Finding {
 	var detailedDesc string
 	if len(a.ParamNames) > 0 {
@@ -153,6 +157,7 @@ func (a *APIAnnotationGuessableID) ToFinding() utils.Finding {
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
+
 func (a *APIAnnotationGuessableID) ToAPIFinding() oapicommon.APIFinding {
 	var additionalInfo *map[string]interface{}
 	if len(a.ParamNames) > 0 {

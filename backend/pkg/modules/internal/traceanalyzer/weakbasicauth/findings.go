@@ -47,17 +47,19 @@ func (a *AnnotationShortPassword) NewAPIAnnotation(path, method string) utils.Tr
 	return NewAPIAnnotationShortPassword(path, method)
 }
 func (a *AnnotationShortPassword) Severity() string           { return utils.SeverityMedium }
-func (a *AnnotationShortPassword) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a *AnnotationShortPassword) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 func (a *AnnotationShortPassword) Deserialize(serialized []byte) error {
 	var tmp AnnotationShortPassword
 	err := json.Unmarshal(serialized, &tmp)
 	*a = tmp
 
-	return err
+	return err //nolint:wrapcheck
 }
+
 func (a AnnotationShortPassword) Redacted() utils.TraceAnalyzerAnnotation {
 	return &AnnotationShortPassword{"XXX", a.Length, a.MinSize}
 }
+
 func (a *AnnotationShortPassword) ToFinding() utils.Finding {
 	return utils.Finding{
 		ShortDesc:    "Too short Basic Auth password",
@@ -86,19 +88,21 @@ func (a *APIAnnotationShortPassword) Aggregate(ann utils.TraceAnalyzerAnnotation
 	return false
 }
 
-func (a APIAnnotationShortPassword) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a APIAnnotationShortPassword) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 
 func (a *APIAnnotationShortPassword) Deserialize(serialized []byte) error {
 	var tmp APIAnnotationShortPassword
 	err := json.Unmarshal(serialized, &tmp)
 	*a = tmp
 
-	return err
+	return err //nolint:wrapcheck
 }
+
 func (a APIAnnotationShortPassword) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
 	return &newA
 }
+
 func (a *APIAnnotationShortPassword) ToFinding() utils.Finding {
 	return utils.Finding{
 		ShortDesc:    "Too short Basic Auth password",
@@ -107,6 +111,7 @@ func (a *APIAnnotationShortPassword) ToFinding() utils.Finding {
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
+
 func (a *APIAnnotationShortPassword) ToAPIFinding() oapicommon.APIFinding {
 	jsonPointer := a.SpecLocation()
 	return oapicommon.APIFinding{
@@ -137,17 +142,19 @@ func (a *AnnotationKnownPassword) NewAPIAnnotation(path, method string) utils.Tr
 	return NewAPIAnnotationKnownPassword(path, method)
 }
 func (a *AnnotationKnownPassword) Severity() string           { return utils.SeverityMedium }
-func (a *AnnotationKnownPassword) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a *AnnotationKnownPassword) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 func (a *AnnotationKnownPassword) Deserialize(serialized []byte) error {
 	var tmp AnnotationKnownPassword
 	err := json.Unmarshal(serialized, &tmp)
 	*a = tmp
 
-	return err
+	return err //nolint:wrapcheck
 }
+
 func (a *AnnotationKnownPassword) Redacted() utils.TraceAnalyzerAnnotation {
 	return NewAnnotationKnownPassword("XXX")
 }
+
 func (a *AnnotationKnownPassword) ToFinding() utils.Finding {
 	return utils.Finding{
 		ShortDesc:    "Weak Basic Auth password (found in dictionary)",
@@ -176,19 +183,21 @@ func (a *APIAnnotationKnownPassword) Aggregate(ann utils.TraceAnalyzerAnnotation
 	return false
 }
 
-func (a APIAnnotationKnownPassword) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a APIAnnotationKnownPassword) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 
 func (a *APIAnnotationKnownPassword) Deserialize(serialized []byte) error {
 	var tmp APIAnnotationKnownPassword
 	err := json.Unmarshal(serialized, &tmp)
 	*a = tmp
 
-	return err
+	return err //nolint:wrapcheck
 }
+
 func (a APIAnnotationKnownPassword) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
 	return &newA
 }
+
 func (a *APIAnnotationKnownPassword) ToFinding() utils.Finding {
 	return utils.Finding{
 		ShortDesc:    "Weak Basic Auth password (found in dictionary)",
@@ -197,6 +206,7 @@ func (a *APIAnnotationKnownPassword) ToFinding() utils.Finding {
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
+
 func (a *APIAnnotationKnownPassword) ToAPIFinding() oapicommon.APIFinding {
 	jsonPointer := a.SpecLocation()
 	return oapicommon.APIFinding{
@@ -229,17 +239,19 @@ func (a *AnnotationSamePassword) NewAPIAnnotation(path, method string) utils.Tra
 	return NewAPIAnnotationSamePassword(path, method)
 }
 func (a *AnnotationSamePassword) Severity() string           { return utils.SeverityMedium }
-func (a *AnnotationSamePassword) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a *AnnotationSamePassword) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 func (a *AnnotationSamePassword) Deserialize(serialized []byte) error {
 	var tmp AnnotationSamePassword
 	err := json.Unmarshal(serialized, &tmp)
 	*a = tmp
 
-	return err
+	return err //nolint:wrapcheck
 }
+
 func (a *AnnotationSamePassword) Redacted() utils.TraceAnalyzerAnnotation {
 	return NewAnnotationSamePassword(a.User, "XXX", a.APIs)
 }
+
 func (a *AnnotationSamePassword) ToFinding() utils.Finding {
 	return utils.Finding{
 		ShortDesc:    "Same Basic Auth credentials used for another service",
@@ -279,19 +291,21 @@ func (a *APIAnnotationSamePassword) Aggregate(ann utils.TraceAnalyzerAnnotation)
 	return updated
 }
 
-func (a APIAnnotationSamePassword) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a APIAnnotationSamePassword) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 
 func (a *APIAnnotationSamePassword) Deserialize(serialized []byte) error {
 	var tmp APIAnnotationSamePassword
 	err := json.Unmarshal(serialized, &tmp)
 	*a = tmp
 
-	return err
+	return err //nolint:wrapcheck
 }
+
 func (a APIAnnotationSamePassword) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
 	return &newA
 }
+
 func (a *APIAnnotationSamePassword) ToFinding() utils.Finding {
 	return utils.Finding{
 		ShortDesc:    "Same Basic Auth credentials used for another service",
@@ -300,6 +314,7 @@ func (a *APIAnnotationSamePassword) ToFinding() utils.Finding {
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
+
 func (a *APIAnnotationSamePassword) ToAPIFinding() oapicommon.APIFinding {
 	return oapicommon.APIFinding{
 		Source: utils.ModuleName,

@@ -19,7 +19,6 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 )
 
-
 const (
 	SeverityInfo     = "INFO"
 	SeverityLow      = "LOW"
@@ -27,7 +26,6 @@ const (
 	SeverityHigh     = "HIGH"
 	SeverityCritical = "CRITICAL"
 )
-
 
 func SeverityToAlert(severity string) core.AlertSeverity {
 	switch severity {

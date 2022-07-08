@@ -53,14 +53,15 @@ func (a AnnotationNLID) NewAPIAnnotation(path, method string) utils.TraceAnalyze
 	return NewAPIAnnotationNLID(path, method)
 }
 func (a *AnnotationNLID) Severity() string           { return utils.SeverityInfo }
-func (a *AnnotationNLID) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a *AnnotationNLID) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 func (a *AnnotationNLID) Deserialize(serialized []byte) error {
 	var tmp AnnotationNLID
 	err := json.Unmarshal(serialized, &tmp)
 	*a = tmp
 
-	return err
+	return err //nolint:wrapcheck
 }
+
 func (a AnnotationNLID) Redacted() utils.TraceAnalyzerAnnotation {
 	newA := a
 	for i := range newA.Params {
@@ -68,6 +69,7 @@ func (a AnnotationNLID) Redacted() utils.TraceAnalyzerAnnotation {
 	}
 	return &newA
 }
+
 func (a *AnnotationNLID) ToFinding() utils.Finding {
 	paramValues := []string{}
 	for _, p := range a.Params {
@@ -108,19 +110,21 @@ func (a *APIAnnotationNLID) Aggregate(ann utils.TraceAnalyzerAnnotation) (update
 	return initialSize != len(a.ParamNames)
 }
 
-func (a APIAnnotationNLID) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a APIAnnotationNLID) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 
 func (a *APIAnnotationNLID) Deserialize(serialized []byte) error {
 	var tmp APIAnnotationNLID
 	err := json.Unmarshal(serialized, &tmp)
 	*a = tmp
 
-	return err
+	return err //nolint:wrapcheck
 }
+
 func (a APIAnnotationNLID) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
 	return &newA
 }
+
 func (a *APIAnnotationNLID) ToFinding() utils.Finding {
 	var detailedDesc string
 	if len(a.ParamNames) > 0 {
@@ -140,6 +144,7 @@ func (a *APIAnnotationNLID) ToFinding() utils.Finding {
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
+
 func (a *APIAnnotationNLID) ToAPIFinding() oapicommon.APIFinding {
 	var additionalInfo *map[string]interface{}
 	if len(a.ParamNames) > 0 {

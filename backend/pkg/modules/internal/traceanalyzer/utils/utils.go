@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/go-openapi/jsonpointer"
+
 	_models "github.com/openclarity/apiclarity/plugins/api/server/models"
 )
 
@@ -31,8 +32,6 @@ const (
 	paramPrefix = "{"
 	paramSuffix = "}"
 )
-
-var moduleName string
 
 func isPathParam(segment string) bool {
 	return strings.HasPrefix(segment, paramPrefix) && strings.HasSuffix(segment, paramSuffix)

@@ -45,6 +45,13 @@ type Event struct {
 	Telemetry *pluginsmodels.Telemetry
 }
 
+const (
+	notificationMaxQueueSize = 100
+	notificationWorkers      = 10
+)
+
+//go:generate $GOPATH/bin/mockgen -destination=./mock_modules.go -package=core github.com/openclarity/apiclarity/backend/pkg/modules/internal/core Module,BackendAccessor
+
 // Module each APIClarity module needs to implement this interface.
 type Module interface {
 	Info() ModuleInfo
@@ -82,7 +89,7 @@ func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface, sa
 
 	var n *notifier.Notifier
 	if notificationPrefix != "" {
-		n = notifier.NewNotifier(notificationPrefix, 100, 10)
+		n = notifier.NewNotifier(notificationPrefix, notificationMaxQueueSize, notificationWorkers)
 		n.Start(context.Background())
 	}
 	return &accessor{

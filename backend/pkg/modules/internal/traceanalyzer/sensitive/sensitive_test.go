@@ -164,7 +164,8 @@ func TestSensitive(t *testing.T) {
 				{Matches: []RuleMatch{
 					{Rule: &Rule{ID: "simple-001"}, InRequestHeaders: true, InResponseHeaders: true},
 					{Rule: &Rule{ID: "core-002"}, InRequestHeaders: true},
-				}}},
+				}},
+			},
 		},
 	}
 	sensitive, err := NewSensitive(testRulesFiles)

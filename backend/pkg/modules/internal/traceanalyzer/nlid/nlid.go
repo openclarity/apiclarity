@@ -46,8 +46,8 @@ type params = map[string]bool
 type Reason map[string]interface{}
 
 type parameter struct {
-	Name string`json:"name"`
-	Value string`json:"value"`
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 type NLID struct {
@@ -240,7 +240,7 @@ func getDecodedBodyParams(o params, val interface{}, prefix string) {
 	case nil:
 		// nothing
 	default:
-		fmt.Println("unknown type not adding: ", val)
+		// nothing
 	}
 }
 

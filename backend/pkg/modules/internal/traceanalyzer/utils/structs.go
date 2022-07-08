@@ -52,10 +52,10 @@ type BaseTraceAnalyzerAPIAnnotation struct {
 	SpecMethod string `json:"method"`
 }
 
-func (a BaseTraceAnalyzerAPIAnnotation) Path() string               { return a.SpecPath }
-func (a BaseTraceAnalyzerAPIAnnotation) Method() string             { return a.SpecMethod }
-func (a BaseTraceAnalyzerAPIAnnotation) Severity() string           { return SeverityInfo }
-func (a BaseTraceAnalyzerAPIAnnotation) TTL() time.Duration         { return 24 * time.Hour }
+func (a BaseTraceAnalyzerAPIAnnotation) Path() string       { return a.SpecPath }
+func (a BaseTraceAnalyzerAPIAnnotation) Method() string     { return a.SpecMethod }
+func (a BaseTraceAnalyzerAPIAnnotation) Severity() string   { return SeverityInfo }
+func (a BaseTraceAnalyzerAPIAnnotation) TTL() time.Duration { return 24 * time.Hour } //nolint:gomnd
 func (a BaseTraceAnalyzerAPIAnnotation) SpecLocation() string {
 	return JSONPointer([]string{"paths", a.SpecPath, strings.ToLower(a.SpecMethod)})
 }
