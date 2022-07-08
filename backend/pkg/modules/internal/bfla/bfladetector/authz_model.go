@@ -55,7 +55,6 @@ func (u *DetectedUser) IsMismatchedScopes(op *spec.Operation) bool {
 	}
 	for _, secItem := range op.Security {
 		for _, scopes := range secItem {
-
 			if !ContainsAll(scopes, spaceRegex.Split(*u.JWTClaims.Scope, -1)) {
 				return true
 			}

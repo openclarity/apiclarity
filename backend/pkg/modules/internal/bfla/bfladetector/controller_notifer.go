@@ -2,6 +2,7 @@ package bfladetector
 
 import (
 	"context"
+
 	"github.com/openclarity/apiclarity/api3/global"
 	"github.com/openclarity/apiclarity/api3/notifications"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"

@@ -69,13 +69,14 @@ func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Modul
 	ctrlNotifier := bfladetector.NewControllerNotifier(accessor)
 	p.bflaDetector = bfladetector.NewBFLADetector(ctx, accessor, eventAlerter{accessor}, ctrlNotifier, sp, controllerResyncInterval)
 
-	handler := &httpHandler{
-		bflaDetector:    p.bflaDetector,
-		state:           sp,
-		accessor:        accessor,
-		openAPIProvider: bfladetector.NewBFLAOpenAPIProvider(accessor),
-	}
-	p.httpHandler = restapi.HandlerWithOptions(handler, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + bfladetector.ModuleName})
+	p.httpHandler = restapi.HandlerWithOptions(&httpHandler{
+		bflaDetector:     p.bflaDetector,
+		state:            sp,
+		accessor:         accessor,
+		findingsRegistry: bfladetector.NewFindingsRegistry(sp),
+	}, restapi.ChiServerOptions{
+		BaseURL: core.BaseHTTPPath + "/" + bfladetector.ModuleName,
+	})
 	return p, nil
 }
 
@@ -244,15 +245,19 @@ func (p *bfla) APIAnnotationNotify(modName string, apiID uint, ann *core.Annotat
 }
 
 type httpHandler struct {
-	state           recovery.StatePersister
-	bflaDetector    bfladetector.BFLADetector
-	openAPIProvider bfladetector.OpenAPIProvider
-	accessor        core.BackendAccessor
+	state            recovery.StatePersister
+	bflaDetector     bfladetector.BFLADetector
+	accessor         core.BackendAccessor
+	findingsRegistry bfladetector.FindingsRegistry
 }
 
 func (h httpHandler) GetAPIFindingsForAPI(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.GetAPIFindingsForAPIParams) {
-	//TODO implement me
-	panic("implement me")
+	findings, err := h.findingsRegistry.GetAll(uint(apiID))
+	if err != nil {
+		httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
+		return
+	}
+	httpResponse(w, http.StatusOK, findings)
 }
 
 func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID int) {
@@ -284,7 +289,7 @@ func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID in
 		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
 		return
 	}
-	spc, err := h.openAPIProvider.GetOpenAPI(apiinfo, event.APIInfoID)
+	spc, err := bfladetector.GetOpenAPI(apiinfo, event.APIInfoID)
 	if err != nil {
 		log.Error("unable to get the spec")
 	}

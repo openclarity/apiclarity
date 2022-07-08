@@ -64,6 +64,7 @@ func NewBFLADetector(ctx context.Context, apiInfoProvider apiInfoProvider, event
 		eventAlerter:             eventAlerter,
 		controllerNotifier:       ctrlNotifier,
 		controllerResyncInterval: controllerResyncInterval,
+		findingsRegistry:         NewFindingsRegistry(sp),
 		mu:                       &sync.RWMutex{},
 	}
 	go func() {
@@ -419,7 +420,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			finding = APIFindingBFLASuspiciousCallHigh(specType, resolvedPath, trace.APIEvent.Method)
 		}
 
-		if err := l.findingsRegistry.Add(trace.APIEvent.APIInfoID, finding); err != nil {
+		if err := l.findingsRegistry.Add(apiID, finding); err != nil {
 			log.Warnf("unable to add findings: %s", err)
 		}
 		if err := l.eventAlerter.SetEventAlert(ctx, ModuleName, trace.APIEvent.ID, severity); err != nil {
@@ -427,6 +428,19 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		}
 
 		aud.WarningStatus = ResolveBFLAStatusInt(int(trace.APIEvent.StatusCode))
+	}
+
+	spc, err := GetOpenAPI(apiInfo, apiID)
+	if err != nil {
+		log.Warnf("unable to get openapi spec")
+	}
+	op := GetSpecOperation(spc, trace.APIEvent.Method, resolvedPath)
+	for _, user := range aud.EndUsers {
+		if user.IsMismatchedScopes(op) {
+			if err := l.findingsRegistry.Add(trace.APIEvent.APIInfoID, APIFindingBFLAScopesMismatch(specType, resolvedPath, trace.APIEvent.Method)); err != nil {
+				log.Warnf("unable to add scope mismatch findings: %s", err)
+			}
+		}
 	}
 	aud.StatusCode = trace.APIEvent.StatusCode
 	aud.LastTime = time.Time(trace.APIEvent.Time)
