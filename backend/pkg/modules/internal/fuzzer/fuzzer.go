@@ -36,6 +36,7 @@ import (
 )
 
 const (
+	ModuleName        = "fuzzer"
 	ModuleDescription = "Runs a set of tests against API endpoints to discover insecure implementations"
 	ModuleVersion     = "0.0.0"
 	EmptyJSON         = "{}"
@@ -61,7 +62,7 @@ func init() {
 }
 
 //nolint:ireturn,nolintlint // was needed for the module implementation of ApiClarity
-func newFuzzer(ctx context.Context, moduleName string, accessor core.BackendAccessor) (core.Module, error) {
+func newFuzzer(ctx context.Context, accessor core.BackendAccessor) (core.Module, error) {
 	logging.InitLogger()
 	logging.Logf("[Fuzzer] Start():: -->")
 
@@ -74,14 +75,14 @@ func newFuzzer(ctx context.Context, moduleName string, accessor core.BackendAcce
 		model:        nil,
 		accessor:     accessor,
 		info: &core.ModuleInfo{
-			Name:        moduleName,
+			Name:        ModuleName,
 			Description: ModuleDescription,
 		},
 	}
 
 	plugin.config.Dump()
 
-	plugin.httpHandler = restapi.HandlerWithOptions(&pluginFuzzerHTTPHandler{fuzzer: &plugin}, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + moduleName})
+	plugin.httpHandler = restapi.HandlerWithOptions(&pluginFuzzerHTTPHandler{fuzzer: &plugin}, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + ModuleName})
 
 	// Initialize the model
 	plugin.model = model.NewModel(accessor)

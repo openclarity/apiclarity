@@ -32,13 +32,14 @@ func init() {
 }
 
 const (
+	ModuleName        = "demo"
 	ModuleDescription = "This is a demo module doing nothing"
 )
 
-func newModule(ctx context.Context, moduleName string, accessor core.BackendAccessor) (core.Module, error) {
+func newModule(ctx context.Context, accessor core.BackendAccessor) (core.Module, error) {
 	d := demo{
 		info: &core.ModuleInfo{
-			Name:        moduleName,
+			Name:        ModuleName,
 			Description: ModuleDescription,
 		},
 	}

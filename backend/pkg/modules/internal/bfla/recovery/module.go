@@ -24,8 +24,8 @@ import (
 )
 
 func ResyncedModule(wrappedModuleFactory core.ModuleFactory) core.ModuleFactory {
-	return func(ctx context.Context, moduleName string, accessor core.BackendAccessor) (core.Module, error) {
-		wrappedModule, err := wrappedModuleFactory(ctx, moduleName, accessor)
+	return func(ctx context.Context, accessor core.BackendAccessor) (core.Module, error) {
+		wrappedModule, err := wrappedModuleFactory(ctx, accessor)
 		if err != nil {
 			return nil, err
 		}

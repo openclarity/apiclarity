@@ -90,7 +90,7 @@ type traceAnalyzer struct {
 	info     *core.ModuleInfo
 }
 
-func newTraceAnalyzer(ctx context.Context, moduleName string, accessor core.BackendAccessor) (core.Module, error) {
+func newTraceAnalyzer(ctx context.Context, accessor core.BackendAccessor) (core.Module, error) {
 	var err error
 
 	p := traceAnalyzer{
