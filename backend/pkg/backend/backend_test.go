@@ -302,7 +302,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 
 	mockCtrlModules := gomock.NewController(t)
 	defer mockCtrlModules.Finish()
-	mockModules := modules.NewMockModule(mockCtrlModules)
+	mockModulesManager := modules.NewMockModulesManager(mockCtrlModules)
 
 	op := spec.NewOperation()
 	op.Responses = spec.NewResponses()
@@ -742,13 +742,13 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 		tt.fields.expectDatabase(mockDatabase)
 		tt.fields.expectAPIInventoryTable(mockAPIInventoryTable)
 		tt.fields.expectAPIEventTable(mockAPIEventTable)
-		mockModules.EXPECT().EventNotify(ctx, gomock.Any()).AnyTimes()
+		mockModulesManager.EXPECT().EventNotify(ctx, gomock.Any()).AnyTimes()
 		t.Run(tt.name, func(t *testing.T) {
 			b := &Backend{
-				speculator: tt.fields.speculator,
-				monitor:    tt.fields.monitor,
-				dbHandler:  tt.fields.dbHandler,
-				modules:    mockModules,
+				speculator:     tt.fields.speculator,
+				monitor:        tt.fields.monitor,
+				dbHandler:      tt.fields.dbHandler,
+				modulesManager: mockModulesManager,
 			}
 			if err := b.handleHTTPTrace(ctx, tt.args.trace); (err != nil) != tt.wantErr {
 				t.Errorf("handleHTTPTrace() error = %v, wantErr %v", err, tt.wantErr)

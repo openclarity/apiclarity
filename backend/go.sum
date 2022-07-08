@@ -967,6 +967,8 @@ github.com/openclarity/trace-sampling-manager/api v0.0.0-20220622111449-ff7eed2b
 github.com/openclarity/trace-sampling-manager/api v0.0.0-20220622111449-ff7eed2b2b39/go.mod h1:yw7gPOl7tMaCSoJA+iQ4dTqQEFO19za94A0QKGb9eZM=
 github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220622111449-ff7eed2b2b39 h1:VU45smmwLi/LQNaB9nugtmRrHkZeIy9JszEWUjAcVKk=
 github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220622111449-ff7eed2b2b39/go.mod h1:uCFl1Z5wNl6ms+0TBV6JWbL/YstmsJC78Y1aXGH3KMI=
+github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220701140339-4cc0ec209fea h1:9BG8ZGnmaFLtVxMem0tYurMoR6Z6Ret0I2x+ycUyPIg=
+github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220701140339-4cc0ec209fea/go.mod h1:uCFl1Z5wNl6ms+0TBV6JWbL/YstmsJC78Y1aXGH3KMI=
 github.com/opencontainers/go-digest v0.0.0-20170106003457-a6d0ee40d420/go.mod h1:cMLVZDEM3+U2I4VmLI6N8jQYUd2OVphdqWwCJHrFt2s=
 github.com/opencontainers/go-digest v0.0.0-20180430190053-c9281466c8b2/go.mod h1:cMLVZDEM3+U2I4VmLI6N8jQYUd2OVphdqWwCJHrFt2s=
 github.com/opencontainers/go-digest v1.0.0-rc1/go.mod h1:cMLVZDEM3+U2I4VmLI6N8jQYUd2OVphdqWwCJHrFt2s=

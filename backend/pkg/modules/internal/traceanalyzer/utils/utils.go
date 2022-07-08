@@ -31,6 +31,8 @@ const (
 	paramSuffix = "}"
 )
 
+var moduleName string
+
 func isPathParam(segment string) bool {
 	return strings.HasPrefix(segment, paramPrefix) && strings.HasSuffix(segment, paramSuffix)
 }
