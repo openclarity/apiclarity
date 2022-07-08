@@ -65,6 +65,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TestHandle'
+        '400':
+          description: Status Bad Request
+          content:
+            application/json:
+              schema:
+                description: 'error message'
+                type: 'string'
         '404':
           description: Service not found
           content:
