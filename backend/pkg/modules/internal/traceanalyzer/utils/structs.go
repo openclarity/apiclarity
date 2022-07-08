@@ -41,7 +41,7 @@ type TraceAnalyzerAPIAnnotation interface {
 	Deserialize([]byte) error
 	Redacted() TraceAnalyzerAPIAnnotation
 	ToFinding() Finding
-	ToAPIFinding(source string) oapicommon.APIFinding
+	ToAPIFinding() oapicommon.APIFinding
 }
 
 // A finding is an interpreted annotation.

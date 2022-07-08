@@ -149,7 +149,7 @@ func (a *APIAnnotationNLID) ToFinding() utils.Finding {
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
-func (a *APIAnnotationNLID) ToAPIFinding(source string) oapicommon.APIFinding {
+func (a *APIAnnotationNLID) ToAPIFinding() oapicommon.APIFinding {
 	var additionalInfo *map[string]interface{}
 	if len(a.ParamNames) > 0 {
 		paramNames := []string{}
@@ -161,7 +161,7 @@ func (a *APIAnnotationNLID) ToAPIFinding(source string) oapicommon.APIFinding {
 		}
 	}
 	return oapicommon.APIFinding{
-		Source: source,
+		Source: utils.ModuleName,
 
 		Type:        a.Name(),
 		Name:        "NLID (Non learnt Identifier)",
