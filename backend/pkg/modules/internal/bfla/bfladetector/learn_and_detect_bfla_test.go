@@ -146,6 +146,8 @@ func Test_learnAndDetectBFLA_BuildAuthzModel(t *testing.T) {
 	}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			backendAccessor.EXPECT().EnableTraces(context.TODO(), gomock.Any(), gomock.Any()).Return(nil).Times(3)
+
 			detector.StartLearning(mapID2name["user"], 100)
 			detector.StartLearning(mapID2name["catalogue"], 100)
 			detector.StartLearning(mapID2name["carts"], 100)
@@ -266,6 +268,10 @@ func Test_learnAndDetectBFLA_DenyTrace(t *testing.T) {
 			}).AnyTimes()
 			backendAccessor.EXPECT().Notify(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 			detector := initBFLADetector(ctrl, backendAccessor, tt.authModels, storedBFLAStates)
+			backendAccessor.EXPECT().EnableTraces(context.TODO(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+			detector.StartLearning(mapID2name["carts"], -1)
+			backendAccessor.EXPECT().DisableTraces(context.TODO(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+			detector.StopLearning(mapID2name["carts"])
 			detector.DenyTrace("/carts/{id}/items", "POST", newClientRef("frontend"), mapID2name["carts"], nil)
 			time.Sleep(1 * time.Second)
 			assert(t, tt.wantAuthModels, tt.authModels)
@@ -368,6 +374,10 @@ func Test_learnAndDetectBFLA_ApproveTrace(t *testing.T) {
 			}).AnyTimes()
 			backendAccessor.EXPECT().Notify(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 			detector := initBFLADetector(ctrl, backendAccessor, tt.authModels, storedBFLAStates)
+			backendAccessor.EXPECT().EnableTraces(context.TODO(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+			detector.StartLearning(mapID2name["carts"], -1)
+			backendAccessor.EXPECT().DisableTraces(context.TODO(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+			detector.StopLearning(mapID2name["carts"])
 			detector.ApproveTrace("/carts/{id}/merge", "POST", newClientRef("frontend"), mapID2name["carts"], &bfladetector.DetectedUser{ID: "user1", Source: bfladetector.DetectedUserSourceJWT})
 			time.Sleep(1 * time.Second)
 			assert(t, tt.wantAuthModels, tt.authModels)

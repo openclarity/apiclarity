@@ -127,6 +127,9 @@ type BFLADetector interface {
 	StartLearning(apiID uint, numberOfTraces int) error
 	StopLearning(apiID uint) error
 
+	StartDetection(apiID uint) error
+	StopDetection(apiID uint) error
+
 	ProvideAuthzModel(apiID uint, am AuthorizationModel)
 }
 
@@ -301,10 +304,10 @@ func runtimeRecover() {
 	}
 }
 
-func (l *learnAndDetectBFLA) checkBFLAState(apiID uint, allowedStates []BFLAStateEnum) (*BFLAState, recovery.PersistedValue, error) {
+func (l *learnAndDetectBFLA) checkBFLAState(apiID uint, allowedStates []BFLAStateEnum) (BFLAState, recovery.PersistedValue, error) {
 	stateValue, err := l.bflaStateMap.Get(apiID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to get state traces counter: %w", err)
+		return BFLAState{}, nil, fmt.Errorf("unable to get state traces counter: %w", err)
 	}
 	state := stateValue.Get().(BFLAState)
 	match := false
@@ -315,9 +318,9 @@ func (l *learnAndDetectBFLA) checkBFLAState(apiID uint, allowedStates []BFLAStat
 		}
 	}
 	if !match {
-		return &state, stateValue, fmt.Errorf("state %v does not allow for the requested operation", state.state)
+		return state, stateValue, fmt.Errorf("state %v does not allow for the requested operation", state.state)
 	}
-	return &state, stateValue, nil
+	return state, stateValue, nil
 }
 
 func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command) (err error) {
@@ -362,7 +365,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		}
 		err = l.bflaBackendAccessor.DisableTraces(ctx, l.modName, cmd.apiID)
 		if err != nil {
-			return fmt.Errorf("Cannot disable traces: %w", err)
+			return fmt.Errorf("cannot disable traces: %w", err)
 		}
 		state.state = BFLALearnt
 		state.traceCounter = 0
@@ -377,7 +380,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if state.state == BFLAStart || state.state == BFLALearnt {
 			err = l.bflaBackendAccessor.EnableTraces(ctx, l.modName, cmd.apiID)
 			if err != nil {
-				return fmt.Errorf("Cannot enable traces: %w", err)
+				return fmt.Errorf("cannot enable traces: %w", err)
 			}
 		}
 		state.state = BFLALearning
@@ -394,7 +397,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if state.state == BFLADetecting || state.state == BFLALearning {
 			err = l.bflaBackendAccessor.DisableTraces(ctx, l.modName, cmd.apiID)
 			if err != nil {
-				return fmt.Errorf("Cannot disable traces: %w", err)
+				return fmt.Errorf("cannot disable traces: %w", err)
 			}
 		}
 
@@ -518,7 +521,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	state, stateValue, err := l.checkBFLAState(apiID, []BFLAStateEnum{BFLALearning, BFLADetecting})
 
 	if err != nil {
-		return fmt.Errorf("Unable to handle traces in the current state: %w", err)
+		return fmt.Errorf("unable to handle traces in the current state: %w", err)
 	}
 	if state.state == BFLALearning {
 		/* We are in the learning state */
