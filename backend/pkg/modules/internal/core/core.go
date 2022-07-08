@@ -57,12 +57,12 @@ func RegisterModule(m ModuleFactory) {
 	_, corePath, _, _ := runtime.Caller(0)
 	_, modulePath, _, _ := runtime.Caller(1)
 	modulePathIndex := len(strings.Split(corePath, "/")) - 2
-	moduleID := strings.Split(modulePath, "/")[modulePathIndex]
+	moduleFolderName := strings.Split(modulePath, "/")[modulePathIndex]
 
-	modules[moduleID] = m
+	modules[moduleFolderName] = m
 }
 
-type ModuleFactory func(ctx context.Context, moduleName string, accessor BackendAccessor) (Module, error)
+type ModuleFactory func(ctx context.Context, accessor BackendAccessor) (Module, error)
 
 func New(ctx context.Context, accessor BackendAccessor, samplingManager *manager.Manager) (Module, []ModuleInfo) {
 	c := &Core{}
@@ -70,14 +70,17 @@ func New(ctx context.Context, accessor BackendAccessor, samplingManager *manager
 	c.samplingManager = samplingManager
 
 	modInfos := []ModuleInfo{}
-	for moduleName, moduleFactory := range modules {
-		module, err := moduleFactory(ctx, moduleName, accessor)
+	for moduleFolderName, moduleFactory := range modules {
+		module, err := moduleFactory(ctx, accessor)
 		if err != nil {
 			log.Error(err)
 			continue
 		}
+		if module.Info().Name != moduleFolderName {
+			log.Panicf("module %s's name does not match with folder name containing the module %s", module.Info().Name, moduleFolderName)
+		}
 		log.Infof("Module %s initialized", module.Info().Name)
-		c.Modules[moduleName] = module
+		c.Modules[moduleFolderName] = module
 		modInfos = append(modInfos, module.Info())
 	}
 	return c, modInfos
