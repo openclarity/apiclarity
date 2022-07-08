@@ -55,11 +55,11 @@ func (p *bfla) Info() core.ModuleInfo {
 }
 func (p *bfla) HTTPHandler() http.Handler { return p.httpHandler }
 
-func newModule(ctx context.Context, modName string, accessor core.BackendAccessor) (_ core.Module, err error) {
+func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Module, err error) {
 	p := &bfla{
 		accessor: accessor,
 		info: &core.ModuleInfo{
-			Name:        modName,
+			Name:        bfladetector.ModuleName,
 			Description: bfladetector.ModuleDescription,
 		},
 	}
@@ -72,9 +72,9 @@ func newModule(ctx context.Context, modName string, accessor core.BackendAccesso
 		return nil, fmt.Errorf("failed to init bfla module: %w", err)
 	}
 
-	sp := recovery.NewStatePersister(ctx, accessor, modName, persistenceInterval)
-	ctrlNotifier := bfladetector.NewBFLANotifier(modName, accessor)
-	p.bflaDetector = bfladetector.NewBFLADetector(ctx, modName, accessor, eventAlerter{accessor}, ctrlNotifier, sp, controllerResyncInterval)
+	sp := recovery.NewStatePersister(ctx, accessor, bfladetector.ModuleName, persistenceInterval)
+	ctrlNotifier := bfladetector.NewBFLANotifier(bfladetector.ModuleName, accessor)
+	p.bflaDetector = bfladetector.NewBFLADetector(ctx, bfladetector.ModuleName, accessor, eventAlerter{accessor}, ctrlNotifier, sp, controllerResyncInterval)
 
 	handler := &httpHandler{
 		bflaDetector:    p.bflaDetector,
@@ -82,7 +82,7 @@ func newModule(ctx context.Context, modName string, accessor core.BackendAccesso
 		accessor:        accessor,
 		openAPIProvider: bfladetector.NewBFLAOpenAPIProvider(accessor),
 	}
-	p.httpHandler = restapi.HandlerWithOptions(handler, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + modName})
+	p.httpHandler = restapi.HandlerWithOptions(handler, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + bfladetector.ModuleName})
 	return p, nil
 }
 

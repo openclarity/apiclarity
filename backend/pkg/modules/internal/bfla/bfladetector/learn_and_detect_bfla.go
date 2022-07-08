@@ -37,6 +37,7 @@ import (
 )
 
 const (
+	ModuleName               = "bfla"
 	ModuleDescription        = "Reconstructs an authorization model for an API and detects violations of such authorization model"
 	K8sSrcAnnotationName     = "bfla_k8s_src"
 	K8sDstAnnotationName     = "bfla_k8s_dst"
