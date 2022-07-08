@@ -247,14 +247,14 @@ func (p *pluginFuzzer) StopFuzzing(ctx context.Context, apiID oapicommon.ApiID) 
 	// Retrieve the API
 	api, err := p.model.GetAPI(ctx, uint(apiID))
 	if err != nil {
-		// Must not happen, as we had be able to start a Fuzzing...
+		// Must not happen, as we have been able to start a Fuzzing...
 		logging.Errorf("[Fuzzer] StopFuzzing(): can't retrieve API (%v)", apiID)
 		return &NotFoundError{msg: ""}
 	}
 
 	// Some checks...
 	if p.fuzzerClient == nil {
-		// Must not happen, as we had be able to start a Fuzzing...
+		// Must not happen, as we have been able to start a Fuzzing...
 		return &PluginError{"No deployment client running"}
 	}
 	if !api.InFuzzing {
