@@ -192,3 +192,10 @@ func IsGreaterSeverity(severity1 oapicommon.Severity, severity2 oapicommon.Sever
 	s2AsNumber := SeverityToNumber[string(severity2)]
 	return s1AsNumber > s2AsNumber
 }
+
+func IsDone(report *restapi.FuzzingStatusAndReport) bool {
+	if report == nil || report.Status == restapi.INPROGRESS {
+		return false
+	}
+	return true
+}

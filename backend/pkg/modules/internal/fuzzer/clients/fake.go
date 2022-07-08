@@ -64,18 +64,25 @@ const (
 type FakeClient struct {
 	testFileName string
 	remoteHost   string
+	quitPipe     chan bool
 }
 
 func (c *FakeClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem string, timeBudget string) error {
 	logging.Logf("[Fuzzer][FakeClient] TriggerFuzzingJob(%v, %v, %v, %v):: -->", apiID, endpoint, securityItem, timeBudget)
-	go FakeTriggerFuzzingJob(context.TODO(), c.testFileName, uint(apiID), c.remoteHost)
+	go FakeTriggerFuzzingJob(context.TODO(), c.quitPipe, c.testFileName, uint(apiID), c.remoteHost)
 	logging.Logf("[Fuzzer][FakeClient] TriggerFuzzingJob():: <--")
+	return nil
+}
+
+func (c *FakeClient) StopFuzzingJob(apiID int64) error {
+	// Just quit goroutine
+	c.quitPipe <- true
 	return nil
 }
 
 func SendReport(ctx context.Context, remoteHost string, apiID uint, body []byte) error {
 	url := fmt.Sprintf("%s/modules/fuzzer/updateStatus/%v", remoteHost, apiID)
-	logging.Logf("Sending report to url (%v)", url)
+	logging.Logf("[Fuzzer][FakeClient] Sending report to url (%v)", url)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
 	if err != nil {
 		return fmt.Errorf("can't create request with context (%v): %v", url, err)
@@ -91,7 +98,14 @@ func SendReport(ctx context.Context, remoteHost string, apiID uint, body []byte)
 	return nil
 }
 
-func FakeTriggerFuzzingJob(ctx context.Context, testFilename string, apiID uint, remoteHost string) {
+func flushChannel(pipe chan bool) {
+	for len(pipe) > 0 {
+		<-pipe
+	}
+}
+
+func FakeTriggerFuzzingJob(ctx context.Context, pipe chan bool, testFilename string, apiID uint, remoteHost string) {
+	flushChannel(pipe)
 	file, err := os.Open(testFilename)
 	if err == nil {
 		defer file.Close()
@@ -101,27 +115,38 @@ func FakeTriggerFuzzingJob(ctx context.Context, testFilename string, apiID uint,
 		buf := make([]byte, 0, MaxScannerCapacity)
 		scanner.Buffer(buf, MaxScannerCapacity)
 		for scanner.Scan() {
-			logging.Logf("[Fuzzer][FakeClient] inject data len=(%v)", len(scanner.Text()))
-			err = SendReport(ctx, remoteHost, apiID, scanner.Bytes()) // TODO handle error
-			if err != nil {
-				logging.Errorf("Failed to send report to (%v): %v", remoteHost, err)
+			select {
+			case <-pipe:
+				logging.Logf("[Fuzzer][FakeClient] Interrupt the test")
+				return
+			default:
+				logging.Logf("[Fuzzer][FakeClient] inject data len=(%v)", len(scanner.Text()))
+				err = SendReport(ctx, remoteHost, apiID, scanner.Bytes()) // TODO handle error
+				if err != nil {
+					logging.Errorf("Failed to send report to (%v): %v", remoteHost, err)
+				}
+				time.Sleep(500 * time.Millisecond)
 			}
-			time.Sleep(500 * time.Millisecond)
 		}
 
 		if err := scanner.Err(); err != nil {
 			logging.Errorf("can't read file (%v): %v", testFilename, err)
 		}
 	} else {
-		logging.Logf("[Fuzzer][FakeClient] err=(%v)", err)
-		logging.Logf("[Fuzzer][FakeClient] Use staticFakeData")
+		logging.Logf("[Fuzzer][FakeClient] *** No data file, use staticFakeData in place ***")
 		for _, item := range staticFakeData {
-			logging.Logf("[Fuzzer][FakeClient] inject (%v)", item)
-			err = SendReport(ctx, remoteHost, apiID, []byte(item)) // TODO handle error
-			if err != nil {
-				logging.Errorf("Failed to send report to (%v): %v", remoteHost, err)
+			select {
+			case <-pipe:
+				logging.Logf("[Fuzzer][FakeClient] Interrupt the test")
+				return
+			default:
+				logging.Logf("[Fuzzer][FakeClient] inject (%v)", item)
+				err = SendReport(ctx, remoteHost, apiID, []byte(item)) // TODO handle error
+				if err != nil {
+					logging.Errorf("Failed to send report to (%v): %v", remoteHost, err)
+				}
+				time.Sleep(500 * time.Millisecond)
 			}
-			time.Sleep(500 * time.Millisecond)
 		}
 	}
 }
@@ -131,6 +156,7 @@ func NewFakeClient(config *config.Config) (Client, error) {
 	p := &FakeClient{
 		testFileName: config.GetFakeFileName(),
 		remoteHost:   config.GetPlatformHost(),
+		quitPipe:     make(chan bool),
 	}
 	return p, nil
 }

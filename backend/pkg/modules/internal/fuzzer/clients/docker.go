@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -45,7 +46,7 @@ type DockerClient struct {
 }
 
 func (c *DockerClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem string, timeBudget string) error {
-	logging.Logf("[Fuzzer][DockerClient] TriggerFuzzingJob(%v, %v, %v, %v):: -->", apiID, endpoint, securityItem, timeBudget)
+	logging.Logf("[Fuzzer][DockerClient] TriggerFuzzingJob(%v, %v, %v, %v): -->", apiID, endpoint, securityItem, timeBudget)
 
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -71,16 +72,18 @@ func (c *DockerClient) TriggerFuzzingJob(apiID int64, endpoint string, securityI
 	logging.Logf("[Fuzzer][DockerClient] inputEnv=%v", inputEnv)
 
 	// Pull the docker image if needed
-	reader, err := cli.ImagePull(ctx, c.imageName, types.ImagePullOptions{})
-	if err != nil {
-		return fmt.Errorf("unable to pull docker Fuzzer image %v: %w", c.imageName, err)
+	if strings.Contains(c.imageName, "/") {
+		reader, err := cli.ImagePull(ctx, c.imageName, types.ImagePullOptions{})
+		if err != nil {
+			return fmt.Errorf("unable to pull docker Fuzzer image %v: %w", c.imageName, err)
+		}
+		_, err = io.Copy(os.Stdout, reader)
+		if err != nil {
+			// Not blocking I guess
+			logging.Errorf("[Fuzzer][DockerClient] can't get output of pull action (%v)", err)
+		}
+		logging.Logf("[Fuzzer][DockerClient] Image is pulled (%v)", c.imageName)
 	}
-	_, err = io.Copy(os.Stdout, reader)
-	if err != nil {
-		// Not blocking I guess
-		logging.Errorf("[Fuzzer][DockerClient] can't get output of pull action (%v)", err)
-	}
-	logging.Logf("[Fuzzer][DockerClient] Image is pulled (%v)", c.imageName)
 
 	// Create the container
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
@@ -113,7 +116,32 @@ func (c *DockerClient) TriggerFuzzingJob(apiID int64, endpoint string, securityI
 		}
 	}
 
-	logging.Logf("[Fuzzer][DockerClient] TriggerFuzzingJob():: <--")
+	logging.Logf("[Fuzzer][DockerClient] TriggerFuzzingJob(): <--")
+	return nil
+}
+
+func (c *DockerClient) StopFuzzingJob(apiID int64) error {
+	logging.Logf("[Fuzzer][DockerClient] StopFuzzingJob(%v): -->", apiID)
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return fmt.Errorf("unable to create new docker client: %w", err)
+	}
+	containerName := ContainerNameDefault // TODO must be unique. For demo only
+
+	if err := cli.ContainerStop(ctx, containerName, nil); err != nil {
+		logging.Logf("[Fuzzer][DockerClient] StopFuzzingJob(%v): can't stop container %s (already stopped?): %v", apiID, containerName, err)
+	}
+
+	removeOptions := types.ContainerRemoveOptions{
+		RemoveVolumes: true,
+		Force:         true,
+	}
+	if err := cli.ContainerRemove(ctx, containerName, removeOptions); err != nil {
+		// Just log this as warning, as it's not an error, specially if the container has "autoremove" flag
+		logging.Logf("[Fuzzer][DockerClient] StopFuzzingJob(%v): can't remove container (already removed?): %v", apiID, err)
+	}
+	logging.Logf("[Fuzzer][DockerClient] StopFuzzingJob(%v): <--", apiID)
 	return nil
 }
 

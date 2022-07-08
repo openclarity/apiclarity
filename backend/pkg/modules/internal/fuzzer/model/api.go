@@ -60,6 +60,7 @@ const (
 	ReportNameSCNFuzzerPrefix = "path:"
 	ReportNameRestlerPrefix   = "restler"
 	MinLocationTokensNumber   = 4
+	DefaultErrorMsg           = "An error occured during the test"
 )
 
 /*
@@ -114,8 +115,11 @@ func NewTest() *TestItem {
 }
 
 func ConvertRawFindingToAPIFinding(finding restapi.RawFindings) *common.APIFinding {
-	additionalInfo := map[string]interface{}{
-		"Description": finding.AdditionalInfo,
+	var additionalInfo *map[string]interface{} // = nil
+	if finding.AdditionalInfo != nil {
+		additionalInfo = &map[string]interface{}{
+			"Description": finding.AdditionalInfo,
+		}
 	}
 	result := common.APIFinding{
 		Type:           *finding.Type,
@@ -123,7 +127,7 @@ func ConvertRawFindingToAPIFinding(finding restapi.RawFindings) *common.APIFindi
 		Source:         *finding.Namespace,
 		Description:    *finding.Description,
 		Severity:       common.Severity(*finding.Request.Severity),
-		AdditionalInfo: &additionalInfo,
+		AdditionalInfo: additionalInfo,
 	}
 	return &result
 }
@@ -132,12 +136,65 @@ func ConvertRawFindingToAPIFinding(finding restapi.RawFindings) *common.APIFindi
 * API
  */
 
-func (api *API) GetLastStatus() *restapi.FuzzingStatusAndReport {
+func (api *API) GetLastReport() *restapi.FuzzingStatusAndReport {
 	if len(api.TestsList) > 0 {
 		index := len(api.TestsList) - 1
 		return api.TestsList[index].Test.Report
 	}
 	return nil
+}
+
+func (api *API) GetLastStatus() (restapi.FuzzingStatusEnum, error) {
+	if len(api.TestsList) > 0 {
+		index := len(api.TestsList) - 1
+		report := api.TestsList[index].Test.Report
+		if report == nil {
+			// Must not happen as we create a default empty report at test creation
+			return restapi.ERROR, fmt.Errorf("no report for last test for the api")
+		}
+		return report.Status, nil
+	}
+	return restapi.ERROR, fmt.Errorf("no test for the api")
+}
+
+func (api *API) SetErrorForLastStatus(msg string) error {
+	if len(api.TestsList) > 0 {
+		index := len(api.TestsList) - 1
+		lastTest := api.TestsList[index].Test
+		report := lastTest.Report
+		if report == nil {
+			// Must not happen as we create a default empty report at test creation
+			return fmt.Errorf("no report for last test for the api")
+		}
+		report.Status = restapi.ERROR
+		lastTest.ErrorMessage = &msg
+		return nil
+	}
+	return fmt.Errorf("no test for the api")
+}
+
+func (api *API) GetShortStatusOnError(msg string) (*restapi.ShortTestReport, error) {
+	// Retreive a ShortStatus, even if there is no valid report, with error status inside
+	// Use by default msg as error message. If empty, try to use lastTest.ErrorMessage is any
+	if len(api.TestsList) > 0 {
+		index := len(api.TestsList) - 1
+		lastTest := api.TestsList[index].Test
+
+		msgToSend := msg
+		if len(msg) == 0 && lastTest.ErrorMessage != nil && len(*lastTest.ErrorMessage) > 0 {
+			msgToSend = *lastTest.ErrorMessage
+		}
+
+		// Create the shortreport structure to fill
+		shortReport := restapi.ShortTestReport{
+			Starttime:     *lastTest.Starttime,
+			Status:        restapi.ERROR,
+			StatusMessage: &msgToSend,
+			Tags:          &[]restapi.FuzzingReportTag{},
+		}
+		return &shortReport, nil
+	}
+	return nil, fmt.Errorf("no existing tests for api(%v)", api.ID)
 }
 
 func (api *API) GetLastShortStatus() (*restapi.ShortTestReport, error) {
@@ -363,14 +420,13 @@ func updateRequestCountersForRestler(shortReport *restapi.ShortTestReport, repor
 	return nil
 }
 
-func (api *API) AddNewStatusReport(report restapi.FuzzingStatusAndReport) {
+func (api *API) AddNewStatusReport(report restapi.FuzzingStatusAndReport) error {
 	if !api.InFuzzing {
 		logging.Logf("[Fuzzer] AddNewStatusReport():: API id (%v) not in Fuzzing... did you triggered it from HTTP?", api.ID)
-		return
+		return fmt.Errorf("API not in fuzzing")
 	}
 
-	// Logf("[Fuzzer] AddNewStatusReport():: api.inFuzzing=%v", api.inFuzzing)
-	// Logf("[Fuzzer] AddNewStatusReport():: len(api.tests)=%v", len(api.tests))
+	logging.Debugf("[Fuzzer] AddNewStatusReport():: Status inFuzzing=(%v), nb of tests=(%v)", api.InFuzzing, len(api.TestsList))
 
 	// Add report contet on test data for the said API
 	if api.InFuzzing && len(api.TestsList) > 0 {
@@ -380,6 +436,11 @@ func (api *API) AddNewStatusReport(report restapi.FuzzingStatusAndReport) {
 		lastTest.Progress = &report.Progress
 		lastTest.Report = &report
 		lastTest.LastReportTime = &now
+
+		if report.Status == restapi.ERROR {
+			// Put a default message here. Must be updated when Fuzzer will be able to return a proper error message
+			*lastTest.ErrorMessage = DefaultErrorMsg
+		}
 
 		// Update main vulnerabilities for the test
 		total, critical, high, medium, low := 0, 0, 0, 0, 0
@@ -415,11 +476,10 @@ func (api *API) AddNewStatusReport(report restapi.FuzzingStatusAndReport) {
 			if *reportItem.Name == "restler" && *reportItem.Source == "RESTLER" {
 				for _, finding := range *reportItem.Findings {
 					tokens := strings.Split(*finding.AdditionalInfo, " ")
-					// logging.Logf("[Fuzzer] AddNewStatusReport():: #### AdditionalInfo=%v", *finding.AdditionalInfo)
 					if len(tokens) > 3 && strings.HasPrefix(tokens[2], "HTTP") {
+						logging.Debugf("[Fuzzer] AddNewStatusReport():: Adding new report item (%v %v)", tokens[0], tokens[1])
 						httpcode := tools.GetHTTPCodeFromFindingType(*finding.Type)
 						*reportItem.Paths = append(*reportItem.Paths, tools.NewFuzzingReportPath(httpcode, tokens[0], tokens[1]))
-						// logging.Logf("[Fuzzer] AddNewStatusReport():: #### ... add new path len(api.tests)=%v", (*reportItem.Paths)[len(*reportItem.Paths)-1])
 					}
 				}
 				// It exists only one ""
@@ -449,6 +509,7 @@ func (api *API) AddNewStatusReport(report restapi.FuzzingStatusAndReport) {
 			report.Report[key] = reportItem
 		}
 	}
+	return nil
 }
 
 func (api *API) AddErrorOnLastTest(fuzzerError error) {
@@ -467,11 +528,19 @@ func (api *API) AddErrorOnLastTest(fuzzerError error) {
 	}
 }
 
-func (api *API) GetTestContent(timestamp int64) *restapi.TestWithReport {
+func (api *API) GetTestByTimestamp(timestamp int64) *restapi.TestWithReport {
 	for _, testItem := range api.TestsList {
 		if *testItem.Test.Starttime == timestamp {
 			return testItem.Test
 		}
+	}
+	return nil
+}
+
+func (api *API) GetLastTest() *restapi.TestWithReport {
+	if len(api.TestsList) > 0 {
+		index := len(api.TestsList) - 1
+		return api.TestsList[index].Test
 	}
 	return nil
 }
