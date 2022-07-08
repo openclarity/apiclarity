@@ -116,9 +116,9 @@ func (a *APIAnnotationNoAlgField) ToFinding() utils.Finding {
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
-func (a *APIAnnotationNoAlgField) ToAPIFinding() oapicommon.APIFinding {
+func (a *APIAnnotationNoAlgField) ToAPIFinding(source string) oapicommon.APIFinding {
 	return oapicommon.APIFinding{
-		Source: utils.ModuleName,
+		Source: source,
 
 		Type:        a.Name(),
 		Name:        "JWT has no algorithm specified",
@@ -211,9 +211,9 @@ func (a *APIAnnotationAlgFieldNone) ToFinding() utils.Finding {
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
-func (a *APIAnnotationAlgFieldNone) ToAPIFinding() oapicommon.APIFinding {
+func (a *APIAnnotationAlgFieldNone) ToAPIFinding(source string) oapicommon.APIFinding {
 	return oapicommon.APIFinding{
-		Source: utils.ModuleName,
+		Source: source,
 
 		Type:        a.Name(),
 		Name:        "'alg' field set to None",
@@ -314,7 +314,7 @@ func (a *APIAnnotationNotRecommendedAlg) ToFinding() utils.Finding {
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
-func (a *APIAnnotationNotRecommendedAlg) ToAPIFinding() oapicommon.APIFinding {
+func (a *APIAnnotationNotRecommendedAlg) ToAPIFinding(source string) oapicommon.APIFinding {
 	var additionalInfo *map[string]interface{}
 	description := "Signing algorithms that are not recommended were used"
 	if len(a.NotRecommendedAlgs) > 0 {
@@ -328,7 +328,7 @@ func (a *APIAnnotationNotRecommendedAlg) ToAPIFinding() oapicommon.APIFinding {
 		description = fmt.Sprintf("Signing algorithms (%s) are not recommended", strings.Join(not_recommended, ","))
 	}
 	return oapicommon.APIFinding{
-		Source: utils.ModuleName,
+		Source: source,
 
 		Type:        a.Name(),
 		Name:        "Not a recommanded JWT signing algorithm",
@@ -421,9 +421,9 @@ func (a *APIAnnotationNoExpireClaim) ToFinding() utils.Finding {
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
-func (a *APIAnnotationNoExpireClaim) ToAPIFinding() oapicommon.APIFinding {
+func (a *APIAnnotationNoExpireClaim) ToAPIFinding(source string) oapicommon.APIFinding {
 	return oapicommon.APIFinding{
-		Source: utils.ModuleName,
+		Source: source,
 
 		Type:        a.Name(),
 		Name:        "JWT does not have any expire claims",
@@ -541,12 +541,12 @@ func (a *APIAnnotationExpTooFar) ToFinding() utils.Finding {
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
-func (a *APIAnnotationExpTooFar) ToAPIFinding() oapicommon.APIFinding {
+func (a *APIAnnotationExpTooFar) ToAPIFinding(source string) oapicommon.APIFinding {
 	additionalInfo := &map[string]interface{}{
 		"expire_in_example": a.ExpireInExample.Seconds(),
 	}
 	return oapicommon.APIFinding{
-		Source: utils.ModuleName,
+		Source: source,
 
 		Type:        a.Name(),
 		Name:        "JWT does not have any expire claims",
@@ -658,9 +658,9 @@ func (a *APIAnnotationWeakSymetricSecret) ToFinding() utils.Finding {
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
-func (a *APIAnnotationWeakSymetricSecret) ToAPIFinding() oapicommon.APIFinding {
+func (a *APIAnnotationWeakSymetricSecret) ToAPIFinding(source string) oapicommon.APIFinding {
 	return oapicommon.APIFinding{
-		Source: utils.ModuleName,
+		Source: source,
 
 		Type:        a.Name(),
 		Name:        "JWT signed with a weak key",
@@ -771,9 +771,9 @@ func (a *APIAnnotationSensitiveContent) ToFinding() utils.Finding {
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
-func (a *APIAnnotationSensitiveContent) ToAPIFinding() oapicommon.APIFinding {
+func (a *APIAnnotationSensitiveContent) ToAPIFinding(source string) oapicommon.APIFinding {
 	return oapicommon.APIFinding{
-		Source: utils.ModuleName,
+		Source: source,
 
 		Type:        a.Name(),
 		Name:        "JWT claims or headers may contains sensitive content",

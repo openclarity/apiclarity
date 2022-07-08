@@ -47,14 +47,21 @@ type bfla struct {
 	k8s          k8straceannotator.K8sClient
 
 	accessor core.BackendAccessor
+	info     *core.ModuleInfo
 }
 
-func (p *bfla) Name() string              { return bfladetector.ModuleName }
+func (p *bfla) Info() core.ModuleInfo {
+	return *p.info
+}
 func (p *bfla) HTTPHandler() http.Handler { return p.httpHandler }
 
-func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Module, err error) {
+func newModule(ctx context.Context, modName string, accessor core.BackendAccessor) (_ core.Module, err error) {
 	p := &bfla{
 		accessor: accessor,
+		info: &core.ModuleInfo{
+			Name:        modName,
+			Description: bfladetector.ModuleDescription,
+		},
 	}
 	if accessor.K8SClient() == nil {
 		return nil, fmt.Errorf("ignoring bfla module due to missing kubernetes client")
@@ -65,9 +72,9 @@ func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Modul
 		return nil, fmt.Errorf("failed to init bfla module: %w", err)
 	}
 
-	sp := recovery.NewStatePersister(ctx, accessor, bfladetector.ModuleName, persistenceInterval)
-	ctrlNotifier := bfladetector.NewControllerNotifier(accessor)
-	p.bflaDetector = bfladetector.NewBFLADetector(ctx, accessor, eventAlerter{accessor}, ctrlNotifier, sp, controllerResyncInterval)
+	sp := recovery.NewStatePersister(ctx, accessor, modName, persistenceInterval)
+	ctrlNotifier := bfladetector.NewBFLANotifier(modName, accessor)
+	p.bflaDetector = bfladetector.NewBFLADetector(ctx, modName, accessor, eventAlerter{accessor}, ctrlNotifier, sp, controllerResyncInterval)
 
 	handler := &httpHandler{
 		bflaDetector:    p.bflaDetector,
@@ -75,7 +82,7 @@ func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Modul
 		accessor:        accessor,
 		openAPIProvider: bfladetector.NewBFLAOpenAPIProvider(accessor),
 	}
-	p.httpHandler = restapi.HandlerWithOptions(handler, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + bfladetector.ModuleName})
+	p.httpHandler = restapi.HandlerWithOptions(handler, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + modName})
 	return p, nil
 }
 
@@ -109,7 +116,7 @@ func (p *bfla) EventNotify(ctx context.Context, event *core.Event) {
 func (p *bfla) eventNotify(ctx context.Context, event *core.Event) (err error) {
 	log.Debugf("[BFLA] received a new event for API(%v) Event(%v) ", event.APIEvent.APIInfoID, event.APIEvent.ID)
 	cmpTrace := &bfladetector.CompositeTrace{Event: event}
-	if cmpTrace.K8SDestination, cmpTrace.K8SSource, cmpTrace.DetectedUser, err = getBFLAAnnotations(ctx, p.accessor, event.APIEvent.ID); err != nil {
+	if cmpTrace.K8SDestination, cmpTrace.K8SSource, cmpTrace.DetectedUser, err = getBFLAAnnotations(ctx, p.info.Name, p.accessor, event.APIEvent.ID); err != nil {
 		log.Errorf("unable to get bfla annotations: %s", err)
 	}
 	if err := p.addK8sDestination(ctx, cmpTrace, event.Telemetry, event.APIEvent.ID); err != nil {
@@ -147,7 +154,7 @@ func (p *bfla) addDetectedUser(ctx context.Context, cmpTrace *bfladetector.Compo
 	if annDest.Annotation, err = json.Marshal(cmpTrace.DetectedUser); err != nil {
 		return fmt.Errorf("unable to marshal user: %w", err)
 	}
-	if err := p.accessor.CreateAPIEventAnnotations(ctx, bfladetector.ModuleName, eventID, annDest); err != nil {
+	if err := p.accessor.CreateAPIEventAnnotations(ctx, p.info.Name, eventID, annDest); err != nil {
 		return fmt.Errorf("failed to create event annotation: %w", err)
 	}
 	return nil
@@ -177,7 +184,7 @@ func (p *bfla) addK8sSource(ctx context.Context, cmpTrace *bfladetector.Composit
 	if annSrc.Annotation, err = json.Marshal(cmpTrace.K8SSource); err != nil {
 		return fmt.Errorf("unable to marshal src: %w", err)
 	}
-	if err := p.accessor.CreateAPIEventAnnotations(ctx, bfladetector.ModuleName, eventID, annSrc); err != nil {
+	if err := p.accessor.CreateAPIEventAnnotations(ctx, p.info.Name, eventID, annSrc); err != nil {
 		return fmt.Errorf("failure creating src event annotation: %w", err)
 	}
 	return nil
@@ -199,14 +206,14 @@ func (p *bfla) addK8sDestination(ctx context.Context, cmpTrace *bfladetector.Com
 	if annDest.Annotation, err = json.Marshal(cmpTrace.K8SDestination); err != nil {
 		return fmt.Errorf("unable to marshal k8s dest: %w", err)
 	}
-	if err := p.accessor.CreateAPIEventAnnotations(ctx, bfladetector.ModuleName, eventID, annDest); err != nil {
+	if err := p.accessor.CreateAPIEventAnnotations(ctx, p.info.Name, eventID, annDest); err != nil {
 		return fmt.Errorf("failure creating dest event annotation: %w", err)
 	}
 	return nil
 }
 
-func getBFLAAnnotations(ctx context.Context, accessor core.BackendAccessor, eventID uint) (dest, src *k8straceannotator.K8sObjectRef, user *bfladetector.DetectedUser, err error) {
-	anns, err := accessor.ListAPIEventAnnotations(ctx, bfladetector.ModuleName, eventID)
+func getBFLAAnnotations(ctx context.Context, modName string, accessor core.BackendAccessor, eventID uint) (dest, src *k8straceannotator.K8sObjectRef, user *bfladetector.DetectedUser, err error) {
+	anns, err := accessor.ListAPIEventAnnotations(ctx, modName, eventID)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("unable to get annotations for event=%d; %v", eventID, err)
 	}
@@ -248,6 +255,7 @@ type httpHandler struct {
 	bflaDetector    bfladetector.BFLADetector
 	openAPIProvider bfladetector.OpenAPIProvider
 	accessor        core.BackendAccessor
+	modName         string
 }
 
 func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID int) {
@@ -263,7 +271,7 @@ func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID in
 	}
 	event := events[0]
 
-	dest, src, user, err := getBFLAAnnotations(r.Context(), h.accessor, uint(eventID))
+	dest, src, user, err := getBFLAAnnotations(r.Context(), h.modName, h.accessor, uint(eventID))
 	if err != nil {
 		httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
 		return
@@ -515,7 +523,7 @@ func (h httpHandler) PutAuthorizationModelApiIDLearningStart(w http.ResponseWrit
 			}
 		}
 		log.Infof("start learning applied successfully on api=%d", apiID)
-		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Reqested start learning operation on api event"})
+		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Requested start learning operation on api event"})
 	}
 }
 
@@ -534,8 +542,34 @@ func (h httpHandler) PutAuthorizationModelApiIDLearningStop(w http.ResponseWrite
 			return
 		}
 		log.Infof("stop learning applied successfully on api=%d", apiID)
-		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Reqested stop learning operation on api event"})
+		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Requested stop learning operation on api event"})
 	}
+}
+
+func (h httpHandler) PutAuthorizationModelApiIDDetectionStart(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
+	// TODO: only start if there is an auth model
+	err := h.accessor.EnableTraces(r.Context(), h.modName, uint(apiID))
+	if err != nil {
+		log.Error(err)
+		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
+		return
+	}
+
+	log.Infof("Tracing succesfully started for api=%d", apiID)
+	httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Trace analysis succesfully started for api %d", apiID)})
+
+}
+
+func (h httpHandler) PutAuthorizationModelApiIDDetectionStop(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
+	err := h.accessor.DisableTraces(r.Context(), h.modName, uint(apiID))
+	if err != nil {
+		log.Error(err)
+		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
+		return
+	}
+
+	log.Infof("Tracing succesfully stopped for api=%d", apiID)
+	httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Trace analysis stopped for api %d", apiID)})
 }
 
 // nolint:stylecheck,revive
@@ -552,7 +586,7 @@ func (h httpHandler) PutEventIdOperation(w http.ResponseWriter, r *http.Request,
 	}
 	apiEvent := events[0]
 
-	_, src, user, err := getBFLAAnnotations(r.Context(), h.accessor, uint(eventID))
+	_, src, user, err := getBFLAAnnotations(r.Context(), h.modName, h.accessor, uint(eventID))
 	if err != nil {
 		log.Error(err)
 		httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{

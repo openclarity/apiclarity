@@ -87,6 +87,56 @@ paths:
       responses:
         '204':
           description: Successful deletion
+  
+  /{apiID}/start:
+     post:
+      operationId: StartTraceAnalysis
+      summary: Start Trace Analysis for an API
+      description: Start Trace Analysis for an API. 
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse' 
+        default:
+          description: 'Error response'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+
+  /{apiID}/stop:
+     post:
+      operationId: StopTraceAnalysis
+      summary: Stop Trace Analysis for an API
+      description: Stop Trace Analysis for an API. 
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse' 
+        default:
+          description: 'Error response'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
 
 components:
   schemas:

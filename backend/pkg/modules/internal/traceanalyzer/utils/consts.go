@@ -16,5 +16,5 @@
 package utils
 
 const (
-	ModuleName = "TraceAnalyzer"
+	ModuleDescription = "Inspects request and responses to detect insecure practices"
 )
