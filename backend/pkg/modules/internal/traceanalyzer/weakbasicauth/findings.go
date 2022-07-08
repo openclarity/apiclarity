@@ -112,9 +112,9 @@ func (a *APIAnnotationShortPassword) ToFinding() utils.Finding {
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
-func (a *APIAnnotationShortPassword) ToAPIFinding(source string) oapicommon.APIFinding {
+func (a *APIAnnotationShortPassword) ToAPIFinding() oapicommon.APIFinding {
 	return oapicommon.APIFinding{
-		Source: source,
+		Source: utils.ModuleName,
 
 		Type:        a.Name(),
 		Name:        "Too short Basic Auth password",
@@ -205,9 +205,9 @@ func (a *APIAnnotationKnownPassword) ToFinding() utils.Finding {
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
-func (a *APIAnnotationKnownPassword) ToAPIFinding(source string) oapicommon.APIFinding {
+func (a *APIAnnotationKnownPassword) ToAPIFinding() oapicommon.APIFinding {
 	return oapicommon.APIFinding{
-		Source: source,
+		Source: utils.ModuleName,
 
 		Type:        a.Name(),
 		Name:        "Weak Basic Auth password (found in dictionary)",
@@ -306,9 +306,9 @@ func (a *APIAnnotationSamePassword) ToFinding() utils.Finding {
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
-func (a *APIAnnotationSamePassword) ToAPIFinding(source string) oapicommon.APIFinding {
+func (a *APIAnnotationSamePassword) ToAPIFinding() oapicommon.APIFinding {
 	return oapicommon.APIFinding{
-		Source: source,
+		Source: utils.ModuleName,
 
 		Type:        a.Name(),
 		Name:        "Same Basic Auth credentials used for another service",

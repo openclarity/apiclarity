@@ -120,7 +120,7 @@ func (a *APIAnnotationRegexpMatching) ToFinding() utils.Finding {
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
-func (a *APIAnnotationRegexpMatching) ToAPIFinding(source string) oapicommon.APIFinding {
+func (a *APIAnnotationRegexpMatching) ToAPIFinding() oapicommon.APIFinding {
 	var additionalInfo *map[string]interface{}
 	if len(a.MatchingRules) > 0 {
 		matchingRules := []string{}
@@ -132,7 +132,7 @@ func (a *APIAnnotationRegexpMatching) ToAPIFinding(source string) oapicommon.API
 		}
 	}
 	return oapicommon.APIFinding{
-		Source: source,
+		Source: utils.ModuleName,
 
 		Type:        a.Name(),
 		Name:        "Matching regular expression",
