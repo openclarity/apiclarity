@@ -31,6 +31,7 @@ import (
 	"github.com/openclarity/apiclarity/api3/notifications"
 	"github.com/openclarity/apiclarity/backend/pkg/config"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/common"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/guessableid"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/nlid"
@@ -545,7 +546,7 @@ func (h httpHandler) GetEventAnnotations(w http.ResponseWriter, r *http.Request,
 	dbAnns, err := h.ta.accessor.ListAPIEventAnnotations(r.Context(), utils.ModuleName, uint(eventID))
 	if err != nil {
 		log.Error(err)
-		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: "Internal error, could not read data from database"})
+		common.HttpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: "Internal error, could not read data from database"})
 		return
 	}
 	annList := []restapi.Annotation{}
@@ -569,7 +570,7 @@ func (h httpHandler) GetEventAnnotations(w http.ResponseWriter, r *http.Request,
 		Total: len(annList),
 	}
 
-	httpResponse(w, http.StatusOK, result)
+	common.HttpResponse(w, http.StatusOK, result)
 }
 
 func (h httpHandler) GetApiFindings(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.GetApiFindingsParams) { //nolint:revive,stylecheck
@@ -578,7 +579,7 @@ func (h httpHandler) GetApiFindings(w http.ResponseWriter, r *http.Request, apiI
 	apiFindings, err := h.ta.getAPIFindings(r.Context(), uint(apiID), sensitive)
 	if err != nil {
 		log.Error(err)
-		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: "Internal error, could not read data from database"})
+		common.HttpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: "Internal error, could not read data from database"})
 		return
 	}
 
@@ -589,42 +590,32 @@ func (h httpHandler) GetApiFindings(w http.ResponseWriter, r *http.Request, apiI
 	apiFindingsObject := oapicommon.APIFindings{
 		Items: &apiFindings,
 	}
-	httpResponse(w, http.StatusOK, apiFindingsObject)
+	common.HttpResponse(w, http.StatusOK, apiFindingsObject)
 }
 
 func (h httpHandler) StartTraceAnalysis(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
 	err := h.ta.accessor.EnableTraces(r.Context(), utils.ModuleName, uint(apiID))
 	if err != nil {
 		log.Error(err)
-		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
+		common.HttpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
 		return
 	}
 
 	log.Infof("Tracing successfully started for api=%d", apiID)
-	httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Trace analysis successfully started for api %d", apiID)})
+	common.HttpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Trace analysis successfully started for api %d", apiID)})
 }
 
 func (h httpHandler) StopTraceAnalysis(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
 	err := h.ta.accessor.DisableTraces(r.Context(), utils.ModuleName, uint(apiID))
 	if err != nil {
 		log.Error(err)
-		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
+		common.HttpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
 		return
 	}
 
 	log.Infof("Tracing successfully stopped for api=%d", apiID)
-	httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Trace analysis stopped for api %d", apiID)})
-}
 
-func httpResponse(w http.ResponseWriter, code int, v interface{}) {
-	w.WriteHeader(code)
-	if v != nil {
-		if err := json.NewEncoder(w).Encode(v); err != nil {
-			log.Error(err)
-			http.Error(w, err.Error(), code)
-			return
-		}
-	}
+	common.HttpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Trace analysis stopped for api %d", apiID)})
 }
 
 //nolint:revive,stylecheck // Api is not uppercased because it's defined as is in the specification
@@ -634,12 +625,12 @@ func (h httpHandler) ResetApiFindings(w http.ResponseWriter, r *http.Request, ap
 	err := h.ta.accessor.DeleteAllAPIInfoAnnotations(r.Context(), utils.ModuleName, uint(apiID))
 	if err != nil {
 		log.Error(err)
-		httpResponse(w, http.StatusInternalServerError, oapicommon.ApiResponse{Message: "Internal error, could not delete data from database"})
+		common.HttpResponse(w, http.StatusInternalServerError, oapicommon.ApiResponse{Message: "Internal error, could not delete data from database"})
 		return
 	}
 
 	log.Infof("API Findings successfully reset for api=%d", apiID)
-	httpResponse(w, http.StatusNoContent, nil)
+	common.HttpResponse(w, http.StatusNoContent, nil)
 }
 
 //nolint:gochecknoinits

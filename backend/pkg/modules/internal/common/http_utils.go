@@ -15,4 +15,3 @@ func HttpResponse(w http.ResponseWriter, code int, v interface{}) {
 		return
 	}
 }
-

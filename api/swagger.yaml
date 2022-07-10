@@ -345,7 +345,7 @@ definitions:
       - ALERT_INFO
       - ALERT_WARN
       - ALERT_CRITICAL
-  
+
   ModuleAlert:
     type: 'object'
     properties:

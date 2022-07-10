@@ -53,7 +53,6 @@ func init() {
 func newDiffer(ctx context.Context, accessor core.BackendAccessor) (core.Module, error) {
 	// Use default values
 	d := &differ{
-		httpHandler:     restapi.HandlerWithOptions(&httpHandler{}, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + moduleName}),
 		accessor:        accessor,
 		config:          config.GetConfig(),
 		apiIDToDiffs:    make(map[uint]map[diffHash]global.Diff),
@@ -63,8 +62,10 @@ func newDiffer(ctx context.Context, accessor core.BackendAccessor) (core.Module,
 			Description: "Calculate diffs base on events and send diffs notifications",
 		},
 	}
+	h := restapi.HandlerWithOptions(&httpHandler{differ: d}, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + moduleName})
+	d.httpHandler = h
 
-	// TODO this should under the start method of API handler
+	// TODO this should under the start method of API handler?
 	go d.StartDiffsSender(ctx)
 
 	return d, nil

@@ -223,6 +223,8 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 
 	log.Debugf("Handling telemetry: %+v", trace)
 
+	// TODO: Selective tracing for spec diffs and spec reconstruction
+
 	// get host name first from headers if not exist
 	if trace.Request.Host == "" {
 		headers := convertHeadersToMap(trace.Request.Common.Headers)

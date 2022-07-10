@@ -1899,48 +1899,54 @@ paths:
       summary: Get the version of this Module
       tags:
       - local-bfla
-  /modules/differ/start:
-    get:
-      description: Start this Module
-      operationId: differstart
-      responses:
-        "201":
-          content:
-            application/json:
-              schema:
-                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
-          description: Success
-      summary: Start this Module
-      tags:
-      - local-differ
-  /modules/differ/stop:
-    get:
-      description: Stop this Module
-      operationId: differstop
-      responses:
-        "201":
-          content:
-            application/json:
-              schema:
-                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
-          description: Success
-      summary: Stop this Module
-      tags:
-      - local-differ
-  /modules/differ/version:
-    get:
-      description: Get the version of this Module
-      operationId: differgetVersion
+  /modules/differ/{apiID}/start:
+    post:
+      description: Start Differ for an API.
+      operationId: differStartDiffer
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: ../common/openapi.yaml#/components/schemas/ModuleVersion
-          description: Version of the Module
-      summary: Get the version of this Module
-      tags:
-      - local-differ
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      summary: Start Differ for an API
+  /modules/differ/{apiID}/stop:
+    post:
+      description: Stop Differ for an API.
+      operationId: differStopDiffer
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      summary: Stop Differ for an API
   /modules/fuzzer/annotatedspec/{apiID}:
     get:
       description: Retreive the annotated spec for an API if any, 404 Not Found otherwise

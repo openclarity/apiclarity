@@ -4,48 +4,56 @@ info:
   version: 0.0.1
   description: APIClarity Module API
 paths:
-  /version:
-    get:
-      operationId: getVersion
-      summary: Get the version of this Module
-      description: Get the version of this Module
-      tags:
-      - local-differ
+  /{apiID}/start:
+    post:
+      operationId: StartDiffer
+      summary: Start Differ for an API
+      description: Start Differ for an API.
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
       responses:
         '200':
-          description: Version of the Module
-          content:
-            application/json:
-              schema:
-                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ModuleVersion'
-  /start:
-    get:
-      operationId: start
-      summary: Start this Module
-      description: Start this Module
-      tags:
-        - local-differ
-      responses:
-        '201':
           description: 'Success'
           content:
             'application/json':
               schema:
                 $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
-  /stop:
-    get:
-      operationId: stop
-      summary: Stop this Module
-      description: Stop this Module
-      tags:
-        - local-differ
+        default:
+          description: 'Error response'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+
+  /{apiID}/stop:
+    post:
+      operationId: StopDiffer
+      summary: Stop Differ for an API
+      description: Stop Differ for an API.
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
       responses:
-        '201':
+        '200':
           description: 'Success'
           content:
             'application/json':
               schema:
                 $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+        default:
+          description: 'Error response'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+
 components:
   schemas:
     Diff:

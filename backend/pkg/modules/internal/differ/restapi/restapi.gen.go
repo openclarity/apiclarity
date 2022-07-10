@@ -13,6 +13,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/deepmap/oapi-codegen/pkg/runtime"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/chi/v5"
 	externalRef0 "github.com/openclarity/apiclarity/api3/common"
@@ -29,37 +30,39 @@ type Diff struct {
 	DiffType externalRef0.DiffType `json:"diffType"`
 
 	// Timestamp of the time that the diff was last seen
-	LastSeen int64 `json:"lastSeen"`
+	LastSeen int64                    `json:"lastSeen"`
+	Method   *externalRef0.HttpMethod `json:"method,omitempty"`
 
 	// New spec json string
 	NewSpec string `json:"newSpec"`
 
 	// Old spec json string
 	OldSpec string `json:"oldSpec"`
+
+	// Path of the diff element
+	Path     *string                `json:"path,omitempty"`
+	SpecType *externalRef0.SpecType `json:"specType,omitempty"`
 }
 
 // SpecDiffs defines model for SpecDiffs.
 type SpecDiffs struct {
-	Diffs []APIDiffs `json:"diffs"`
+	Diffs APIDiffs `json:"diffs"`
 }
 
 // SpecDiffsNotification defines model for SpecDiffsNotification.
 type SpecDiffsNotification struct {
-	Diffs            []APIDiffs `json:"diffs"`
-	NotificationType string     `json:"notificationType"`
+	Diffs            APIDiffs `json:"diffs"`
+	NotificationType string   `json:"notificationType"`
 }
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// Start this Module
-	// (GET /start)
-	Start(w http.ResponseWriter, r *http.Request)
-	// Stop this Module
-	// (GET /stop)
-	Stop(w http.ResponseWriter, r *http.Request)
-	// Get the version of this Module
-	// (GET /version)
-	GetVersion(w http.ResponseWriter, r *http.Request)
+	// Start Differ for an API
+	// (POST /{apiID}/start)
+	StartDiffer(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
+	// Stop Differ for an API
+	// (POST /{apiID}/stop)
+	StopDiffer(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -71,12 +74,23 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(http.Handler) http.Handler
 
-// Start operation middleware
-func (siw *ServerInterfaceWrapper) Start(w http.ResponseWriter, r *http.Request) {
+// StartDiffer operation middleware
+func (siw *ServerInterfaceWrapper) StartDiffer(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.Start(w, r)
+		siw.Handler.StartDiffer(w, r, apiID)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -86,27 +100,23 @@ func (siw *ServerInterfaceWrapper) Start(w http.ResponseWriter, r *http.Request)
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// Stop operation middleware
-func (siw *ServerInterfaceWrapper) Stop(w http.ResponseWriter, r *http.Request) {
+// StopDiffer operation middleware
+func (siw *ServerInterfaceWrapper) StopDiffer(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.Stop(w, r)
-	})
+	var err error
 
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
 	}
 
-	handler.ServeHTTP(w, r.WithContext(ctx))
-}
-
-// GetVersion operation middleware
-func (siw *ServerInterfaceWrapper) GetVersion(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetVersion(w, r)
+		siw.Handler.StopDiffer(w, r, apiID)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -230,13 +240,10 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/start", wrapper.Start)
+		r.Post(options.BaseURL+"/{apiID}/start", wrapper.StartDiffer)
 	})
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/stop", wrapper.Stop)
-	})
-	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/version", wrapper.GetVersion)
+		r.Post(options.BaseURL+"/{apiID}/stop", wrapper.StopDiffer)
 	})
 
 	return r
@@ -245,16 +252,17 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/9RUW2sbPRD9K2K+73G76zSlD/vmNhAMbRKakJeQB1U7ayusLpXGNcbsfy/S3nxbuwVD",
-	"KRgsodGZc86c1QaEUdZo1OQh34AXC1Q8LqcPsxtZlnFtnbHoSGLccStnujRh+b/DEnJI02zvx628zoRR",
-	"yujMWNTcynTNVfVfNjTM2m7ZtAWsEyi6lpJQ+a0WRy8GguEWrS1CDtw5voa6TsDhj6V0WED+0tPtwF/7",
-	"evP9DQUFgAh0IDTUP8XSSym96RDrBCru6RFRx07ohZOWpNGQw5NU6Ikry0zJaIGMpEJGC05xF2ixFfcs",
-	"IDAfIBIojVOcIAep6eMHSIAkVUHkl64ookAvXmrCObrAROPq0aI4JHKHK+YtCvbmjWaenNTzAaHd1wmY",
-	"qjgOcF8VvwGwN7DemGSYwNBjoHtskOFgJLZ/Fq0+/ufiNR6qnsudIVlKwRtTNsCr6r6E/OVSqfrEPe70",
-	"qJPT4gaX6tc6CJLt97w7venD7HPFnaQ1+2qKZYVs+jDbitbWeUBDBwn8ROeb25N0kl7FdDT8IYfrdJJe",
-	"QwKW0yJOIPPEHYXVHOmQwGM4ZbSQviUAEc1FlbOiq4AwEW+N9s2k30+uwp8wmlBT82TZqjUnC1Ec3rqL",
-	"vmLfWhYQTd3TshQCvY/58UuluFuPKCQ+9/E7MIJX74rG2ddwL/Nk7Am3jD1jlrH/tFcH+k5Y1QdxxK1b",
-	"bF7Ttq55ase9u0V6bhEPHJz8BQcbmh2lIx4+b+vCTtauo2c9GPO3rn8FAAD//zef9Pg6CAAA",
+	"H4sIAAAAAAAC/+xVT2sbPxD9KmJ+v+Oy6zalh725daGGJjF1biEHdXc2Vlj96WjcYIy+e5G8fxzbMTn4",
+	"UGjB4BUavfdm9Ga0hcpqZw0a9lBuwVcr1DJ9ThfzmWqa9O3IOiRWmFbSqblpbPz8n7CBEvK8OPhJp66K",
+	"ymptTWEdGulUvpG6/a8YCYuOrZh2gCGDuqdUjNrvUZw8GAXGU7xxCCVIIrmBEDIg/LlWhDWU94PcHvxh",
+	"iLc/nrDiCJCAjhKN8Xcp9FKZznrEkEErPS8RTWJCX5FyrKyBEu6URs9SO2EbwSsUrDQKXklOqyhLPEsv",
+	"IoLwESKDxpKWDCUowx8/QAasuI1JfuuDEgoMySvD+IgUlWjkla0vl+VXZne9wwwZGHxeOqyO07zBZ+Ed",
+	"VuLJWyM8kzKPo75uHTKwbX0a4Lat3wTgJK+OTy8kr/oCp5JiixoNn0KILJd1wrJHPLTrYIts9N9Yg7Gc",
+	"p2wcN15p2qGxzvXT0POHol7vnIHyxrJqVCV31d2CbNvbBsr7SxXsk/T4giNk55MZixEeQkxIdUPrpQ2m",
+	"i/nnVpLijbi29bpFMV3M9/pnbz+iIUEGv5D87vQkn+Tvkkl3+qGEq3ySX8HOdanixTaOoFkoPEvidDXW",
+	"87GSZdzuSERjSUgTteSQ0CllPa/7wEGMkyQ1MpJP1VYRKjk+AyN1mouRHvZvlGmNWTftLzvHZxDCQ6Ty",
+	"zhq/8977yST+VdZw7K/0hLi2u8ciNu/49lxUzfdOBaT7P6j2uqrQ+/ToYCPXLf95Gr8QWRI0RmTg11pL",
+	"2rxulxS1ZznrzjnOurcZzrp/fvvr/XbKLBEm/A4AAP//EhazK0cKAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

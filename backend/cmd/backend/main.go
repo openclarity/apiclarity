@@ -49,7 +49,6 @@ func main() {
 	viper.SetDefault(config.HostToTraceSecretNamespace, os.Getenv("POD_NAMESPACE"))
 	viper.SetDefault(config.HostToTraceSecretOwnerName, "apiclarity")
 	viper.SetDefault(config.BackendRestPort, "8080")
-	viper.SetDefault(config.DiffsSendIntervalMin, "5")
 	viper.SetDefault(config.StateBackupIntervalSec, "30")
 	viper.SetDefault(config.DatabaseCleanerIntervalSec, "30")
 	viper.SetDefault(config.StateBackupFileName, "state.gob")
