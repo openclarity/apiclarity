@@ -29,6 +29,7 @@ type diffHash [32]byte
 
 const (
 	moduleName         = "differ"
+	moduleInfo         = "Calculate spec diffs base on events and send diffs notifications"
 	diffsSendThreshold = 500
 )
 
@@ -40,7 +41,7 @@ type differ struct {
 	config          *config.Config
 
 	accessor core.BackendAccessor
-	info     *core.ModuleInfo
+	info     core.ModuleInfo
 	sync.RWMutex
 }
 
@@ -57,9 +58,9 @@ func newDiffer(ctx context.Context, accessor core.BackendAccessor) (core.Module,
 		config:          config.GetConfig(),
 		apiIDToDiffs:    make(map[uint]map[diffHash]global.Diff),
 		totalDiffEvents: 0,
-		info: &core.ModuleInfo{
+		info: core.ModuleInfo{
 			Name:        moduleName,
-			Description: "Calculate diffs base on events and send diffs notifications",
+			Description: moduleInfo,
 		},
 	}
 	h := restapi.HandlerWithOptions(&httpHandler{differ: d}, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + moduleName})
@@ -76,7 +77,7 @@ func (p *differ) Name() string {
 }
 
 func (p *differ) Info() core.ModuleInfo {
-	return *p.info
+	return p.info
 }
 
 func (p *differ) EventNotify(ctx context.Context, event *core.Event) {
