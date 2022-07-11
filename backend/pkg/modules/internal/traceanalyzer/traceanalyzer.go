@@ -623,6 +623,10 @@ func (h httpHandler) GetApiFindings(w http.ResponseWriter, r *http.Request, apiI
 		return
 	}
 
+	if len(apiFindings) == 0 {
+		apiFindings = make([]oapicommon.APIFinding, 0)
+	}
+
 	apiFindingsObject := oapicommon.APIFindings{
 		Items: &apiFindings,
 	}
@@ -660,6 +664,21 @@ func httpResponse(w http.ResponseWriter, code int, v interface{}) {
 		http.Error(w, err.Error(), code)
 		return
 	}
+}
+
+func (h httpHandler) ResetApiFindings(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
+	h.ta.aggregator.ResetAPIFindings(uint64(apiID))
+
+	err := h.ta.accessor.DeleteAllAPIInfoAnnotations(r.Context(), utils.ModuleName, uint(apiID))
+	if err != nil {
+		err := oapicommon.ApiResponse{Message: "Internal error, could not delete data from database"}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(err)
+		return
+
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 //nolint:gochecknoinits

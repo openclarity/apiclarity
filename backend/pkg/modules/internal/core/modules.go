@@ -77,6 +77,7 @@ type BackendAccessor interface {
 	ListAPIInfoAnnotations(ctx context.Context, modName string, apiID uint) ([]*Annotation, error)
 	StoreAPIInfoAnnotations(ctx context.Context, modName string, apiID uint, annotations ...Annotation) error
 	DeleteAPIInfoAnnotations(ctx context.Context, modName string, apiID uint, name ...string) error
+	DeleteAllAPIInfoAnnotations(ctx context.Context, modName string, apiID uint) error
 
 	EnableTraces(ctx context.Context, modName string, apiID uint) error
 	DisableTraces(ctx context.Context, modName string, apiID uint) error
@@ -207,6 +208,13 @@ func (b *accessor) StoreAPIInfoAnnotations(ctx context.Context, modName string, 
 
 func (b *accessor) DeleteAPIInfoAnnotations(ctx context.Context, modName string, apiID uint, name ...string) error {
 	if err := b.dbHandler.APIInfoAnnotationsTable().Delete(ctx, modName, apiID, name...); err != nil {
+		return fmt.Errorf("unable to delete the apiinfo annotation: %w", err)
+	}
+	return nil
+}
+
+func (b *accessor) DeleteAllAPIInfoAnnotations(ctx context.Context, modName string, apiID uint) error {
+	if err := b.dbHandler.APIInfoAnnotationsTable().DeleteAll(ctx, modName, apiID); err != nil {
 		return fmt.Errorf("unable to delete the apiinfo annotation: %w", err)
 	}
 	return nil
