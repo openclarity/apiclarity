@@ -50,8 +50,6 @@ const (
 	notificationWorkers      = 10
 )
 
-//go:generate $GOPATH/bin/mockgen -destination=./mock_modules.go -package=core github.com/openclarity/apiclarity/backend/pkg/modules/internal/core Module,BackendAccessor
-
 // Module each APIClarity module needs to implement this interface.
 type Module interface {
 	Info() ModuleInfo
