@@ -17,6 +17,7 @@ package bfladetector
 
 import (
 	"fmt"
+
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 
 	"github.com/ghodss/yaml"

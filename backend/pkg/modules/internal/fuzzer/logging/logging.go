@@ -28,9 +28,11 @@ var fuzzerLogger = logrus.New()
 func Debugf(f string, args ...interface{}) {
 	fuzzerLogger.Debugf(f, args...)
 }
+
 func Logf(f string, args ...interface{}) {
 	fuzzerLogger.Infof(f, args...)
 }
+
 func Warningf(f string, args ...interface{}) {
 	fuzzerLogger.Warningf(f, args...)
 }

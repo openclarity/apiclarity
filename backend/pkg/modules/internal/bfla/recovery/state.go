@@ -87,11 +87,6 @@ type stateValue struct {
 	val          interface{}
 }
 
-type stateKey struct {
-	modName string
-	apiID   uint
-}
-
 type Errors []error
 
 func (errs Errors) Error() string {

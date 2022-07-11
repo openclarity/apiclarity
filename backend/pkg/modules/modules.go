@@ -27,7 +27,7 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 
 	// Enables the demo module.
-	// _ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/demo"
+	// _ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/demo" .
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer"
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer"
 	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
@@ -35,7 +35,7 @@ import (
 
 type (
 	ModuleInfo          = core.ModuleInfo
-	ModulesManager      = core.Module
+	ModulesManager      = core.Module //nolint:revive
 	MockModule          = core.MockModule
 	Annotation          = core.Annotation
 	BackendAccessor     = core.BackendAccessor

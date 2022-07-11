@@ -60,7 +60,7 @@ const (
 	ReportNameSCNFuzzerPrefix = "path:"
 	ReportNameRestlerPrefix   = "restler"
 	MinLocationTokensNumber   = 4
-	DefaultErrorMsg           = "An error occured during the test"
+	DefaultErrorMsg           = "An error occurred during the test"
 )
 
 /*
@@ -174,7 +174,7 @@ func (api *API) SetErrorForLastStatus(msg string) error {
 }
 
 func (api *API) GetShortStatusOnError(msg string) (*restapi.ShortTestReport, error) {
-	// Retreive a ShortStatus, even if there is no valid report, with error status inside
+	// Retrieve a ShortStatus, even if there is no valid report, with error status inside
 	// Use by default msg as error message. If empty, try to use lastTest.ErrorMessage is any
 	if len(api.TestsList) > 0 {
 		index := len(api.TestsList) - 1

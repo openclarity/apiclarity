@@ -241,7 +241,6 @@ func (b *accessor) EnableTraces(ctx context.Context, modName string, apiID uint)
 		},
 	)
 	return nil
-
 }
 
 func (b *accessor) DisableTraces(ctx context.Context, modName string, apiID uint) error {
