@@ -73,8 +73,6 @@ func sameAnns(got []utils.TraceAnalyzerAnnotation, expected []utils.TraceAnalyze
 	return true
 }
 
-
-
 func TestBasicAuth(t *testing.T) {
 	testcases := []struct {
 		headers []*models.Header

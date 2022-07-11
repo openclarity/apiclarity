@@ -342,6 +342,41 @@ components:
             $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
       description: unknown error
   schemas:
+    APIClarityFeature:
+      description: Description of APIClarity feature and the list of API hosts (in
+        the form 'host:port') the feature requires to get trace for
+      properties:
+        featureDescription:
+          description: Short human readable description of the feature
+          type: string
+        featureName:
+          $ref: '#/components/schemas/APIClarityFeatureEnum'
+        hostsToTrace:
+          items:
+            type: string
+          type: array
+      required:
+      - featureName
+      type: object
+    APIClarityFeatureEnum:
+      description: APIClarity Feature Name
+      enum:
+      - bfla
+      - differ
+      - fuzzer
+      - specdiffs
+      - specreconstructor
+      - traceanalyzer
+      type: string
+    APIClarityFeatureList:
+      description: List of APIClarity features and for each feature the list of API
+        hosts (in the form 'host:port') the feature requires to get trace for
+      properties:
+        features:
+          items:
+            $ref: '#/components/schemas/APIClarityFeature'
+          type: array
+      type: object
     APIDiffs:
       properties:
         apiInfo:
@@ -468,12 +503,15 @@ components:
           type: string
         path:
           type: string
-        tag:
-          type: string
+        tags:
+          items:
+            type: string
+          type: array
       required:
       - path
       - method
       - audience
+      - tags
       type: object
     AuthorizationScheme:
       discriminator:
@@ -1405,6 +1443,17 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       summary: Get most used APIs
+  /features:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIClarityFeatureList'
+          description: Success
+      summary: Get the list of APIClarity features and for each feature the list of
+        API hosts (in the form 'host:port') the feature requires to get trace for
   /modules/bfla/apiFindings/{apiID}:
     get:
       description: Asks for findings of an APIClarity module, and API. Implemented
@@ -1557,6 +1606,52 @@ paths:
           description: Error response
       tags:
       - local-bfla
+  /modules/bfla/authorizationModel/{apiID}/detection/start:
+    put:
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      tags:
+      - bfla
+  /modules/bfla/authorizationModel/{apiID}/detection/stop:
+    put:
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      tags:
+      - bfla
   /modules/bfla/authorizationModel/{apiID}/learning/reset:
     put:
       parameters:
@@ -1853,6 +1948,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/TestHandle'
           description: Successful Response
+        "400":
+          content:
+            application/json:
+              schema:
+                description: error message
+                type: string
+          description: Status Bad Request
         "404":
           content:
             application/json:
@@ -1883,6 +1985,13 @@ paths:
       responses:
         "204":
           description: Successful Response
+        "400":
+          content:
+            application/json:
+              schema:
+                description: error message
+                type: string
+          description: Status Bad Request
         "404":
           content:
             application/json:
@@ -1900,41 +2009,6 @@ paths:
       summary: Stop (cancel) a running test for an API
       tags:
       - fuzzer
-  /modules/fuzzer/rawfindings/{apiID}:
-    get:
-      description: Receive list of findings for an API
-      operationId: fuzzerGetRawfindings
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RawFindingsBundle'
-          description: Raw Finding Bundle
-      summary: Retreive list of findings for an API
-      tags:
-      - local-fuzzer
-    parameters:
-    - in: path
-      name: apiID
-      required: true
-      schema:
-        $ref: ../common/openapi.yaml#/components/schemas/ApiID
-    post:
-      description: Receive list of raw findings for an API
-      operationId: fuzzerPostRawfindings
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RawFindingsBundle'
-        required: true
-      responses:
-        "204":
-          description: Successful Response
-      summary: Receive list of raw findings for an API
-      tags:
-      - local-fuzzer
   /modules/fuzzer/report/{apiID}/{timestamp}:
     get:
       description: Retreive a report for an API identified by its timestamp
@@ -2042,44 +2116,54 @@ paths:
                 $ref: '#/components/schemas/Version'
           description: Version of the Module
       summary: Get the version of this Module
-  /modules/traceanalyzer/apiAnnotations/{apiID}:
-    delete:
-      description: Get Trace Analyzer Annotations for a specific API
-      operationId: traceanalyzerDeleteAPIAnnotations
+  /modules/traceanalyzer/{apiID}/start:
+    post:
+      description: Start Trace Analysis for an API.
+      operationId: traceanalyzerStartTraceAnalysis
       parameters:
       - in: path
         name: apiID
         required: true
         schema:
           $ref: ../common/openapi.yaml#/components/schemas/ApiID
-      - description: name of the annotation
-        in: query
-        name: name
-        required: true
-        schema:
-          type: string
-      responses:
-        "204":
-          description: Successful deletion
-      summary: Delete Annotations for an API
-    get:
-      description: Get Trace Analyzer Annotations for a specific API
-      operationId: traceanalyzerGetAPIAnnotations
-      parameters:
-      - in: path
-        name: apiID
-        required: true
-        schema:
-          $ref: ../common/openapi.yaml#/components/schemas/ApiID
-      - $ref: '#/components/parameters/redacted'
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Annotations'
-          description: Annotation
-      summary: Get Annotations for an API
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      summary: Start Trace Analysis for an API
+  /modules/traceanalyzer/{apiID}/stop:
+    post:
+      description: Stop Trace Analysis for an API.
+      operationId: traceanalyzerStopTraceAnalysis
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      summary: Stop Trace Analysis for an API
   /modules/traceanalyzer/apiFindings/{apiID}:
     get:
       description: Asks for findings of an APIClarity module, and API. Implemented
@@ -2106,6 +2190,25 @@ paths:
                 $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
           description: Error response
       summary: Get findings for an API and module
+  /modules/traceanalyzer/apiFindings/{apiID}/reset:
+    post:
+      operationId: traceanalyzerResetApiFindings
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "204":
+          description: Reset
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      summary: Delete all API findings for an API
   /modules/traceanalyzer/eventAnnotations/{eventID}:
     get:
       description: Get Trace Analyzer Annotations for a specific event

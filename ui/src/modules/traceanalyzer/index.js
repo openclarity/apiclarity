@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { isEmpty } from 'lodash';
+import React, { useEffect } from 'react';
 import { MODULE_TYPES } from '../MODULE_TYPES.js';
 
 import { useFetch, FETCH_METHODS, usePrevious } from 'hooks';
@@ -13,7 +12,7 @@ import './traceAnalyzer.scss';
 
 const TraceAnalyzerEventDetails = props => {
     const {eventId} = props;
-    const [{loading, data}] = useFetch(`modules/TraceAnalyzer/eventAnnotations/${eventId}`);
+    const [{loading, data}] = useFetch(`modules/traceanalyzer/eventAnnotations/${eventId}`);
 
     if (loading) {
         return <Loader />;
@@ -61,13 +60,12 @@ const TraceDetails = ({trace}) => (
 
 const TraceAnalyzerAPIDetails = props => {
     const {inventoryId} = props;
-    const annsUrl = `modules/TraceAnalyzer/apiAnnotations/${inventoryId}`;
+    const annsUrl = `modules/traceanalyzer/apiFindings/${inventoryId}`;
     const [{data}, fetchData] = useFetch(annsUrl);
-    const [selectedRowIds, setSelectedRowIds] = useState([]);
 
     const columns = [
-        { Header: 'Finding',     id: "name",       accessor: "name" },
-        { Header: 'Description', id: "annotation", accessor: "annotation" },
+        { Header: 'Finding',     id: "name",        accessor: "name" },
+        { Header: 'Description', id: "description", accessor: "description" },
         {
             Header: 'Severity',
             Cell: ({row}) => {
@@ -85,16 +83,15 @@ const TraceAnalyzerAPIDetails = props => {
         }
     }, [previousDeleting, deleting, fetchData]);
 
-    const deleteAPIAnnotations = () => deleteFinding({
-        //formatUrl: url => `${url}/${resetUrlSuffix}`,
-        queryParams: { 'name': data.items[selectedRowIds[0]].kind },
-        method: FETCH_METHODS.DELETE
+    const resetAPIFindings = () => deleteFinding({
+        formatUrl: url => `${url}/reset`,
+        method: FETCH_METHODS.POST
     });
 
     return (
         <div className="trace-analysis-wrapper">
             <div className="review-actions-wrapper">
-                <Button onClick={() => deleteAPIAnnotations()} disabled={isEmpty(selectedRowIds)}>Forget Finding(s)</Button>
+                <Button onClick={() => resetAPIFindings()}>Reset Findings</Button>
                 <DownloadJsonButton title="Download finding's JSON" fileName="findings-data" data={data} />
             </div>
             <Table
@@ -102,8 +99,6 @@ const TraceAnalyzerAPIDetails = props => {
                 columns={columns}
                 withPagination={false}
                 data={data}
-                withMultiSelect={true}
-                onRowSelect={setSelectedRowIds}
             />
         </div>
     )
@@ -111,7 +106,7 @@ const TraceAnalyzerAPIDetails = props => {
 
 const pluginEventDetails = {
     name: 'Trace Analysis',
-    moduleName: 'TraceAnalyzer',
+    moduleName: 'traceanalyzer',
     component: TraceAnalyzerEventDetails,
     endpoint: '/traceanalysis',
     type: MODULE_TYPES.EVENT_DETAILS
@@ -119,7 +114,7 @@ const pluginEventDetails = {
 
 const pluginAPIDetails = {
     name: 'Trace Analysis',
-    moduleName: 'TraceAnalyzer',
+    moduleName: 'traceanalyzer',
     component: TraceAnalyzerAPIDetails,
     endpoint: '/traceanalysis',
     type: MODULE_TYPES.INVENTORY_DETAILS

@@ -49,7 +49,7 @@ func findJWTToken(trace *models.Telemetry) (*jwt.Token, []utils.TraceAnalyzerAnn
 		return nil, anns
 	}
 
- 	hValue := trace.Request.Common.Headers[index].Value
+	hValue := trace.Request.Common.Headers[index].Value
 	splitValue := strings.Split(hValue, " ")
 	if len(splitValue) == 2 && splitValue[0] == BearerAuth {
 		// We found a Bearer Token !

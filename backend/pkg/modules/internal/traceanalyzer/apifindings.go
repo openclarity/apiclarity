@@ -21,8 +21,9 @@ import (
 )
 
 type findingKey struct {
-	path string
-	name string
+	path   string
+	method string
+	name   string
 }
 
 type apiFindings struct {
@@ -64,6 +65,10 @@ func (r *APIsFindingsRepo) GetAPIFindings(apiID uint64) (apiFindings []utils.Tra
 	return
 }
 
+func (r *APIsFindingsRepo) ResetAPIFindings(apiID uint64) {
+	delete(r.apis, apiID)
+}
+
 func (r *APIsFindingsRepo) aggregate(apiID uint64, path, method string, ann utils.TraceAnalyzerAnnotation) (updated bool) {
 	// Check if we already have an entry for this apiID
 	findings, found := r.apis[apiID]
@@ -75,7 +80,7 @@ func (r *APIsFindingsRepo) aggregate(apiID uint64, path, method string, ann util
 	}
 
 	// Check if we already have an entry for this (path, annotation name) pair
-	key := findingKey{path, ann.Name()}
+	key := findingKey{path, method, ann.Name()}
 	apiAnn, found := findings.paths[key]
 	if !found {
 		apiAnn = ann.NewAPIAnnotation(path, method)

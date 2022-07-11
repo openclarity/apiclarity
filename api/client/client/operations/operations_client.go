@@ -6,6 +6,8 @@ package operations
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"fmt"
+
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 )
@@ -61,6 +63,8 @@ type ClientService interface {
 	GetDashboardAPIUsageLatestDiffs(params *GetDashboardAPIUsageLatestDiffsParams, opts ...ClientOption) (*GetDashboardAPIUsageLatestDiffsOK, error)
 
 	GetDashboardAPIUsageMostUsed(params *GetDashboardAPIUsageMostUsedParams, opts ...ClientOption) (*GetDashboardAPIUsageMostUsedOK, error)
+
+	GetFeatures(params *GetFeaturesParams, opts ...ClientOption) (*GetFeaturesOK, error)
 
 	PostAPIInventory(params *PostAPIInventoryParams, opts ...ClientOption) (*PostAPIInventoryOK, error)
 
@@ -698,6 +702,44 @@ func (a *Client) GetDashboardAPIUsageMostUsed(params *GetDashboardAPIUsageMostUs
 	// unexpected success response
 	unexpectedSuccess := result.(*GetDashboardAPIUsageMostUsedDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  GetFeatures gets the list of API clarity features and for each feature the list of API hosts in the form host port the feature requires to get trace for
+*/
+func (a *Client) GetFeatures(params *GetFeaturesParams, opts ...ClientOption) (*GetFeaturesOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetFeaturesParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "GetFeatures",
+		Method:             "GET",
+		PathPattern:        "/features",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetFeaturesReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetFeaturesOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetFeatures: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
