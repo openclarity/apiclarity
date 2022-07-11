@@ -572,47 +572,6 @@ func (h httpHandler) GetEventAnnotations(w http.ResponseWriter, r *http.Request,
 	httpResponse(w, http.StatusOK, result)
 }
 
-func (h httpHandler) GetAPIAnnotations(w http.ResponseWriter, r *http.Request, apiID int64, params restapi.GetAPIAnnotationsParams) {
-	dbAnns, err := h.ta.accessor.ListAPIInfoAnnotations(r.Context(), utils.ModuleName, uint(apiID))
-	if err != nil {
-		log.Error(err)
-		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: "Internal error, could not read data from database"})
-		return
-	}
-	annList := []restapi.Annotation{}
-
-	taAnns := fromCoreAPIAnnotations(dbAnns)
-	for _, a := range taAnns {
-		if params.Redacted != nil && *params.Redacted {
-			a = a.Redacted()
-		}
-		f := a.ToFinding()
-		annList = append(annList, restapi.Annotation{
-			Annotation: f.DetailedDesc,
-			Name:       f.ShortDesc,
-			Severity:   f.Severity,
-			Kind:       a.Name(),
-		})
-	}
-	result := restapi.Annotations{
-		Items: &annList,
-		Total: len(annList),
-	}
-
-	httpResponse(w, http.StatusOK, result)
-}
-
-func (h httpHandler) DeleteAPIAnnotations(w http.ResponseWriter, r *http.Request, apiID int64, params restapi.DeleteAPIAnnotationsParams) {
-	err := h.ta.accessor.DeleteAPIInfoAnnotations(r.Context(), utils.ModuleName, uint(apiID), params.Name)
-	if err != nil {
-		log.Error(err)
-		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: "Internal error, could not read data from database"})
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
-
 func (h httpHandler) GetApiFindings(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.GetApiFindingsParams) { //nolint:revive,stylecheck
 	// If sensitive parameter is not set, default to false (ie: do not include sensitive data)
 	sensitive := params.Sensitive != nil && *params.Sensitive
