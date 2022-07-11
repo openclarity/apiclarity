@@ -16,12 +16,39 @@
 package nlid
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
 	pluginmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
 )
+
+func sameAnn(got utils.TraceAnalyzerAnnotation, expected utils.TraceAnalyzerAnnotation) bool {
+	wanted := expected.(*AnnotationNLID) //nolint:forcetypeassert
+	observed := got.(*AnnotationNLID) //nolint:forcetypeassert
+
+	if wanted.SpecLocation != observed.SpecLocation {
+		return false
+	}
+
+	if len(wanted.Params) != len(observed.Params) {
+		return false
+	}
+
+	for _, wp := range wanted.Params {
+		found := false
+		for _, op := range observed.Params {
+			if wp.Name == op.Name && wp.Value == op.Value {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	return true
+}
 
 func sameAnns(got []utils.TraceAnalyzerAnnotation, expected []utils.TraceAnalyzerAnnotation) bool {
 	if len(got) != len(expected) {
@@ -30,7 +57,7 @@ func sameAnns(got []utils.TraceAnalyzerAnnotation, expected []utils.TraceAnalyze
 	for _, eo := range expected { // For each wanted observation
 		found := false
 		for _, o := range got { // Check if it's in the result
-			if reflect.DeepEqual(o, eo) {
+			if sameAnn(o, eo) {
 				found = true
 				break
 			}
