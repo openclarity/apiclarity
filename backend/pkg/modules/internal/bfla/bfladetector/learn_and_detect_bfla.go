@@ -49,32 +49,26 @@ const (
 
 type BFLAStateEnum uint
 
-/*
-digraph G {
-
-Start->Learning [label=startLearning, color=green]
-Learning->Learnt [label=stopLearning, color=red]
-Learning->Detecting[label=startDetection]
-Learning->Start[label=reset, color=red]
-Learnt->Start [label=reset]
-Learnt->Detecting [label=startDetection, color=green]
-Learnt->Learning [label=startLearning, color=green]
-Detecting->Learnt [label=stopDetection, color=red]
-Detecting->Start [label=reset, color=red]
-Detecting->Learning [label=startLearning]
-Learnt->Learnt[label=updateModel]
-Detecting->Detecting[label=updateModel]
-
-a  [label="red=disable traces \n green=enable traces\nblack=don't touch tracing", shape="box"]
-}
-
-*/
 const (
 	BFLAStart BFLAStateEnum = iota
 	BFLALearning
 	BFLALearnt
 	BFLADetecting
 )
+
+func (s BFLAStateEnum) String() string {
+	switch s {
+	case BFLAStart:
+		return "START"
+	case BFLALearning:
+		return "LEARNING"
+	case BFLALearnt:
+		return "LEARNT"
+	case BFLADetecting:
+		return "DETECTING"
+	}
+	return "unknown"
+}
 
 type BFLAState struct {
 	state        BFLAStateEnum
@@ -304,23 +298,18 @@ func runtimeRecover() {
 	}
 }
 
-func (l *learnAndDetectBFLA) checkBFLAState(apiID uint, allowedStates []BFLAStateEnum) (BFLAState, recovery.PersistedValue, error) {
+func (l *learnAndDetectBFLA) checkBFLAState(apiID uint, allowedStates ...BFLAStateEnum) (BFLAState, recovery.PersistedValue, error) {
 	stateValue, err := l.bflaStateMap.Get(apiID)
 	if err != nil {
 		return BFLAState{}, nil, fmt.Errorf("unable to get state traces counter: %w", err)
 	}
 	state := stateValue.Get().(BFLAState)
-	match := false
 	for _, s := range allowedStates {
 		if state.state == s {
-			match = true
-			break
+			return state, stateValue, nil
 		}
 	}
-	if !match {
-		return state, stateValue, fmt.Errorf("state %v does not allow for the requested operation", state.state)
-	}
-	return state, stateValue, nil
+	return state, stateValue, fmt.Errorf("state %v does not allow for the requested operation", state.state)
 }
 
 func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command) (err error) {
@@ -335,7 +324,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if err != nil {
 			return fmt.Errorf("unable to parse spec info: %w", err)
 		}
-		_, _, err = l.checkBFLAState(cmd.apiID, []BFLAStateEnum{BFLALearnt, BFLADetecting})
+		_, _, err = l.checkBFLAState(cmd.apiID, BFLALearnt, BFLADetecting)
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Mark Legitimate': %w", err)
 		}
@@ -351,7 +340,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if err != nil {
 			return fmt.Errorf("unable to parse spec info: %w", err)
 		}
-		_, _, err = l.checkBFLAState(cmd.apiID, []BFLAStateEnum{BFLALearnt, BFLADetecting})
+		_, _, err = l.checkBFLAState(cmd.apiID, BFLALearnt, BFLADetecting)
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Mark Illegitimate': %w", err)
 		}
@@ -359,7 +348,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		l.logError(l.notify(ctx, cmd.apiID))
 
 	case *StopLearningCommand:
-		state, stateValue, err := l.checkBFLAState(cmd.apiID, []BFLAStateEnum{BFLALearning})
+		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLALearning)
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Stop Learning': %w", err)
 		}
@@ -373,7 +362,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		l.logError(l.notify(ctx, cmd.apiID))
 
 	case *StartLearningCommand:
-		state, stateValue, err := l.checkBFLAState(cmd.apiID, []BFLAStateEnum{BFLAStart, BFLALearnt, BFLADetecting})
+		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLAStart, BFLALearnt, BFLADetecting)
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Start Learning': %w", err)
 		}
@@ -390,7 +379,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		// TODO: Check if state is "start" and the (reconstructed or provided) spec is available
 
 	case *ResetLearningCommand:
-		state, stateValue, err := l.checkBFLAState(cmd.apiID, []BFLAStateEnum{BFLALearning, BFLALearnt, BFLADetecting})
+		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLALearning, BFLALearnt, BFLADetecting)
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Reset Learning': %w", err)
 		}
@@ -412,7 +401,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		l.logError(l.notify(ctx, cmd.apiID))
 
 	case *StartDetectionCommand:
-		state, stateValue, err := l.checkBFLAState(cmd.apiID, []BFLAStateEnum{BFLALearning, BFLALearnt})
+		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLALearning, BFLALearnt)
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Start Detection': %w", err)
 		}
@@ -426,7 +415,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		stateValue.Set(state)
 
 	case *StopDetectionCommand:
-		state, stateValue, err := l.checkBFLAState(cmd.apiID, []BFLAStateEnum{BFLADetecting})
+		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLADetecting)
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Stop Detection': %w", err)
 		}
@@ -434,7 +423,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		stateValue.Set(state)
 
 	case *ProvideAuthzModelCommand:
-		_, _, err = l.checkBFLAState(cmd.apiID, []BFLAStateEnum{BFLALearnt, BFLADetecting})
+		_, _, err = l.checkBFLAState(cmd.apiID, BFLALearnt, BFLADetecting)
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Provide Authz Model': %w", err)
 		}
@@ -518,7 +507,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		return fmt.Errorf("spec not present cannot learn BFLA; apiID=%d", trace.APIEvent.APIInfoID)
 	}
 
-	state, stateValue, err := l.checkBFLAState(apiID, []BFLAStateEnum{BFLALearning, BFLADetecting})
+	state, stateValue, err := l.checkBFLAState(apiID, BFLALearning, BFLADetecting)
 
 	if err != nil {
 		return fmt.Errorf("unable to handle traces in the current state: %w", err)
@@ -536,15 +525,16 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			return nil
 		}
 		state.traceCounter--
+
 		if state.traceCounter == 0 {
+			state.state = BFLALearnt
 			err = l.bflaBackendAccessor.DisableTraces(ctx, l.modName, apiID)
 			if err != nil {
-				return fmt.Errorf("Cannot disable traces: %w", err)
+				err = fmt.Errorf("cannot disable traces: %w", err)
 			}
-			state.state = BFLALearnt
-			stateValue.Set(state)
 		}
-		return nil
+		stateValue.Set(state)
+		return err
 	}
 
 	/* We are in detecting state */
@@ -695,7 +685,7 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, pa
 func (l *learnAndDetectBFLA) IsLearning(apiID uint) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	_, _, err := l.checkBFLAState(apiID, []BFLAStateEnum{BFLALearning})
+	_, _, err := l.checkBFLAState(apiID, BFLALearning)
 	return err == nil
 }
 
