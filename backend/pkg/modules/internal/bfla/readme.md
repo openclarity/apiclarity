@@ -10,7 +10,7 @@ The process consists of two phases
  2. Detection phase
 
 ## Learning
-The learning phase begins as soon as a user uploads or reconstructs a spec for a given API.
+The learning phase begins upon user request or it can be configured to start as soon as a user uploads or reconstructs a spec for a given API.
 By default, the learning lasts for 100 API calls (for an API), the learning can be stopped, reset or prolonged for a longer period.
 
 ![img.png](../../assets/bfla/images/img_1.png)
@@ -18,7 +18,7 @@ By default, the learning lasts for 100 API calls (for an API), the learning can 
 **(Orders) -> POST /v1/checkout -> (Payment)**: This call is registered during the learning phase.
 
 ## Detection
-Once the learning phase has ended, the detection phase begins. 
+Once the learning phase has ended, the user can ask to start the detection phase.
 During the detection phase, all the API calls that do not comply with the authorization model will be marked as warnings.
 If the call was rejected by the API the warning will have a lower severity, however if the API accepted the unexpected call and returned a 2xx status code it will have a higher severity (check fig1 and fig2).
 
@@ -52,3 +52,9 @@ Supported protocols:
 1. Basic auth: The principal ID is the username from the `base64(username:password)` formula.
 2. JWT: The principal ID is the Subject claim in the body.
 3. X-Customer-ID header: The Principal ID is given by the Kong gateway when using authorization plugins.
+
+## BFLA State Machine  
+The following diagram depicts the BFLA State Machine. 
+![img.png](../../assets/bfla/images/BFLA_FSM.png)
+
+For reference we also include the .dot state machine definition: [BFLA_FSM.dot](../../assets/bfla/BFLA_FSM.dot)
