@@ -2164,44 +2164,6 @@ paths:
                 $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
           description: Error response
       summary: Stop Trace Analysis for an API
-  /modules/traceanalyzer/apiAnnotations/{apiID}:
-    delete:
-      description: Get Trace Analyzer Annotations for a specific API
-      operationId: traceanalyzerDeleteAPIAnnotations
-      parameters:
-      - in: path
-        name: apiID
-        required: true
-        schema:
-          $ref: ../common/openapi.yaml#/components/schemas/ApiID
-      - description: name of the annotation
-        in: query
-        name: name
-        required: true
-        schema:
-          type: string
-      responses:
-        "204":
-          description: Successful deletion
-      summary: Delete Annotations for an API
-    get:
-      description: Get Trace Analyzer Annotations for a specific API
-      operationId: traceanalyzerGetAPIAnnotations
-      parameters:
-      - in: path
-        name: apiID
-        required: true
-        schema:
-          $ref: ../common/openapi.yaml#/components/schemas/ApiID
-      - $ref: '#/components/parameters/redacted'
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Annotations'
-          description: Annotation
-      summary: Get Annotations for an API
   /modules/traceanalyzer/apiFindings/{apiID}:
     get:
       description: Asks for findings of an APIClarity module, and API. Implemented

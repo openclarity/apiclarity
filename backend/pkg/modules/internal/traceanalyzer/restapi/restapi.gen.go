@@ -38,17 +38,6 @@ type Annotations struct {
 // Redacted defines model for redacted.
 type Redacted = bool
 
-// DeleteAPIAnnotationsParams defines parameters for DeleteAPIAnnotations.
-type DeleteAPIAnnotationsParams struct {
-	// name of the annotation
-	Name string `form:"name" json:"name"`
-}
-
-// GetAPIAnnotationsParams defines parameters for GetAPIAnnotations.
-type GetAPIAnnotationsParams struct {
-	Redacted *Redacted `form:"redacted,omitempty" json:"redacted,omitempty"`
-}
-
 // GetApiFindingsParams defines parameters for GetApiFindings.
 type GetApiFindingsParams struct {
 	// Should findings include sensitive data ?
@@ -62,12 +51,6 @@ type GetEventAnnotationsParams struct {
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// Delete Annotations for an API
-	// (DELETE /apiAnnotations/{apiID})
-	DeleteAPIAnnotations(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params DeleteAPIAnnotationsParams)
-	// Get Annotations for an API
-	// (GET /apiAnnotations/{apiID})
-	GetAPIAnnotations(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params GetAPIAnnotationsParams)
 	// Get findings for an API and module
 	// (GET /apiFindings/{apiID})
 	GetApiFindings(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params GetApiFindingsParams)
@@ -93,89 +76,6 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
-
-// DeleteAPIAnnotations operation middleware
-func (siw *ServerInterfaceWrapper) DeleteAPIAnnotations(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var err error
-
-	// ------------- Path parameter "apiID" -------------
-	var apiID externalRef0.ApiID
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
-		return
-	}
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params DeleteAPIAnnotationsParams
-
-	// ------------- Required query parameter "name" -------------
-	if paramValue := r.URL.Query().Get("name"); paramValue != "" {
-
-	} else {
-		siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "name"})
-		return
-	}
-
-	err = runtime.BindQueryParameter("form", true, true, "name", r.URL.Query(), &params.Name)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "name", Err: err})
-		return
-	}
-
-	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.DeleteAPIAnnotations(w, r, apiID, params)
-	})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r.WithContext(ctx))
-}
-
-// GetAPIAnnotations operation middleware
-func (siw *ServerInterfaceWrapper) GetAPIAnnotations(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var err error
-
-	// ------------- Path parameter "apiID" -------------
-	var apiID externalRef0.ApiID
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
-		return
-	}
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params GetAPIAnnotationsParams
-
-	// ------------- Optional query parameter "redacted" -------------
-	if paramValue := r.URL.Query().Get("redacted"); paramValue != "" {
-
-	}
-
-	err = runtime.BindQueryParameter("form", true, false, "redacted", r.URL.Query(), &params.Redacted)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "redacted", Err: err})
-		return
-	}
-
-	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetAPIAnnotations(w, r, apiID, params)
-	})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r.WithContext(ctx))
-}
 
 // GetApiFindings operation middleware
 func (siw *ServerInterfaceWrapper) GetApiFindings(w http.ResponseWriter, r *http.Request) {
@@ -449,12 +349,6 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
-		r.Delete(options.BaseURL+"/apiAnnotations/{apiID}", wrapper.DeleteAPIAnnotations)
-	})
-	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/apiAnnotations/{apiID}", wrapper.GetAPIAnnotations)
-	})
-	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/apiFindings/{apiID}", wrapper.GetApiFindings)
 	})
 	r.Group(func(r chi.Router) {
@@ -476,21 +370,19 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+xWSW/bPBD9K8R831GQ3CbowTe3SQMfChhJbkEOjDSymVAkQ1IG1ED/vSBFW2u2boiL",
-	"AAZsa0azvfeGfIBUFkoKFNbA/AEU1bRAi9r/05jR1GLmfjMBc7gvUVcQgaAFwry1R2DSDRbUOWaY05Jb",
-	"mOeUG4zAVsr53kjJkQqo63rn7XMshJCWWiaFz6+lQm0Zehvt2UIgYzUTa6gjuGMimzQ05U0YDG5RM1tN",
-	"GOsINN6XTLt2r4BluzajbhmdECH/9b5DeXOLqXVp2p7MuClmsej/+F9jDnP4L2mxSMKEks546n0mqjWt",
-	"/H9pKW+GblLNVDMquHSPCW5RWNIWb0gqS2FhH4YJi2vUo96bqOPGnB8TuRwnXKyWXzh1YyGXmqZIFoLy",
-	"6jtq8k1mJUeyWC1dXmY5vsAdItiiNk3sWTyLP7hmpUJBFYM5HMWz+AgiUNRu/AQTqlhn6MkDVWx5UjeF",
-	"crQ4LvkM7TB5JwLJpSaUGIUpy1ka6ncwevsygzmc+MiL1bILd9ST0FXQjSu0lY0vDrozt7rEroYCI+I4",
-	"GXyoYkeOJoUUSZhHXNGCT3PH56nraNi7q4PInNgNkh65p0QeRPB4sUMhXTtno6QwDeE/zo7H478o0xSN",
-	"yUtOPEKe4E6hZVFQXe3HOwZFeDDqCNZo/wSsZ2gPA9OptdEWmuyX8wQgM/eVSmFR+BlSpThLfbvJrWnW",
-	"7ajyZ/aTaRbEYDF01lcPXYfTY9DWkRf0VyYyJtY9NU9ivjB3TYA8vOG43QTbrZnC75WIUJG5xzFZFopj",
-	"gcJiRm4qgjTdBKdJQrTVvHE2/GTADm8uUBhm2RZ/G3F+tcnVcj/8SYo5RMnOhXwuRcYRvF+4ifz9khU7",
-	"D4ObKvlUa6mJbj2GytgTuZWFp25g6GMKSTSaRiBKGv/dZ/K5M791Lr/o+PCdHC7G4WyjnHtoJ+BuMPZX",
-	"uN7Fxj95ahm+7gD04aY23ukg84uoEop7kiy51AW1ze3z0/HkZfTfPNqaUXtYd3I1luqeXAd3JGfugmlY",
-	"lyLxCDf/gvffuR+IwmdvT7/hgnq4O+YZ9gyZKNVTRJTqdTyU6p2G7zSsnuWOC1f/CAAA///myQdchRIA",
-	"AA==",
+	"H4sIAAAAAAAC/+xWUU/bQAz+Kydvj1HSDbSHvnWDTX2YhIA3xINJnHKQ3B2+S6Wsyn+f7pI2aZMB09AE",
+	"ElKlJGef/dn+bHcDqS6NVqSchfkGDDKW5IjDF1OGqaPMv0sFc3ioiGuIQGFJMO/lEdj0lkr0ihnlWBUO",
+	"5jkWliJwtfG6N1oXhAqaptlqBx8LpbRDJ7UK/lkbYicpyHBP1hmyjqVaQRPBvVTZpKCFNyGwtCaWrp4Q",
+	"NhEwPVSSfbhXILNtmNEQxsBE5/96F6G+uaPUeTd9THYclHRU7r98ZMphDh+SvhZJl6FkkJ5m5wmZsQ7f",
+	"2mHRJt2mLE2bKrj0x4LWpJzowVuR6ko52JmRytGKeBR7a3UcmNeTKtdjh4uz5bcCfVrEJWNKYqGwqH8R",
+	"i586qwoSi7Ol9ytdQc9QhwjWxLa1PYtn8ScfrDak0EiYw1E8i48gAoPuNmQwQSO/S5VJtbLJBo1cnjT+",
+	"fEVuAqy9tyLXLPLuhtC5QCUGqMoAIxKoMn8ci2VpCipJOcrETS0I09tOCQIwDhleZjCHH+QWPZqAsu+p",
+	"q66RPPK+jwJgGBbBcUXDpuooEsfJwQ+NPPK8KbVKugTFNZbFNJmCn6aJ/tVgH1JyQcpKJ9cEzbWPwBqt",
+	"bMv0z7OZf6RaOVKhEGhMIdOQq+TOtm394kGeLXfJD5Q9qH4otNiqiK+VygqCoNcNrv8P2cjzLnFTkE+Z",
+	"NQvuNSKwVVki1y3deiJ7VrdMDtTtGOovTHVIwmTbBjHahuc+k8+9+LVzeUy643HLh0jebo1PqCBHAosi",
+	"lHai3G2Nw8QfLJ9kE04eG4aePgczeGCg9SCsoVTmMm1XytTEOz3w/CyqdOAeJUuuuUTXLqsvx5O7a3qB",
+	"DkbU7m/KS02oJzb1H+ZOv8hHDTxKuepSHcq6bVfrkPfadd/DhRcPi2nlkCLxqG7hQtDfqr+RDp+9vv69",
+	"qNKUrH27M+YJ9hwyUZvHiKjN3/FQm3cavtOwfpI73lzzOwAA///F+U6MtA4AAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
