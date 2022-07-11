@@ -18,6 +18,7 @@ package database
 import (
 	"fmt"
 
+	"github.com/go-openapi/strfmt"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
@@ -39,22 +40,24 @@ const (
 	reconstructedSpecInfoColumnName = "reconstructed_spec_info"
 	providedSpecColumnName          = "provided_spec"
 	providedSpecInfoColumnName      = "provided_spec_info"
+	createdAtColumnName             = "created_at"
 )
 
 type APIInfo struct {
 	// will be populated after inserting to DB
 	ID uint `json:"id,omitempty" gorm:"primarykey" faker:"-"`
 
-	Type                  models.APIType `json:"type,omitempty" gorm:"column:type" faker:"oneof: INTERNAL, EXTERNAL"`
-	Name                  string         `json:"name,omitempty" gorm:"column:name" faker:"oneof: test.com, example.com, kaki.org"`
-	Port                  int64          `json:"port,omitempty" gorm:"column:port" faker:"oneof: 80, 443"`
-	HasProvidedSpec       bool           `json:"hasProvidedSpec,omitempty" gorm:"column:has_provided_spec"`
-	HasReconstructedSpec  bool           `json:"hasReconstructedSpec,omitempty" gorm:"column:has_reconstructed_spec"`
-	ReconstructedSpec     string         `json:"reconstructedSpec,omitempty" gorm:"column:reconstructed_spec" faker:"-"`
-	ReconstructedSpecInfo string         `json:"reconstructedSpecInfo,omitempty" gorm:"column:reconstructed_spec_info" faker:"-"`
-	ProvidedSpec          string         `json:"providedSpec,omitempty" gorm:"column:provided_spec" faker:"-"`
-	ProvidedSpecInfo      string         `json:"providedSpecInfo,omitempty" gorm:"column:provided_spec_info" faker:"-"`
-	DestinationNamespace  string         `json:"destinationNamespace,omitempty" gorm:"column:destination_namespace" faker:"-"`
+	Type                  models.APIType  `json:"type,omitempty" gorm:"column:type" faker:"oneof: INTERNAL, EXTERNAL"`
+	Name                  string          `json:"name,omitempty" gorm:"column:name" faker:"oneof: test.com, example.com, kaki.org"`
+	Port                  int64           `json:"port,omitempty" gorm:"column:port" faker:"oneof: 80, 443"`
+	HasProvidedSpec       bool            `json:"hasProvidedSpec,omitempty" gorm:"column:has_provided_spec"`
+	HasReconstructedSpec  bool            `json:"hasReconstructedSpec,omitempty" gorm:"column:has_reconstructed_spec"`
+	ReconstructedSpec     string          `json:"reconstructedSpec,omitempty" gorm:"column:reconstructed_spec" faker:"-"`
+	ReconstructedSpecInfo string          `json:"reconstructedSpecInfo,omitempty" gorm:"column:reconstructed_spec_info" faker:"-"`
+	ProvidedSpec          string          `json:"providedSpec,omitempty" gorm:"column:provided_spec" faker:"-"`
+	ProvidedSpecInfo      string          `json:"providedSpecInfo,omitempty" gorm:"column:provided_spec_info" faker:"-"`
+	DestinationNamespace  string          `json:"destinationNamespace,omitempty" gorm:"column:destination_namespace" faker:"-"`
+	CreatedAt             strfmt.DateTime `json:"createdAt,omitempty" gorm:"column:created_at" faker:"-"`
 
 	Annotations []*APIInfoAnnotation `gorm:"foreignKey:APIID;references:ID"`
 }
@@ -64,7 +67,7 @@ type APIInventoryTable interface {
 	GetAPIInventoryAndTotal(params operations.GetAPIInventoryParams) ([]APIInfo, int64, error)
 	GetAPISpecs(apiID uint32) (*APIInfo, error)
 	GetAPISpecsInfo(apiID uint32) (*models.OpenAPISpecs, error)
-	PutAPISpec(apiID uint, spec string, specInfo *models.SpecInfo, specType specType) error
+	PutAPISpec(apiID uint, spec string, specInfo *models.SpecInfo, specType specType, createAt strfmt.DateTime) error
 	DeleteProvidedAPISpec(apiID uint32) error
 	DeleteApprovedAPISpec(apiID uint32) error
 	GetAPIID(name, port string) (uint, error)

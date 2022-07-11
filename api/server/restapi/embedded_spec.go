@@ -1264,6 +1264,10 @@ func init() {
       "description": "spec in json or yaml format",
       "type": "object",
       "properties": {
+        "ceratedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
         "rawSpec": {
           "description": "spec in json or yaml format",
           "type": "string"
@@ -3457,6 +3461,10 @@ func init() {
       "description": "spec in json or yaml format",
       "type": "object",
       "properties": {
+        "ceratedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
         "rawSpec": {
           "description": "spec in json or yaml format",
           "type": "string"

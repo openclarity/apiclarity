@@ -247,6 +247,9 @@ definitions:
       rawSpec:
         type: 'string'
         description: 'spec in json or yaml format'
+      ceratedAt:
+        type: 'string'
+        format: 'date-time'
 
   SpecTag:
     type: 'object'
