@@ -97,14 +97,14 @@ func TestNLIDHeaders(t *testing.T) {
 		// The parameter "id" matches keywords, it's checked but not yet learnt
 		{
 			description: "Value '12' was not previously learnt",
-			host:       "example.com",
-			path:       "",
-			pathParams: map[string]string{},
-			method:     "",
-			headersReq: []*pluginmodels.Header{{Key: "id", Value: "12"}, {Key: "test", Value: "36"}},
-			headersRes: []*pluginmodels.Header{},
-			bodyRes:    []byte{},
-			wanted:     []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("", "", []parameter{{Name: "XXX", Value: "12"}})},
+			host:        "example.com",
+			path:        "",
+			pathParams:  map[string]string{},
+			method:      "",
+			headersReq:  []*pluginmodels.Header{{Key: "id", Value: "12"}, {Key: "test", Value: "36"}},
+			headersRes:  []*pluginmodels.Header{},
+			bodyRes:     []byte{},
+			wanted:      []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("", "", []parameter{{Name: "XXX", Value: "12"}})},
 		},
 
 		{host: "example.com", headersReq: []*pluginmodels.Header{}, headersRes: []*pluginmodels.Header{{Key: "id", Value: "12"}, {Key: "test", Value: "36"}}, wanted: []utils.TraceAnalyzerAnnotation{}},

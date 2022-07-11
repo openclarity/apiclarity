@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/go-openapi/jsonpointer"
 
@@ -67,14 +66,15 @@ func (a *AnnotationGuessableID) NewAPIAnnotation(path, method string) utils.Trac
 	return NewAPIAnnotationGuessableID(path, method)
 }
 func (a *AnnotationGuessableID) Severity() string           { return utils.SeverityInfo }
-func (a *AnnotationGuessableID) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a *AnnotationGuessableID) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 func (a *AnnotationGuessableID) Deserialize(serialized []byte) error {
 	var tmp AnnotationGuessableID
 	err := json.Unmarshal(serialized, &tmp)
 	*a = tmp
 
-	return err
+	return err //nolint:wrapcheck
 }
+
 func (a AnnotationGuessableID) Redacted() utils.TraceAnalyzerAnnotation {
 	newA := a
 	for i := range newA.Params {
@@ -82,6 +82,7 @@ func (a AnnotationGuessableID) Redacted() utils.TraceAnalyzerAnnotation {
 	}
 	return &newA
 }
+
 func (a *AnnotationGuessableID) ToFinding() utils.Finding {
 	paramNames := []string{}
 	for _, p := range a.Params {
@@ -97,20 +98,14 @@ func (a *AnnotationGuessableID) ToFinding() utils.Finding {
 }
 
 type APIAnnotationGuessableID struct {
-	SpecLocation string          `json:"spec_location"`
-	ParamNames   map[string]bool `json:"parameters"`
+	utils.BaseTraceAnalyzerAPIAnnotation
+	ParamNames map[string]bool `json:"parameters"`
 }
 
 func NewAPIAnnotationGuessableID(path, method string) *APIAnnotationGuessableID {
-	pointerTokens := []string{
-		jsonpointer.Escape("paths"),
-		jsonpointer.Escape(path),
-		jsonpointer.Escape(strings.ToLower(method)),
-	}
-	pointer := strings.Join(pointerTokens, "/")
 	return &APIAnnotationGuessableID{
-		SpecLocation: pointer,
-		ParamNames:   make(map[string]bool),
+		BaseTraceAnalyzerAPIAnnotation: utils.BaseTraceAnalyzerAPIAnnotation{SpecPath: path, SpecMethod: method},
+		ParamNames:                     make(map[string]bool),
 	}
 }
 func (a *APIAnnotationGuessableID) Name() string { return GuessableType }
@@ -128,21 +123,21 @@ func (a *APIAnnotationGuessableID) Aggregate(ann utils.TraceAnalyzerAnnotation) 
 	return initialSize != len(a.ParamNames)
 }
 
-func (a *APIAnnotationGuessableID) Severity() string   { return utils.SeverityInfo }
-func (a *APIAnnotationGuessableID) TTL() time.Duration { return 24 * time.Hour }
+func (a APIAnnotationGuessableID) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 
-func (a *APIAnnotationGuessableID) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *APIAnnotationGuessableID) Deserialize(serialized []byte) error {
 	var tmp APIAnnotationGuessableID
 	err := json.Unmarshal(serialized, &tmp)
 	*a = tmp
 
-	return err
+	return err //nolint:wrapcheck
 }
+
 func (a APIAnnotationGuessableID) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
 	return &newA
 }
+
 func (a *APIAnnotationGuessableID) ToFinding() utils.Finding {
 	var detailedDesc string
 	if len(a.ParamNames) > 0 {
@@ -150,9 +145,9 @@ func (a *APIAnnotationGuessableID) ToFinding() utils.Finding {
 		for name := range a.ParamNames {
 			paramNames = append(paramNames, name)
 		}
-		detailedDesc = fmt.Sprintf("In call '%s', parameter(s) '%s' seems to be guessable", a.SpecLocation, strings.Join(paramNames, ","))
+		detailedDesc = fmt.Sprintf("In call '%s %s', parameter(s) '%s' seems to be guessable", a.SpecMethod, a.SpecPath, strings.Join(paramNames, ","))
 	} else {
-		detailedDesc = fmt.Sprintf("In call '%s', parameter(s) seems to be guessable", a.SpecLocation)
+		detailedDesc = fmt.Sprintf("In call '%s %s', parameter(s) seems to be guessable", a.SpecMethod, a.SpecPath)
 	}
 
 	return utils.Finding{
@@ -162,6 +157,7 @@ func (a *APIAnnotationGuessableID) ToFinding() utils.Finding {
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
+
 func (a *APIAnnotationGuessableID) ToAPIFinding() oapicommon.APIFinding {
 	var additionalInfo *map[string]interface{}
 	if len(a.ParamNames) > 0 {
@@ -173,6 +169,7 @@ func (a *APIAnnotationGuessableID) ToAPIFinding() oapicommon.APIFinding {
 			"parameters": paramNames,
 		}
 	}
+	jsonPointer := a.SpecLocation()
 	return oapicommon.APIFinding{
 		Source: utils.ModuleName,
 
@@ -180,8 +177,8 @@ func (a *APIAnnotationGuessableID) ToAPIFinding() oapicommon.APIFinding {
 		Name:        "Guessable identifier",
 		Description: "Parameters seems to be guessable",
 
-		ProvidedSpecLocation:      &a.SpecLocation,
-		ReconstructedSpecLocation: &a.SpecLocation,
+		ProvidedSpecLocation:      &jsonPointer,
+		ReconstructedSpecLocation: &jsonPointer,
 
 		Severity: oapicommon.INFO,
 
