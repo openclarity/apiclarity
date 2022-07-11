@@ -14,7 +14,7 @@ paths:
           in: path
           required: true
           schema:
-            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+            $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID'
         - $ref: '../../../../../../api3/common/openapi.yaml#/components/parameters/Sensitive'
       responses:
         '200':
@@ -23,6 +23,25 @@ paths:
             application/json:
               schema:
                 $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/APIFindings'
+        default:
+          description: 'Error response'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+  /apiFindings/{apiID}/reset:
+    post:
+      operationId: ResetApiFindings
+      summary: 'Delete all API findings for an API'
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID'
+      responses:
+        '204':
+          description: 'Reset'
         default:
           description: 'Error response'
           content:

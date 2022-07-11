@@ -1261,6 +1261,9 @@ type ClientInterface interface {
 	// TraceanalyzerGetApiFindings request
 	TraceanalyzerGetApiFindings(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerGetApiFindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// TraceanalyzerResetApiFindings request
+	TraceanalyzerResetApiFindings(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// TraceanalyzerGetEventAnnotations request
 	TraceanalyzerGetEventAnnotations(ctx context.Context, eventID int64, params *TraceanalyzerGetEventAnnotationsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1909,6 +1912,18 @@ func (c *Client) TraceanalyzerGetAPIAnnotations(ctx context.Context, apiID exter
 
 func (c *Client) TraceanalyzerGetApiFindings(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerGetApiFindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewTraceanalyzerGetApiFindingsRequest(c.Server, apiID, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) TraceanalyzerResetApiFindings(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewTraceanalyzerResetApiFindingsRequest(c.Server, apiID)
 	if err != nil {
 		return nil, err
 	}
@@ -5015,6 +5030,40 @@ func NewTraceanalyzerGetApiFindingsRequest(server string, apiID externalRef0.Api
 	return req, nil
 }
 
+// NewTraceanalyzerResetApiFindingsRequest generates requests for TraceanalyzerResetApiFindings
+func NewTraceanalyzerResetApiFindingsRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/modules/traceanalyzer/apiFindings/%s/reset", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewTraceanalyzerGetEventAnnotationsRequest generates requests for TraceanalyzerGetEventAnnotations
 func NewTraceanalyzerGetEventAnnotationsRequest(server string, eventID int64, params *TraceanalyzerGetEventAnnotationsParams) (*http.Request, error) {
 	var err error
@@ -5335,6 +5384,9 @@ type ClientWithResponsesInterface interface {
 
 	// TraceanalyzerGetApiFindings request
 	TraceanalyzerGetApiFindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerGetApiFindingsParams, reqEditors ...RequestEditorFn) (*TraceanalyzerGetApiFindingsResponse, error)
+
+	// TraceanalyzerResetApiFindings request
+	TraceanalyzerResetApiFindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*TraceanalyzerResetApiFindingsResponse, error)
 
 	// TraceanalyzerGetEventAnnotations request
 	TraceanalyzerGetEventAnnotationsWithResponse(ctx context.Context, eventID int64, params *TraceanalyzerGetEventAnnotationsParams, reqEditors ...RequestEditorFn) (*TraceanalyzerGetEventAnnotationsResponse, error)
@@ -6454,6 +6506,28 @@ func (r TraceanalyzerGetApiFindingsResponse) StatusCode() int {
 	return 0
 }
 
+type TraceanalyzerResetApiFindingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSONDefault  *externalRef0.ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r TraceanalyzerResetApiFindingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r TraceanalyzerResetApiFindingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type TraceanalyzerGetEventAnnotationsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7000,6 +7074,15 @@ func (c *ClientWithResponses) TraceanalyzerGetApiFindingsWithResponse(ctx contex
 		return nil, err
 	}
 	return ParseTraceanalyzerGetApiFindingsResponse(rsp)
+}
+
+// TraceanalyzerResetApiFindingsWithResponse request returning *TraceanalyzerResetApiFindingsResponse
+func (c *ClientWithResponses) TraceanalyzerResetApiFindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*TraceanalyzerResetApiFindingsResponse, error) {
+	rsp, err := c.TraceanalyzerResetApiFindings(ctx, apiID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseTraceanalyzerResetApiFindingsResponse(rsp)
 }
 
 // TraceanalyzerGetEventAnnotationsWithResponse request returning *TraceanalyzerGetEventAnnotationsResponse
@@ -8563,6 +8646,32 @@ func ParseTraceanalyzerGetApiFindingsResponse(rsp *http.Response) (*Traceanalyze
 	return response, nil
 }
 
+// ParseTraceanalyzerResetApiFindingsResponse parses an HTTP response from a TraceanalyzerResetApiFindingsWithResponse call
+func ParseTraceanalyzerResetApiFindingsResponse(rsp *http.Response) (*TraceanalyzerResetApiFindingsResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &TraceanalyzerResetApiFindingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseTraceanalyzerGetEventAnnotationsResponse parses an HTTP response from a TraceanalyzerGetEventAnnotationsWithResponse call
 func ParseTraceanalyzerGetEventAnnotationsResponse(rsp *http.Response) (*TraceanalyzerGetEventAnnotationsResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
@@ -8801,6 +8910,9 @@ type ServerInterface interface {
 	// Get findings for an API and module
 	// (GET /modules/traceanalyzer/apiFindings/{apiID})
 	TraceanalyzerGetApiFindings(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params TraceanalyzerGetApiFindingsParams)
+	// Delete all API findings for an API
+	// (POST /modules/traceanalyzer/apiFindings/{apiID}/reset)
+	TraceanalyzerResetApiFindings(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 	// Get Annotations for an event
 	// (GET /modules/traceanalyzer/eventAnnotations/{eventID})
 	TraceanalyzerGetEventAnnotations(w http.ResponseWriter, r *http.Request, eventID int64, params TraceanalyzerGetEventAnnotationsParams)
@@ -11069,6 +11181,32 @@ func (siw *ServerInterfaceWrapper) TraceanalyzerGetApiFindings(w http.ResponseWr
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// TraceanalyzerResetApiFindings operation middleware
+func (siw *ServerInterfaceWrapper) TraceanalyzerResetApiFindings(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.TraceanalyzerResetApiFindings(w, r, apiID)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 // TraceanalyzerGetEventAnnotations operation middleware
 func (siw *ServerInterfaceWrapper) TraceanalyzerGetEventAnnotations(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -11419,6 +11557,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/modules/traceanalyzer/apiFindings/{apiID}", wrapper.TraceanalyzerGetApiFindings)
 	})
 	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/modules/traceanalyzer/apiFindings/{apiID}/reset", wrapper.TraceanalyzerResetApiFindings)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/modules/traceanalyzer/eventAnnotations/{eventID}", wrapper.TraceanalyzerGetEventAnnotations)
 	})
 	r.Group(func(r chi.Router) {
@@ -11536,9 +11677,10 @@ var swaggerSpec = []string{
 	"4KEYrMSLd9U8vtKGfk7dqnp6r0z6GbxXacM0a2imfzsCVLDjFYi3ObKVFfS4lF114fI0JGU273+VWMfh",
 	"pipKtsFuviRZR84bFHHPe5Op69rv3qT5achn3X/MEYsfZoMB9B/k7o52bEQ3X1lRvjIVF/widE8CARoE",
 	"Uz25ImEXOgayxt90pJ9eeXVRKhtTcSA7B6Mi0+KJQbhFHe941KsUZ40QF10KBCnL3AhUEdBKrdgjP8Xu",
-	"3CtjZmNRLg8uKdpfdUEzPg3HszKxMlQnqeBprWK/lm3bknwcCxMcd2/3tHubF3pUOAap3hqqkf125g/J",
-	"A6L1Al46jWkj5RLTjumMN2rstMfDzJxvtTek8ZtgXcze1bNW7BWxb1Tf43nxH/AYaXGjo1Ic7ASucYNj",
-	"d3ELo6O0vSVpqxMGAY6g+E4xN4l955SX5HWerp/+LwAA///ghBSDFswAAA==",
+	"3CtjZmNRLg8uKdpfdUEzPg3HszKxMlQnqeBprWK/lm3bknwcCxMcd2/3tHvbKPTadQnjffWccPL7EK9J",
+	"PK08g7jF8UOwV7oo6PucqwZO17EXFU65qqekakxbO++G5PnfevtVOmxrIyUS047Zqjfqy7S34cycb7X1",
+	"p/GbYF223tWzVmwFsm9U3+N1gB/wlHBxH6tSHOwErnH/andxC6OjtL0laasTBgGOoPhOMTeJfeeUV1x2",
+	"nq6f/i8AAP//k2ygY/XNAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

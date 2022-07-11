@@ -2228,6 +2228,25 @@ paths:
                 $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
           description: Error response
       summary: Get findings for an API and module
+  /modules/traceanalyzer/apiFindings/{apiID}/reset:
+    post:
+      operationId: traceanalyzerResetApiFindings
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "204":
+          description: Reset
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      summary: Delete all API findings for an API
   /modules/traceanalyzer/eventAnnotations/{eventID}:
     get:
       description: Get Trace Analyzer Annotations for a specific event
