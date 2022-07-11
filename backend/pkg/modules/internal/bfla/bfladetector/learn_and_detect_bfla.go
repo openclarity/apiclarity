@@ -67,7 +67,7 @@ func (s BFLAStateEnum) String() string {
 	case BFLADetecting:
 		return "DETECTING"
 	}
-	return "unknown"
+	return "UNKNOWN"
 }
 
 type BFLAState struct {
