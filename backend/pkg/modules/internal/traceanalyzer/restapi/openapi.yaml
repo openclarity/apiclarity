@@ -68,45 +68,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Annotations'
-  /apiAnnotations/{apiID}:
-    get:
-      operationId: GetAPIAnnotations
-      summary: Get Annotations for an API
-      description: Get Trace Analyzer Annotations for a specific API
-      parameters:
-        - name: apiID
-          in: path
-          required: true
-          schema:
-            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
-        - $ref: '#/components/parameters/redacted'
-      responses:
-        '200':
-          description: Annotation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Annotations'
-    delete:
-      operationId: DeleteAPIAnnotations
-      summary: Delete Annotations for an API
-      description: Get Trace Analyzer Annotations for a specific API
-      parameters:
-        - name: apiID
-          in: path
-          required: true
-          schema:
-            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
-        - in: query
-          name: name
-          required: true
-          schema:
-            type: string
-          description: name of the annotation
-      responses:
-        '204':
-          description: Successful deletion
-  
+
   /{apiID}/start:
      post:
       operationId: StartTraceAnalysis
