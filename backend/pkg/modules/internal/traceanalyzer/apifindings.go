@@ -21,8 +21,9 @@ import (
 )
 
 type findingKey struct {
-	path string
-	name string
+	path   string
+	method string
+	name   string
 }
 
 type apiFindings struct {
@@ -75,7 +76,7 @@ func (r *APIsFindingsRepo) aggregate(apiID uint64, path, method string, ann util
 	}
 
 	// Check if we already have an entry for this (path, annotation name) pair
-	key := findingKey{path, ann.Name()}
+	key := findingKey{path, method, ann.Name()}
 	apiAnn, found := findings.paths[key]
 	if !found {
 		apiAnn = ann.NewAPIAnnotation(path, method)

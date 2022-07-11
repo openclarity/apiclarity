@@ -16,6 +16,7 @@
 package utils
 
 import (
+	"strings"
 	"time"
 
 	oapicommon "github.com/openclarity/apiclarity/api3/common"
@@ -34,6 +35,8 @@ type TraceAnalyzerAnnotation interface {
 
 type TraceAnalyzerAPIAnnotation interface {
 	Name() string
+	Path() string
+	Method() string
 	Aggregate(TraceAnalyzerAnnotation) (notify bool)
 	Severity() string
 	TTL() time.Duration
@@ -42,6 +45,19 @@ type TraceAnalyzerAPIAnnotation interface {
 	Redacted() TraceAnalyzerAPIAnnotation
 	ToFinding() Finding
 	ToAPIFinding() oapicommon.APIFinding
+}
+
+type BaseTraceAnalyzerAPIAnnotation struct {
+	SpecPath   string `json:"path"`
+	SpecMethod string `json:"method"`
+}
+
+func (a BaseTraceAnalyzerAPIAnnotation) Path() string       { return a.SpecPath }
+func (a BaseTraceAnalyzerAPIAnnotation) Method() string     { return a.SpecMethod }
+func (a BaseTraceAnalyzerAPIAnnotation) Severity() string   { return SeverityInfo }
+func (a BaseTraceAnalyzerAPIAnnotation) TTL() time.Duration { return 24 * time.Hour } //nolint:gomnd
+func (a BaseTraceAnalyzerAPIAnnotation) SpecLocation() string {
+	return JSONPointer([]string{"paths", a.SpecPath, strings.ToLower(a.SpecMethod)})
 }
 
 // A finding is an interpreted annotation.

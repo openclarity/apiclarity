@@ -154,7 +154,6 @@ func Run() {
 		}
 		monitor.Start()
 		defer monitor.Stop()
-
 	} else if viper.GetBool(_database.FakeDataEnvVar) {
 		go dbHandler.CreateFakeData()
 	}

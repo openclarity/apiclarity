@@ -17,11 +17,6 @@ package sensitive
 
 import (
 	"encoding/json"
-	"fmt"
-	"strings"
-	"time"
-
-	"github.com/go-openapi/jsonpointer"
 
 	oapicommon "github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
@@ -45,41 +40,37 @@ func (a *AnnotationRegexpMatching) NewAPIAnnotation(path, method string) utils.T
 	return NewAPIAnnotationRegexpMatching(path, method)
 }
 func (a *AnnotationRegexpMatching) Severity() string           { return utils.SeverityMedium }
-func (a *AnnotationRegexpMatching) Serialize() ([]byte, error) { return json.Marshal(a) }
+func (a *AnnotationRegexpMatching) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 func (a *AnnotationRegexpMatching) Deserialize(serialized []byte) error {
 	var tmp AnnotationRegexpMatching
 	err := json.Unmarshal(serialized, &tmp)
 	*a = tmp
 
-	return err
+	return err //nolint:wrapcheck
 }
+
 func (a AnnotationRegexpMatching) Redacted() utils.TraceAnalyzerAnnotation {
 	return &a
 }
+
 func (a *AnnotationRegexpMatching) ToFinding() utils.Finding {
 	return utils.Finding{
 		ShortDesc:    "Matching regular expression",
-		DetailedDesc: fmt.Sprintf("This event matches sensitive information"),
+		DetailedDesc: "This event matches sensitive information",
 		Severity:     a.Severity(),
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
 
 type APIAnnotationRegexpMatching struct {
-	SpecLocation  string          `json:"spec_location"`
+	utils.BaseTraceAnalyzerAPIAnnotation
 	MatchingRules map[string]bool `json:"matching_rules_id"`
 }
 
 func NewAPIAnnotationRegexpMatching(path, method string) *APIAnnotationRegexpMatching {
-	pointerTokens := []string{
-		jsonpointer.Escape("paths"),
-		jsonpointer.Escape(path),
-		jsonpointer.Escape(strings.ToLower(method)),
-	}
-	pointer := strings.Join(pointerTokens, "/")
 	return &APIAnnotationRegexpMatching{
-		SpecLocation:  pointer,
-		MatchingRules: make(map[string]bool),
+		BaseTraceAnalyzerAPIAnnotation: utils.BaseTraceAnalyzerAPIAnnotation{SpecPath: path, SpecMethod: method},
+		MatchingRules:                  make(map[string]bool),
 	}
 }
 func (a *APIAnnotationRegexpMatching) Name() string { return RegexpMatchingType }
@@ -97,21 +88,21 @@ func (a *APIAnnotationRegexpMatching) Aggregate(ann utils.TraceAnalyzerAnnotatio
 	return initialSize != len(a.MatchingRules)
 }
 
-func (a *APIAnnotationRegexpMatching) Severity() string   { return utils.SeverityInfo }
-func (a *APIAnnotationRegexpMatching) TTL() time.Duration { return 24 * time.Hour }
+func (a APIAnnotationRegexpMatching) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 
-func (a *APIAnnotationRegexpMatching) Serialize() ([]byte, error) { return json.Marshal(a) }
 func (a *APIAnnotationRegexpMatching) Deserialize(serialized []byte) error {
 	var tmp APIAnnotationRegexpMatching
 	err := json.Unmarshal(serialized, &tmp)
 	*a = tmp
 
-	return err
+	return err //nolint:wrapcheck
 }
+
 func (a APIAnnotationRegexpMatching) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
 	return &newA
 }
+
 func (a *APIAnnotationRegexpMatching) ToFinding() utils.Finding {
 	return utils.Finding{
 		ShortDesc:    "Matching regular expression",
@@ -120,6 +111,7 @@ func (a *APIAnnotationRegexpMatching) ToFinding() utils.Finding {
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
 }
+
 func (a *APIAnnotationRegexpMatching) ToAPIFinding() oapicommon.APIFinding {
 	var additionalInfo *map[string]interface{}
 	if len(a.MatchingRules) > 0 {
@@ -131,6 +123,7 @@ func (a *APIAnnotationRegexpMatching) ToAPIFinding() oapicommon.APIFinding {
 			"matching_rules": matchingRules,
 		}
 	}
+	jsonPointer := a.SpecLocation()
 	return oapicommon.APIFinding{
 		Source: utils.ModuleName,
 
@@ -138,8 +131,8 @@ func (a *APIAnnotationRegexpMatching) ToAPIFinding() oapicommon.APIFinding {
 		Name:        "Matching regular expression",
 		Description: "This event matches sensitive information",
 
-		ProvidedSpecLocation:      &a.SpecLocation,
-		ReconstructedSpecLocation: &a.SpecLocation,
+		ProvidedSpecLocation:      &jsonPointer,
+		ReconstructedSpecLocation: &jsonPointer,
 
 		Severity: oapicommon.INFO,
 
