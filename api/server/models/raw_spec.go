@@ -8,8 +8,10 @@ package models
 import (
 	"context"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // RawSpec spec in json or yaml format
@@ -17,12 +19,37 @@ import (
 // swagger:model rawSpec
 type RawSpec struct {
 
+	// cerated at
+	// Format: date-time
+	CeratedAt strfmt.DateTime `json:"ceratedAt,omitempty"`
+
 	// spec in json or yaml format
 	RawSpec string `json:"rawSpec,omitempty"`
 }
 
 // Validate validates this raw spec
 func (m *RawSpec) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateCeratedAt(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *RawSpec) validateCeratedAt(formats strfmt.Registry) error {
+	if swag.IsZero(m.CeratedAt) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("ceratedAt", "body", "date-time", m.CeratedAt.String(), formats); err != nil {
+		return err
+	}
+
 	return nil
 }
 

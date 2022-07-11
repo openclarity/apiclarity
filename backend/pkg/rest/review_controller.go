@@ -20,9 +20,11 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/spec"
+	"github.com/go-openapi/strfmt"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 
@@ -95,7 +97,7 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
 	}
 
-	if err := s.dbHandler.APIInventoryTable().PutAPISpec(apiID, string(oapSpec), specInfo, database.ReconstructedSpecType); err != nil {
+	if err := s.dbHandler.APIInventoryTable().PutAPISpec(apiID, string(oapSpec), specInfo, database.ReconstructedSpecType, strfmt.DateTime(time.Now())); err != nil {
 		log.Errorf("Failed to save reconstructed API spec to db: %v", err)
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
 	}
