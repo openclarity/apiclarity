@@ -33,28 +33,28 @@ type AuthzModelNotification struct {
 	SpecType   SpecType
 }
 
-func NewBFLANotifier(moduleName string, accessor core.BackendAccessor) *notifier {
-	return &notifier{
+func NewBFLANotifier(moduleName string, accessor core.BackendAccessor) *Notifier {
+	return &Notifier{
 		accessor:   accessor,
 		moduleName: moduleName,
 	}
 }
 
-type notifier struct {
+type Notifier struct {
 	accessor   core.BackendAccessor
 	moduleName string
 }
 
-func (n *notifier) Notify(ctx context.Context, apiID uint, notification AuthzModelNotification) error {
+func (n *Notifier) Notify(ctx context.Context, apiID uint, notification AuthzModelNotification) error {
 	ntf := notifications.APIClarityNotification{}
 	if err := ntf.FromAuthorizationModelNotification(notifications.AuthorizationModelNotification{
 		Learning:   notification.Learning,
 		Operations: ToGlobalOperations(notification.AuthzModel.Operations),
 		SpecType:   global.SpecType(ToRestapiSpecType(notification.SpecType)),
 	}); err != nil {
-		return err
+		return err //nolint:wrapcheck
 	}
-	return n.accessor.Notify(ctx, n.moduleName, apiID, ntf)
+	return n.accessor.Notify(ctx, n.moduleName, apiID, ntf) //nolint:wrapcheck
 }
 
 func ToGlobalOperations(authzModelOps Operations) (ops []global.AuthorizationModelOperation) {
