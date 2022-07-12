@@ -38,6 +38,10 @@ spec:
             - --log-level
             - {{ .Values.apiclarity.logLevel }}
           env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             # space separated list of response headers to ignore when reconstructing the spec
             - name: RESPONSE_HEADERS_TO_IGNORE
               valueFrom:
