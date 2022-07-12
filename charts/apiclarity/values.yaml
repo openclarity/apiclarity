@@ -39,6 +39,14 @@ global:
 
 apiclarity:
 
+  # Send APIClarity notifications to this backend
+  # notificationURLPrefix: http://example.local:8888/
+
+  modules:
+    fuzzer:
+      docker:
+        image: gcr.io/eticloud/k8sec/scn-dast:22e6ed54e0816942c82334a4ce2addc2333cd395
+
   # Defines env variables for apiclarity pod
   env:
     plugins:
