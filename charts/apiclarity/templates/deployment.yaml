@@ -67,7 +67,11 @@ spec:
                   key: postgresql-password
             - name: STATE_BACKUP_FILE_NAME
               value: /apiclarity/state.gob
-         {{- range $key, $val := .Values.apiclarity.env.plugins }}
+            {{- if .Values.apiclarity.notification_url_prefix }}
+            - name: NOTIFICATION_BACKEND_PREFIX
+              value: {{ .Values.apiclarity.notification_url_prefix }}
+            {{- end }}
+          {{- range $key, $val := .Values.apiclarity.env.plugins }}
             - name: {{ $key }}
               value: {{ $val | quote }}
           {{- end }}

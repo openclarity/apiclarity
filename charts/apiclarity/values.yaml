@@ -39,6 +39,9 @@ global:
 
 apiclarity:
 
+  # Send notification of new API Findings to this backend
+  # notification_url_prefix: http://example.local:8888/
+
   # Defines env variables for apiclarity pod
   env:
     plugins:
