@@ -112,7 +112,7 @@ type BFLADetector interface {
 	SendTrace(trace *CompositeTrace)
 
 	IsLearning(apiID uint) bool
-	FindSourceObj(path, method, clientUid string, apiID uint) (*SourceObject, error)
+	FindSourceObj(path, method, clientUID string, apiID uint) (*SourceObject, error)
 
 	ApproveTrace(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser)
 	DenyTrace(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser)
@@ -245,7 +245,7 @@ func (c CommandsChan) Send(cmd Command) {
 func (c CommandsChan) SendAndReplyErr(cmd CommandWithError) error {
 	defer cmd.Close()
 	c <- cmd
-	return cmd.RcvError()
+	return cmd.RcvError() //nolint:wrapcheck
 }
 
 type CompositeTrace struct {
@@ -303,7 +303,7 @@ func (l *learnAndDetectBFLA) checkBFLAState(apiID uint, allowedStates ...BFLASta
 	if err != nil {
 		return BFLAState{}, nil, fmt.Errorf("unable to get state traces counter: %w", err)
 	}
-	state := stateValue.Get().(BFLAState)
+	state := stateValue.Get().(BFLAState) //nolint:forcetypeassert
 	for _, s := range allowedStates {
 		if state.state == s {
 			return state, stateValue, nil
@@ -312,6 +312,7 @@ func (l *learnAndDetectBFLA) checkBFLAState(apiID uint, allowedStates ...BFLASta
 	return state, stateValue, fmt.Errorf("state %v does not allow for the requested operation", state.state)
 }
 
+//nolint:gocyclo
 func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command) (err error) {
 	defer runtimeRecover()
 	switch cmd := command.(type) {
@@ -329,6 +330,9 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 			return fmt.Errorf("unable to perform command 'Mark Legitimate': %w", err)
 		}
 		err = l.updateAuthorizationModel(tags, cmd.path, cmd.method, cmd.clientRef, cmd.apiID, cmd.detectedUser, true, true)
+		if err != nil {
+			return fmt.Errorf("unable to perform command 'Mark Legitimate': %w", err)
+		}
 		l.logError(l.notify(ctx, cmd.apiID))
 
 	case *MarkIllegitimateCommand:
@@ -345,7 +349,9 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 			return fmt.Errorf("unable to perform command 'Mark Illegitimate': %w", err)
 		}
 		err = l.updateAuthorizationModel(tags, cmd.path, cmd.method, cmd.clientRef, cmd.apiID, cmd.detectedUser, false, true)
-		l.logError(l.notify(ctx, cmd.apiID))
+		if err != nil {
+			return fmt.Errorf("unable to perform command 'Mark Illegitimate': %w", err)
+		}
 
 	case *StopLearningCommand:
 		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLALearning)
@@ -408,7 +414,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if state.state == BFLALearnt {
 			err = l.bflaBackendAccessor.EnableTraces(ctx, l.modName, cmd.apiID)
 			if err != nil {
-				return fmt.Errorf("Cannot enable traces: %w", err)
+				return fmt.Errorf("cannot enable traces: %w", err)
 			}
 		}
 		state.state = BFLADetecting
@@ -458,11 +464,11 @@ func GetSpecOperation(spc *spec.Swagger, method models.HTTPMethod, resolvedPath 
 	case models.HTTPMethodDELETE:
 		return spc.Paths.Paths[resolvedPath].Delete
 	case models.HTTPMethodCONNECT:
-		//op = spc.Paths.Paths[resolvedPath].Connect TODO
+		// op = spc.Paths.Paths[resolvedPath].Connect TODO
 	case models.HTTPMethodOPTIONS:
 		return spc.Paths.Paths[resolvedPath].Options
 	case models.HTTPMethodTRACE:
-		//op = spc.Paths.Paths[resolvedPath].Trace TODO
+		// op = spc.Paths.Paths[resolvedPath].Trace TODO
 	case models.HTTPMethodPATCH:
 		return spc.Paths.Paths[resolvedPath].Patch
 	}
@@ -508,7 +514,6 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	}
 
 	state, stateValue, err := l.checkBFLAState(apiID, BFLALearning, BFLADetecting)
-
 	if err != nil {
 		return fmt.Errorf("unable to handle traces in the current state: %w", err)
 	}
@@ -542,11 +547,11 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		trace.K8SSource, trace.APIEvent.APIInfoID, trace.DetectedUser, false, false); err != nil {
 		return err
 	}
-	var srcUid string
+	var srcUID string
 	if trace.K8SSource != nil {
-		srcUid = trace.K8SSource.Uid
+		srcUID = trace.K8SSource.Uid
 	}
-	aud, setAud, err := l.findSourceObj(resolvedPath, string(trace.APIEvent.Method), srcUid, trace.APIEvent.APIInfoID)
+	aud, setAud, err := l.findSourceObj(resolvedPath, string(trace.APIEvent.Method), srcUID, trace.APIEvent.APIInfoID)
 	if err != nil {
 		return err
 	}
@@ -596,7 +601,7 @@ func (l *learnAndDetectBFLA) notify(ctx context.Context, apiID uint) error {
 			ntf.AuthzModel, _ = v.Get().(AuthorizationModel)
 		}
 	}
-	return l.bflaNotifier.Notify(ctx, apiID, ntf)
+	return l.bflaNotifier.Notify(ctx, apiID, ntf) //nolint:wrapcheck
 }
 
 func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser, authorize, updateAuthorized bool) error {
@@ -689,15 +694,15 @@ func (l *learnAndDetectBFLA) IsLearning(apiID uint) bool {
 	return err == nil
 }
 
-func (l *learnAndDetectBFLA) FindSourceObj(path, method, clientUid string, apiID uint) (*SourceObject, error) {
+func (l *learnAndDetectBFLA) FindSourceObj(path, method, clientUID string, apiID uint) (*SourceObject, error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	aud, _, err := l.findSourceObj(path, method, clientUid, apiID)
+	aud, _, err := l.findSourceObj(path, method, clientUID, apiID)
 	return aud, err
 }
 
-func (l *learnAndDetectBFLA) findSourceObj(path, method, clientUid string, apiID uint) (obj *SourceObject, setFn func(v *SourceObject), err error) {
-	external := clientUid == ""
+func (l *learnAndDetectBFLA) findSourceObj(path, method, clientUID string, apiID uint) (obj *SourceObject, setFn func(v *SourceObject), err error) {
+	external := clientUID == ""
 	authzModelEntry, err := l.authzModelsMap.Get(apiID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("authz model load error: %w", err)
@@ -717,7 +722,7 @@ func (l *learnAndDetectBFLA) findSourceObj(path, method, clientUid string, apiID
 		if sa.External && !external {
 			return false
 		}
-		return sa.K8sObject.Uid == clientUid
+		return sa.K8sObject.Uid == clientUID
 	})
 	if obj == nil {
 		return nil, nil, fmt.Errorf("audience not found: %w", err)

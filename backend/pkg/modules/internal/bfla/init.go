@@ -546,6 +546,7 @@ func (h httpHandler) PutAuthorizationModelApiIDLearningStop(w http.ResponseWrite
 	}
 }
 
+// nolint:stylecheck,revive
 func (h httpHandler) PutAuthorizationModelApiIDDetectionStart(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
 	ctx := r.Context()
 	select {
@@ -565,6 +566,7 @@ func (h httpHandler) PutAuthorizationModelApiIDDetectionStart(w http.ResponseWri
 	}
 }
 
+// nolint:stylecheck,revive
 func (h httpHandler) PutAuthorizationModelApiIDDetectionStop(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
 	ctx := r.Context()
 	select {
@@ -647,8 +649,8 @@ func (h httpHandler) GetVersion(w http.ResponseWriter, r *http.Request) {
 	httpResponse(w, http.StatusOK, &oapicommon.ModuleVersion{Version: moduleVersion})
 }
 
+// nolint:stylecheck,revive
 func (h httpHandler) GetApiFindings(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.GetApiFindingsParams) {
-	return
 }
 
 func httpResponse(w http.ResponseWriter, code int, v interface{}) {

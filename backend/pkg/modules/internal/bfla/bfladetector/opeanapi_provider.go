@@ -17,12 +17,12 @@ package bfladetector
 
 import (
 	"fmt"
-	"github.com/openclarity/apiclarity/backend/pkg/database"
 
 	"github.com/ghodss/yaml"
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/spec"
 
+	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 )
 
