@@ -71,7 +71,17 @@ spec:
                   key: postgresql-password
             - name: STATE_BACKUP_FILE_NAME
               value: /apiclarity/state.gob
-         {{- range $key, $val := .Values.apiclarity.env.plugins }}
+            {{- if .Values.apiclarity.notificationURLPrefix }}
+            - name: NOTIFICATION_BACKEND_PREFIX
+              value: {{ .Values.apiclarity.notificationURLPrefix }}
+            {{- end }}
+            - name: FUZZER_DEPLOYMENT_TYPE
+              value: kubernetes
+            - name: FUZZER_IMAGE_NAME
+              value: {{ .Values.apiclarity.modules.fuzzer.docker.image }}
+            - name: FUZZER_PLATFORM_HOST_FROM_FUZZER
+              value: http://{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:8080/api
+          {{- range $key, $val := .Values.apiclarity.env.plugins }}
             - name: {{ $key }}
               value: {{ $val | quote }}
           {{- end }}
