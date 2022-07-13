@@ -476,7 +476,7 @@ func (h httpHandler) PutAuthorizationModelApiIDDeny(w http.ResponseWriter, r *ht
 }
 
 // nolint:stylecheck,revive
-func (h httpHandler) PutAuthorizationModelApiIDLearningReset(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.PutAuthorizationModelApiIDLearningResetParams) {
+func (h httpHandler) PostAuthorizationModelApiIDReset(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
 	ctx := r.Context()
 	select {
 	case <-ctx.Done():
@@ -484,20 +484,14 @@ func (h httpHandler) PutAuthorizationModelApiIDLearningReset(w http.ResponseWrit
 		log.Error(err)
 		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
 	default:
-		log.Infof("reset learning api=%d", apiID)
-		if params.NrTraces == nil {
-			if err := h.bflaDetector.ResetLearning(uint(apiID), -1); err != nil {
-				httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
-				return
-			}
-		} else {
-			if err := h.bflaDetector.ResetLearning(uint(apiID), *params.NrTraces); err != nil {
-				httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
-				return
-			}
+		log.Infof("reset BFLA model on api=%d", apiID)
+		if err := h.bflaDetector.ResetModel(uint(apiID)); err != nil {
+			httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
+			return
 		}
-		log.Infof("reset learning applied successfully on api=%d", apiID)
-		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Reqested reset learning operation on api event"})
+
+		log.Infof("reset BFLA model applied successfully on api=%d", apiID)
+		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Requested reset BFLA model operation on api event"})
 	}
 }
 
