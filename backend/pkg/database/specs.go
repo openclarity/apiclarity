@@ -80,17 +80,17 @@ func (a *APIInventoryTableHandler) PutAPISpec(apiID uint, spec string, specInfo 
 	switch specType {
 	case ReconstructedSpecType:
 		valuesToUpdate = map[string]interface{}{
-			reconstructedSpecColumnName:     spec,
-			reconstructedSpecInfoColumnName: string(specInfoB),
-			hasReconstructedSpecColumnName:  true,
-			createdAtColumnName:             createdAt,
+			reconstructedSpecColumnName:          spec,
+			reconstructedSpecInfoColumnName:      string(specInfoB),
+			hasReconstructedSpecColumnName:       true,
+			reconstructedSpecCreatedAtColumnName: createdAt,
 		}
 	case ProvidedSpecType:
 		valuesToUpdate = map[string]interface{}{
-			providedSpecColumnName:     spec,
-			providedSpecInfoColumnName: string(specInfoB),
-			hasProvidedSpecColumnName:  true,
-			createdAtColumnName:        createdAt,
+			providedSpecColumnName:          spec,
+			providedSpecInfoColumnName:      string(specInfoB),
+			hasProvidedSpecColumnName:       true,
+			providedSpecCreatedAtColumnName: createdAt,
 		}
 	}
 
