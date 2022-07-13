@@ -1652,33 +1652,6 @@ paths:
           description: Error response
       tags:
       - bfla
-  /modules/bfla/authorizationModel/{apiID}/learning/reset:
-    put:
-      parameters:
-      - in: path
-        name: apiID
-        required: true
-        schema:
-          $ref: ../common/openapi.yaml#/components/schemas/ApiID
-      - in: query
-        name: nr_traces
-        schema:
-          type: integer
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
-          description: Success
-        default:
-          content:
-            application/json:
-              schema:
-                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
-          description: Error response
-      tags:
-      - bfla
   /modules/bfla/authorizationModel/{apiID}/learning/start:
     put:
       parameters:
@@ -1708,6 +1681,29 @@ paths:
       - bfla
   /modules/bfla/authorizationModel/{apiID}/learning/stop:
     put:
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      tags:
+      - bfla
+  /modules/bfla/authorizationModel/{apiID}/reset:
+    post:
       parameters:
       - in: path
         name: apiID

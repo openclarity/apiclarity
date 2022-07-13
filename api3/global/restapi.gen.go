@@ -896,11 +896,6 @@ type PutModulesBflaAuthorizationModelApiIDDenyParams struct {
 	K8sClientUid string `form:"k8sClientUid" json:"k8sClientUid"`
 }
 
-// PutModulesBflaAuthorizationModelApiIDLearningResetParams defines parameters for PutModulesBflaAuthorizationModelApiIDLearningReset.
-type PutModulesBflaAuthorizationModelApiIDLearningResetParams struct {
-	NrTraces *int `form:"nr_traces,omitempty" json:"nr_traces,omitempty"`
-}
-
 // PutModulesBflaAuthorizationModelApiIDLearningStartParams defines parameters for PutModulesBflaAuthorizationModelApiIDLearningStart.
 type PutModulesBflaAuthorizationModelApiIDLearningStartParams struct {
 	NrTraces *int `form:"nr_traces,omitempty" json:"nr_traces,omitempty"`
@@ -1180,14 +1175,14 @@ type ClientInterface interface {
 	// PutModulesBflaAuthorizationModelApiIDDetectionStop request
 	PutModulesBflaAuthorizationModelApiIDDetectionStop(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PutModulesBflaAuthorizationModelApiIDLearningReset request
-	PutModulesBflaAuthorizationModelApiIDLearningReset(ctx context.Context, apiID externalRef0.ApiID, params *PutModulesBflaAuthorizationModelApiIDLearningResetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// PutModulesBflaAuthorizationModelApiIDLearningStart request
 	PutModulesBflaAuthorizationModelApiIDLearningStart(ctx context.Context, apiID externalRef0.ApiID, params *PutModulesBflaAuthorizationModelApiIDLearningStartParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PutModulesBflaAuthorizationModelApiIDLearningStop request
 	PutModulesBflaAuthorizationModelApiIDLearningStop(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostModulesBflaAuthorizationModelApiIDReset request
+	PostModulesBflaAuthorizationModelApiIDReset(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// BflagetEvent request
 	BflagetEvent(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1617,18 +1612,6 @@ func (c *Client) PutModulesBflaAuthorizationModelApiIDDetectionStop(ctx context.
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutModulesBflaAuthorizationModelApiIDLearningReset(ctx context.Context, apiID externalRef0.ApiID, params *PutModulesBflaAuthorizationModelApiIDLearningResetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutModulesBflaAuthorizationModelApiIDLearningResetRequest(c.Server, apiID, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 func (c *Client) PutModulesBflaAuthorizationModelApiIDLearningStart(ctx context.Context, apiID externalRef0.ApiID, params *PutModulesBflaAuthorizationModelApiIDLearningStartParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutModulesBflaAuthorizationModelApiIDLearningStartRequest(c.Server, apiID, params)
 	if err != nil {
@@ -1643,6 +1626,18 @@ func (c *Client) PutModulesBflaAuthorizationModelApiIDLearningStart(ctx context.
 
 func (c *Client) PutModulesBflaAuthorizationModelApiIDLearningStop(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutModulesBflaAuthorizationModelApiIDLearningStopRequest(c.Server, apiID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostModulesBflaAuthorizationModelApiIDReset(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostModulesBflaAuthorizationModelApiIDResetRequest(c.Server, apiID)
 	if err != nil {
 		return nil, err
 	}
@@ -4113,60 +4108,6 @@ func NewPutModulesBflaAuthorizationModelApiIDDetectionStopRequest(server string,
 	return req, nil
 }
 
-// NewPutModulesBflaAuthorizationModelApiIDLearningResetRequest generates requests for PutModulesBflaAuthorizationModelApiIDLearningReset
-func NewPutModulesBflaAuthorizationModelApiIDLearningResetRequest(server string, apiID externalRef0.ApiID, params *PutModulesBflaAuthorizationModelApiIDLearningResetParams) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/modules/bfla/authorizationModel/%s/learning/reset", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	queryValues := queryURL.Query()
-
-	if params.NrTraces != nil {
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "nr_traces", runtime.ParamLocationQuery, *params.NrTraces); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-	}
-
-	queryURL.RawQuery = queryValues.Encode()
-
-	req, err := http.NewRequest("PUT", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 // NewPutModulesBflaAuthorizationModelApiIDLearningStartRequest generates requests for PutModulesBflaAuthorizationModelApiIDLearningStart
 func NewPutModulesBflaAuthorizationModelApiIDLearningStartRequest(server string, apiID externalRef0.ApiID, params *PutModulesBflaAuthorizationModelApiIDLearningStartParams) (*http.Request, error) {
 	var err error
@@ -4248,6 +4189,40 @@ func NewPutModulesBflaAuthorizationModelApiIDLearningStopRequest(server string, 
 	}
 
 	req, err := http.NewRequest("PUT", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostModulesBflaAuthorizationModelApiIDResetRequest generates requests for PostModulesBflaAuthorizationModelApiIDReset
+func NewPostModulesBflaAuthorizationModelApiIDResetRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/modules/bfla/authorizationModel/%s/reset", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -5170,14 +5145,14 @@ type ClientWithResponsesInterface interface {
 	// PutModulesBflaAuthorizationModelApiIDDetectionStop request
 	PutModulesBflaAuthorizationModelApiIDDetectionStopWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*PutModulesBflaAuthorizationModelApiIDDetectionStopResponse, error)
 
-	// PutModulesBflaAuthorizationModelApiIDLearningReset request
-	PutModulesBflaAuthorizationModelApiIDLearningResetWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *PutModulesBflaAuthorizationModelApiIDLearningResetParams, reqEditors ...RequestEditorFn) (*PutModulesBflaAuthorizationModelApiIDLearningResetResponse, error)
-
 	// PutModulesBflaAuthorizationModelApiIDLearningStart request
 	PutModulesBflaAuthorizationModelApiIDLearningStartWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *PutModulesBflaAuthorizationModelApiIDLearningStartParams, reqEditors ...RequestEditorFn) (*PutModulesBflaAuthorizationModelApiIDLearningStartResponse, error)
 
 	// PutModulesBflaAuthorizationModelApiIDLearningStop request
 	PutModulesBflaAuthorizationModelApiIDLearningStopWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*PutModulesBflaAuthorizationModelApiIDLearningStopResponse, error)
+
+	// PostModulesBflaAuthorizationModelApiIDReset request
+	PostModulesBflaAuthorizationModelApiIDResetWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*PostModulesBflaAuthorizationModelApiIDResetResponse, error)
 
 	// BflagetEvent request
 	BflagetEventWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*BflagetEventResponse, error)
@@ -5857,29 +5832,6 @@ func (r PutModulesBflaAuthorizationModelApiIDDetectionStopResponse) StatusCode()
 	return 0
 }
 
-type PutModulesBflaAuthorizationModelApiIDLearningResetResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *externalRef0.ApiResponse
-	JSONDefault  *externalRef0.ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r PutModulesBflaAuthorizationModelApiIDLearningResetResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PutModulesBflaAuthorizationModelApiIDLearningResetResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type PutModulesBflaAuthorizationModelApiIDLearningStartResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -5920,6 +5872,29 @@ func (r PutModulesBflaAuthorizationModelApiIDLearningStopResponse) Status() stri
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PutModulesBflaAuthorizationModelApiIDLearningStopResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostModulesBflaAuthorizationModelApiIDResetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *externalRef0.ApiResponse
+	JSONDefault  *externalRef0.ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostModulesBflaAuthorizationModelApiIDResetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostModulesBflaAuthorizationModelApiIDResetResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -6668,15 +6643,6 @@ func (c *ClientWithResponses) PutModulesBflaAuthorizationModelApiIDDetectionStop
 	return ParsePutModulesBflaAuthorizationModelApiIDDetectionStopResponse(rsp)
 }
 
-// PutModulesBflaAuthorizationModelApiIDLearningResetWithResponse request returning *PutModulesBflaAuthorizationModelApiIDLearningResetResponse
-func (c *ClientWithResponses) PutModulesBflaAuthorizationModelApiIDLearningResetWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *PutModulesBflaAuthorizationModelApiIDLearningResetParams, reqEditors ...RequestEditorFn) (*PutModulesBflaAuthorizationModelApiIDLearningResetResponse, error) {
-	rsp, err := c.PutModulesBflaAuthorizationModelApiIDLearningReset(ctx, apiID, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePutModulesBflaAuthorizationModelApiIDLearningResetResponse(rsp)
-}
-
 // PutModulesBflaAuthorizationModelApiIDLearningStartWithResponse request returning *PutModulesBflaAuthorizationModelApiIDLearningStartResponse
 func (c *ClientWithResponses) PutModulesBflaAuthorizationModelApiIDLearningStartWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *PutModulesBflaAuthorizationModelApiIDLearningStartParams, reqEditors ...RequestEditorFn) (*PutModulesBflaAuthorizationModelApiIDLearningStartResponse, error) {
 	rsp, err := c.PutModulesBflaAuthorizationModelApiIDLearningStart(ctx, apiID, params, reqEditors...)
@@ -6693,6 +6659,15 @@ func (c *ClientWithResponses) PutModulesBflaAuthorizationModelApiIDLearningStopW
 		return nil, err
 	}
 	return ParsePutModulesBflaAuthorizationModelApiIDLearningStopResponse(rsp)
+}
+
+// PostModulesBflaAuthorizationModelApiIDResetWithResponse request returning *PostModulesBflaAuthorizationModelApiIDResetResponse
+func (c *ClientWithResponses) PostModulesBflaAuthorizationModelApiIDResetWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*PostModulesBflaAuthorizationModelApiIDResetResponse, error) {
+	rsp, err := c.PostModulesBflaAuthorizationModelApiIDReset(ctx, apiID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostModulesBflaAuthorizationModelApiIDResetResponse(rsp)
 }
 
 // BflagetEventWithResponse request returning *BflagetEventResponse
@@ -7770,39 +7745,6 @@ func ParsePutModulesBflaAuthorizationModelApiIDDetectionStopResponse(rsp *http.R
 	return response, nil
 }
 
-// ParsePutModulesBflaAuthorizationModelApiIDLearningResetResponse parses an HTTP response from a PutModulesBflaAuthorizationModelApiIDLearningResetWithResponse call
-func ParsePutModulesBflaAuthorizationModelApiIDLearningResetResponse(rsp *http.Response) (*PutModulesBflaAuthorizationModelApiIDLearningResetResponse, error) {
-	bodyBytes, err := ioutil.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PutModulesBflaAuthorizationModelApiIDLearningResetResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParsePutModulesBflaAuthorizationModelApiIDLearningStartResponse parses an HTTP response from a PutModulesBflaAuthorizationModelApiIDLearningStartWithResponse call
 func ParsePutModulesBflaAuthorizationModelApiIDLearningStartResponse(rsp *http.Response) (*PutModulesBflaAuthorizationModelApiIDLearningStartResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
@@ -7845,6 +7787,39 @@ func ParsePutModulesBflaAuthorizationModelApiIDLearningStopResponse(rsp *http.Re
 	}
 
 	response := &PutModulesBflaAuthorizationModelApiIDLearningStopResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostModulesBflaAuthorizationModelApiIDResetResponse parses an HTTP response from a PostModulesBflaAuthorizationModelApiIDResetWithResponse call
+func ParsePostModulesBflaAuthorizationModelApiIDResetResponse(rsp *http.Response) (*PostModulesBflaAuthorizationModelApiIDResetResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostModulesBflaAuthorizationModelApiIDResetResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -8591,14 +8566,14 @@ type ServerInterface interface {
 	// (PUT /modules/bfla/authorizationModel/{apiID}/detection/stop)
 	PutModulesBflaAuthorizationModelApiIDDetectionStop(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 
-	// (PUT /modules/bfla/authorizationModel/{apiID}/learning/reset)
-	PutModulesBflaAuthorizationModelApiIDLearningReset(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params PutModulesBflaAuthorizationModelApiIDLearningResetParams)
-
 	// (PUT /modules/bfla/authorizationModel/{apiID}/learning/start)
 	PutModulesBflaAuthorizationModelApiIDLearningStart(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params PutModulesBflaAuthorizationModelApiIDLearningStartParams)
 
 	// (PUT /modules/bfla/authorizationModel/{apiID}/learning/stop)
 	PutModulesBflaAuthorizationModelApiIDLearningStop(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
+
+	// (POST /modules/bfla/authorizationModel/{apiID}/reset)
+	PostModulesBflaAuthorizationModelApiIDReset(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 	// Get the event with the annotations and bfla status
 	// (GET /modules/bfla/event/{id})
 	BflagetEvent(w http.ResponseWriter, r *http.Request, id int)
@@ -10288,46 +10263,6 @@ func (siw *ServerInterfaceWrapper) PutModulesBflaAuthorizationModelApiIDDetectio
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// PutModulesBflaAuthorizationModelApiIDLearningReset operation middleware
-func (siw *ServerInterfaceWrapper) PutModulesBflaAuthorizationModelApiIDLearningReset(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var err error
-
-	// ------------- Path parameter "apiID" -------------
-	var apiID externalRef0.ApiID
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
-		return
-	}
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params PutModulesBflaAuthorizationModelApiIDLearningResetParams
-
-	// ------------- Optional query parameter "nr_traces" -------------
-	if paramValue := r.URL.Query().Get("nr_traces"); paramValue != "" {
-
-	}
-
-	err = runtime.BindQueryParameter("form", true, false, "nr_traces", r.URL.Query(), &params.NrTraces)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "nr_traces", Err: err})
-		return
-	}
-
-	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PutModulesBflaAuthorizationModelApiIDLearningReset(w, r, apiID, params)
-	})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r.WithContext(ctx))
-}
-
 // PutModulesBflaAuthorizationModelApiIDLearningStart operation middleware
 func (siw *ServerInterfaceWrapper) PutModulesBflaAuthorizationModelApiIDLearningStart(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -10385,6 +10320,32 @@ func (siw *ServerInterfaceWrapper) PutModulesBflaAuthorizationModelApiIDLearning
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PutModulesBflaAuthorizationModelApiIDLearningStop(w, r, apiID)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// PostModulesBflaAuthorizationModelApiIDReset operation middleware
+func (siw *ServerInterfaceWrapper) PostModulesBflaAuthorizationModelApiIDReset(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostModulesBflaAuthorizationModelApiIDReset(w, r, apiID)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -11148,13 +11109,13 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Put(options.BaseURL+"/modules/bfla/authorizationModel/{apiID}/detection/stop", wrapper.PutModulesBflaAuthorizationModelApiIDDetectionStop)
 	})
 	r.Group(func(r chi.Router) {
-		r.Put(options.BaseURL+"/modules/bfla/authorizationModel/{apiID}/learning/reset", wrapper.PutModulesBflaAuthorizationModelApiIDLearningReset)
-	})
-	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/modules/bfla/authorizationModel/{apiID}/learning/start", wrapper.PutModulesBflaAuthorizationModelApiIDLearningStart)
 	})
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/modules/bfla/authorizationModel/{apiID}/learning/stop", wrapper.PutModulesBflaAuthorizationModelApiIDLearningStop)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/modules/bfla/authorizationModel/{apiID}/reset", wrapper.PostModulesBflaAuthorizationModelApiIDReset)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/modules/bfla/event/{id}", wrapper.BflagetEvent)
@@ -11226,110 +11187,110 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
-	"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",
+	"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",
-	"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",
+	"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",
-	"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",
+	"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",
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
