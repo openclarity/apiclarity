@@ -7,6 +7,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	models "github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/api3/global"
 	"github.com/openclarity/apiclarity/api3/notifications"
@@ -98,15 +99,31 @@ func (p *differ) getSpecDiffsNotifications() []notifications.SpecDiffsNotificati
 	return ret
 }
 
-func convertAPIInfo(apiInfo *database.APIInfo) common.ApiInfo {
+func convertAPIInfo(apiInfo *database.APIInfo) common.ApiInfoWithType {
 	id := uint32(apiInfo.ID)
 	port := int(apiInfo.Port)
-	return common.ApiInfo{
+	return common.ApiInfoWithType{
+		ApiType:              convertApiType(apiInfo.Type),
 		DestinationNamespace: &apiInfo.DestinationNamespace,
 		HasProvidedSpec:      &apiInfo.HasProvidedSpec,
 		HasReconstructedSpec: &apiInfo.HasReconstructedSpec,
 		Id:                   &id,
 		Name:                 &apiInfo.Name,
 		Port:                 &port,
+	}
+}
+
+func convertApiType(apiType models.APIType) *common.ApiTypeEnum {
+	switch apiType {
+	case models.APITypeINTERNAL:
+		typ := common.INTERNAL
+		return &typ
+	case models.APITypeEXTERNAL:
+		typ := common.EXTERNAL
+		return &typ
+	default:
+		log.Errorf("Unknown api type: %v", apiType)
+		typ := common.INTERNAL
+		return &typ
 	}
 }

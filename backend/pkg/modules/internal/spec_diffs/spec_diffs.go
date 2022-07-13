@@ -168,13 +168,14 @@ func (p *differ) addDiffToSend(newSpec, oldSpec string, diffType models.DiffType
 	}
 	method := convertFromModelsMethod(event.Method)
 	p.apiIDToDiffs[event.APIInfoID][hash] = global.Diff{
-		DiffType: convertFromModelsDiffType(diffType),
-		LastSeen: t.Unix(),
-		NewSpec:  newSpec,
-		OldSpec:  oldSpec,
-		Method:   &method,
-		Path:     &event.Path,
-		SpecType: &specType,
+		DiffType:      convertFromModelsDiffType(diffType),
+		LastSeen:      time.Time(event.Time),
+		Method:        &method,
+		NewSpec:       newSpec,
+		OldSpec:       oldSpec,
+		Path:          &event.Path,
+		SpecTimestamp: time.Time(event.),
+		SpecType:      &specType,
 	}
 }
 

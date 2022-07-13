@@ -46,7 +46,6 @@ func GetConfig() *Config {
 	return configSingleton
 }
 
-// Accessors as member are not visible from external.
 func (c *Config) SendNotificationIntervalSec() int {
 	return c.sendNotificationIntervalSec
 }
