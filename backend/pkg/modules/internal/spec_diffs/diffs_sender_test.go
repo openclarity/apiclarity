@@ -5,9 +5,11 @@ import (
 	"reflect"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 
+	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/api3/global"
 	"github.com/openclarity/apiclarity/api3/notifications"
@@ -45,29 +47,42 @@ func Test_pluginDiffer_getSpecDiffsNotifications(t *testing.T) {
 			fields: fields{
 				apiIDToDiffs: map[uint]map[diffHash]global.Diff{
 					1: {hash1: global.Diff{
-						DiffType: common.GENERALDIFF,
-						LastSeen: 1,
-						NewSpec:  newSpec,
-						OldSpec:  oldSpec,
+						DiffType:      common.GENERALDIFF,
+						LastSeen:      time.Unix(10, 0),
+						Method:        common.GET,
+						NewSpec:       newSpec,
+						OldSpec:       oldSpec,
+						Path:          "/some/path",
+						SpecTimestamp: time.Unix(1, 0),
+						SpecType:      common.PROVIDED,
 					},
 						hash2: global.Diff{
-							DiffType: common.ZOMBIEDIFF,
-							LastSeen: 1,
-							NewSpec:  newSpec2,
-							OldSpec:  oldSpec2,
+							DiffType:      common.ZOMBIEDIFF,
+							LastSeen:      time.Unix(11, 0),
+							Method:        common.POST,
+							NewSpec:       newSpec2,
+							OldSpec:       oldSpec2,
+							Path:          "/some/path/2",
+							SpecTimestamp: time.Unix(2, 0),
+							SpecType:      common.PROVIDED,
 						}},
 					2: {hash1: global.Diff{
-						DiffType: common.ZOMBIEDIFF,
-						LastSeen: 2,
-						NewSpec:  newSpec,
-						OldSpec:  oldSpec,
+						DiffType:      common.ZOMBIEDIFF,
+						LastSeen:      time.Unix(12, 0),
+						Method:        common.GET,
+						NewSpec:       newSpec,
+						OldSpec:       oldSpec,
+						Path:          "/some/path/3",
+						SpecTimestamp: time.Unix(3, 0),
+						SpecType:      common.PROVIDED,
 					}},
 				},
 			},
 			want: []notifications.SpecDiffsNotification{
 				{
 					Diffs: global.APIDiffs{
-						ApiInfo: common.ApiInfo{
+						ApiInfo: common.ApiInfoWithType{
+							ApiType:              nil,
 							DestinationNamespace: stringPtr("bar"),
 							HasProvidedSpec:      boolPtr(true),
 							HasReconstructedSpec: boolPtr(false),
@@ -77,23 +92,32 @@ func Test_pluginDiffer_getSpecDiffsNotifications(t *testing.T) {
 						},
 						Diffs: []global.Diff{
 							{
-								DiffType: common.GENERALDIFF,
-								LastSeen: 1,
-								NewSpec:  newSpec,
-								OldSpec:  oldSpec,
+								DiffType:      common.GENERALDIFF,
+								LastSeen:      time.Unix(10, 0),
+								Method:        common.GET,
+								NewSpec:       newSpec,
+								OldSpec:       oldSpec,
+								Path:          "/some/path",
+								SpecTimestamp: time.Unix(1, 0),
+								SpecType:      common.PROVIDED,
 							},
 							{
-								DiffType: common.ZOMBIEDIFF,
-								LastSeen: 1,
-								NewSpec:  newSpec2,
-								OldSpec:  oldSpec2,
+								DiffType:      common.ZOMBIEDIFF,
+								LastSeen:      time.Unix(11, 0),
+								Method:        common.POST,
+								NewSpec:       newSpec2,
+								OldSpec:       oldSpec2,
+								Path:          "/some/path/2",
+								SpecTimestamp: time.Unix(2, 0),
+								SpecType:      common.PROVIDED,
 							},
 						},
 					},
 				},
 				{
 					Diffs: global.APIDiffs{
-						ApiInfo: common.ApiInfo{
+						ApiInfo: common.ApiInfoWithType{
+							ApiType:              nil,
 							DestinationNamespace: stringPtr("bar2"),
 							HasProvidedSpec:      boolPtr(false),
 							HasReconstructedSpec: boolPtr(true),
@@ -103,10 +127,14 @@ func Test_pluginDiffer_getSpecDiffsNotifications(t *testing.T) {
 						},
 						Diffs: []global.Diff{
 							{
-								DiffType: common.ZOMBIEDIFF,
-								LastSeen: 2,
-								NewSpec:  newSpec,
-								OldSpec:  oldSpec,
+								DiffType:      common.ZOMBIEDIFF,
+								LastSeen:      time.Unix(12, 0),
+								Method:        common.GET,
+								NewSpec:       newSpec,
+								OldSpec:       oldSpec,
+								Path:          "/some/path/3",
+								SpecTimestamp: time.Unix(3, 0),
+								SpecType:      common.PROVIDED,
 							},
 						},
 					},
@@ -120,6 +148,7 @@ func Test_pluginDiffer_getSpecDiffsNotifications(t *testing.T) {
 					HasProvidedSpec:      true,
 					HasReconstructedSpec: false,
 					DestinationNamespace: "bar",
+					Type:                 models.APITypeINTERNAL,
 				}, nil)
 				accessor.EXPECT().GetAPIInfo(gomock.Any(), uint(2)).Return(&database.APIInfo{
 					ID:                   2,
@@ -128,6 +157,7 @@ func Test_pluginDiffer_getSpecDiffsNotifications(t *testing.T) {
 					HasProvidedSpec:      false,
 					HasReconstructedSpec: true,
 					DestinationNamespace: "bar2",
+					Type:                 models.APITypeINTERNAL,
 				}, nil)
 			},
 		},

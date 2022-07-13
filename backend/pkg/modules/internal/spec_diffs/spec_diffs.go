@@ -144,7 +144,7 @@ func (p *differ) EventNotify(ctx context.Context, event *core.Event) {
 }
 
 func (p *differ) addDiffToSend(newSpec, oldSpec string, diffType models.DiffType, specType common.SpecType, event *database.APIEvent) {
-	if event.SpecDiffType == models.DiffTypeNODIFF {
+	if diffType == models.DiffTypeNODIFF {
 		return
 	}
 	if p.getTotalUniqueDiffs() > diffsSendThreshold {
@@ -156,7 +156,19 @@ func (p *differ) addDiffToSend(newSpec, oldSpec string, diffType models.DiffType
 
 	// TODO should we include also specType in the hash?
 	hash = sha256.Sum256([]byte(newSpec + oldSpec))
-	t := time.Time(event.Time)
+
+	apiInfo, err := p.accessor.GetAPIInfo(context.TODO(), event.APIInfoID)
+	if err != nil {
+		log.Errorf("Failed to get api info with apiID=%v: %v", event.APIInfoID, err)
+		return
+	}
+
+	var specTimestamp time.Time
+	if specType == common.PROVIDED {
+		specTimestamp = time.Time(apiInfo.ProvidedSpecCreatedAt)
+	} else {
+		specTimestamp = time.Time(apiInfo.ReconstructedSpecCreatedAt)
+	}
 
 	p.Lock()
 	defer p.Unlock()
@@ -166,16 +178,15 @@ func (p *differ) addDiffToSend(newSpec, oldSpec string, diffType models.DiffType
 	if _, ok := p.apiIDToDiffs[event.APIInfoID][hash]; !ok {
 		p.totalUniqueDiffs++
 	}
-	method := convertFromModelsMethod(event.Method)
 	p.apiIDToDiffs[event.APIInfoID][hash] = global.Diff{
 		DiffType:      convertFromModelsDiffType(diffType),
 		LastSeen:      time.Time(event.Time),
-		Method:        &method,
+		Method:        convertFromModelsMethod(event.Method),
 		NewSpec:       newSpec,
 		OldSpec:       oldSpec,
-		Path:          &event.Path,
-		SpecTimestamp: time.Time(event.),
-		SpecType:      &specType,
+		Path:          event.Path,
+		SpecTimestamp: specTimestamp,
+		SpecType:      specType,
 	}
 }
 
