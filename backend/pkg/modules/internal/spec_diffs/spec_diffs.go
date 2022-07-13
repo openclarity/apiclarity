@@ -1,4 +1,4 @@
-package differ
+package spec_diffs
 
 import (
 	"context"
@@ -20,8 +20,8 @@ import (
 	"github.com/openclarity/apiclarity/api3/global"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/differ/config"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/differ/restapi"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/spec_diffs/config"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/spec_diffs/restapi"
 	speculatorutils "github.com/openclarity/apiclarity/backend/pkg/utils/speculator"
 )
 
@@ -36,9 +36,9 @@ const (
 type differ struct {
 	httpHandler http.Handler
 
-	apiIDToDiffs    map[uint]map[diffHash]global.Diff
-	totalDiffEvents int
-	config          *config.Config
+	apiIDToDiffs     map[uint]map[diffHash]global.Diff
+	totalUniqueDiffs int
+	config           *config.Config
 
 	accessor core.BackendAccessor
 	info     core.ModuleInfo
@@ -54,10 +54,10 @@ func init() {
 func newDiffer(ctx context.Context, accessor core.BackendAccessor) (core.Module, error) {
 	// Use default values
 	d := &differ{
-		accessor:        accessor,
-		config:          config.GetConfig(),
-		apiIDToDiffs:    make(map[uint]map[diffHash]global.Diff),
-		totalDiffEvents: 0,
+		accessor:         accessor,
+		config:           config.GetConfig(),
+		apiIDToDiffs:     make(map[uint]map[diffHash]global.Diff),
+		totalUniqueDiffs: 0,
 		info: core.ModuleInfo{
 			Name:        moduleName,
 			Description: moduleInfo,
@@ -147,7 +147,7 @@ func (p *differ) addDiffToSend(newSpec, oldSpec string, diffType models.DiffType
 	if event.SpecDiffType == models.DiffTypeNODIFF {
 		return
 	}
-	if p.getTotalDiffEvents() > diffsSendThreshold {
+	if p.getTotalUniqueDiffs() > diffsSendThreshold {
 		log.Warnf("Diff events threshold reached (%v), ignoring event", diffsSendThreshold)
 		return
 	}
@@ -164,7 +164,7 @@ func (p *differ) addDiffToSend(newSpec, oldSpec string, diffType models.DiffType
 		p.apiIDToDiffs[event.APIInfoID] = make(map[diffHash]global.Diff)
 	}
 	if _, ok := p.apiIDToDiffs[event.APIInfoID][hash]; !ok {
-		p.totalDiffEvents++
+		p.totalUniqueDiffs++
 	}
 	method := convertFromModelsMethod(event.Method)
 	p.apiIDToDiffs[event.APIInfoID][hash] = global.Diff{

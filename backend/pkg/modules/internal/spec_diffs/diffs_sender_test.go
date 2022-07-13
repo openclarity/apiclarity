@@ -1,4 +1,4 @@
-package differ
+package spec_diffs
 
 import (
 	"crypto/sha256"

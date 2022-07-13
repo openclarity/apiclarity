@@ -1,4 +1,4 @@
-package differ
+package spec_diffs
 
 import (
 	"context"
@@ -27,7 +27,7 @@ func (p *differ) StartDiffsSender(ctx context.Context) {
 			return
 		case <-ticker.C:
 			if err := p.sendDiffsNotifications(); err != nil {
-				log.Errorf("Failed to send diffs notification. total diffs=%v.: %v", p.totalDiffEvents, err)
+				log.Errorf("Failed to send diffs notification. total diffs=%v.: %v", p.totalUniqueDiffs, err)
 			}
 			p.clearDiffs()
 		}
@@ -38,11 +38,11 @@ func (p *differ) clearDiffs() {
 	p.Lock()
 	defer p.Unlock()
 	p.apiIDToDiffs = map[uint]map[diffHash]global.Diff{}
-	p.totalDiffEvents = 0
+	p.totalUniqueDiffs = 0
 }
 
 func (p *differ) sendDiffsNotifications() error {
-	if p.getTotalDiffEvents() == 0 {
+	if p.getTotalUniqueDiffs() == 0 {
 		log.Infof("No events to send")
 		return nil
 	}
@@ -65,10 +65,10 @@ func (p *differ) sendDiffsNotifications() error {
 	return nil
 }
 
-func (p *differ) getTotalDiffEvents() int {
+func (p *differ) getTotalUniqueDiffs() int {
 	p.RLock()
 	defer p.RUnlock()
-	return p.totalDiffEvents
+	return p.totalUniqueDiffs
 }
 
 func (p *differ) getSpecDiffsNotifications() []notifications.SpecDiffsNotification {

@@ -1,4 +1,4 @@
-package differ
+package spec_diffs
 
 import (
 	"crypto/sha256"
@@ -352,14 +352,14 @@ func Test_differ_addDiffToSend(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := &differ{
-				apiIDToDiffs:    tt.fields.apiIDToDiffs,
-				totalDiffEvents: tt.fields.totalEvents,
+				apiIDToDiffs:     tt.fields.apiIDToDiffs,
+				totalUniqueDiffs: tt.fields.totalEvents,
 			}
 
 			p.addDiffToSend(tt.args.newSpec, tt.args.oldSpec, tt.args.diffType, tt.args.specType, tt.args.event)
 
 			assert.Assert(t, reflect.DeepEqual(tt.wantApiIDToDiffs, p.apiIDToDiffs))
-			assert.Assert(t, tt.wantTotalEvents == p.totalDiffEvents)
+			assert.Assert(t, tt.wantTotalEvents == p.totalUniqueDiffs)
 		})
 	}
 }

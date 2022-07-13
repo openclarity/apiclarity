@@ -376,8 +376,8 @@ components:
       description: APIClarity Feature Name
       enum:
       - bfla
-      - differ
       - fuzzer
+      - spec_diffs
       - specdiffs
       - specreconstructor
       - traceanalyzer
@@ -1899,54 +1899,6 @@ paths:
       summary: Get the version of this Module
       tags:
       - local-bfla
-  /modules/differ/{apiID}/start:
-    post:
-      description: Start Differ for an API.
-      operationId: differStartDiffer
-      parameters:
-      - in: path
-        name: apiID
-        required: true
-        schema:
-          $ref: ../common/openapi.yaml#/components/schemas/ApiID
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
-          description: Success
-        default:
-          content:
-            application/json:
-              schema:
-                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
-          description: Error response
-      summary: Start Differ for an API
-  /modules/differ/{apiID}/stop:
-    post:
-      description: Stop Differ for an API.
-      operationId: differStopDiffer
-      parameters:
-      - in: path
-        name: apiID
-        required: true
-        schema:
-          $ref: ../common/openapi.yaml#/components/schemas/ApiID
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
-          description: Success
-        default:
-          content:
-            application/json:
-              schema:
-                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
-          description: Error response
-      summary: Stop Differ for an API
   /modules/fuzzer/annotatedspec/{apiID}:
     get:
       description: Retreive the annotated spec for an API if any, 404 Not Found otherwise
@@ -2259,6 +2211,54 @@ paths:
                 $ref: '#/components/schemas/Version'
           description: Version of the Module
       summary: Get the version of this Module
+  /modules/spec_diffs/{apiID}/start:
+    post:
+      description: Start Differ for an API.
+      operationId: spec_diffsStartDiffer
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      summary: Start Differ for an API
+  /modules/spec_diffs/{apiID}/stop:
+    post:
+      description: Stop Differ for an API.
+      operationId: spec_diffsStopDiffer
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      summary: Stop Differ for an API
   /modules/traceanalyzer/{apiID}/start:
     post:
       description: Start Trace Analysis for an API.
