@@ -491,7 +491,7 @@ func (h httpHandler) PostAuthorizationModelApiIDReset(w http.ResponseWriter, r *
 		}
 
 		log.Infof("reset BFLA model applied successfully on api=%d", apiID)
-		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Reqested reset BFLA model operation on api event"})
+		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Requested reset BFLA model operation on api event"})
 	}
 }
 
