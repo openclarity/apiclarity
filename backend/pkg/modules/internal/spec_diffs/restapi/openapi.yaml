@@ -81,11 +81,19 @@ components:
         specType:
           description: 'the spec type the diff was calculated against'
           $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/SpecType'
+        specTimestamp:
+          description: 'the time that this spec was created. used also as spec version'
+          type: 'string'
+          format: date-time
       required:
         - lastSeen
         - diffType
         - oldSpec
         - newSpec
+        - method
+        - path
+        - specType
+        - specTimestamp
     APIDiffs:
       type: object
       properties:

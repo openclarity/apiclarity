@@ -625,6 +625,10 @@ components:
         path:
           description: Path of the diff element
           type: string
+        specTimestamp:
+          description: the time that this spec was created. used also as spec version
+          format: date-time
+          type: string
         specType:
           $ref: ../common/openapi.yaml#/components/schemas/SpecType
       required:
@@ -632,6 +636,10 @@ components:
       - diffType
       - oldSpec
       - newSpec
+      - method
+      - path
+      - specType
+      - specTimestamp
       type: object
     Finding:
       properties:
