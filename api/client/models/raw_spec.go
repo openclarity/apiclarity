@@ -19,9 +19,9 @@ import (
 // swagger:model rawSpec
 type RawSpec struct {
 
-	// cerated at
+	// created at
 	// Format: date-time
-	CeratedAt strfmt.DateTime `json:"ceratedAt,omitempty"`
+	CreatedAt strfmt.DateTime `json:"createdAt,omitempty"`
 
 	// spec in json or yaml format
 	RawSpec string `json:"rawSpec,omitempty"`
@@ -31,7 +31,7 @@ type RawSpec struct {
 func (m *RawSpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateCeratedAt(formats); err != nil {
+	if err := m.validateCreatedAt(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -41,12 +41,12 @@ func (m *RawSpec) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *RawSpec) validateCeratedAt(formats strfmt.Registry) error {
-	if swag.IsZero(m.CeratedAt) { // not required
+func (m *RawSpec) validateCreatedAt(formats strfmt.Registry) error {
+	if swag.IsZero(m.CreatedAt) { // not required
 		return nil
 	}
 
-	if err := validate.FormatOf("ceratedAt", "body", "date-time", m.CeratedAt.String(), formats); err != nil {
+	if err := validate.FormatOf("createdAt", "body", "date-time", m.CreatedAt.String(), formats); err != nil {
 		return err
 	}
 

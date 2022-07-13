@@ -1264,7 +1264,7 @@ func init() {
       "description": "spec in json or yaml format",
       "type": "object",
       "properties": {
-        "ceratedAt": {
+        "createdAt": {
           "type": "string",
           "format": "date-time"
         },
@@ -3461,7 +3461,7 @@ func init() {
       "description": "spec in json or yaml format",
       "type": "object",
       "properties": {
-        "ceratedAt": {
+        "createdAt": {
           "type": "string",
           "format": "date-time"
         },
