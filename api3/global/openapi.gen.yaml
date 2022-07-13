@@ -610,10 +610,9 @@ components:
         diffType:
           $ref: ../common/openapi.yaml#/components/schemas/DiffType
         lastSeen:
-          description: Timestamp of the time that the diff was last seen
-          format: int64
-          title: Last seen time
-          type: integer
+          description: The time that the diff was last seen
+          format: date-time
+          type: string
         method:
           $ref: ../common/openapi.yaml#/components/schemas/HttpMethod
         newSpec:

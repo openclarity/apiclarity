@@ -60,10 +60,9 @@ components:
       type: object
       properties:
         lastSeen:
-          description: Timestamp of the time that the diff was last seen
-          format: int64
-          title: Last seen time
-          type: integer
+          description: The time that the diff was last seen
+          type: 'string'
+          format: date-time
         diffType:
           $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/DiffType'
         oldSpec:
