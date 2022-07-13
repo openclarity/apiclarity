@@ -117,7 +117,7 @@ type BFLADetector interface {
 	ApproveTrace(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser)
 	DenyTrace(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser)
 
-	ResetLearning(apiID uint, numberOfTraces int) error
+	ResetModel(apiID uint) error
 	StartLearning(apiID uint, numberOfTraces int) error
 	StopLearning(apiID uint) error
 
@@ -161,9 +161,8 @@ type StartLearningCommand struct {
 	ErrorChan
 }
 
-type ResetLearningCommand struct {
-	apiID          uint
-	numberOfTraces int
+type ResetModelCommand struct {
+	apiID uint
 	ErrorChan
 }
 
@@ -200,7 +199,7 @@ type StopDetectionCommand struct {
 
 func (a *StopLearningCommand) isCommand()      {}
 func (a *StartLearningCommand) isCommand()     {}
-func (a *ResetLearningCommand) isCommand()     {}
+func (a *ResetModelCommand) isCommand()        {}
 func (a *MarkLegitimateCommand) isCommand()    {}
 func (a *MarkIllegitimateCommand) isCommand()  {}
 func (a *ProvideAuthzModelCommand) isCommand() {}
@@ -384,10 +383,10 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 
 		// TODO: Check if state is "start" and the (reconstructed or provided) spec is available
 
-	case *ResetLearningCommand:
+	case *ResetModelCommand:
 		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLALearning, BFLALearnt, BFLADetecting)
 		if err != nil {
-			return fmt.Errorf("unable to perform command 'Reset Learning': %w", err)
+			return fmt.Errorf("unable to perform command 'Reset Model': %w", err)
 		}
 		if state.state == BFLADetecting || state.state == BFLALearning {
 			err = l.bflaBackendAccessor.DisableTraces(ctx, l.modName, cmd.apiID)
@@ -758,14 +757,10 @@ func (l *learnAndDetectBFLA) DenyTrace(path, method string, clientRef *k8stracea
 	})
 }
 
-func (l *learnAndDetectBFLA) ResetLearning(apiID uint, numberOfTraces int) error {
-	if numberOfTraces < -1 {
-		return fmt.Errorf("value %v not allowed", numberOfTraces)
-	}
-	return l.commandsCh.SendAndReplyErr(&ResetLearningCommand{
-		apiID:          apiID,
-		numberOfTraces: numberOfTraces,
-		ErrorChan:      NewErrorChan(),
+func (l *learnAndDetectBFLA) ResetModel(apiID uint) error {
+	return l.commandsCh.SendAndReplyErr(&ResetModelCommand{
+		apiID:     apiID,
+		ErrorChan: NewErrorChan(),
 	})
 }
 
