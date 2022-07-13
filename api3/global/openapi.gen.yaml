@@ -394,7 +394,7 @@ components:
     APIDiffs:
       properties:
         apiInfo:
-          $ref: ../common/openapi.yaml#/components/schemas/ApiInfo
+          $ref: ../common/openapi.yaml#/components/schemas/ApiInfoWithType
         diffs:
           items:
             $ref: '#/components/schemas/Diff'

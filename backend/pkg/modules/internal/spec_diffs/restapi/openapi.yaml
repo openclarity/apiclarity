@@ -97,7 +97,7 @@ components:
       type: object
       properties:
         apiInfo:
-          $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiInfo'
+          $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiInfoWithType'
         diffs:
           type: array
           items:
