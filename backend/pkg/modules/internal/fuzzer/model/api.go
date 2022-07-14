@@ -126,10 +126,28 @@ func ConvertRawFindingToAPIFinding(finding restapi.RawFindings) *common.APIFindi
 		Name:           typeToNameMap[*finding.Type],
 		Source:         *finding.Namespace,
 		Description:    *finding.Description,
-		Severity:       common.Severity(*finding.Request.Severity),
+		Severity:       convertSeverity(*finding.Request.Severity),
 		AdditionalInfo: additionalInfo,
 	}
 	return &result
+}
+
+func convertSeverity(severity string) common.Severity {
+	switch strings.ToLower(severity) {
+	case "critical":
+		return common.CRITICAL
+	case "high":
+		return common.HIGH
+	case "medium":
+		return common.MEDIUM
+	case "low":
+		return common.LOW
+	case "info":
+		return common.INFO
+	default:
+		logging.Warningf("[Fuzzer] unexpected severity level (%s) using info.", strings.ToLower(severity))
+		return common.INFO
+	}
 }
 
 /*
@@ -447,14 +465,14 @@ func (api *API) AddNewStatusReport(report restapi.FuzzingStatusAndReport) error 
 		for _, reportItem := range report.Report {
 			for _, finding := range *reportItem.Findings {
 				// update severity counters
-				switch *finding.Request.Severity {
-				case "critical":
+				switch convertSeverity(*finding.Request.Severity) {
+				case common.CRITICAL:
 					critical++
-				case "high":
+				case common.HIGH:
 					high++
-				case "medium":
+				case common.MEDIUM:
 					medium++
-				case "low":
+				case common.LOW:
 					low++
 				}
 			}
@@ -617,7 +635,7 @@ func (api *API) GetLastAPIFindings() *[]common.APIFinding {
 						Name:                      findingName,
 						ProvidedSpecLocation:      new(string),
 						ReconstructedSpecLocation: new(string),
-						Severity:                  common.Severity(risk),
+						Severity:                  convertSeverity(risk),
 						Source:                    *finding.Namespace,
 						Type:                      *finding.Type,
 					}
