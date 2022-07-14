@@ -1,4 +1,4 @@
-package spec_diffs
+package differ
 
 import (
 	"crypto/sha256"
@@ -27,10 +27,12 @@ func Test_pluginDiffer_getSpecDiffsNotifications(t *testing.T) {
 		oldSpec  = "newSpec"
 		newSpec2 = "newSpec2"
 		oldSpec2 = "newSpec2"
+
 	)
 	var (
 		hash1 = sha256.Sum256([]byte(newSpec + oldSpec))
 		hash2 = sha256.Sum256([]byte(newSpec2 + oldSpec2))
+		apiType = common.INTERNAL
 	)
 
 	type fields struct {
@@ -82,7 +84,7 @@ func Test_pluginDiffer_getSpecDiffsNotifications(t *testing.T) {
 				{
 					Diffs: global.APIDiffs{
 						ApiInfo: common.ApiInfoWithType{
-							ApiType:              nil,
+							ApiType:              &apiType,
 							DestinationNamespace: stringPtr("bar"),
 							HasProvidedSpec:      boolPtr(true),
 							HasReconstructedSpec: boolPtr(false),
@@ -117,7 +119,7 @@ func Test_pluginDiffer_getSpecDiffsNotifications(t *testing.T) {
 				{
 					Diffs: global.APIDiffs{
 						ApiInfo: common.ApiInfoWithType{
-							ApiType:              nil,
+							ApiType:              &apiType,
 							DestinationNamespace: stringPtr("bar2"),
 							HasProvidedSpec:      boolPtr(false),
 							HasReconstructedSpec: boolPtr(true),

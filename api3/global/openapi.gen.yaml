@@ -377,7 +377,7 @@ components:
       enum:
       - bfla
       - fuzzer
-      - spec_diffs
+      - differ
       - specdiffs
       - specreconstructor
       - traceanalyzer

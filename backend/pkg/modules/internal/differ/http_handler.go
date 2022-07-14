@@ -1,4 +1,4 @@
-package spec_diffs
+package differ
 
 import (
 	"fmt"

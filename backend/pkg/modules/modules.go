@@ -27,7 +27,7 @@ import (
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla"
 
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
-	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/spec_diffs"
+	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/differ"
 
 	// Enables the fuzzer module.
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer"

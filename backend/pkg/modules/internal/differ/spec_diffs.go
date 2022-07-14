@@ -1,4 +1,4 @@
-package spec_diffs
+package differ
 
 import (
 	"context"
@@ -20,8 +20,8 @@ import (
 	"github.com/openclarity/apiclarity/api3/global"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/spec_diffs/config"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/spec_diffs/restapi"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/differ/config"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/differ/restapi"
 	speculatorutils "github.com/openclarity/apiclarity/backend/pkg/utils/speculator"
 )
 

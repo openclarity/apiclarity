@@ -29,7 +29,7 @@ import (
 const (
 	APIClarityFeatureEnumBfla              APIClarityFeatureEnum = "bfla"
 	APIClarityFeatureEnumFuzzer            APIClarityFeatureEnum = "fuzzer"
-	APIClarityFeatureEnumSpecDiffs         APIClarityFeatureEnum = "spec_diffs"
+	APIClarityFeatureEnumSpecDiffs         APIClarityFeatureEnum = "differ"
 	APIClarityFeatureEnumSpecdiffs         APIClarityFeatureEnum = "specdiffs"
 	APIClarityFeatureEnumSpecreconstructor APIClarityFeatureEnum = "specreconstructor"
 	APIClarityFeatureEnumTraceanalyzer     APIClarityFeatureEnum = "traceanalyzer"
@@ -5087,7 +5087,7 @@ func NewSpecDiffsStartDifferRequest(server string, apiID externalRef0.ApiID) (*h
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/modules/spec_diffs/%s/start", pathParam0)
+	operationPath := fmt.Sprintf("/modules/differ/%s/start", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -5121,7 +5121,7 @@ func NewSpecDiffsStopDifferRequest(server string, apiID externalRef0.ApiID) (*ht
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/modules/spec_diffs/%s/stop", pathParam0)
+	operationPath := fmt.Sprintf("/modules/differ/%s/stop", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9321,10 +9321,10 @@ type ServerInterface interface {
 	// (GET /modules/fuzzer/version)
 	FuzzergetVersion(w http.ResponseWriter, r *http.Request)
 	// Start Differ for an API
-	// (POST /modules/spec_diffs/{apiID}/start)
+	// (POST /modules/differ/{apiID}/start)
 	SpecDiffsStartDiffer(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 	// Stop Differ for an API
-	// (POST /modules/spec_diffs/{apiID}/stop)
+	// (POST /modules/differ/{apiID}/stop)
 	SpecDiffsStopDiffer(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 	// Get findings for an API and module
 	// (GET /modules/traceanalyzer/apiFindings/{apiID})
@@ -12056,10 +12056,10 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/modules/fuzzer/version", wrapper.FuzzergetVersion)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/modules/spec_diffs/{apiID}/start", wrapper.SpecDiffsStartDiffer)
+		r.Post(options.BaseURL+"/modules/differ/{apiID}/start", wrapper.SpecDiffsStartDiffer)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/modules/spec_diffs/{apiID}/stop", wrapper.SpecDiffsStopDiffer)
+		r.Post(options.BaseURL+"/modules/differ/{apiID}/stop", wrapper.SpecDiffsStopDiffer)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/modules/traceanalyzer/apiFindings/{apiID}", wrapper.TraceanalyzerGetApiFindings)
