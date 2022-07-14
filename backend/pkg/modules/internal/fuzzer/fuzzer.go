@@ -449,7 +449,7 @@ func (p *pluginFuzzerHTTPHandler) PostUpdateStatus(writer http.ResponseWriter, r
 	}
 
 	// Add the new report to the last Test
-	api.AddNewStatusReport(data)
+	err = api.AddNewStatusReport(data)
 	if err != nil {
 		logging.Errorf("[Fuzzer] PostUpdateStatus(%v): fail to process new report, error=(%v)", apiID, err)
 		httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
