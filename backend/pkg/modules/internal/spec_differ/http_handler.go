@@ -1,4 +1,4 @@
-package differ
+package spec_differ
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 )
 
 type httpHandler struct{
-	differ *differ
+	differ *specDiffer
 }
 
 func (h *httpHandler) StartDiffer(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {

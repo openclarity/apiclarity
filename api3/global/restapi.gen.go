@@ -28,8 +28,8 @@ import (
 // Defines values for APIClarityFeatureEnum.
 const (
 	Bfla              APIClarityFeatureEnum = "bfla"
-	Differ            APIClarityFeatureEnum = "differ"
 	Fuzzer            APIClarityFeatureEnum = "fuzzer"
+	SpecDiffer        APIClarityFeatureEnum = "spec_differ"
 	Specdiffs         APIClarityFeatureEnum = "specdiffs"
 	Specreconstructor APIClarityFeatureEnum = "specreconstructor"
 	Traceanalyzer     APIClarityFeatureEnum = "traceanalyzer"
@@ -1245,12 +1245,6 @@ type ClientInterface interface {
 	// BflagetVersion request
 	BflagetVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// DifferStartDiffer request
-	DifferStartDiffer(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// DifferStopDiffer request
-	DifferStopDiffer(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// FuzzerGetAnnotatedSpec request
 	FuzzerGetAnnotatedSpec(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1290,6 +1284,12 @@ type ClientInterface interface {
 
 	// FuzzergetVersion request
 	FuzzergetVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SpecDifferStartDiffer request
+	SpecDifferStartDiffer(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SpecDifferStopDiffer request
+	SpecDifferStopDiffer(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// TraceanalyzerGetApiFindings request
 	TraceanalyzerGetApiFindings(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerGetApiFindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1787,30 +1787,6 @@ func (c *Client) BflagetVersion(ctx context.Context, reqEditors ...RequestEditor
 	return c.Client.Do(req)
 }
 
-func (c *Client) DifferStartDiffer(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDifferStartDifferRequest(c.Server, apiID)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) DifferStopDiffer(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDifferStopDifferRequest(c.Server, apiID)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 func (c *Client) FuzzerGetAnnotatedSpec(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewFuzzerGetAnnotatedSpecRequest(c.Server, apiID)
 	if err != nil {
@@ -1969,6 +1945,30 @@ func (c *Client) FuzzerPostUpdateStatus(ctx context.Context, apiID externalRef0.
 
 func (c *Client) FuzzergetVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewFuzzergetVersionRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SpecDifferStartDiffer(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSpecDifferStartDifferRequest(c.Server, apiID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) SpecDifferStopDiffer(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSpecDifferStopDifferRequest(c.Server, apiID)
 	if err != nil {
 		return nil, err
 	}
@@ -4624,74 +4624,6 @@ func NewBflagetVersionRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewDifferStartDifferRequest generates requests for DifferStartDiffer
-func NewDifferStartDifferRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/modules/differ/%s/start", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewDifferStopDifferRequest generates requests for DifferStopDiffer
-func NewDifferStopDifferRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/modules/differ/%s/stop", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 // NewFuzzerGetAnnotatedSpecRequest generates requests for FuzzerGetAnnotatedSpec
 func NewFuzzerGetAnnotatedSpecRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
 	var err error
@@ -5139,6 +5071,74 @@ func NewFuzzergetVersionRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewSpecDifferStartDifferRequest generates requests for SpecDifferStartDiffer
+func NewSpecDifferStartDifferRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/modules/spec_differ/%s/start", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewSpecDifferStopDifferRequest generates requests for SpecDifferStopDiffer
+func NewSpecDifferStopDifferRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/modules/spec_differ/%s/stop", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewTraceanalyzerGetApiFindingsRequest generates requests for TraceanalyzerGetApiFindings
 func NewTraceanalyzerGetApiFindingsRequest(server string, apiID externalRef0.ApiID, params *TraceanalyzerGetApiFindingsParams) (*http.Request, error) {
 	var err error
@@ -5508,12 +5508,6 @@ type ClientWithResponsesInterface interface {
 	// BflagetVersion request
 	BflagetVersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*BflagetVersionResponse, error)
 
-	// DifferStartDiffer request
-	DifferStartDifferWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*DifferStartDifferResponse, error)
-
-	// DifferStopDiffer request
-	DifferStopDifferWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*DifferStopDifferResponse, error)
-
 	// FuzzerGetAnnotatedSpec request
 	FuzzerGetAnnotatedSpecWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*FuzzerGetAnnotatedSpecResponse, error)
 
@@ -5553,6 +5547,12 @@ type ClientWithResponsesInterface interface {
 
 	// FuzzergetVersion request
 	FuzzergetVersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*FuzzergetVersionResponse, error)
+
+	// SpecDifferStartDiffer request
+	SpecDifferStartDifferWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*SpecDifferStartDifferResponse, error)
+
+	// SpecDifferStopDiffer request
+	SpecDifferStopDifferWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*SpecDifferStopDifferResponse, error)
 
 	// TraceanalyzerGetApiFindings request
 	TraceanalyzerGetApiFindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerGetApiFindingsParams, reqEditors ...RequestEditorFn) (*TraceanalyzerGetApiFindingsResponse, error)
@@ -6409,52 +6409,6 @@ func (r BflagetVersionResponse) StatusCode() int {
 	return 0
 }
 
-type DifferStartDifferResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *externalRef0.ApiResponse
-	JSONDefault  *externalRef0.ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r DifferStartDifferResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r DifferStartDifferResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type DifferStopDifferResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *externalRef0.ApiResponse
-	JSONDefault  *externalRef0.ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r DifferStopDifferResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r DifferStopDifferResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type FuzzerGetAnnotatedSpecResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -6723,6 +6677,52 @@ func (r FuzzergetVersionResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r FuzzergetVersionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type SpecDifferStartDifferResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *externalRef0.ApiResponse
+	JSONDefault  *externalRef0.ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r SpecDifferStartDifferResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SpecDifferStartDifferResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type SpecDifferStopDifferResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *externalRef0.ApiResponse
+	JSONDefault  *externalRef0.ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r SpecDifferStopDifferResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SpecDifferStopDifferResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7198,24 +7198,6 @@ func (c *ClientWithResponses) BflagetVersionWithResponse(ctx context.Context, re
 	return ParseBflagetVersionResponse(rsp)
 }
 
-// DifferStartDifferWithResponse request returning *DifferStartDifferResponse
-func (c *ClientWithResponses) DifferStartDifferWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*DifferStartDifferResponse, error) {
-	rsp, err := c.DifferStartDiffer(ctx, apiID, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseDifferStartDifferResponse(rsp)
-}
-
-// DifferStopDifferWithResponse request returning *DifferStopDifferResponse
-func (c *ClientWithResponses) DifferStopDifferWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*DifferStopDifferResponse, error) {
-	rsp, err := c.DifferStopDiffer(ctx, apiID, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseDifferStopDifferResponse(rsp)
-}
-
 // FuzzerGetAnnotatedSpecWithResponse request returning *FuzzerGetAnnotatedSpecResponse
 func (c *ClientWithResponses) FuzzerGetAnnotatedSpecWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*FuzzerGetAnnotatedSpecResponse, error) {
 	rsp, err := c.FuzzerGetAnnotatedSpec(ctx, apiID, reqEditors...)
@@ -7338,6 +7320,24 @@ func (c *ClientWithResponses) FuzzergetVersionWithResponse(ctx context.Context, 
 		return nil, err
 	}
 	return ParseFuzzergetVersionResponse(rsp)
+}
+
+// SpecDifferStartDifferWithResponse request returning *SpecDifferStartDifferResponse
+func (c *ClientWithResponses) SpecDifferStartDifferWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*SpecDifferStartDifferResponse, error) {
+	rsp, err := c.SpecDifferStartDiffer(ctx, apiID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSpecDifferStartDifferResponse(rsp)
+}
+
+// SpecDifferStopDifferWithResponse request returning *SpecDifferStopDifferResponse
+func (c *ClientWithResponses) SpecDifferStopDifferWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*SpecDifferStopDifferResponse, error) {
+	rsp, err := c.SpecDifferStopDiffer(ctx, apiID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSpecDifferStopDifferResponse(rsp)
 }
 
 // TraceanalyzerGetApiFindingsWithResponse request returning *TraceanalyzerGetApiFindingsResponse
@@ -8578,72 +8578,6 @@ func ParseBflagetVersionResponse(rsp *http.Response) (*BflagetVersionResponse, e
 	return response, nil
 }
 
-// ParseDifferStartDifferResponse parses an HTTP response from a DifferStartDifferWithResponse call
-func ParseDifferStartDifferResponse(rsp *http.Response) (*DifferStartDifferResponse, error) {
-	bodyBytes, err := ioutil.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &DifferStartDifferResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseDifferStopDifferResponse parses an HTTP response from a DifferStopDifferWithResponse call
-func ParseDifferStopDifferResponse(rsp *http.Response) (*DifferStopDifferResponse, error) {
-	bodyBytes, err := ioutil.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &DifferStopDifferResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParseFuzzerGetAnnotatedSpecResponse parses an HTTP response from a FuzzerGetAnnotatedSpecWithResponse call
 func ParseFuzzerGetAnnotatedSpecResponse(rsp *http.Response) (*FuzzerGetAnnotatedSpecResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
@@ -9023,6 +8957,72 @@ func ParseFuzzergetVersionResponse(rsp *http.Response) (*FuzzergetVersionRespons
 	return response, nil
 }
 
+// ParseSpecDifferStartDifferResponse parses an HTTP response from a SpecDifferStartDifferWithResponse call
+func ParseSpecDifferStartDifferResponse(rsp *http.Response) (*SpecDifferStartDifferResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SpecDifferStartDifferResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseSpecDifferStopDifferResponse parses an HTTP response from a SpecDifferStopDifferWithResponse call
+func ParseSpecDifferStopDifferResponse(rsp *http.Response) (*SpecDifferStopDifferResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SpecDifferStopDifferResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseTraceanalyzerGetApiFindingsResponse parses an HTTP response from a TraceanalyzerGetApiFindingsWithResponse call
 func ParseTraceanalyzerGetApiFindingsResponse(rsp *http.Response) (*TraceanalyzerGetApiFindingsResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
@@ -9284,12 +9284,6 @@ type ServerInterface interface {
 	// Get the version of this Module
 	// (GET /modules/bfla/version)
 	BflagetVersion(w http.ResponseWriter, r *http.Request)
-	// Start Differ for an API
-	// (POST /modules/differ/{apiID}/start)
-	DifferStartDiffer(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
-	// Stop Differ for an API
-	// (POST /modules/differ/{apiID}/stop)
-	DifferStopDiffer(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 	// Retreive the annotated spec for an API
 	// (GET /modules/fuzzer/annotatedspec/{apiID})
 	FuzzerGetAnnotatedSpec(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
@@ -9326,6 +9320,12 @@ type ServerInterface interface {
 	// Get the version of this Module
 	// (GET /modules/fuzzer/version)
 	FuzzergetVersion(w http.ResponseWriter, r *http.Request)
+	// Start Differ for an API
+	// (POST /modules/spec_differ/{apiID}/start)
+	SpecDifferStartDiffer(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
+	// Stop Differ for an API
+	// (POST /modules/spec_differ/{apiID}/stop)
+	SpecDifferStopDiffer(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 	// Get findings for an API and module
 	// (GET /modules/traceanalyzer/apiFindings/{apiID})
 	TraceanalyzerGetApiFindings(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params TraceanalyzerGetApiFindingsParams)
@@ -11275,58 +11275,6 @@ func (siw *ServerInterfaceWrapper) BflagetVersion(w http.ResponseWriter, r *http
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// DifferStartDiffer operation middleware
-func (siw *ServerInterfaceWrapper) DifferStartDiffer(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var err error
-
-	// ------------- Path parameter "apiID" -------------
-	var apiID externalRef0.ApiID
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
-		return
-	}
-
-	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.DifferStartDiffer(w, r, apiID)
-	})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r.WithContext(ctx))
-}
-
-// DifferStopDiffer operation middleware
-func (siw *ServerInterfaceWrapper) DifferStopDiffer(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var err error
-
-	// ------------- Path parameter "apiID" -------------
-	var apiID externalRef0.ApiID
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
-		return
-	}
-
-	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.DifferStopDiffer(w, r, apiID)
-	})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r.WithContext(ctx))
-}
-
 // FuzzerGetAnnotatedSpec operation middleware
 func (siw *ServerInterfaceWrapper) FuzzerGetAnnotatedSpec(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -11631,6 +11579,58 @@ func (siw *ServerInterfaceWrapper) FuzzergetVersion(w http.ResponseWriter, r *ht
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.FuzzergetVersion(w, r)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// SpecDifferStartDiffer operation middleware
+func (siw *ServerInterfaceWrapper) SpecDifferStartDiffer(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SpecDifferStartDiffer(w, r, apiID)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// SpecDifferStopDiffer operation middleware
+func (siw *ServerInterfaceWrapper) SpecDifferStopDiffer(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SpecDifferStopDiffer(w, r, apiID)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -12020,12 +12020,6 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/modules/bfla/version", wrapper.BflagetVersion)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/modules/differ/{apiID}/start", wrapper.DifferStartDiffer)
-	})
-	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/modules/differ/{apiID}/stop", wrapper.DifferStopDiffer)
-	})
-	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/modules/fuzzer/annotatedspec/{apiID}", wrapper.FuzzerGetAnnotatedSpec)
 	})
 	r.Group(func(r chi.Router) {
@@ -12060,6 +12054,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/modules/fuzzer/version", wrapper.FuzzergetVersion)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/modules/spec_differ/{apiID}/start", wrapper.SpecDifferStartDiffer)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/modules/spec_differ/{apiID}/stop", wrapper.SpecDifferStopDiffer)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/modules/traceanalyzer/apiFindings/{apiID}", wrapper.TraceanalyzerGetApiFindings)
@@ -12104,95 +12104,95 @@ var swaggerSpec = []string{
 	"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",
-	"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",
+	"zv6c1jVfCqDkLkV0+2+0YryzfX5bFFJTTbUDUxlC0K7L7TqEnu+t02/fkHB2YrS6CfB6nf3F/6Dq/4YH",
+	"K8gkSAYJDB9472sLTiuAnmNbhOM856ESm1HBZ2sus3C1zZjnWRmP2rwFN76wUtpGzpFA8+n3EgTqGKXH",
+	"UcU64lZWOyuBnsZpORyoVl7VIOrBa/hVnIoNCImY0IGWtXJeXAjl2wbX+7PzgWpZDLN++ju9lJO2jJA1",
+	"nKO1HIMhvlm6otJ2NGLFbPvoe+h3hhICQ9tWxPd2mO4gW21RsFhFMaL2VtIXfyL4JYIYeDSAs0ByzSmT",
+	"UcTCfIVvFdn+iklg/UCUBq18oOrs2O6smGvAgTbIvgmGMYSa38ptTVyWMb6bQOdzV+TA91jEJNmL2mzJ",
+	"fwaIMzzIgadgFaWE2ffC5trlqNaFxXgZfUVEJg6El2vv9EsL/CnbRgn+JiBY8B/Re8g9Br+Ml6/owUqz",
+	"OximqJ1g8hhWNq6CLjjNBOUiClBYJU6IYEL48FYh4S1zsrrRrzLppR7ERlBu5PSBXtOwC92ujIZsgAK0",
+	"fr4wK1krQA7SACMiXYiSTKq2KLDjCJHgJqUqucRNyZfUWRknzert69/pTfQklRtCmu3XXHZTpp9vi+D7",
+	"3r3EcXcbUiJijkPfxHdBmRqwlCd2I/E0YnitNgRWee5g6LlIF8bj4t1NLOpkNBcXCyvmTPpEYcz43MJ3",
+	"8uDJqpNERNLqVMMN7eF2q0inmtnPV6hGbqWs1LDCImBuEXbcL5FbwR2MY6XZcjXu1Z7Zi+++9x5SvOJT",
+	"1LJx1sD33iOYoKRxaLPJY+buPkyN/AOuaAlysC351K3sphfU1rAA3rUdu8J+VZiROWjtwmCFrIiC+eUj",
+	"tVI6617ddBHAd1dKbMTWhe8+oNlb5oZkmYBvjB3Z+8FiMhxcLT96wm1eXn4aTzltx4P5eC7/4sBhFnLo",
+	"KjDZ9KZWdQJB2Txn54ObxXIwX3qyxc35eDCfTqYf9N+j8XI8XBo/iAZL6z7P0KbGHNPLm8VsPPR8zxj7",
+	"fPxhspxcDJZjz/cWV4vZZDi5vFrcXIxHk6uL4m8fJx8+2ufL5WL/rlAMKb2PErvu4YahxsEtMVLW0s9H",
+	"tLtGBcHd/3qYHrgZXtnMDuGotD8q+dR2VOH4BgZBgqhdFcs9j8kv//hVMCOXAM/3Pl1OP9z882Z4OV1c",
+	"XYznN5OR/Xilsm9QAxcAEIvg29kK8IGO5fc+CeAezQIhS3RquUUy/sy2kAl1wGcF95AC3glQJLS9mxuU",
+	"G8a+uRcE3XNPtgrvFN0D7sqCf9OIADW1BZQoDOwDXIaB0wDakpeTPdhWB+wEolCIdsjcOxlcxD1uvEOU",
+	"wV1cHYqVMI+phIujfiXi7sEbkFIUABjSCED1+Q4lVG44HV3T6sahA1VqtxMZR/k5m+ZYzwlo+CzKhzE2",
+	"IkUM2SzbGSaB8k1KstEUcrVFV9VAuYEyg7Z+faigxH4wP6qpDqlCmJWxEky/Vsfiv9aPNed9bEpFNzjL",
+	"u9RgrXeMQU9hzDoR/ZwDDtNbvkIxmS+ZmXsdMdyosJixYBGbsMcgSkum1jWn375hspkjkeHBkMX/GaZJ",
+	"gggDMqYMEqRyVBo5qxqMN5BrjxVzRqdSrLeQgluEiJyTS4ET4ufwPlursX6ufWzIrw1rCUh+JKAFrHPw",
+	"XMDNzWvNRtq+P0KUaUXWIBUVNmjjlcI+sogn2QAwuAFZzKQaijf4oc8VltnEIm6aC8SRggWVW7zZIppd",
+	"fXmikte9zUjW04aSFnxAAs0L3GYgyuhQRBgtGBafZQASsEjawQwIoTlAkHIyCz3JmcA0fVkSj9aa1fEQ",
+	"Hw62BzdNChehvjbHt3JEM4fNrK6EmzaK4UMYQbsXqw946z6KjCBbOCpNsD2iipLbDuI1kwa9efFLuGkU",
+	"LCxltLjqvbO13Zov4UZnLmdWyPip4lN2j/LWaBoDo9mPNTJe4lIFmwGKnTtxs+qTO+IBCWSXKmrWsh2Q",
+	"ClkcdUoOlS5HiUmTaFPaTBnclmRTwCDAfHwYzgr9nTEoFHolo0CbMzlRtvQCUmy4oE7h2ALGrHEZqo+0",
+	"TBmWCLmuiE4Z8200cgnlmFGa0eV07PneeD6/nHu+N5nezOaXH+bjxaIWGBuvF2LitsPfz2ofsp/zN/6B",
+	"xrDGK0it2/hyUEPssMXU2QFdPqxvwmzbaWRyqBGuEQrjOInu+AgBIg9iIPGDCMSrX+X/beEg05OrojGT",
+	"B32UXunf5o2G0arGedFf1B4XMBW4bYhAm34byEa2+5v11FLGs4OPa2pq1urimSi1ENL4/D4lQWgJyQaQ",
+	"QUtkIIa/pQjwj0CmkqQJyqKkCby3bSL5SH5TBMkVBaKDTtZx00yLVZSg8e+YmbpJd77ZIUqtF1Yu5Aew",
+	"wXci3xgxiEMK4G2UyggQ+p0r1Eyr6bXKWYDqbls1q492zHP0gawZkH7cf4NCBENb4mywttCaAWneJQu1",
+	"CWJfW9lH8UczE5lOSJGNmpIGSmPk1O2gyt9PlovJh49Lz/eWg/PLhed7l7PxdDQV/xssbgbTwfn/LsZc",
+	"z3+Yz4by73+Jv/nn5XwwHJs/DmaTm7Orf/E/7AhZaKRVSGvjtQ5LWVwNh9wE+d50vPz1cv7p5mwwOb+a",
+	"c1O1vLy8Ob8UEfjZYL4Y32jb9WE8Hc8nw6ypAbMNHBvUW+6BIspmhodiSye8RVSwvjbc3J2ABERkEwmO",
+	"lduOagbU6On5TyN1zFUD18yAxNj5ZLezfnlrXs962xLXMtwxkUXMrOnImcjpSUXbEgTm3uu/3hX1g0pm",
+	"bt9s5UDYnSWZNMkpBzJE1DtMGZnrvFljuLl9n7UPYu5913IYUvVwjHXXizbbw62q2loo++MDzEXuoWpw",
+	"lCHTDa2GB26euCfj29PHwvbPbR9mMjDNsyuq7NvAteoKCLWf/LikdMruZdjqsx2zKQ+a45EvXJzgLYwT",
+	"ivx8VuxiZvPLz5PReOT53nw8vJwulvOr4XI8srraS+V0FlEp0sxr+XGQcRcmYAWpCO7LzPScmmNzCNtR",
+	"0f6VeGavXo4G9727NCQogbc4xC4798+l5qYPv0TUKhP894/Q7rXvQ0UXPNQqHixHDzYIJyROLVZGXyAD",
+	"MAwB5m3yRAoqVB6s8SRUukDHQ3W5P4zb+2Ywj3hrawxDjnPdtOC8s0tmiVy/GNaeTvI/V5PhJ3E78Wxw",
+	"db4U/xvPTC1anNmrEXktKodVaRVHU6i23Cd5GdApY5TB9itm29xnenbFGUIN0tJNm4mUBBXmS9AK4Tt1",
+	"orgH7XYAVzyPjDr7WXng8PUbAkw2F1GQhihLESty6GA2oRMyhKttTdrtXW2MsqT98qQKc8w6bdj7XF0s",
+	"+qUcqssVWZZqRHiLi+2MVhsiP1d5yCU9ogjJKsEMr+pvOkRrwHnVQMhQ97DxNd/AuQ/1kbe2DRNG9+6j",
+	"nEf31kF2KMA2U1s3zoVsbxuq8TJIdSQHnikmp2ii8hZYB7J1Gmh+b46LlmcIpffLm7dv3qqDNW7xvFPv",
+	"r+InI3HhRBdTFH9tkNCW2enXJPBOvQ+IDbJGfqGKZU2iYt7kJL9TXWdEjca64pRDU1Hmx7GdKMnj0LZc",
+	"V9Khiy4W4dI0L2nhBkup3KJDp1JdJyf0GOV5nNvnF7wdu1Qu/Tv2KxVTcOxVqknhQpvqbfmOvTqhxFYb",
+	"oFO3807dykVIOvXptDB7jcHuHZ86aaHM31O6dpq4WgvOBbO2IiaO/bq378aWtvIcjv26S6qleoyLXixU",
+	"TXbvIJNsr0tVG/7y9m2nYg01TmntlXZ5FZQCdTt9g+8QkUnJCSQb5IO1WIfM/+Cm6g0QvUNENmwLdill",
+	"4BaBMLpHSVa9ArAIGJXm+uTEKYP3tBuu6lpr3eLk9X25vqdffa3Wt1ikq5UIAPh5WSY7F2SkPilU5xAl",
+	"MdLdDiYP0rsxKCU+5j7RyXfx8yR4dPKOxrJx1UmqloiVd4QnI12KpFhqC2UD9aq01Zfd+3DU8xKulm4n",
+	"sVFKVF8DcSXkrNz3SNgMFc9MYKDpKG9pBBKEGpon5cquXQk/tw5wpP7BqF+gqIUFssLsLVTO23XdyOqC",
+	"34fbm1aLz+91f1ou/96lSyc3s64mu3vX7s6mvUa/C4067ijiJ20jLMWx3TrWVb125Cj9cMTzOsbSKUSB",
+	"iFgV3ceD+MAiObSrC1xcRM8CL8+mTXGm/0StXmpRlLOIljWlyjh9HwUPP97QFAtXVSvtPYu1kyzxw8ky",
+	"FPdQi5SR+fUVwybl9WSdRLuPnEIkmKmzLRdzNxDCXurb1QSKSvOOOrC/SrG9ZGOeqdX7R01Ue/f23WHL",
+	"M3JaT0ZgGjFwFqUk2KeECxYBnEXkqwEiqiCIUeGm76Lt44lRZs6ZjwZZ3bfOLtQk8A7jvpa1yjPoW8Gy",
+	"ZB1JgqjF1xJC729u6D3cbFDyRi/cmSyZEyEH+AeVlykPQaIiboW7jomsCKDk9zAmMNtEcinMqxSscYga",
+	"SFPYfDydPkVf7UikOiIV93qdKMUb0k5EWYgeP40mu4wRGcRYQv3MMiPvKJq04eAKNSfwrjLw+P/xGq84",
+	"5dpIVYjOSZ4MkUxFKZJuJH63U8/cPP08lFSUanIV9kzMK0K5VSpF0mxE8z2Vf1naGaTsB1PgubYZCZTV",
+	"Ux6LGzSWpKi63fjlOYFpcFy7caTlwlRpbFHtBoY4UEmlEIeqbvE+uG0QBGK3HmCm+Osp+qESyX2qkqgE",
+	"So6aol1TWKKu3WiYbjaIMhTMxdMx3Qxzqe9PRK4i4IdwmjJSJRqGCon0az58CyjuWxtEcgsMzdUIg2L/",
+	"roTKnhV6XhNQgtrJErw+SR/Ecfggq1QqfCiWASxSVdLk7ewKe2U8dUXhBp1sMctK0DTIuGj8Ubd9KcmE",
+	"3VLznpBlZ3+qzKFn02Njx/S+Y3rfMb3vmN7386T39XXG+jw9q21OtRL4s8SCwRbrqmn3mG0x4V40CkVp",
+	"XZE0t+aYy+5amaeLhdS0ANLtbQSTIDO9TRZ3pFtr0/tMJvcgIX6xQPqMh6mpwGgNWU5CyBBl2QV0ZxKd",
+	"G/0OJy9a8ynSH0JmJALzZJ9aCTjZRZRdUfkwhjOeL3SnwyF5EONDKiWONnm/TVwdEtg1H76qQ+WZbrMf",
+	"KXd7T0s8H9aEl8rySi+FHfJ5MYHanbhrSU9u1yHkvHuiK5vKeMnIzDEunRnTr7SwhCgRd+D1ABzY92fn",
+	"A6CmENV1CkGaN2ZNQ0HH9+sQ8j1ZVhaVnkXJYDZpy3JcbpGoa5tfOpfg8BWIxw3sqY+yuEBT4uOTqw4Y",
+	"hsmhs2GuFohQzPDdYQxWjnhrmgAR7KcqaBWF/nDJC0KTgCRvUZa5rJ6u4AmSxwfLzH/Wiff5aCazy5G1",
+	"OMixfSHQnNfBZBfLsvEoALcPUsBlo1oxyCGqCsCRnffFzhl7/Gx8va7ytWA3xVUWFq+8eGTh9Iplldfx",
+	"KWdKy5NJiucOy53XP9LoWx6ncvWEXhTzyHpZ6pHV68ZUy5+F5L3i8h2o/fznry3k/fnYrYMy0oc/4tSn",
+	"5sy/nUMHWQnfg1tO27ve2Qsp9XNW6mzYR1JL6T3O17/TYYgRYVe4G1wHCay8EukIoxUM//wEGRF1qXsJ",
+	"yEhWtj5Kx1E6XqF0MLQSCxCx4r6CogYTBxWvxdk9OiPdWSmK98ZJUXxkpP8sRtKPbu9DJZ2j7I3nF6CR",
+	"akwmSW5EtJl6Fvt44JvjRzbcgzrLufCozf7T2ChBVMYL+0SR5mKQI+f8R3EO1YVdnx5wlrVhX3PUOX8k",
+	"/XXyh0gfOvmOG4pYcfpvEJOlm1xo7bYx37vjUXf0JAAfEBIx9WhfzcVr0U4kYAFYaG3LHUB5Y5EgnXcQ",
+	"Rz8ct8YjTk7b6JwUJ98zCjw6egaqNtGl+VLq3gnlW0cpv93ZKN51FxeN59+OhuDHhWqM6tHWA3XN3qqd",
+	"LAGNKbioPyDfIPY5q+D9zGSTYOnpLYj6bK4D6WXYRbp2za2ola/IniglgAIao1Vr7sIcsQThO2Tqj8JF",
+	"KnmQLB/m8cG7t+/yuhAgYluU3GNaJcmZgOUD0hqv7kLbT2aj93IfXdcYYqLq+hMKfhSHEy8u6KcYLA/l",
+	"2W9VkoiBtSzuUWBDN36osKPkvRqGfDmpNDlbGrkgx2SaYzJNn2Qaxeb8n2xXY74kYmV0+byGfAyoKFg1",
+	"HFt4WeY173Us7+jUukLrNAQ5nZ9fk6LkDq+QqUx972+9bEpnGCaEoYTAENhSqOu5TKvvJsVd4Oj8oZr9",
+	"8XP+EOPr52b9ZM+Rlw/Py/mRi4pW9uFl0Vq9YfQqk+Dy5+72V+qwdiL18l8XMXlWFlUPkr6HAZirR86P",
+	"svpjZVWdS9WIahSDP64gWaHwTwCCJCVEv9bsIrpR/HIktyBV7yxrPQrATyQArnzpIhDS98pE4nv2hKlD",
+	"XAfqxxLNaE6ACMNrLDfMmFFgPptf47C9EGfNf9IzhxYgzSU71LqvfSD2+gdbROOBzvZgkj2WY+GBThGc",
+	"8hldNVqbUsT1EiYSX/IE4jZKZUxzlSaJKJGvpECMZ1KI/9gYstkgpk/5fiiyS+9NWhA+VGspgl1cWk1o",
+	"twENmDaFFgRxu4VyQ5MvTNn/4z1mW04YyRJ/at6hve5Qw1IJzdOkqgnNncQrjQPIkDSs7lQWD+HKrvod",
+	"fYPMKQlQAtby3dh6Gl8ZU/9I2ap7wLaK+jm812HDLGpox383BNSQ4wWwt92zVQUrBZdd9aHyLKJVMu9/",
+	"l9hE4baiZa7ObrECYE/KWwRxz+eSmena78mk/YHlH3r6WEAWjdHqJsDrNUq6RVRGoo9BquqVf13TQ4VV",
+	"5H+PKWE/YSZAORhQIb4LU7Vu/TuyVBQfOepVcJSN9EWGErnmkMDw4YWdQS9NwI51HY5H0Xs8im5l+rZE",
+	"7QJzinzsl8SeTmFSmUX+U5BXVgMXdZI4VddtlWmK5EWljFL9umSDauP8JEgMBmoUYAxQrpyNVK5ts/6q",
+	"JLa6cImCtGfozaU4bQBXDO2vyradB1rSerPPtip9ZfwT87lYO+U7ed0GvSmmja5SgbTyXJP/ovsevaZX",
+	"4IfXsoMbw7V65E9ntyg+ctsr89GbmI23RsmdJm6ahN6pqNbuPV4//l8AAAD//44PUnOY2AAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

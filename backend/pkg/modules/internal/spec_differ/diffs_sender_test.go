@@ -1,4 +1,4 @@
-package differ
+package spec_differ
 
 import (
 	"crypto/sha256"
@@ -167,7 +167,7 @@ func Test_pluginDiffer_getSpecDiffsNotifications(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.expectAccessor(mockAccessor)
-			p := &differ{
+			p := &specDiffer{
 				apiIDToDiffs: tt.fields.apiIDToDiffs,
 				accessor:     mockAccessor,
 			}

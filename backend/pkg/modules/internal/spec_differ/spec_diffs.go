@@ -1,4 +1,4 @@
-package differ
+package spec_differ
 
 import (
 	"context"
@@ -20,20 +20,20 @@ import (
 	"github.com/openclarity/apiclarity/api3/global"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/differ/config"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/differ/restapi"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/spec_differ/config"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/spec_differ/restapi"
 	speculatorutils "github.com/openclarity/apiclarity/backend/pkg/utils/speculator"
 )
 
 type diffHash [32]byte
 
 const (
-	moduleName         = "differ"
+	moduleName         = "spec_differ"
 	moduleInfo         = "Calculate spec diffs base on events and send diffs notifications"
 	diffsSendThreshold = 500
 )
 
-type differ struct {
+type specDiffer struct {
 	httpHandler http.Handler
 
 	apiIDToDiffs     map[uint]map[diffHash]global.Diff
@@ -47,13 +47,13 @@ type differ struct {
 
 //nolint:gochecknoinits // was needed for the module implementation of ApiClarity
 func init() {
-	core.RegisterModule(newDiffer)
+	core.RegisterModule(newSpecDiffer)
 }
 
 //nolint:ireturn,nolintlint // was needed for the module implementation of ApiClarity
-func newDiffer(ctx context.Context, accessor core.BackendAccessor) (core.Module, error) {
+func newSpecDiffer(ctx context.Context, accessor core.BackendAccessor) (core.Module, error) {
 	// Use default values
-	d := &differ{
+	d := &specDiffer{
 		accessor:         accessor,
 		config:           config.GetConfig(),
 		apiIDToDiffs:     make(map[uint]map[diffHash]global.Diff),
@@ -72,15 +72,15 @@ func newDiffer(ctx context.Context, accessor core.BackendAccessor) (core.Module,
 	return d, nil
 }
 
-func (p *differ) Name() string {
+func (s *specDiffer) Name() string {
 	return moduleName
 }
 
-func (p *differ) Info() core.ModuleInfo {
-	return p.info
+func (s *specDiffer) Info() core.ModuleInfo {
+	return s.info
 }
 
-func (p *differ) EventNotify(ctx context.Context, event *core.Event) {
+func (s *specDiffer) EventNotify(ctx context.Context, event *core.Event) {
 	var reconstructedDiff *_spec.APIDiff
 	var providedDiff *_spec.APIDiff
 	var err error
@@ -89,7 +89,7 @@ func (p *differ) EventNotify(ctx context.Context, event *core.Event) {
 
 	apiEvent := event.APIEvent
 	specKey := _speculator.GetSpecKey(apiEvent.HostSpecName, strconv.Itoa(int(apiEvent.DestinationPort)))
-	speculatorAccessor := p.accessor.GetSpeculatorAccessor()
+	speculatorAccessor := s.accessor.GetSpeculatorAccessor()
 
 	if !speculatorAccessor.HasProvidedSpec(specKey) && !speculatorAccessor.HasApprovedSpec(specKey) {
 		log.Debugf("No diffs to calculate")
@@ -130,24 +130,24 @@ func (p *differ) EventNotify(ctx context.Context, event *core.Event) {
 	apiEvent.SpecDiffType = getHighestPrioritySpecDiffType(providedDiffType, reconstructedDiffType)
 
 	// save api event with diffs in db
-	if err := p.accessor.UpdateAPIEvent(ctx, apiEvent); err != nil {
+	if err := s.accessor.UpdateAPIEvent(ctx, apiEvent); err != nil {
 		log.Errorf("Failed to update api event: %v", err)
 		return
 	}
 
 	if apiEvent.HasProvidedSpecDiff {
-		p.addDiffToSend(apiEvent.NewProvidedSpec, apiEvent.OldProvidedSpec, providedDiffType, common.PROVIDED, apiEvent)
+		s.addDiffToSend(apiEvent.NewProvidedSpec, apiEvent.OldProvidedSpec, providedDiffType, common.PROVIDED, apiEvent)
 	}
 	if apiEvent.HasReconstructedSpecDiff {
-		p.addDiffToSend(apiEvent.NewReconstructedSpec, apiEvent.OldReconstructedSpec, reconstructedDiffType, common.RECONSTRUCTED, apiEvent)
+		s.addDiffToSend(apiEvent.NewReconstructedSpec, apiEvent.OldReconstructedSpec, reconstructedDiffType, common.RECONSTRUCTED, apiEvent)
 	}
 }
 
-func (p *differ) addDiffToSend(newSpec, oldSpec string, diffType models.DiffType, specType common.SpecType, event *database.APIEvent) {
+func (s *specDiffer) addDiffToSend(newSpec, oldSpec string, diffType models.DiffType, specType common.SpecType, event *database.APIEvent) {
 	if diffType == models.DiffTypeNODIFF {
 		return
 	}
-	if p.getTotalUniqueDiffs() > diffsSendThreshold {
+	if s.getTotalUniqueDiffs() > diffsSendThreshold {
 		log.Warnf("Diff events threshold reached (%v), ignoring event", diffsSendThreshold)
 		return
 	}
@@ -157,7 +157,7 @@ func (p *differ) addDiffToSend(newSpec, oldSpec string, diffType models.DiffType
 	// TODO should we include also specType in the hash?
 	hash = sha256.Sum256([]byte(newSpec + oldSpec))
 
-	apiInfo, err := p.accessor.GetAPIInfo(context.TODO(), event.APIInfoID)
+	apiInfo, err := s.accessor.GetAPIInfo(context.TODO(), event.APIInfoID)
 	if err != nil {
 		log.Errorf("Failed to get api info with apiID=%v: %v", event.APIInfoID, err)
 		return
@@ -170,15 +170,15 @@ func (p *differ) addDiffToSend(newSpec, oldSpec string, diffType models.DiffType
 		specTimestamp = time.Time(apiInfo.ReconstructedSpecCreatedAt)
 	}
 
-	p.Lock()
-	defer p.Unlock()
-	if len(p.apiIDToDiffs[event.APIInfoID]) == 0 {
-		p.apiIDToDiffs[event.APIInfoID] = make(map[diffHash]global.Diff)
+	s.Lock()
+	defer s.Unlock()
+	if len(s.apiIDToDiffs[event.APIInfoID]) == 0 {
+		s.apiIDToDiffs[event.APIInfoID] = make(map[diffHash]global.Diff)
 	}
-	if _, ok := p.apiIDToDiffs[event.APIInfoID][hash]; !ok {
-		p.totalUniqueDiffs++
+	if _, ok := s.apiIDToDiffs[event.APIInfoID][hash]; !ok {
+		s.totalUniqueDiffs++
 	}
-	p.apiIDToDiffs[event.APIInfoID][hash] = global.Diff{
+	s.apiIDToDiffs[event.APIInfoID][hash] = global.Diff{
 		DiffType:      convertFromModelsDiffType(diffType),
 		LastSeen:      time.Time(event.Time),
 		Method:        convertFromModelsMethod(event.Method),
@@ -323,6 +323,6 @@ func convertSpecDiffToEventDiff(diff *_spec.APIDiff) (originalRet, modifiedRet [
 	return originalRet, modifiedRet, nil
 }
 
-func (p *differ) HTTPHandler() http.Handler {
-	return p.httpHandler
+func (s *specDiffer) HTTPHandler() http.Handler {
+	return s.httpHandler
 }

@@ -1,4 +1,4 @@
-package differ
+package spec_differ
 
 import (
 	"context"
@@ -14,10 +14,10 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 )
 
-func (p *differ) StartDiffsSender(ctx context.Context) {
+func (s *specDiffer) StartDiffsSender(ctx context.Context) {
 	// each period aggregate diffs per api and notify to notification server
 	log.Info("Starting diffs sender")
-	interval := p.config.SendNotificationIntervalSec()
+	interval := s.config.SendNotificationIntervalSec()
 
 	ticker := time.NewTicker(time.Duration(interval) * time.Second)
 	defer ticker.Stop()
@@ -27,28 +27,28 @@ func (p *differ) StartDiffsSender(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if err := p.sendDiffsNotifications(); err != nil {
-				log.Errorf("Failed to send diffs notification. total diffs=%v.: %v", p.totalUniqueDiffs, err)
+			if err := s.sendDiffsNotifications(); err != nil {
+				log.Errorf("Failed to send diffs notification. total diffs=%v.: %v", s.totalUniqueDiffs, err)
 			}
-			p.clearDiffs()
+			s.clearDiffs()
 		}
 	}
 }
 
-func (p *differ) clearDiffs() {
-	p.Lock()
-	defer p.Unlock()
-	p.apiIDToDiffs = map[uint]map[diffHash]global.Diff{}
-	p.totalUniqueDiffs = 0
+func (s *specDiffer) clearDiffs() {
+	s.Lock()
+	defer s.Unlock()
+	s.apiIDToDiffs = map[uint]map[diffHash]global.Diff{}
+	s.totalUniqueDiffs = 0
 }
 
-func (p *differ) sendDiffsNotifications() error {
-	if p.getTotalUniqueDiffs() == 0 {
+func (s *specDiffer) sendDiffsNotifications() error {
+	if s.getTotalUniqueDiffs() == 0 {
 		log.Infof("No events to send")
 		return nil
 	}
 
-	diffsNotifications := p.getSpecDiffsNotifications()
+	diffsNotifications := s.getSpecDiffsNotifications()
 
 	log.Infof("Sending diff notifications: %+v", diffsNotifications)
 
@@ -58,7 +58,7 @@ func (p *differ) sendDiffsNotifications() error {
 			return fmt.Errorf("failed to convert to apiclarity notification: %v", err)
 		}
 		apiID := *notification.Diffs.ApiInfo.Id
-		if err := p.accessor.Notify(context.TODO(), moduleName, uint(apiID), n); err != nil {
+		if err := s.accessor.Notify(context.TODO(), moduleName, uint(apiID), n); err != nil {
 			return fmt.Errorf("failed to notify: %v", err)
 		}
 	}
@@ -66,20 +66,20 @@ func (p *differ) sendDiffsNotifications() error {
 	return nil
 }
 
-func (p *differ) getTotalUniqueDiffs() int {
-	p.RLock()
-	defer p.RUnlock()
-	return p.totalUniqueDiffs
+func (s *specDiffer) getTotalUniqueDiffs() int {
+	s.RLock()
+	defer s.RUnlock()
+	return s.totalUniqueDiffs
 }
 
-func (p *differ) getSpecDiffsNotifications() []notifications.SpecDiffsNotification {
-	p.RLock()
-	defer p.RUnlock()
+func (s *specDiffer) getSpecDiffsNotifications() []notifications.SpecDiffsNotification {
+	s.RLock()
+	defer s.RUnlock()
 
 	var ret []notifications.SpecDiffsNotification
 
-	for apiID, apiInfoDiffs := range p.apiIDToDiffs {
-		apiInfo, err := p.accessor.GetAPIInfo(context.TODO(), apiID)
+	for apiID, apiInfoDiffs := range s.apiIDToDiffs {
+		apiInfo, err := s.accessor.GetAPIInfo(context.TODO(), apiID)
 		if err != nil {
 			log.Errorf("Failed to get api info with apiID=%v: %v", apiID, err)
 			continue

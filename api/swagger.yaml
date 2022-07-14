@@ -388,7 +388,7 @@ definitions:
       - specdiffs
       - traceanalyzer
       - bfla
-      - differ
+      - spec_differ
       - fuzzer
       
 
