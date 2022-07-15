@@ -24,15 +24,19 @@ import (
 var fuzzerLogger = logrus.New()
 
 // Logf logs message either via defined user logger or via system one if no user logger is defined.
-func Logf(f string, args ...interface{}) {
-	fuzzerLogger.Infof(f, args...)
-}
 
 func Debugf(f string, args ...interface{}) {
 	fuzzerLogger.Debugf(f, args...)
 }
 
-// Logf logs message either via defined user logger or via system one if no user logger is defined.
+func Logf(f string, args ...interface{}) {
+	fuzzerLogger.Infof(f, args...)
+}
+
+func Warningf(f string, args ...interface{}) {
+	fuzzerLogger.Warningf(f, args...)
+}
+
 func Errorf(f string, args ...interface{}) {
 	fuzzerLogger.Errorf(f, args...)
 }

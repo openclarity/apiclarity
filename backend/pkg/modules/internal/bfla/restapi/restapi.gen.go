@@ -152,11 +152,6 @@ type PutAuthorizationModelApiIDDenyParams struct {
 	K8sClientUid string `form:"k8sClientUid" json:"k8sClientUid"`
 }
 
-// PutAuthorizationModelApiIDLearningResetParams defines parameters for PutAuthorizationModelApiIDLearningReset.
-type PutAuthorizationModelApiIDLearningResetParams struct {
-	NrTraces *int `form:"nr_traces,omitempty" json:"nr_traces,omitempty"`
-}
-
 // PutAuthorizationModelApiIDLearningStartParams defines parameters for PutAuthorizationModelApiIDLearningStart.
 type PutAuthorizationModelApiIDLearningStartParams struct {
 	NrTraces *int `form:"nr_traces,omitempty" json:"nr_traces,omitempty"`
@@ -186,14 +181,20 @@ type ServerInterface interface {
 	// (PUT /authorizationModel/{apiID}/deny)
 	PutAuthorizationModelApiIDDeny(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params PutAuthorizationModelApiIDDenyParams)
 
-	// (PUT /authorizationModel/{apiID}/learning/reset)
-	PutAuthorizationModelApiIDLearningReset(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params PutAuthorizationModelApiIDLearningResetParams)
+	// (PUT /authorizationModel/{apiID}/detection/start)
+	PutAuthorizationModelApiIDDetectionStart(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
+
+	// (PUT /authorizationModel/{apiID}/detection/stop)
+	PutAuthorizationModelApiIDDetectionStop(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 
 	// (PUT /authorizationModel/{apiID}/learning/start)
 	PutAuthorizationModelApiIDLearningStart(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params PutAuthorizationModelApiIDLearningStartParams)
 
 	// (PUT /authorizationModel/{apiID}/learning/stop)
 	PutAuthorizationModelApiIDLearningStop(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
+
+	// (POST /authorizationModel/{apiID}/reset)
+	PostAuthorizationModelApiIDReset(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 	// Get the event with the annotations and bfla status
 	// (GET /event/{id})
 	GetEvent(w http.ResponseWriter, r *http.Request, id int)
@@ -488,8 +489,8 @@ func (siw *ServerInterfaceWrapper) PutAuthorizationModelApiIDDeny(w http.Respons
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// PutAuthorizationModelApiIDLearningReset operation middleware
-func (siw *ServerInterfaceWrapper) PutAuthorizationModelApiIDLearningReset(w http.ResponseWriter, r *http.Request) {
+// PutAuthorizationModelApiIDDetectionStart operation middleware
+func (siw *ServerInterfaceWrapper) PutAuthorizationModelApiIDDetectionStart(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var err error
@@ -503,22 +504,34 @@ func (siw *ServerInterfaceWrapper) PutAuthorizationModelApiIDLearningReset(w htt
 		return
 	}
 
-	// Parameter object where we will unmarshal all parameters from the context
-	var params PutAuthorizationModelApiIDLearningResetParams
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutAuthorizationModelApiIDDetectionStart(w, r, apiID)
+	})
 
-	// ------------- Optional query parameter "nr_traces" -------------
-	if paramValue := r.URL.Query().Get("nr_traces"); paramValue != "" {
-
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
 	}
 
-	err = runtime.BindQueryParameter("form", true, false, "nr_traces", r.URL.Query(), &params.NrTraces)
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// PutAuthorizationModelApiIDDetectionStop operation middleware
+func (siw *ServerInterfaceWrapper) PutAuthorizationModelApiIDDetectionStop(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "nr_traces", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
 		return
 	}
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PutAuthorizationModelApiIDLearningReset(w, r, apiID, params)
+		siw.Handler.PutAuthorizationModelApiIDDetectionStop(w, r, apiID)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -585,6 +598,32 @@ func (siw *ServerInterfaceWrapper) PutAuthorizationModelApiIDLearningStop(w http
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PutAuthorizationModelApiIDLearningStop(w, r, apiID)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// PostAuthorizationModelApiIDReset operation middleware
+func (siw *ServerInterfaceWrapper) PostAuthorizationModelApiIDReset(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostAuthorizationModelApiIDReset(w, r, apiID)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -802,13 +841,19 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Put(options.BaseURL+"/authorizationModel/{apiID}/deny", wrapper.PutAuthorizationModelApiIDDeny)
 	})
 	r.Group(func(r chi.Router) {
-		r.Put(options.BaseURL+"/authorizationModel/{apiID}/learning/reset", wrapper.PutAuthorizationModelApiIDLearningReset)
+		r.Put(options.BaseURL+"/authorizationModel/{apiID}/detection/start", wrapper.PutAuthorizationModelApiIDDetectionStart)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/authorizationModel/{apiID}/detection/stop", wrapper.PutAuthorizationModelApiIDDetectionStop)
 	})
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/authorizationModel/{apiID}/learning/start", wrapper.PutAuthorizationModelApiIDLearningStart)
 	})
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/authorizationModel/{apiID}/learning/stop", wrapper.PutAuthorizationModelApiIDLearningStop)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/authorizationModel/{apiID}/reset", wrapper.PostAuthorizationModelApiIDReset)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/event/{id}", wrapper.GetEvent)
@@ -826,31 +871,32 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"fSBFLQAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

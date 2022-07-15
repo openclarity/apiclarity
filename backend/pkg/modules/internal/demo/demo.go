@@ -31,16 +31,25 @@ func init() {
 	core.RegisterModule(newModule)
 }
 
-const ModuleName = "demo"
+const (
+	ModuleName        = "demo"
+	ModuleDescription = "This is a demo module doing nothing"
+)
 
 func newModule(ctx context.Context, accessor core.BackendAccessor) (core.Module, error) {
-	return &demo{
-		handler: HandlerWithOptions(&controller{accessor: accessor}, ChiServerOptions{BaseURL: "/api/modules/demo"}),
-	}, nil
+	d := demo{
+		info: &core.ModuleInfo{
+			Name:        ModuleName,
+			Description: ModuleDescription,
+		},
+	}
+	d.handler = HandlerWithOptions(&controller{accessor: accessor, demo: &d}, ChiServerOptions{BaseURL: "/api/modules/demo"})
+	return &d, nil
 }
 
 type controller struct {
 	accessor core.BackendAccessor
+	demo     *demo
 }
 
 func httpError(w http.ResponseWriter, err error) {
@@ -63,7 +72,7 @@ func (c *controller) PostAlertEventID(w http.ResponseWriter, r *http.Request, ev
 	case "WARN":
 		ann = core.AlertWarnAnn
 	}
-	err := c.accessor.CreateAPIEventAnnotations(r.Context(), ModuleName, uint(eventID), ann)
+	err := c.accessor.CreateAPIEventAnnotations(r.Context(), c.demo.info.Name, uint(eventID), ann)
 	if err != nil {
 		httpError(w, err)
 		return
@@ -83,7 +92,7 @@ func (c *controller) GetApiApiID(w http.ResponseWriter, r *http.Request, apiID i
 
 //nolint:stylecheck,revive
 func (c *controller) GetApiApiIDAnnotationAnnotation(w http.ResponseWriter, r *http.Request, apiID int, annotation string) {
-	api, err := c.accessor.GetAPIInfoAnnotation(r.Context(), ModuleName, uint(apiID), annotation)
+	api, err := c.accessor.GetAPIInfoAnnotation(r.Context(), c.demo.info.Name, uint(apiID), annotation)
 	if err != nil {
 		httpError(w, err)
 		return
@@ -93,7 +102,7 @@ func (c *controller) GetApiApiIDAnnotationAnnotation(w http.ResponseWriter, r *h
 
 //nolint:stylecheck,revive
 func (c *controller) DeleteApiApiIDAnnotationAnnotation(w http.ResponseWriter, r *http.Request, apiID int, annotation string) {
-	err := c.accessor.DeleteAPIInfoAnnotations(r.Context(), ModuleName, uint(apiID), annotation)
+	err := c.accessor.DeleteAPIInfoAnnotations(r.Context(), c.demo.info.Name, uint(apiID), annotation)
 	if err != nil {
 		httpError(w, err)
 		return
@@ -108,7 +117,7 @@ func (c *controller) PostApiApiIDAnnotationAnnotation(w http.ResponseWriter, r *
 	}
 	d := &Data{}
 	_ = json.NewDecoder(r.Body).Decode(d)
-	err := c.accessor.StoreAPIInfoAnnotations(r.Context(), ModuleName, uint(apiID), core.Annotation{
+	err := c.accessor.StoreAPIInfoAnnotations(r.Context(), c.demo.info.Name, uint(apiID), core.Annotation{
 		Name:       annotation,
 		Annotation: []byte(d.Data),
 	})
@@ -120,7 +129,7 @@ func (c *controller) PostApiApiIDAnnotationAnnotation(w http.ResponseWriter, r *
 }
 
 func (c *controller) GetEventEventIDAnnotationAnnotation(w http.ResponseWriter, r *http.Request, eventID int, annotation string) {
-	api, err := c.accessor.GetAPIEventAnnotation(r.Context(), ModuleName, uint(eventID), annotation)
+	api, err := c.accessor.GetAPIEventAnnotation(r.Context(), c.demo.info.Name, uint(eventID), annotation)
 	if err != nil {
 		httpError(w, err)
 		return
@@ -134,7 +143,7 @@ func (c *controller) PostEventEventIDAnnotationAnnotation(w http.ResponseWriter,
 	}
 	d := &Data{}
 	_ = json.NewDecoder(r.Body).Decode(d)
-	err := c.accessor.CreateAPIEventAnnotations(r.Context(), ModuleName, uint(eventID), core.Annotation{
+	err := c.accessor.CreateAPIEventAnnotations(r.Context(), c.demo.info.Name, uint(eventID), core.Annotation{
 		Name:       annotation,
 		Annotation: []byte(d.Data),
 	})
@@ -165,10 +174,11 @@ func (c *controller) GetVersion(w http.ResponseWriter, r *http.Request) {
 
 type demo struct {
 	handler http.Handler
+	info    *core.ModuleInfo
 }
 
-func (d *demo) Name() string {
-	return ModuleName
+func (d *demo) Info() core.ModuleInfo {
+	return *d.info
 }
 
 func (d *demo) EventNotify(ctx context.Context, event *core.Event) {

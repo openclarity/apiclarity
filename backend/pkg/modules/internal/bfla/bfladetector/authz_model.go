@@ -27,7 +27,7 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/restapi"
 )
 
-var spaceRegex = regexp.MustCompile("\\s+")
+var spaceRegex = regexp.MustCompile(`\s+`)
 
 type Operation struct {
 	Method   string   `json:"method"`

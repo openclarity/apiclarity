@@ -21,10 +21,12 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-
-	log "github.com/sirupsen/logrus"
+	"strconv"
+	"strings"
 
 	"github.com/openclarity/apiclarity/backend/pkg/config"
+	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
+	log "github.com/sirupsen/logrus"
 )
 
 const BaseHTTPPath = "/api/modules"
@@ -49,44 +51,98 @@ func GetNotificationPrefix() string {
 
 // The order of the modules is not important.
 // You MUST NOT rely on a specific order of modules.
-var modules []ModuleFactory
+var modules = map[string]ModuleFactory{}
 
 func RegisterModule(m ModuleFactory) {
-	modules = append(modules, m)
+	_, corePath, _, ok1 := runtime.Caller(0)
+	_, modulePath, _, ok2 := runtime.Caller(1)
+	if !ok1 || !ok2 {
+		log.Errorf("unable to retrieve folder containing the module %v. Ignoring registration.", m)
+		return
+	}
+	modulePathIndex := len(strings.Split(corePath, "/")) - 2 //nolint:gomnd
+	moduleFolderName := strings.Split(modulePath, "/")[modulePathIndex]
+
+	modules[moduleFolderName] = m
 }
 
 type ModuleFactory func(ctx context.Context, accessor BackendAccessor) (Module, error)
 
-func New(ctx context.Context, accessor BackendAccessor) Module {
-	c := &core{}
-	for _, moduleFactory := range modules {
+func New(ctx context.Context, accessor BackendAccessor, samplingManager *manager.Manager) (Module, []ModuleInfo) {
+	c := &Core{}
+	c.Modules = map[string]Module{}
+	c.samplingManager = samplingManager
+
+	modInfos := []ModuleInfo{}
+	for moduleFolderName, moduleFactory := range modules {
 		module, err := moduleFactory(ctx, accessor)
 		if err != nil {
 			log.Error(err)
 			continue
 		}
-		log.Infof("Module %s initialized", module.Name())
-		c.modules = append(c.modules, module)
+		if module.Info().Name != moduleFolderName {
+			log.Panicf("module %s's name does not match with folder name containing the module %s", module.Info().Name, moduleFolderName)
+		}
+		log.Infof("Module %s initialized", module.Info().Name)
+		c.Modules[moduleFolderName] = module
+		modInfos = append(modInfos, module.Info())
 	}
-	return c
+	return c, modInfos
 }
 
-type core struct {
-	modules []Module
+type Core struct {
+	Modules         map[string]Module
+	samplingManager *manager.Manager
 }
 
-func (c *core) Name() string { return "core" }
+func (c *Core) Info() ModuleInfo {
+	return ModuleInfo{
+		Name:        "Core",
+		Description: "Core Module Stub",
+	}
+}
 
-func (c *core) EventNotify(ctx context.Context, event *Event) {
-	for _, mod := range c.modules {
+func shouldTrace(host string, port int64, hosts []string) bool {
+	for _, h := range hosts {
+		if h == "*" {
+			return true
+		}
+		hp := strings.Split(h, ":")
+		if hp[0] == "*" || hp[0] == host {
+			if len(hp) == 1 {
+				return true
+			}
+			if hp[1] == "*" {
+				return true
+			}
+			p, err := strconv.Atoi(hp[1])
+			if err == nil && int64(p) == port {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (c *Core) EventNotify(ctx context.Context, event *Event) {
+	host := event.APIEvent.HostSpecName
+	port := event.APIEvent.DestinationPort
+
+	for modName, mod := range c.Modules {
+		if !shouldTrace(host, port, c.samplingManager.HostsToTraceByComponentID(modName)) {
+			log.Debugf("Trace of host %s should NOT be sent to module %s.", host, modName)
+			continue
+		}
+		log.Debugf("Trace of host %s should be sent to module %s.", host, modName)
+
 		mod.EventNotify(ctx, event)
 	}
 }
 
-func (c *core) HTTPHandler() http.Handler {
+func (c *Core) HTTPHandler() http.Handler {
 	handler := http.NewServeMux()
-	for _, m := range c.modules {
-		handler.Handle(BaseHTTPPath+"/"+m.Name()+"/", m.HTTPHandler())
+	for moduleName, m := range c.Modules {
+		handler.Handle(BaseHTTPPath+"/"+moduleName+"/", m.HTTPHandler())
 	}
 
 	return handler

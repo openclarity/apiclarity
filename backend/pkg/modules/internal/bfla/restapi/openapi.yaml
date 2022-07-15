@@ -201,8 +201,8 @@ paths:
             'application/json':
               schema:
                 $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
-  /authorizationModel/{apiID}/learning/reset:
-    put:
+  /authorizationModel/{apiID}/reset:
+    post:
       tags:
       - bfla
       parameters:
@@ -211,11 +211,6 @@ paths:
           required: true
           schema:
             $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
-
-        - in: query
-          name: nr_traces
-          schema:
-            type: integer
       responses:
         '200':
           description: 'Success'
@@ -231,6 +226,56 @@ paths:
                 $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
 
   /authorizationModel/{apiID}/learning/stop:
+    put:
+      tags:
+      - bfla
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+        default:
+          description: "Error response"
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+
+  /authorizationModel/{apiID}/detection/start:
+    put:
+      tags:
+      - bfla
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+        default:
+          description: "Error response"
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+
+  /authorizationModel/{apiID}/detection/stop:
     put:
       tags:
       - bfla
@@ -415,9 +460,9 @@ components:
         method:
           type: string
         tags:
-          type: array
           items:
             type: string
+          type: array
         audience:
           type: array
           items:

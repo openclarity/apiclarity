@@ -79,7 +79,7 @@ identifier without having retrieved the identifier first.
 ## Configuration
 
 Default dictionaries and rules are provided as part of the module (see
-https://github.com/openclarity/apiclarity/tree/master/backend/pkg/modules/assets/TraceAnalyzer)
+https://github.com/openclarity/apiclarity/tree/master/backend/pkg/modules/assets/traceanalyzer)
 
 You can overwrite those files with the following environment variables:
 

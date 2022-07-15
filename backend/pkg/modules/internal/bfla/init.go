@@ -47,14 +47,21 @@ type bfla struct {
 	k8s          k8straceannotator.K8sClient
 
 	accessor core.BackendAccessor
+	info     *core.ModuleInfo
 }
 
-func (p *bfla) Name() string              { return bfladetector.ModuleName }
+func (p *bfla) Info() core.ModuleInfo {
+	return *p.info
+}
 func (p *bfla) HTTPHandler() http.Handler { return p.httpHandler }
 
 func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Module, err error) {
 	p := &bfla{
 		accessor: accessor,
+		info: &core.ModuleInfo{
+			Name:        bfladetector.ModuleName,
+			Description: bfladetector.ModuleDescription,
+		},
 	}
 	if accessor.K8SClient() == nil {
 		return nil, fmt.Errorf("ignoring bfla module due to missing kubernetes client")
@@ -66,8 +73,8 @@ func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Modul
 	}
 
 	sp := recovery.NewStatePersister(ctx, accessor, bfladetector.ModuleName, persistenceInterval)
-	ctrlNotifier := bfladetector.NewControllerNotifier(accessor)
-	p.bflaDetector = bfladetector.NewBFLADetector(ctx, accessor, eventAlerter{accessor}, ctrlNotifier, sp, controllerResyncInterval)
+	ctrlNotifier := bfladetector.NewBFLANotifier(bfladetector.ModuleName, accessor)
+	p.bflaDetector = bfladetector.NewBFLADetector(ctx, bfladetector.ModuleName, accessor, eventAlerter{accessor}, ctrlNotifier, sp, controllerResyncInterval)
 
 	p.httpHandler = restapi.HandlerWithOptions(&httpHandler{
 		bflaDetector:     p.bflaDetector,
@@ -110,7 +117,7 @@ func (p *bfla) EventNotify(ctx context.Context, event *core.Event) {
 func (p *bfla) eventNotify(ctx context.Context, event *core.Event) (err error) {
 	log.Debugf("[BFLA] received a new event for API(%v) Event(%v) ", event.APIEvent.APIInfoID, event.APIEvent.ID)
 	cmpTrace := &bfladetector.CompositeTrace{Event: event}
-	if cmpTrace.K8SDestination, cmpTrace.K8SSource, cmpTrace.DetectedUser, err = getBFLAAnnotations(ctx, p.accessor, event.APIEvent.ID); err != nil {
+	if cmpTrace.K8SDestination, cmpTrace.K8SSource, cmpTrace.DetectedUser, err = getBFLAAnnotations(ctx, p.info.Name, p.accessor, event.APIEvent.ID); err != nil {
 		log.Errorf("unable to get bfla annotations: %s", err)
 	}
 	if err := p.addK8sDestination(ctx, cmpTrace, event.Telemetry, event.APIEvent.ID); err != nil {
@@ -148,7 +155,7 @@ func (p *bfla) addDetectedUser(ctx context.Context, cmpTrace *bfladetector.Compo
 	if annDest.Annotation, err = json.Marshal(cmpTrace.DetectedUser); err != nil {
 		return fmt.Errorf("unable to marshal user: %w", err)
 	}
-	if err := p.accessor.CreateAPIEventAnnotations(ctx, bfladetector.ModuleName, eventID, annDest); err != nil {
+	if err := p.accessor.CreateAPIEventAnnotations(ctx, p.info.Name, eventID, annDest); err != nil {
 		return fmt.Errorf("failed to create event annotation: %w", err)
 	}
 	return nil
@@ -178,7 +185,7 @@ func (p *bfla) addK8sSource(ctx context.Context, cmpTrace *bfladetector.Composit
 	if annSrc.Annotation, err = json.Marshal(cmpTrace.K8SSource); err != nil {
 		return fmt.Errorf("unable to marshal src: %w", err)
 	}
-	if err := p.accessor.CreateAPIEventAnnotations(ctx, bfladetector.ModuleName, eventID, annSrc); err != nil {
+	if err := p.accessor.CreateAPIEventAnnotations(ctx, p.info.Name, eventID, annSrc); err != nil {
 		return fmt.Errorf("failure creating src event annotation: %w", err)
 	}
 	return nil
@@ -200,14 +207,14 @@ func (p *bfla) addK8sDestination(ctx context.Context, cmpTrace *bfladetector.Com
 	if annDest.Annotation, err = json.Marshal(cmpTrace.K8SDestination); err != nil {
 		return fmt.Errorf("unable to marshal k8s dest: %w", err)
 	}
-	if err := p.accessor.CreateAPIEventAnnotations(ctx, bfladetector.ModuleName, eventID, annDest); err != nil {
+	if err := p.accessor.CreateAPIEventAnnotations(ctx, p.info.Name, eventID, annDest); err != nil {
 		return fmt.Errorf("failure creating dest event annotation: %w", err)
 	}
 	return nil
 }
 
-func getBFLAAnnotations(ctx context.Context, accessor core.BackendAccessor, eventID uint) (dest, src *k8straceannotator.K8sObjectRef, user *bfladetector.DetectedUser, err error) {
-	anns, err := accessor.ListAPIEventAnnotations(ctx, bfladetector.ModuleName, eventID)
+func getBFLAAnnotations(ctx context.Context, modName string, accessor core.BackendAccessor, eventID uint) (dest, src *k8straceannotator.K8sObjectRef, user *bfladetector.DetectedUser, err error) {
+	anns, err := accessor.ListAPIEventAnnotations(ctx, modName, eventID)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("unable to get annotations for event=%d; %v", eventID, err)
 	}
@@ -249,6 +256,7 @@ type httpHandler struct {
 	bflaDetector     bfladetector.BFLADetector
 	accessor         core.BackendAccessor
 	findingsRegistry bfladetector.FindingsRegistry
+	modName         string
 }
 
 func (h httpHandler) GetAPIFindingsForAPI(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.GetAPIFindingsForAPIParams) {
@@ -273,7 +281,7 @@ func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID in
 	}
 	event := events[0]
 
-	dest, src, user, err := getBFLAAnnotations(r.Context(), h.accessor, uint(eventID))
+	dest, src, user, err := getBFLAAnnotations(r.Context(), h.modName, h.accessor, uint(eventID))
 	if err != nil {
 		httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
 		return
@@ -414,7 +422,11 @@ func FromRestapiAuthorizationModel(am *restapi.AuthorizationModel) bfladetector.
 func ToRestapiAuthorizationModel(am *bfladetector.AuthorizationModel) *restapi.AuthorizationModel {
 	res := &restapi.AuthorizationModel{}
 	for _, o := range am.Operations {
-		resOp := restapi.AuthorizationModelOperation{Method: o.Method, Path: o.Path}
+		resOp := restapi.AuthorizationModelOperation{
+			Method: o.Method,
+			Path:   o.Path,
+			Tags:   o.Tags,
+		}
 		for _, aud := range o.Audience {
 			resAud := restapi.AuthorizationModelAudience{
 				Authorized:    aud.Authorized,
@@ -440,21 +452,16 @@ func ToRestapiAuthorizationModel(am *bfladetector.AuthorizationModel) *restapi.A
 
 // nolint:stylecheck,revive
 func (h httpHandler) PutAuthorizationModelApiIDApprove(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.PutAuthorizationModelApiIDApproveParams) {
-	done := make(chan struct{})
 	ctx := r.Context()
 	clientRef := &k8straceannotator.K8sObjectRef{Uid: params.K8sClientUid} // TODO this looks wrong.
-	go func() {
-		log.Infof("approve operation on api=%d path=%s method=%s ", apiID, params.Path, params.Method)
-		h.bflaDetector.ApproveTrace(params.Path, strings.ToUpper(params.Method), clientRef, uint(apiID), nil)
-		done <- struct{}{}
-	}()
-
 	select {
 	case <-ctx.Done():
 		err := ctx.Err()
 		log.Error(err)
 		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
-	case <-done:
+	default:
+		log.Infof("approve operation on api=%d path=%s method=%s ", apiID, params.Path, params.Method)
+		h.bflaDetector.ApproveTrace(params.Path, strings.ToUpper(params.Method), clientRef, uint(apiID), nil)
 		log.Infof("approve applied successfully on api=%d path=%s method=%s ", apiID, params.Path, params.Method)
 		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Requested approve operation on api event"})
 	}
@@ -462,94 +469,124 @@ func (h httpHandler) PutAuthorizationModelApiIDApprove(w http.ResponseWriter, r 
 
 // nolint:stylecheck,revive
 func (h httpHandler) PutAuthorizationModelApiIDDeny(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.PutAuthorizationModelApiIDDenyParams) {
-	done := make(chan struct{})
 	ctx := r.Context()
 	clientRef := &k8straceannotator.K8sObjectRef{Uid: params.K8sClientUid} // TODO this looks wrong.
-	go func() {
-		log.Infof("deny operation on api=%d path=%s method=%s ", apiID, params.Path, params.Method)
-		h.bflaDetector.DenyTrace(params.Path, strings.ToUpper(params.Method), clientRef, uint(apiID), nil)
-		done <- struct{}{}
-	}()
 
 	select {
 	case <-ctx.Done():
 		err := ctx.Err()
 		log.Error(err)
 		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
-	case <-done:
+	default:
+		log.Infof("deny operation on api=%d path=%s method=%s ", apiID, params.Path, params.Method)
+		h.bflaDetector.DenyTrace(params.Path, strings.ToUpper(params.Method), clientRef, uint(apiID), nil)
 		log.Infof("deny applied successfully on api=%d path=%s method=%s ", apiID, params.Path, params.Method)
 		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Reqested deny operation on api event"})
 	}
 }
 
 // nolint:stylecheck,revive
-func (h httpHandler) PutAuthorizationModelApiIDLearningReset(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.PutAuthorizationModelApiIDLearningResetParams) {
-	done := make(chan struct{})
+func (h httpHandler) PostAuthorizationModelApiIDReset(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
 	ctx := r.Context()
-	go func() {
-		log.Infof("reset learning api=%d", apiID)
-		if params.NrTraces == nil {
-			h.bflaDetector.ResetLearning(uint(apiID), -1)
-		} else {
-			h.bflaDetector.ResetLearning(uint(apiID), *params.NrTraces)
-		}
-		done <- struct{}{}
-	}()
-
 	select {
 	case <-ctx.Done():
 		err := ctx.Err()
 		log.Error(err)
 		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
-	case <-done:
-		log.Infof("reset learning applied successfully on api=%d", apiID)
-		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Reqested reset learning operation on api event"})
+	default:
+		log.Infof("reset BFLA model on api=%d", apiID)
+		if err := h.bflaDetector.ResetModel(uint(apiID)); err != nil {
+			httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
+			return
+		}
+
+		log.Infof("reset BFLA model applied successfully on api=%d", apiID)
+		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Requested reset BFLA model operation on api event"})
 	}
 }
 
 // nolint:stylecheck,revive
 func (h httpHandler) PutAuthorizationModelApiIDLearningStart(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.PutAuthorizationModelApiIDLearningStartParams) {
-	done := make(chan struct{})
 	ctx := r.Context()
-	go func() {
-		log.Infof("start learning api=%d", apiID)
-		if params.NrTraces == nil {
-			h.bflaDetector.StartLearning(uint(apiID), -1)
-		} else {
-			h.bflaDetector.StartLearning(uint(apiID), *params.NrTraces)
-		}
-		done <- struct{}{}
-	}()
-
 	select {
 	case <-ctx.Done():
 		err := ctx.Err()
 		log.Error(err)
 		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
-	case <-done:
+	default:
+		log.Infof("start learning api=%d", apiID)
+		if params.NrTraces == nil {
+			if err := h.bflaDetector.StartLearning(uint(apiID), -1); err != nil {
+				httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
+				return
+			}
+		} else {
+			if err := h.bflaDetector.StartLearning(uint(apiID), *params.NrTraces); err != nil {
+				httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
+				return
+			}
+		}
 		log.Infof("start learning applied successfully on api=%d", apiID)
-		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Reqested start learning operation on api event"})
+		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Requested start learning operation on api event"})
 	}
 }
 
 // nolint:stylecheck,revive
 func (h httpHandler) PutAuthorizationModelApiIDLearningStop(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
-	done := make(chan struct{})
 	ctx := r.Context()
-	go func() {
-		log.Infof("stop learning api=%d", apiID)
-		h.bflaDetector.StopLearning(uint(apiID))
-		done <- struct{}{}
-	}()
-
 	select {
 	case <-ctx.Done():
 		err := ctx.Err()
 		log.Error(err)
 		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
-	case <-done:
+	default:
+		log.Infof("stop learning api=%d", apiID)
+		if err := h.bflaDetector.StopLearning(uint(apiID)); err != nil {
+			httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
+			return
+		}
 		log.Infof("stop learning applied successfully on api=%d", apiID)
-		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Reqested stop learning operation on api event"})
+		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Requested stop learning operation on api event"})
+	}
+}
+
+// nolint:stylecheck,revive
+func (h httpHandler) PutAuthorizationModelApiIDDetectionStart(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
+	ctx := r.Context()
+	select {
+	case <-ctx.Done():
+		err := ctx.Err()
+		log.Error(err)
+		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
+	default:
+		log.Infof("start detection on api=%d", apiID)
+		if err := h.bflaDetector.StartDetection(uint(apiID)); err != nil {
+			httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
+			return
+		}
+
+		log.Infof("start detection applied successfully on api=%d", apiID)
+		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Requested start detection operation on api event"})
+	}
+}
+
+// nolint:stylecheck,revive
+func (h httpHandler) PutAuthorizationModelApiIDDetectionStop(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
+	ctx := r.Context()
+	select {
+	case <-ctx.Done():
+		err := ctx.Err()
+		log.Error(err)
+		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
+	default:
+		log.Infof("stop detection on api=%d", apiID)
+		if err := h.bflaDetector.StopDetection(uint(apiID)); err != nil {
+			httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
+			return
+		}
+
+		log.Infof("stop detection applied successfully on api=%d", apiID)
+		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Requested stop detection operation on api event"})
 	}
 }
 
@@ -567,7 +604,7 @@ func (h httpHandler) PutEventIdOperation(w http.ResponseWriter, r *http.Request,
 	}
 	apiEvent := events[0]
 
-	_, src, user, err := getBFLAAnnotations(r.Context(), h.accessor, uint(eventID))
+	_, src, user, err := getBFLAAnnotations(r.Context(), h.modName, h.accessor, uint(eventID))
 	if err != nil {
 		log.Error(err)
 		httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{
@@ -584,9 +621,13 @@ func (h httpHandler) PutEventIdOperation(w http.ResponseWriter, r *http.Request,
 		})
 		return
 	}
-	done := make(chan struct{})
 	ctx := r.Context()
-	go func() {
+	select {
+	case <-ctx.Done():
+		err := ctx.Err()
+		log.Error(err)
+		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
+	default:
 		log.Infof("apply %s operation on trace=%d", operation, eventID)
 		tags, err := bfladetector.ParseSpecInfo(apiInfo)
 		if err != nil {
@@ -603,15 +644,6 @@ func (h httpHandler) PutEventIdOperation(w http.ResponseWriter, r *http.Request,
 		case restapi.DenyUser:
 			h.bflaDetector.DenyTrace(resolvedPath, string(apiEvent.Method), src, apiEvent.APIInfoID, user)
 		}
-		done <- struct{}{}
-	}()
-
-	select {
-	case <-ctx.Done():
-		err := ctx.Err()
-		log.Error(err)
-		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
-	case <-done:
 		log.Infof("%s operation applied successfully on trace=%d", operation, eventID)
 		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Reqested %s operation on api event", operation)})
 	}
@@ -621,8 +653,8 @@ func (h httpHandler) GetVersion(w http.ResponseWriter, r *http.Request) {
 	httpResponse(w, http.StatusOK, &oapicommon.ModuleVersion{Version: moduleVersion})
 }
 
+// nolint:stylecheck,revive
 func (h httpHandler) GetApiFindings(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.GetApiFindingsParams) {
-	return
 }
 
 func httpResponse(w http.ResponseWriter, code int, v interface{}) {

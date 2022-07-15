@@ -16,12 +16,39 @@
 package nlid
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
 	pluginmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
 )
+
+func sameAnn(got utils.TraceAnalyzerAnnotation, expected utils.TraceAnalyzerAnnotation) bool {
+	wanted := expected.(*AnnotationNLID) //nolint:forcetypeassert
+	observed := got.(*AnnotationNLID) //nolint:forcetypeassert
+
+	if wanted.SpecLocation != observed.SpecLocation {
+		return false
+	}
+
+	if len(wanted.Params) != len(observed.Params) {
+		return false
+	}
+
+	for _, wp := range wanted.Params {
+		found := false
+		for _, op := range observed.Params {
+			if wp.Name == op.Name && wp.Value == op.Value {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	return true
+}
 
 func sameAnns(got []utils.TraceAnalyzerAnnotation, expected []utils.TraceAnalyzerAnnotation) bool {
 	if len(got) != len(expected) {
@@ -30,7 +57,7 @@ func sameAnns(got []utils.TraceAnalyzerAnnotation, expected []utils.TraceAnalyze
 	for _, eo := range expected { // For each wanted observation
 		found := false
 		for _, o := range got { // Check if it's in the result
-			if reflect.DeepEqual(o, eo) {
+			if sameAnn(o, eo) {
 				found = true
 				break
 			}
@@ -72,7 +99,7 @@ func checkTC(t *testing.T, testCases []testCase) {
 		trace.Request.Method = tc.method
 		trace.Response.Common.Body = tc.bodyRes
 
-		eventAnns, _ := analyzer.Analyze(tc.pathParams, &trace)
+		eventAnns, _ := analyzer.Analyze(tc.path, tc.method, tc.pathParams, &trace)
 		if !sameAnns(eventAnns, tc.wanted) {
 			for _, ea := range eventAnns {
 				t.Logf("   Got: %+v", ea)
@@ -97,14 +124,14 @@ func TestNLIDHeaders(t *testing.T) {
 		// The parameter "id" matches keywords, it's checked but not yet learnt
 		{
 			description: "Value '12' was not previously learnt",
-			host:       "example.com",
-			path:       "",
-			pathParams: map[string]string{},
-			method:     "",
-			headersReq: []*pluginmodels.Header{{Key: "id", Value: "12"}, {Key: "test", Value: "36"}},
-			headersRes: []*pluginmodels.Header{},
-			bodyRes:    []byte{},
-			wanted:     []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("/", "get", []parameter{{Name: "XXX", Value: "12"}})},
+			host:        "example.com",
+			path:        "",
+			pathParams:  map[string]string{},
+			method:      "",
+			headersReq:  []*pluginmodels.Header{{Key: "id", Value: "12"}, {Key: "test", Value: "36"}},
+			headersRes:  []*pluginmodels.Header{},
+			bodyRes:     []byte{},
+			wanted:      []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("", "", []parameter{{Name: "XXX", Value: "12"}})},
 		},
 
 		{host: "example.com", headersReq: []*pluginmodels.Header{}, headersRes: []*pluginmodels.Header{{Key: "id", Value: "12"}, {Key: "test", Value: "36"}}, wanted: []utils.TraceAnalyzerAnnotation{}},
@@ -113,15 +140,15 @@ func TestNLIDHeaders(t *testing.T) {
 		// Let's start to learn something which is not an ID keyword
 		{host: "example.com", headersReq: []*pluginmodels.Header{}, headersRes: []*pluginmodels.Header{{Key: "param1", Value: "XXXXXXXX"}, {Key: "param2", Value: "YYYYYYYY"}}, wanted: []utils.TraceAnalyzerAnnotation{}},
 		{host: "example.com", headersReq: []*pluginmodels.Header{{Key: "param1", Value: "XXXXXXXX"}, {Key: "param2", Value: "YYYYYYYY"}}, headersRes: []*pluginmodels.Header{}, wanted: []utils.TraceAnalyzerAnnotation{}},
-		{host: "example.com", headersReq: []*pluginmodels.Header{{Key: "param1", Value: "AAAAAAAA"}, {Key: "param2", Value: "YYYYYYYY"}}, headersRes: []*pluginmodels.Header{}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("/", "get", []parameter{{Name: "XXX", Value: "AAAAAAAA"}})}},
+		{host: "example.com", headersReq: []*pluginmodels.Header{{Key: "param1", Value: "AAAAAAAA"}, {Key: "param2", Value: "YYYYYYYY"}}, headersRes: []*pluginmodels.Header{}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("", "", []parameter{{Name: "XXX", Value: "AAAAAAAA"}})}},
 		{host: "example.com", headersReq: []*pluginmodels.Header{{Key: "param2", Value: "XXXXXXXX"}, {Key: "param4", Value: "YYYYYYYY"}}, headersRes: []*pluginmodels.Header{}, wanted: []utils.TraceAnalyzerAnnotation{}},
-		{host: "example.com", headersReq: []*pluginmodels.Header{{Key: "parama", Value: "11111111"}, {Key: "paramb", Value: "22222222"}}, headersRes: []*pluginmodels.Header{}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("/", "get", []parameter{{Name: "XXX", Value: "11111111"}, {Name: "XXX", Value: "22222222"}})}},
+		{host: "example.com", headersReq: []*pluginmodels.Header{{Key: "parama", Value: "11111111"}, {Key: "paramb", Value: "22222222"}}, headersRes: []*pluginmodels.Header{}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("", "", []parameter{{Name: "XXX", Value: "11111111"}, {Name: "XXX", Value: "22222222"}})}},
 
-		{host: "example.com", headersReq: []*pluginmodels.Header{{Key: "id", Value: "ééé aaAAA"}, {Key: "test", Value: "YYYYYYYY"}}, headersRes: []*pluginmodels.Header{}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("/", "get", []parameter{{Name: "XXX", Value: "ééé aaAAA"}})}},
+		{host: "example.com", headersReq: []*pluginmodels.Header{{Key: "id", Value: "ééé aaAAA"}, {Key: "test", Value: "YYYYYYYY"}}, headersRes: []*pluginmodels.Header{}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("", "", []parameter{{Name: "XXX", Value: "ééé aaAAA"}})}},
 		{host: "example.com", headersReq: []*pluginmodels.Header{{Key: "blabla", Value: "ééé aaAAA"}, {Key: "test", Value: "YYYYYYYY"}}, headersRes: []*pluginmodels.Header{}, wanted: []utils.TraceAnalyzerAnnotation{}},
 
-		{host: "example.com", headersReq: []*pluginmodels.Header{{Key: "blabla", Value: "b889200b-5f7e-4da7-b582-fd64f9473328"}, {Key: "test", Value: "YYYYYYYY"}}, headersRes: []*pluginmodels.Header{}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("/", "get", []parameter{{Name: "XXX", Value: "b889200b-5f7e-4da7-b582-fd64f9473328"}})}},
-		{host: "example.com", headersReq: []*pluginmodels.Header{{Key: "blabla", Value: "user_id_23654"}, {Key: "test", Value: "YYYYYYYY"}}, headersRes: []*pluginmodels.Header{}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("/", "get", []parameter{{Name: "XXX", Value: "user_id_23654"}})}},
+		{host: "example.com", headersReq: []*pluginmodels.Header{{Key: "blabla", Value: "b889200b-5f7e-4da7-b582-fd64f9473328"}, {Key: "test", Value: "YYYYYYYY"}}, headersRes: []*pluginmodels.Header{}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("", "", []parameter{{Name: "XXX", Value: "b889200b-5f7e-4da7-b582-fd64f9473328"}})}},
+		{host: "example.com", headersReq: []*pluginmodels.Header{{Key: "blabla", Value: "user_id_23654"}, {Key: "test", Value: "YYYYYYYY"}}, headersRes: []*pluginmodels.Header{}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("", "", []parameter{{Name: "XXX", Value: "user_id_23654"}})}},
 	}
 
 	checkTC(t, testcases)
@@ -133,7 +160,7 @@ func TestNLIDQueryParams(t *testing.T) {
 		{host: "example.com", path: "/test?bla=AAAAAAAAAA", wanted: []utils.TraceAnalyzerAnnotation{}},
 		{host: "example.com", path: "/test?bla=AAAAAAAAAA", wanted: []utils.TraceAnalyzerAnnotation{}}, // bla parameter will be learnt
 		{host: "example.com", path: "/test", headersReq: []*pluginmodels.Header{{Key: "test", Value: "AAAAAAAAAA"}}, wanted: []utils.TraceAnalyzerAnnotation{}},
-		{host: "example.com", path: "/test", headersReq: []*pluginmodels.Header{{Key: "test", Value: "BBBbbbBBBb"}}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("/", "get", []parameter{{Name: "XXX", Value: "BBBbbbBBBb"}})}},
+		{host: "example.com", path: "/test", headersReq: []*pluginmodels.Header{{Key: "test", Value: "BBBbbbBBBb"}}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("/test", "", []parameter{{Name: "XXX", Value: "BBBbbbBBBb"}})}},
 	}
 
 	checkTC(t, testCases)
@@ -171,26 +198,26 @@ func TestNLIDBody(t *testing.T) {
 		{host: "example.com", path: "/testX?newid=blablabla&otherid=testtesttest&strange=THISISNOTCHECKED", headersReq: []*pluginmodels.Header{{Key: "param", Value: "321456987654"}}, wanted: []utils.TraceAnalyzerAnnotation{}},
 
 		// Now let's check for some NLIDs
-		{host: "example.com", path: "/testX", headersReq: []*pluginmodels.Header{{Key: "param", Value: "1234-NLID-5678"}}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("/", "get", []parameter{{Name: "XXX", Value: "1234-NLID-5678"}})}},
-		{host: "example.com", path: "/testX", headersReq: []*pluginmodels.Header{{Key: "param", Value: "1234-NLID-5678"}, {Key: "id", Value: "123654987"}}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("/", "get", []parameter{{Name: "XXX", Value: "1234-NLID-5678"}})}},
+		{host: "example.com", path: "/testX", headersReq: []*pluginmodels.Header{{Key: "param", Value: "1234-NLID-5678"}}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("/testX", "", []parameter{{Name: "XXX", Value: "1234-NLID-5678"}})}},
+		{host: "example.com", path: "/testX", headersReq: []*pluginmodels.Header{{Key: "param", Value: "1234-NLID-5678"}, {Key: "id", Value: "123654987"}}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("/testX", "", []parameter{{Name: "XXX", Value: "1234-NLID-5678"}})}},
 
 		// The param is too small, it's probably not an ID, don't check for it
 		{host: "example.com", path: "/testX", headersReq: []*pluginmodels.Header{{Key: "param", Value: "1234"}}, wanted: []utils.TraceAnalyzerAnnotation{}},
 
 		// Check if path parameters are NLIDs
-		{host: "example.com", method: "GET", path: "/pet/b889200b-5f7e-4da7-b582-fd64f9473328", pathParams: map[string]string{"petID": "b889200b-5f7e-4da7-b582-fd64f9473328"}, headersReq: []*pluginmodels.Header{{Key: "param", Value: "1234"}}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("/", "get", []parameter{{Name: "XXX", Value: "b889200b-5f7e-4da7-b582-fd64f9473328"}})}},
+		{host: "example.com", method: "GET", path: "/pet/b889200b-5f7e-4da7-b582-fd64f9473328", pathParams: map[string]string{"petID": "b889200b-5f7e-4da7-b582-fd64f9473328"}, headersReq: []*pluginmodels.Header{{Key: "param", Value: "1234"}}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("/pet/b889200b-5f7e-4da7-b582-fd64f9473328", "get", []parameter{{Name: "XXX", Value: "b889200b-5f7e-4da7-b582-fd64f9473328"}})}},
 
 		// The "normal" behavior: Create an object with a POST query, get back an ID, Query this id
 		{host: "example.com", method: "POST", path: "/pet", bodyRes: []byte(`{"id": 10, "name": "doggie", "category": {"id": 1, "name": "Dogs"}, "photoUrls": ["string"], "tags": [{"id": 0, "name": "string"}], "status": "available"}`), wanted: []utils.TraceAnalyzerAnnotation{}},
 		{host: "example.com", method: "GET", path: "/pet/10", pathParams: map[string]string{"petID": "10"}, wanted: []utils.TraceAnalyzerAnnotation{}},
-		{host: "example.com", method: "GET", path: "/pet/11", pathParams: map[string]string{"petID": "11"}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("/", "get", []parameter{{Name: "XXX", Value: "11"}})}},
+		{host: "example.com", method: "GET", path: "/pet/11", pathParams: map[string]string{"petID": "11"}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("/pet/11", "get", []parameter{{Name: "XXX", Value: "11"}})}},
 
 		// Another "normal" behavior: GET a list of IDs then get details about one of those IDs
 
 		{host: "example.com", method: "GET", path: "/pet", bodyRes: []byte(`{"ids":[12345678,12345679]}`), wanted: []utils.TraceAnalyzerAnnotation{}},
 		{host: "example.com", method: "GET", path: "/pet/444", pathParams: map[string]string{"petID": "12345678"}, wanted: []utils.TraceAnalyzerAnnotation{}},
 		{host: "example.com", method: "GET", path: "/pet/445", pathParams: map[string]string{"petID": "12345679"}, wanted: []utils.TraceAnalyzerAnnotation{}},
-		{host: "example.com", method: "GET", path: "/pet/448", pathParams: map[string]string{"petID": "12345670"}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("/", "get", []parameter{{Name: "XXX", Value: "12345670"}})}},
+		{host: "example.com", method: "GET", path: "/pet/448", pathParams: map[string]string{"petID": "12345670"}, wanted: []utils.TraceAnalyzerAnnotation{NewAnnotationNLID("/pet/448", "get", []parameter{{Name: "XXX", Value: "12345670"}})}},
 
 		{host: "example.com", path: "/test3", bodyRes: []byte(`{"paramA": 123456789, "param": "blablabla"}`), wanted: []utils.TraceAnalyzerAnnotation{}},
 		{host: "example.com", path: "/test4", headersReq: []*pluginmodels.Header{{Key: "param", Value: "blablabla"}}, wanted: []utils.TraceAnalyzerAnnotation{}},

@@ -51,10 +51,11 @@ const (
 	DebugMode                = false
 	RestlerTimeBudget        = "0.005" // In hours =~ 20s
 	TokenInjectorPath        = "/app/"
-	TestReportTimeout        = 30      // In seconds
+	TestReportTimeout        = 60      // In seconds
 	RestlerQuickTimeBudget   = "0.016" // In hours =~ 1mn
 	RestlerDefaultTimeBudget = "0.16"  // In hours =~ 10mn
 	RestlerDeepTimeBudget    = "1"     // In hours
+	DefaultJobNamespace      = "apiclarity"
 
 	FuzzerImageNameEnvVar            = "FUZZER_IMAGE_NAME"
 	FuzzerDeploymentTypeEnvVar       = "FUZZER_DEPLOYMENT_TYPE"
@@ -68,6 +69,8 @@ const (
 	FuzzerRestlerTimeBudgetEnvVar    = "FUZZER_RESTLER_TIME_BUDGET"
 	FuzzerAuthInjectorPathEnvVar     = "FUZZER_RESTLER_TOKEN_INJECTOR_PATH"
 	FuzzerTestReportTimeoutEnvVar    = "FUZZER_TESTREPORT_TIMEOUT"
+	FuzzerJobNamespaceEnvVar         = "FUZZER_JOB_NAMESPACE"
+	PODNamespaceEnvVar               = "POD_NAMESPACE"
 )
 
 type Config struct {
@@ -83,6 +86,8 @@ type Config struct {
 	restlerTimeBudget      string
 	tokenInjectorPath      string
 	testReportTimeout      int
+
+	jobNamespace string
 }
 
 // the Mutex to restrict access to configSingleton.
@@ -147,25 +152,30 @@ func (c *Config) GetTestReportTimeout() int {
 	return c.testReportTimeout
 }
 
+func (c *Config) GetJobNamespace() string {
+	return c.jobNamespace
+}
+
 func (c *Config) Dump() {
 	/*
 	* properly display the config
 	 */
 	prefix := "[Fuzzer]"
-	logging.Logf("%v ----------------------", prefix)
-	logging.Logf("%v Fuzzer configuration:", prefix)
-	logging.Logf("%v    imageName         (%v)", prefix, c.imageName)
-	logging.Logf("%v    platformType      (%v)", prefix, c.platformType)
-	logging.Logf("%v    deploymentType    (%v)", prefix, c.deploymentType)
-	logging.Logf("%v    showDockerLog     (%v)", prefix, c.showDockerLog)
-	logging.Logf("%v    platformHost      (%v)", prefix, c.platformHost)
-	logging.Logf("%v    platformHostFromFuzzer (%v)", prefix, c.platformHostFromFuzzer)
-	logging.Logf("%v    subFuzzer         (%v)", prefix, c.subFuzzer)
-	logging.Logf("%v    testTraceFile     (%v)", prefix, c.testTraceFile)
-	logging.Logf("%v    restlerTimeBudget (%v)", prefix, c.restlerTimeBudget)
-	logging.Logf("%v    tokenInjectorPath (%v)", prefix, c.tokenInjectorPath)
-	logging.Logf("%v    testReportTimeout (%v)", prefix, c.testReportTimeout)
-	logging.Logf("%v ----------------------", prefix)
+	logging.Debugf("%v ----------------------", prefix)
+	logging.Debugf("%v Fuzzer configuration:", prefix)
+	logging.Debugf("%v    imageName         (%v)", prefix, c.imageName)
+	logging.Debugf("%v    platformType      (%v)", prefix, c.platformType)
+	logging.Debugf("%v    deploymentType    (%v)", prefix, c.deploymentType)
+	logging.Debugf("%v    showDockerLog     (%v)", prefix, c.showDockerLog)
+	logging.Debugf("%v    platformHost      (%v)", prefix, c.platformHost)
+	logging.Debugf("%v    platformHostFromFuzzer (%v)", prefix, c.platformHostFromFuzzer)
+	logging.Debugf("%v    subFuzzer         (%v)", prefix, c.subFuzzer)
+	logging.Debugf("%v    testTraceFile     (%v)", prefix, c.testTraceFile)
+	logging.Debugf("%v    restlerTimeBudget (%v)", prefix, c.restlerTimeBudget)
+	logging.Debugf("%v    tokenInjectorPath (%v)", prefix, c.tokenInjectorPath)
+	logging.Debugf("%v    testReportTimeout (%v)", prefix, c.testReportTimeout)
+	logging.Debugf("%v    jobNamespace      (%v)", prefix, c.jobNamespace)
+	logging.Debugf("%v ----------------------", prefix)
 }
 
 func NewFuzzerConfig() *Config {
@@ -182,6 +192,13 @@ func NewFuzzerConfig() *Config {
 	viper.SetDefault(FuzzerRestlerTimeBudgetEnvVar, RestlerTimeBudget)
 	viper.SetDefault(FuzzerAuthInjectorPathEnvVar, TokenInjectorPath)
 	viper.SetDefault(FuzzerTestReportTimeoutEnvVar, TestReportTimeout)
+	viper.SetDefault(PODNamespaceEnvVar, DefaultJobNamespace)
+
+	// FuzzerJobNamespaceEnvVar takes priority over PODNamespaceEnvVar
+	jobNamespace := viper.GetString(FuzzerJobNamespaceEnvVar)
+	if jobNamespace == "" {
+		jobNamespace = viper.GetString(PODNamespaceEnvVar)
+	}
 
 	// Create a Fuzzer Configuration
 
@@ -198,6 +215,7 @@ func NewFuzzerConfig() *Config {
 		restlerTimeBudget:      viper.GetString(FuzzerRestlerTimeBudgetEnvVar),
 		tokenInjectorPath:      viper.GetString(FuzzerAuthInjectorPathEnvVar),
 		testReportTimeout:      viper.GetInt(FuzzerTestReportTimeoutEnvVar),
+		jobNamespace:           jobNamespace,
 	}
 
 	// ... then override by env, if present

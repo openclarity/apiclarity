@@ -64,18 +64,18 @@ func (mr *MockModuleMockRecorder) HTTPHandler() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HTTPHandler", reflect.TypeOf((*MockModule)(nil).HTTPHandler))
 }
 
-// Name mocks base method.
-func (m *MockModule) Name() string {
+// Info mocks base method.
+func (m *MockModule) Info() ModuleInfo {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Name")
-	ret0, _ := ret[0].(string)
+	ret := m.ctrl.Call(m, "Info")
+	ret0, _ := ret[0].(ModuleInfo)
 	return ret0
 }
 
-// Name indicates an expected call of Name.
-func (mr *MockModuleMockRecorder) Name() *gomock.Call {
+// Info indicates an expected call of Info.
+func (mr *MockModuleMockRecorder) Info() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockModule)(nil).Name))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockModule)(nil).Info))
 }
 
 // MockBackendAccessor is a mock of BackendAccessor interface.
@@ -137,6 +137,48 @@ func (mr *MockBackendAccessorMockRecorder) DeleteAPIInfoAnnotations(arg0, arg1, 
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAPIInfoAnnotations", reflect.TypeOf((*MockBackendAccessor)(nil).DeleteAPIInfoAnnotations), varargs...)
+}
+
+// DeleteAllAPIInfoAnnotations mocks base method.
+func (m *MockBackendAccessor) DeleteAllAPIInfoAnnotations(arg0 context.Context, arg1 string, arg2 uint) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAllAPIInfoAnnotations", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAllAPIInfoAnnotations indicates an expected call of DeleteAllAPIInfoAnnotations.
+func (mr *MockBackendAccessorMockRecorder) DeleteAllAPIInfoAnnotations(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAllAPIInfoAnnotations", reflect.TypeOf((*MockBackendAccessor)(nil).DeleteAllAPIInfoAnnotations), arg0, arg1, arg2)
+}
+
+// DisableTraces mocks base method.
+func (m *MockBackendAccessor) DisableTraces(arg0 context.Context, arg1 string, arg2 uint) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DisableTraces", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DisableTraces indicates an expected call of DisableTraces.
+func (mr *MockBackendAccessorMockRecorder) DisableTraces(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DisableTraces", reflect.TypeOf((*MockBackendAccessor)(nil).DisableTraces), arg0, arg1, arg2)
+}
+
+// EnableTraces mocks base method.
+func (m *MockBackendAccessor) EnableTraces(arg0 context.Context, arg1 string, arg2 uint) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnableTraces", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// EnableTraces indicates an expected call of EnableTraces.
+func (mr *MockBackendAccessorMockRecorder) EnableTraces(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnableTraces", reflect.TypeOf((*MockBackendAccessor)(nil).EnableTraces), arg0, arg1, arg2)
 }
 
 // GetAPIEventAnnotation mocks base method.

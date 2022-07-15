@@ -1,3 +1,18 @@
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package main
 
 import (
@@ -24,6 +39,7 @@ const (
 	rootPath               = "../.."
 	parentNotificationName = "APIClarityNotification"
 	baseNotificationName   = "BaseNotification"
+	featureEnumName        = "APIClarityFeatureEnum"
 )
 
 func loadSpec(path string, fail bool) *openapi3.T {
@@ -70,11 +86,14 @@ func aggregateGlobalSpecs() {
 	/* loading corespec and then enriching it with the module spec elements */
 	coreSpec := loadSpec(rootPath+"/"+coreSpecPath, true)
 
+	featureEnum := coreSpec.Components.Schemas[featureEnumName]
+	coreComponents := reflect.ValueOf(coreSpec.Components)
+
 	moduleSpecs := loadModuleSpecs()
 	for module, moduleSpec := range moduleSpecs {
 		log.Infof("Aggregating components for module %s", module)
-		coreComponents := reflect.ValueOf(coreSpec.Components)
 		moduleComponents := reflect.ValueOf(moduleSpec.Components)
+		featureEnum.Value.Enum = append(featureEnum.Value.Enum, module)
 		for i := 0; i < coreComponents.Type().NumField(); i++ {
 			fieldName := coreComponents.Type().Field(i).Name
 			if fieldName == "ExtensionProps" {
@@ -121,6 +140,11 @@ func aggregateGlobalSpecs() {
 			coreSpec.Paths["/modules/"+module+key] = value
 		}
 	}
+
+	/* Sort the elements of the feature enum to force a deterministic outcome */
+	sort.Slice(featureEnum.Value.Enum, func(i, j int) bool {
+		return strings.Compare(string(featureEnum.Value.Enum[i].(string)), featureEnum.Value.Enum[j].(string)) < 0
+	})
 
 	/* now coreSpec holds the new global spec. We can write to file */
 	specout, err := coreSpec.MarshalJSON()

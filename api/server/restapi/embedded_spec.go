@@ -752,9 +752,68 @@ func init() {
           }
         }
       }
+    },
+    "/features": {
+      "get": {
+        "summary": "Get the list of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/APIClarityFeatureList"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
+    "APIClarityFeature": {
+      "description": "Description of APIClarity feature and the list of API hosts (in the form 'host:port') the feature requires to get trace for",
+      "type": "object",
+      "required": [
+        "featureName"
+      ],
+      "properties": {
+        "featureDescription": {
+          "description": "Short human readable description of the feature",
+          "type": "string"
+        },
+        "featureName": {
+          "$ref": "#/definitions/APIClarityFeatureEnum"
+        },
+        "hostsToTrace": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "APIClarityFeatureEnum": {
+      "description": "APIClarity Feature Name",
+      "type": "string",
+      "enum": [
+        "specreconstructor",
+        "specdiffs",
+        "traceanalyzer",
+        "bfla",
+        "differ",
+        "fuzzer"
+      ]
+    },
+    "APIClarityFeatureList": {
+      "description": "List of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for",
+      "type": "object",
+      "properties": {
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/APIClarityFeature"
+          }
+        }
+      }
+    },
     "AlertSeverityEnum": {
       "description": "Level of alert",
       "type": "string",
@@ -1189,6 +1248,10 @@ func init() {
       "description": "spec in json or yaml format",
       "type": "object",
       "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
         "rawSpec": {
           "description": "spec in json or yaml format",
           "type": "string"
@@ -2870,9 +2933,68 @@ func init() {
           }
         }
       }
+    },
+    "/features": {
+      "get": {
+        "summary": "Get the list of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/APIClarityFeatureList"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
+    "APIClarityFeature": {
+      "description": "Description of APIClarity feature and the list of API hosts (in the form 'host:port') the feature requires to get trace for",
+      "type": "object",
+      "required": [
+        "featureName"
+      ],
+      "properties": {
+        "featureDescription": {
+          "description": "Short human readable description of the feature",
+          "type": "string"
+        },
+        "featureName": {
+          "$ref": "#/definitions/APIClarityFeatureEnum"
+        },
+        "hostsToTrace": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "APIClarityFeatureEnum": {
+      "description": "APIClarity Feature Name",
+      "type": "string",
+      "enum": [
+        "specreconstructor",
+        "specdiffs",
+        "traceanalyzer",
+        "bfla",
+        "differ",
+        "fuzzer"
+      ]
+    },
+    "APIClarityFeatureList": {
+      "description": "List of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for",
+      "type": "object",
+      "properties": {
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/APIClarityFeature"
+          }
+        }
+      }
+    },
     "AlertSeverityEnum": {
       "description": "Level of alert",
       "type": "string",
@@ -3307,6 +3429,10 @@ func init() {
       "description": "spec in json or yaml format",
       "type": "object",
       "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
         "rawSpec": {
           "description": "spec in json or yaml format",
           "type": "string"

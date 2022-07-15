@@ -73,8 +73,6 @@ func sameAnns(got []utils.TraceAnalyzerAnnotation, expected []utils.TraceAnalyze
 	return true
 }
 
-
-
 func TestBasicAuth(t *testing.T) {
 	testcases := []struct {
 		headers []*models.Header
@@ -97,7 +95,7 @@ func TestBasicAuth(t *testing.T) {
 	trace.Request.Common = &models.Common{}
 	for _, tc := range testcases {
 		trace.Request.Common.Headers = tc.headers
-		eventAnns, _ := analyzer.Analyze(&trace)
+		eventAnns := analyzer.Analyze(&trace)
 		if !sameAnns(eventAnns, tc.wanted) {
 			for _, ea := range eventAnns {
 				t.Logf("Got: %+v", ea)
@@ -142,7 +140,7 @@ func TestSamePassword(t *testing.T) {
 			},
 		}
 		trace.Request.Host = tc.host
-		eventAnns, _ := analyzer.Analyze(&trace)
+		eventAnns := analyzer.Analyze(&trace)
 		if !sameAnns(eventAnns, tc.wanted) {
 			for _, ea := range eventAnns {
 				t.Logf("Got: %+v", ea)

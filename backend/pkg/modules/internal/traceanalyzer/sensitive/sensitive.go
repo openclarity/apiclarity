@@ -140,10 +140,10 @@ func (w *Sensitive) applyRule(trace *models.Telemetry, rule Rule) (inRequestBody
 
 type RuleMatch struct {
 	Rule              *Rule `json:"rule"`
-	InRequestBody     bool `json:"in_request_body"`
-	InResponseBody    bool `json:"in_response_body"`
-	InRequestHeaders  bool `json:"in_request_headers"`
-	InResponseHeaders bool `json:"in_response_headers"`
+	InRequestBody     bool  `json:"in_request_body"`
+	InResponseBody    bool  `json:"in_response_body"`
+	InRequestHeaders  bool  `json:"in_request_headers"`
+	InResponseHeaders bool  `json:"in_response_headers"`
 }
 
 func (w *Sensitive) analyzeSensitive(trace *models.Telemetry) *AnnotationRegexpMatching {
@@ -163,12 +163,12 @@ func (w *Sensitive) analyzeSensitive(trace *models.Telemetry) *AnnotationRegexpM
 	return nil
 }
 
-func (w *Sensitive) Analyze(trace *models.Telemetry) (eventAnns []utils.TraceAnalyzerAnnotation, apiAnns []utils.TraceAnalyzerAnnotation) {
+func (w *Sensitive) Analyze(trace *models.Telemetry) (eventAnns []utils.TraceAnalyzerAnnotation) {
 	ann := w.analyzeSensitive(trace)
 
 	if ann != nil {
 		eventAnns = append(eventAnns, ann)
 	}
 
-	return eventAnns, apiAnns
+	return eventAnns
 }

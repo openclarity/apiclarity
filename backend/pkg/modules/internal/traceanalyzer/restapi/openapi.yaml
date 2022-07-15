@@ -14,7 +14,7 @@ paths:
           in: path
           required: true
           schema:
-            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+            $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID'
         - $ref: '../../../../../../api3/common/openapi.yaml#/components/parameters/Sensitive'
       responses:
         '200':
@@ -23,6 +23,25 @@ paths:
             application/json:
               schema:
                 $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/APIFindings'
+        default:
+          description: 'Error response'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+  /apiFindings/{apiID}/reset:
+    post:
+      operationId: ResetApiFindings
+      summary: 'Delete all API findings for an API'
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID'
+      responses:
+        '204':
+          description: 'Reset'
         default:
           description: 'Error response'
           content:
@@ -49,11 +68,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Annotations'
-  /apiAnnotations/{apiID}:
-    get:
-      operationId: GetAPIAnnotations
-      summary: Get Annotations for an API
-      description: Get Trace Analyzer Annotations for a specific API
+
+  /{apiID}/start:
+     post:
+      operationId: StartTraceAnalysis
+      summary: Start Trace Analysis for an API
+      description: Start Trace Analysis for an API. 
       parameters:
         - name: apiID
           in: path
@@ -62,30 +82,42 @@ paths:
             $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
       responses:
         '200':
-          description: Annotation
+          description: 'Success'
           content:
-            application/json:
+            'application/json':
               schema:
-                $ref: '#/components/schemas/Annotations'
-    delete:
-      operationId: DeleteAPIAnnotations
-      summary: Delete Annotations for an API
-      description: Get Trace Analyzer Annotations for a specific API
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse' 
+        default:
+          description: 'Error response'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+
+  /{apiID}/stop:
+     post:
+      operationId: StopTraceAnalysis
+      summary: Stop Trace Analysis for an API
+      description: Stop Trace Analysis for an API. 
       parameters:
         - name: apiID
           in: path
           required: true
           schema:
             $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
-        - in: query
-          name: name
-          required: true
-          schema:
-            type: string
-          description: name of the annotation
       responses:
-        '204':
-          description: Successful deletion
+        '200':
+          description: 'Success'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse' 
+        default:
+          description: 'Error response'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
 
 components:
   schemas:

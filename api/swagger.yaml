@@ -247,6 +247,9 @@ definitions:
       rawSpec:
         type: 'string'
         description: 'spec in json or yaml format'
+      createdAt:
+        type: 'string'
+        format: 'date-time'
 
   SpecTag:
     type: 'object'
@@ -331,7 +334,7 @@ definitions:
       - ALERT_INFO
       - ALERT_WARN
       - ALERT_CRITICAL
-
+  
   ModuleAlert:
     type: 'object'
     properties:
@@ -343,6 +346,40 @@ definitions:
         type: 'string'
       alert:
         $ref: '#/definitions/AlertSeverityEnum'
+  APIClarityFeatureList:
+    type: 'object'
+    description: List of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for
+    properties:
+      features:
+        type: array
+        items:
+          $ref: '#/definitions/APIClarityFeature'
+  APIClarityFeature:
+    type: 'object'
+    description: Description of APIClarity feature and the list of API hosts (in the form 'host:port') the feature requires to get trace for
+    properties:
+      featureName:
+        $ref: '#/definitions/APIClarityFeatureEnum'
+      featureDescription:
+        description: "Short human readable description of the feature"
+        type: string
+      hostsToTrace:
+        type: array
+        items:
+          type: string
+    required:
+    - featureName
+  APIClarityFeatureEnum:
+    description: 'APIClarity Feature Name'
+    type: string
+    enum:
+      - specreconstructor
+      - specdiffs
+      - traceanalyzer
+      - bfla
+      - differ
+      - fuzzer
+      
 
 paths:
   /apiEvents:
@@ -547,6 +584,15 @@ paths:
               $ref: '#/definitions/SpecDiffTime'
         default:
           $ref: '#/responses/UnknownError'
+          
+  /features:
+    get:
+      summary: Get the list of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/APIClarityFeatureList'
 
   /apiInventory/{apiId}/specs:
     get:
@@ -740,6 +786,7 @@ paths:
           $ref: '#/responses/UnknownError'
 
 parameters:
+  
   startTime:
     name: 'startTime'
     description: 'Start time of the query'

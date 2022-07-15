@@ -65,7 +65,6 @@ const (
 	restlerRootPathEnvVar   = "RESTLER_ROOT_PATH"
 	restlerTimeBudgetEnvVar = "RESTLER_TIME_BUDGET"
 	authInjectorPathEnvVar  = "RESTLER_TOKEN_INJECTOR_PATH"
-	JobNamespace            = "apiclarity"
 )
 
 type K8sClient struct {
@@ -76,6 +75,7 @@ type K8sClient struct {
 	platformHostFromFuzzer string
 	subFuzzer              string
 	tokenInjectorPath      string
+	currentJob             *batchv1.Job
 }
 
 func (l *K8sClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem string, timeBudget string) error {
@@ -95,6 +95,26 @@ func (l *K8sClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem
 	}
 
 	logging.Logf("[Fuzzer][K8sClient] TriggerFuzzingJob():: <--")
+	return nil
+}
+
+func (l *K8sClient) StopFuzzingJob(apiID int64) error {
+	logging.Logf("[Fuzzer][K8sClient] StopFuzzingJob(%v): -->", apiID)
+	if l.currentJob == nil {
+		return fmt.Errorf("no current k8s job to terminate")
+	}
+	var zero int64 // = 0
+	policy := metav1.DeletePropagationForeground
+	deleteOptions := &metav1.DeleteOptions{
+		GracePeriodSeconds: &zero,
+		PropagationPolicy:  &policy,
+	}
+	err := l.hClient.BatchV1().Jobs(l.currentJob.Namespace).Delete(context.TODO(), l.currentJob.Name, *deleteOptions)
+	if err != nil {
+		logging.Logf("[Fuzzer][K8sClient] StopFuzzingJob(%v): failed to stop k8s fuzzer job: %v", apiID, err)
+	}
+	l.currentJob = nil
+	logging.Logf("[Fuzzer][K8sClient] StopFuzzingJob(%v): <--", apiID)
 	return nil
 }
 
@@ -235,7 +255,7 @@ func (l *K8sClient) Create(job *batchv1.Job) (*batchv1.Job, error) {
 		logging.Logf("[Fuzzer][K8sClient] Job already exists: %v", job.Name)
 		return ret, nil
 	}
-
+	l.currentJob = ret
 	logging.Logf("[Fuzzer][K8sClient] Job was created successfully. name=%v, namespace=%v", job.Name, job.Namespace)
 	return ret, nil
 }
@@ -245,11 +265,12 @@ func NewKubernetesClient(config *config.Config, accessor core.BackendAccessor) (
 	client := &K8sClient{
 		hClient:                accessor.K8SClient(),
 		imageName:              config.GetImageName(),
-		namespace:              JobNamespace,
+		namespace:              config.GetJobNamespace(),
 		platformType:           config.GetPlatformType(),
 		platformHostFromFuzzer: config.GetPlatformHostFromFuzzer(),
 		subFuzzer:              config.GetSubFuzzerList(),
 		tokenInjectorPath:      config.GetRestlerTokenInjectorPath(),
+		currentJob:             nil,
 	}
 	if client.hClient == nil {
 		logging.Logf("[Fuzzer][K8sClient] Create new Kubernetes client accessor.K8SClient()=%v", accessor.K8SClient())

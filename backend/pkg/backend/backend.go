@@ -48,6 +48,7 @@ import (
 	_speculator "github.com/openclarity/speculator/pkg/speculator"
 	_mimeutils "github.com/openclarity/speculator/pkg/utils"
 	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
+	interfacemanager "github.com/openclarity/trace-sampling-manager/manager/pkg/manager/interface"
 )
 
 type Backend struct {
@@ -57,17 +58,17 @@ type Backend struct {
 	monitor             *k8smonitor.Monitor
 	apiInventoryLock    sync.RWMutex
 	dbHandler           _database.Database
-	modules             modules.Module
+	modulesManager      modules.ModulesManager
 }
 
-func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, dbHandler *_database.Handler, modules modules.Module) *Backend {
+func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, dbHandler *_database.Handler, modulesManager modules.ModulesManager) *Backend {
 	return &Backend{
 		speculator:          speculator,
 		stateBackupInterval: time.Second * time.Duration(config.StateBackupIntervalSec),
 		stateBackupFileName: config.StateBackupFileName,
 		monitor:             monitor,
 		dbHandler:           dbHandler,
-		modules:             modules,
+		modulesManager:      modulesManager,
 	}
 }
 
@@ -84,6 +85,16 @@ func createDatabaseConfig(config *_config.Config) *_database.DBConfig {
 }
 
 const defaultChanSize = 100
+
+func getCoreFeatures() []modules.ModuleInfo {
+	features := []modules.ModuleInfo{
+		{
+			Name:        string(models.APIClarityFeatureEnumSpecreconstructor),
+			Description: "Reconstructs OAPI specifications from traces",
+		},
+	}
+	return features
+}
 
 func Run() {
 	config, err := _config.LoadConfig()
@@ -121,6 +132,20 @@ func Run() {
 
 	var monitor *k8smonitor.Monitor
 	var samplingManager *manager.Manager
+
+	samplingManager, err = manager.Create(clientset, &manager.Config{
+		RestServerPort: config.HTTPTraceSamplingManagerPort,
+		GRPCServerPort: config.GRPCTraceSamplingManagerPort,
+	})
+	if err != nil {
+		log.Errorf("Failed to create a trace sampling manager: %v", err)
+		return
+	}
+	if err := samplingManager.Start(errChan); err != nil {
+		log.Errorf("Failed to start trace sampling manager: %v", err)
+		return
+	}
+
 	if !config.K8sLocal && !viper.GetBool(_config.NoMonitorEnvVar) && !viper.GetBool(_database.FakeTracesEnvVar) && !viper.GetBool(_database.FakeDataEnvVar) {
 		monitor, err = k8smonitor.CreateMonitor(clientset)
 		if err != nil {
@@ -129,21 +154,6 @@ func Run() {
 		}
 		monitor.Start()
 		defer monitor.Stop()
-
-		if config.TraceSamplingEnabled {
-			samplingManager, err = manager.Create(clientset, &manager.Config{
-				RestServerPort: config.HTTPTraceSamplingManagerPort,
-				GRPCServerPort: config.GRPCTraceSamplingManagerPort,
-			})
-			if err != nil {
-				log.Errorf("Failed to create a trace sampling manager: %v", err)
-				return
-			}
-			if err := samplingManager.Start(errChan); err != nil {
-				log.Errorf("Failed to start trace sampling manager: %v", err)
-				return
-			}
-		}
 	} else if viper.GetBool(_database.FakeDataEnvVar) {
 		go dbHandler.CreateFakeData()
 	}
@@ -156,10 +166,19 @@ func Run() {
 		log.Infof("Using encoded speculator state")
 	}
 
-	module := modules.New(globalCtx, dbHandler, clientset)
-	backend := CreateBackend(config, monitor, speculator, dbHandler, module)
+	modulesWrapper, modInfos := modules.New(globalCtx, dbHandler, clientset, samplingManager)
+	features := append(modInfos, getCoreFeatures()...)
+	if !config.TraceSamplingEnabled {
+		for _, f := range features {
+			samplingManager.AddHostsToTrace(&interfacemanager.HostsByComponentID{
+				Hosts:       []string{"*"},
+				ComponentID: f.Name,
+			})
+		}
+	}
+	backend := CreateBackend(config, monitor, speculator, dbHandler, modulesWrapper)
 
-	restServer, err := rest.CreateRESTServer(config.BackendRestPort, speculator, dbHandler, module)
+	restServer, err := rest.CreateRESTServer(config.BackendRestPort, speculator, dbHandler, modulesWrapper, samplingManager, features)
 	if err != nil {
 		log.Fatalf("Failed to create REST server: %v", err)
 	}
@@ -226,6 +245,8 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 	var err error
 
 	log.Debugf("Handling telemetry: %+v", trace)
+
+	// TODO: Selective tracing for spec diffs and spec reconstruction
 
 	// we need to convert the trace to speculator trace format in order to call speculator methods on that trace.
 	// from here on, we work only with speculator telemetry
@@ -364,7 +385,7 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 
 	b.dbHandler.APIEventsTable().CreateAPIEvent(event)
 
-	b.modules.EventNotify(ctx, &modules.Event{APIEvent: event, Telemetry: trace})
+	b.modulesManager.EventNotify(ctx, &modules.Event{APIEvent: event, Telemetry: trace})
 
 	return nil
 }

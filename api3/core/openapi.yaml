@@ -3,6 +3,17 @@ info:
   version: 1.0.0
   title: APIClarity APIs
 paths:
+  /features:
+    get:
+      summary: Get the list of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIClarityFeatureList"
+
   /apiEvents:
     get:
       summary: Get API events
@@ -772,6 +783,37 @@ components:
         application/json:
           schema:
             $ref: "../common/openapi.yaml#/components/schemas/ApiResponse"
-  schemas: {}
+  schemas: 
+    APIClarityFeatureList:
+      type: 'object'
+      description: List of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for
+      properties:
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/APIClarityFeature'
+    APIClarityFeature:
+      type: 'object'
+      description: Description of APIClarity feature and the list of API hosts (in the form 'host:port') the feature requires to get trace for
+      properties:
+        featureName:
+          $ref: '#/components/schemas/APIClarityFeatureEnum'
+        featureDescription:
+          description: "Short human readable description of the feature"
+          type: string
+        hostsToTrace:
+          type: array
+          items:
+            type: string
+      required:
+      - featureName
+
+    APIClarityFeatureEnum:
+      description: 'APIClarity Feature Name'
+      type: string
+      enum:
+        - specreconstructor
+        - specdiffs
+        
 
   

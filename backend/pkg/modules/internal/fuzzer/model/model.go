@@ -73,7 +73,6 @@ func NewReport() restapi.FuzzingStatusAndReport {
 		Status:   restapi.DONE,
 		Report:   map[string]restapi.FuzzingReportItem{},
 	}
-
 }
 
 func NewRawFindings(message string, severity string, findingType string) restapi.RawFindings {
@@ -83,7 +82,8 @@ func NewRawFindings(message string, severity string, findingType string) restapi
 		Location:       &([]string{}),
 		Namespace:      new(string),
 		Request: &restapi.RawFindingsSeverity{
-			Severity: &severity},
+			Severity: &severity,
+		},
 		Type: &findingType,
 	}
 }
@@ -120,7 +120,7 @@ func (m *Model) GetAPI(ctx context.Context, apiID uint) (*API, error) {
 	* Try to retrieve it from backend
 	 */
 	apiInfo, err := m.accessor.GetAPIInfo(ctx, apiID)
-	logging.Logf("[model.GetAPI(%v)]: get apiInfo=(%v)", apiID, apiInfo)
+	logging.Debugf("[model.GetAPI(%v)]: get apiInfo=(%v)", apiID, apiInfo)
 	if err != nil {
 		return nil, fmt.Errorf("error when retrieve api %v: %v", apiID, err)
 	}
@@ -146,7 +146,7 @@ func (m *Model) StartAPIFuzzing(ctx context.Context, apiID uint, params *Fuzzing
 	if err != nil {
 		return ZeroTime, fmt.Errorf("can't start fuzzing (%v)", apiID)
 	}
-	//dumpSlice(m.db)
+	// dumpSlice(m.db)
 	return timestamp, nil
 }
 
@@ -159,9 +159,12 @@ func (m *Model) StopAPIFuzzing(ctx context.Context, apiID uint, fuzzerError erro
 	// Stop fuzzing
 	err = api.StopFuzzing(fuzzerError)
 	if err != nil {
+		err2 := api.SetErrorForLastStatus("failed to stop Fuzzing")
+		if err2 != nil {
+			logging.Errorf("[Fuzzer] StopAPIFuzzing(): can't set last status error for API (%v), err=(%v)", apiID, err)
+		}
 		return fmt.Errorf("can't stop fuzzing (%v)", apiID)
 	}
-	//dumpSlice(m.db)
 	return nil
 }
 
