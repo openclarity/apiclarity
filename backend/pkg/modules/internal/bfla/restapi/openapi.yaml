@@ -25,7 +25,11 @@ paths:
       summary: 'Get Findings for an API'
       description: 'Asks APIClarity for all findings of all modules of a specific API. Implemented at the core of APIClarity.'
       parameters:
-        - $ref: '../../../../../../api3/common/openapi.yaml#/components/parameters/ApiID'
+        - name: apiID
+          description: "The path parameter for apiID type"
+          in: path
+          schema:
+            $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID'
         - $ref: '../../../../../../api3/common/openapi.yaml#/components/parameters/Sensitive'
       responses:
         '200':
@@ -404,14 +408,16 @@ components:
 
     AuthorizationModelOperation:
       type: object
-      required: [path, method, audience]
+      required: [path, method, audience, tags]
       properties:
         path:
           type: string
         method:
           type: string
-        tag:
-          type: string
+        tags:
+          type: array
+          items:
+            type: string
         audience:
           type: array
           items:

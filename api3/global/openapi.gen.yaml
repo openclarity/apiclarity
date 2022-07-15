@@ -468,10 +468,15 @@ components:
           type: string
         path:
           type: string
+        tags:
+          items:
+            type: string
+          type: array
       required:
       - path
       - method
       - audience
+      - tags
       type: object
     AuthorizationScheme:
       discriminator:
@@ -1403,6 +1408,32 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       summary: Get most used APIs
+  /modules/bfla/api/findings/{apiID}:
+    get:
+      description: Asks APIClarity for all findings of all modules of a specific API.
+        Implemented at the core of APIClarity.
+      operationId: bflaGetAPIFindingsForAPI
+      parameters:
+      - description: The path parameter for apiID type
+        in: path
+        name: apiID
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      - $ref: ../common/openapi.yaml#/components/parameters/Sensitive
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/APIFindings
+          description: An API Bundle
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      summary: Get Findings for an API
   /modules/bfla/apiFindings/{apiID}:
     get:
       description: Asks for findings of an APIClarity module, and API. Implemented
