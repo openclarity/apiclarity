@@ -608,7 +608,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 func (l *learnAndDetectBFLA) notify(ctx context.Context, apiID uint) error {
 	ntf := AuthzModelNotification{}
 
-	if l.IsLearning(apiID) {
+	if l.isLearning(apiID) {
 		ntf.Learning = true
 	} else {
 		v, err := l.authzModelsMap.Get(apiID)
@@ -718,6 +718,10 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, pa
 func (l *learnAndDetectBFLA) IsLearning(apiID uint) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
+	return l.isLearning(apiID)
+}
+
+func (l *learnAndDetectBFLA) isLearning(apiID uint) bool {
 	_, _, err := l.checkBFLAState(apiID, BFLALearning)
 	return err == nil
 }
