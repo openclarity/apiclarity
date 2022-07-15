@@ -120,7 +120,7 @@ func (c *DockerClient) TriggerFuzzingJob(apiID int64, endpoint string, securityI
 	return nil
 }
 
-func (c *DockerClient) StopFuzzingJob(apiID int64) error {
+func (c *DockerClient) StopFuzzingJob(apiID int64, complete bool) error {
 	logging.Logf("[Fuzzer][DockerClient] StopFuzzingJob(%v): -->", apiID)
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())

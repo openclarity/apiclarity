@@ -98,7 +98,7 @@ func (l *K8sClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem
 	return nil
 }
 
-func (l *K8sClient) StopFuzzingJob(apiID int64) error {
+func (l *K8sClient) StopFuzzingJob(apiID int64, complete bool) error {
 	logging.Logf("[Fuzzer][K8sClient] StopFuzzingJob(%v): -->", apiID)
 	if l.currentJob == nil {
 		return fmt.Errorf("no current k8s job to terminate")
