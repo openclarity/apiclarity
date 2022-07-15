@@ -316,7 +316,7 @@ func (api *API) GetLastShortStatus() (*restapi.ShortTestReport, error) {
 		}
 
 		// Remove Tags item if no tags are present
-		if len(*shortReport.Tags) == 0 {
+		if shortReport.Tags != nil && len(*shortReport.Tags) == 0 {
 			shortReport.Tags = nil
 		}
 
