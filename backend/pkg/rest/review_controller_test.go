@@ -21,7 +21,7 @@ import (
 	"sort"
 	"testing"
 
-	oapispec "github.com/go-openapi/spec"
+	oapispec "github.com/getkin/kin-openapi/openapi3"
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	speculatorspec "github.com/openclarity/speculator/pkg/spec"
@@ -42,30 +42,18 @@ func Test_createModelsReviewPathItem(t *testing.T) {
 			args: args{
 				pathToPathItem: map[string]*oapispec.PathItem{
 					"/api/1/foo": {
-						PathItemProps: oapispec.PathItemProps{
-							Get: &oapispec.Operation{
-								OperationProps: oapispec.OperationProps{
-									ID: "get",
-								},
-							},
+						Get: &oapispec.Operation{
+							OperationID: "get",
 						},
 					},
 					"/api/2/foo": {
-						PathItemProps: oapispec.PathItemProps{
-							Put: &oapispec.Operation{
-								OperationProps: oapispec.OperationProps{
-									ID: "put",
-								},
-							},
+						Put: &oapispec.Operation{
+							OperationID: "put",
 						},
 					},
 					"/api/3/foo": {
-						PathItemProps: oapispec.PathItemProps{
-							Post: &oapispec.Operation{
-								OperationProps: oapispec.OperationProps{
-									ID: "post",
-								},
-							},
+						Post: &oapispec.Operation{
+							OperationID: "post",
 						},
 					},
 				},
@@ -101,26 +89,16 @@ func Test_createModelsReviewPathItem(t *testing.T) {
 			args: args{
 				pathToPathItem: map[string]*oapispec.PathItem{
 					"/api/1/foo": {
-						PathItemProps: oapispec.PathItemProps{
-							Get: &oapispec.Operation{
-								OperationProps: oapispec.OperationProps{
-									ID: "get",
-								},
-							},
-							Put: &oapispec.Operation{
-								OperationProps: oapispec.OperationProps{
-									ID: "put",
-								},
-							},
+						Get: &oapispec.Operation{
+							OperationID: "get",
+						},
+						Put: &oapispec.Operation{
+							OperationID: "put",
 						},
 					},
 					"/api/2/foo": {
-						PathItemProps: oapispec.PathItemProps{
-							Post: &oapispec.Operation{
-								OperationProps: oapispec.OperationProps{
-									ID: "post",
-								},
-							},
+						Post: &oapispec.Operation{
+							OperationID: "post",
 						},
 					},
 				},

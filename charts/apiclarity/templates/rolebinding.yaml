@@ -1,0 +1,19 @@
+{{- if .Values.apiclarity.rbac.create -}}
+{{- if .Values.global.traceSampling.enable -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "apiclarity.name" . }}
+  namespace: '{{ .Release.Namespace }}'
+  labels:
+    {{ include "apiclarity.labels" . }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "apiclarity.name" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "apiclarity.serviceAccountName" . }}
+    namespace: '{{ .Release.Namespace }}'
+{{- end -}}
+{{- end -}}

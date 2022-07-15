@@ -9,6 +9,7 @@ approved = [
 
 ignored = [
   "github.com/ghodss/yaml", # MIT - https://github.com/ghodss/yaml/blob/master/LICENSE
+  "github.com/invopop/yaml", # MIT - https://github.com/invopop/yaml/blob/main/LICENSE
   "sigs.k8s.io/yaml", # MIT - https://github.com/kubernetes-sigs/yaml/blob/master/LICENSE
   "go.mongodb.org/mongo-driver", # Apache 2.0 - https://github.com/mongodb/mongo-go-driver/blob/master/LICENSE
   "github.com/xeipuuv/gojsonpointer", # Apache 2.0 - https://github.com/xeipuuv/gojsonpointer/blob/master/LICENSE-APACHE-2.0.txt

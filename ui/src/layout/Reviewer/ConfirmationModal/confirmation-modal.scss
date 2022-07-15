@@ -4,11 +4,17 @@
     .approve-alert {
         display: flex;
         align-items: center;
-        margin-top: 5px;
+        margin-top: 13px;
+        margin-bottom: 35px;
 
         .icon {
             margin-right: 5px;
             color: $color-main;
         }
+    }
+
+    .dropdown-title {
+        margin-top: 10px;
+        margin-bottom: 5px;
     }
 }

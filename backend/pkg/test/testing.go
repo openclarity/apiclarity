@@ -20,28 +20,42 @@ import (
 	"net/http"
 	"testing"
 
-	oapi_spec "github.com/go-openapi/spec"
+	oapi_spec "github.com/getkin/kin-openapi/openapi3"
 	"gotest.tools/v3/assert"
 )
 
 type Spec struct {
-	Spec *oapi_spec.Swagger
+	Spec *oapi_spec.T
 }
 
 func NewTestSpec() *Spec {
 	return &Spec{
-		Spec: &oapi_spec.Swagger{
-			SwaggerProps: oapi_spec.SwaggerProps{
-				Paths: &oapi_spec.Paths{
-					Paths: map[string]oapi_spec.PathItem{},
-				},
-			},
+		Spec: &oapi_spec.T{
+			OpenAPI: "3.0.3",
+			Info:    createDefaultSwaggerInfo(),
+			Paths:   map[string]*oapi_spec.PathItem{},
 		},
 	}
 }
 
-func (ts *Spec) WithPathItem(path string, pathItem oapi_spec.PathItem) *Spec {
-	ts.Spec.Paths.Paths[path] = pathItem
+func createDefaultSwaggerInfo() *oapi_spec.Info {
+	return &oapi_spec.Info{
+		Description:    "This is a generated Open API Spec",
+		Title:          "Swagger",
+		TermsOfService: "https://swagger.io/terms/",
+		Contact: &oapi_spec.Contact{
+			Email: "apiteam@swagger.io",
+		},
+		License: &oapi_spec.License{
+			Name: "Apache 2.0",
+			URL:  "https://www.apache.org/licenses/LICENSE-2.0.html",
+		},
+		Version: "1.0.0",
+	}
+}
+
+func (ts *Spec) WithPathItem(path string, pathItem *oapi_spec.PathItem) *Spec {
+	ts.Spec.Paths[path] = pathItem
 	return ts
 }
 
@@ -53,14 +67,12 @@ func (ts *Spec) String(t *testing.T) string {
 }
 
 type PathItem struct {
-	PathItem oapi_spec.PathItem
+	PathItem *oapi_spec.PathItem
 }
 
 func NewTestPathItem() *PathItem {
 	return &PathItem{
-		PathItem: oapi_spec.PathItem{
-			PathItemProps: oapi_spec.PathItemProps{},
-		},
+		PathItem: &oapi_spec.PathItem{},
 	}
 }
 
@@ -91,7 +103,7 @@ type Operation struct {
 func NewTestOperation() *Operation {
 	return &Operation{
 		Op: &oapi_spec.Operation{
-			OperationProps: oapi_spec.OperationProps{},
+			Responses: oapi_spec.NewResponses(),
 		},
 	}
 }

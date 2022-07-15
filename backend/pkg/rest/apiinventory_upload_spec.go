@@ -16,22 +16,19 @@
 package rest
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/ghodss/yaml"
-	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/validate"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
+	speculatorspec "github.com/openclarity/speculator/pkg/spec"
 	"github.com/openclarity/speculator/pkg/speculator"
 )
 
@@ -46,31 +43,16 @@ func (s *Server) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPII
 		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
 	}
 
-	// Creates a new analyzed spec document for the provided spec
-	analyzed, err := loads.Analyzed(jsonSpecBytes, "")
+	doc, _, err := speculatorspec.LoadAndValidateRawJSONSpec(jsonSpecBytes)
 	if err != nil {
 		log.Errorf("failed to analyze spec. Spec: %s. %v", jsonSpecBytes, err)
 		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecBadRequest().WithPayload("Spec validation failed")
 	}
 
-	// Validates an OpenAPI 2.0 specification document.
-	err = validate.Spec(analyzed, strfmt.Default)
-	if err != nil {
-		log.Errorf("spec validation failed. %v", err)
-		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecBadRequest().WithPayload("Spec validation failed")
-	}
-
 	// Create a Path to PathID map for each path in the provided spec
 	pathToPathID := make(map[string]string)
-	for path := range analyzed.Spec().Paths.Paths {
+	for path := range doc.Paths {
 		pathToPathID[path] = uuid.NewV4().String()
-	}
-
-	// Expands the ref fields in the analyzed spec document
-	jsonSpecBytes, err = getExpandedSpec(analyzed)
-	if err != nil {
-		log.Errorf("Failed to get expanded spec: %v", err)
-		return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
 	}
 
 	// Load provided spec to Speculator
@@ -102,21 +84,6 @@ func (s *Server) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPII
 
 	return operations.NewPutAPIInventoryAPIIDSpecsProvidedSpecCreated().
 		WithPayload(&models.RawSpec{RawSpec: params.Body.RawSpec})
-}
-
-// getExpandedSpec expands the ref fields in the analyzed spec document.
-func getExpandedSpec(analyzed *loads.Document) ([]byte, error) {
-	expandedSpec, err := analyzed.Expanded()
-	if err != nil {
-		return nil, fmt.Errorf("failed to expanded spec. %v", err)
-	}
-
-	expandedSpecB, err := json.Marshal(expandedSpec.Spec())
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal expanded spec. %v", err)
-	}
-
-	return expandedSpecB, nil
 }
 
 func (s *Server) loadProvidedSpec(apiID uint32, jsonSpec []byte, pathToPathID map[string]string) error {
