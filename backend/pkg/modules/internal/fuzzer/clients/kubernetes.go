@@ -65,7 +65,6 @@ const (
 	restlerRootPathEnvVar   = "RESTLER_ROOT_PATH"
 	restlerTimeBudgetEnvVar = "RESTLER_TIME_BUDGET"
 	authInjectorPathEnvVar  = "RESTLER_TOKEN_INJECTOR_PATH"
-	JobNamespace            = "apiclarity"
 )
 
 type K8sClient struct {
@@ -266,7 +265,7 @@ func NewKubernetesClient(config *config.Config, accessor core.BackendAccessor) (
 	client := &K8sClient{
 		hClient:                accessor.K8SClient(),
 		imageName:              config.GetImageName(),
-		namespace:              JobNamespace,
+		namespace:              config.GetJobNamespace(),
 		platformType:           config.GetPlatformType(),
 		platformHostFromFuzzer: config.GetPlatformHostFromFuzzer(),
 		subFuzzer:              config.GetSubFuzzerList(),

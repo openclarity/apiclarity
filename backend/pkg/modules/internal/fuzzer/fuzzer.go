@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	oapicommon "github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/api3/global"
@@ -205,7 +206,7 @@ func (p *pluginFuzzer) FuzzTarget(ctx context.Context, apiID oapicommon.ApiID, p
 
 	// Construct the URI of the enpoint to fuzz
 	serviceToTest := api.Name
-	if len(api.Namespace) > 0 {
+	if len(api.Namespace) > 0 && !strings.HasSuffix(serviceToTest, "."+api.Namespace) {
 		serviceToTest = fmt.Sprintf("%s.%s", serviceToTest, api.Namespace)
 	}
 	fullServiceURI := fmt.Sprintf("http://%s:%v", serviceToTest, api.Port)
@@ -448,7 +449,7 @@ func (p *pluginFuzzerHTTPHandler) PostUpdateStatus(writer http.ResponseWriter, r
 	}
 
 	// Add the new report to the last Test
-	api.AddNewStatusReport(data)
+	err = api.AddNewStatusReport(data)
 	if err != nil {
 		logging.Errorf("[Fuzzer] PostUpdateStatus(%v): fail to process new report, error=(%v)", apiID, err)
 		httpResponse(writer, http.StatusInternalServerError, EmptyJSON)

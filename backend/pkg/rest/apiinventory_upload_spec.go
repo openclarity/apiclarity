@@ -89,7 +89,7 @@ func (s *Server) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPII
 	}
 
 	// Save the provided spec in the DB without expanding the ref fields
-	if err = s.dbHandler.APIInventoryTable().PutAPISpec(uint(params.APIID), params.Body.RawSpec, specInfo, database.ProvidedSpecType); err != nil {
+	if err = s.dbHandler.APIInventoryTable().PutAPISpec(uint(params.APIID), params.Body.RawSpec, specInfo, database.ProvidedSpecType, params.Body.CreatedAt); err != nil {
 		// TODO: need to handle errors
 		// https://github.com/go-gorm/gorm/blob/master/errors.go
 		log.Errorf("Failed to put provided API spec. %v", err)

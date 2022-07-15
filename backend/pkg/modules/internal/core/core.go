@@ -51,12 +51,16 @@ func GetNotificationPrefix() string {
 
 // The order of the modules is not important.
 // You MUST NOT rely on a specific order of modules.
-var modules map[string]ModuleFactory = map[string]ModuleFactory{}
+var modules = map[string]ModuleFactory{}
 
 func RegisterModule(m ModuleFactory) {
-	_, corePath, _, _ := runtime.Caller(0)
-	_, modulePath, _, _ := runtime.Caller(1)
-	modulePathIndex := len(strings.Split(corePath, "/")) - 2
+	_, corePath, _, ok1 := runtime.Caller(0)
+	_, modulePath, _, ok2 := runtime.Caller(1)
+	if !ok1 || !ok2 {
+		log.Errorf("unable to retrieve folder containing the module %v. Ignoring registration.", m)
+		return
+	}
+	modulePathIndex := len(strings.Split(corePath, "/")) - 2 //nolint:gomnd
 	moduleFolderName := strings.Split(modulePath, "/")[modulePathIndex]
 
 	modules[moduleFolderName] = m
@@ -121,12 +125,10 @@ func shouldTrace(host string, port int64, hosts []string) bool {
 }
 
 func (c *Core) EventNotify(ctx context.Context, event *Event) {
-
 	host := event.APIEvent.HostSpecName
 	port := event.APIEvent.DestinationPort
 
 	for modName, mod := range c.Modules {
-
 		if !shouldTrace(host, port, c.samplingManager.HostsToTraceByComponentID(modName)) {
 			log.Debugf("Trace of host %s should NOT be sent to module %s.", host, modName)
 			continue

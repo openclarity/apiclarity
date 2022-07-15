@@ -476,7 +476,7 @@ func (h httpHandler) PutAuthorizationModelApiIDDeny(w http.ResponseWriter, r *ht
 }
 
 // nolint:stylecheck,revive
-func (h httpHandler) PutAuthorizationModelApiIDLearningReset(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.PutAuthorizationModelApiIDLearningResetParams) {
+func (h httpHandler) PostAuthorizationModelApiIDReset(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
 	ctx := r.Context()
 	select {
 	case <-ctx.Done():
@@ -484,20 +484,14 @@ func (h httpHandler) PutAuthorizationModelApiIDLearningReset(w http.ResponseWrit
 		log.Error(err)
 		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
 	default:
-		log.Infof("reset learning api=%d", apiID)
-		if params.NrTraces == nil {
-			if err := h.bflaDetector.ResetLearning(uint(apiID), -1); err != nil {
-				httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
-				return
-			}
-		} else {
-			if err := h.bflaDetector.ResetLearning(uint(apiID), *params.NrTraces); err != nil {
-				httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
-				return
-			}
+		log.Infof("reset BFLA model on api=%d", apiID)
+		if err := h.bflaDetector.ResetModel(uint(apiID)); err != nil {
+			httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
+			return
 		}
-		log.Infof("reset learning applied successfully on api=%d", apiID)
-		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Reqested reset learning operation on api event"})
+
+		log.Infof("reset BFLA model applied successfully on api=%d", apiID)
+		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Requested reset BFLA model operation on api event"})
 	}
 }
 
@@ -546,30 +540,44 @@ func (h httpHandler) PutAuthorizationModelApiIDLearningStop(w http.ResponseWrite
 	}
 }
 
+// nolint:stylecheck,revive
 func (h httpHandler) PutAuthorizationModelApiIDDetectionStart(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
-	// TODO: only start if there is an auth model
-	err := h.accessor.EnableTraces(r.Context(), h.modName, uint(apiID))
-	if err != nil {
+	ctx := r.Context()
+	select {
+	case <-ctx.Done():
+		err := ctx.Err()
 		log.Error(err)
 		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
-		return
+	default:
+		log.Infof("start detection on api=%d", apiID)
+		if err := h.bflaDetector.StartDetection(uint(apiID)); err != nil {
+			httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
+			return
+		}
+
+		log.Infof("start detection applied successfully on api=%d", apiID)
+		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Requested start detection operation on api event"})
 	}
-
-	log.Infof("Tracing succesfully started for api=%d", apiID)
-	httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Trace analysis succesfully started for api %d", apiID)})
-
 }
 
+// nolint:stylecheck,revive
 func (h httpHandler) PutAuthorizationModelApiIDDetectionStop(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
-	err := h.accessor.DisableTraces(r.Context(), h.modName, uint(apiID))
-	if err != nil {
+	ctx := r.Context()
+	select {
+	case <-ctx.Done():
+		err := ctx.Err()
 		log.Error(err)
 		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
-		return
-	}
+	default:
+		log.Infof("stop detection on api=%d", apiID)
+		if err := h.bflaDetector.StopDetection(uint(apiID)); err != nil {
+			httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
+			return
+		}
 
-	log.Infof("Tracing succesfully stopped for api=%d", apiID)
-	httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Trace analysis stopped for api %d", apiID)})
+		log.Infof("stop detection applied successfully on api=%d", apiID)
+		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Requested stop detection operation on api event"})
+	}
 }
 
 // nolint:stylecheck,revive
@@ -635,8 +643,8 @@ func (h httpHandler) GetVersion(w http.ResponseWriter, r *http.Request) {
 	httpResponse(w, http.StatusOK, &oapicommon.ModuleVersion{Version: moduleVersion})
 }
 
+// nolint:stylecheck,revive
 func (h httpHandler) GetApiFindings(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.GetApiFindingsParams) {
-	return
 }
 
 func httpResponse(w http.ResponseWriter, code int, v interface{}) {
