@@ -2,12 +2,12 @@ package bfladetector
 
 import (
 	"fmt"
-	"github.com/openclarity/apiclarity/api/server/models"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/recovery"
 	"reflect"
 	"strings"
 
+	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api3/common"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/recovery"
 )
 
 func APIFindingBFLAScopesMismatch(specType SpecType, path string, method models.HTTPMethod) common.APIFinding {

@@ -19,7 +19,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/openclarity/apiclarity/api3/common"
 	"reflect"
 	"runtime/debug"
 	"strconv"
@@ -30,6 +29,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/k8straceannotator"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/recovery"

@@ -256,7 +256,6 @@ type httpHandler struct {
 	bflaDetector     bfladetector.BFLADetector
 	accessor         core.BackendAccessor
 	findingsRegistry bfladetector.FindingsRegistry
-	modName         string
 }
 
 func (h httpHandler) GetAPIFindingsForAPI(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.GetAPIFindingsForAPIParams) {
@@ -281,7 +280,7 @@ func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID in
 	}
 	event := events[0]
 
-	dest, src, user, err := getBFLAAnnotations(r.Context(), h.modName, h.accessor, uint(eventID))
+	dest, src, user, err := getBFLAAnnotations(r.Context(), bfladetector.ModuleName, h.accessor, uint(eventID))
 	if err != nil {
 		httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
 		return
@@ -604,7 +603,7 @@ func (h httpHandler) PutEventIdOperation(w http.ResponseWriter, r *http.Request,
 	}
 	apiEvent := events[0]
 
-	_, src, user, err := getBFLAAnnotations(r.Context(), h.modName, h.accessor, uint(eventID))
+	_, src, user, err := getBFLAAnnotations(r.Context(), bfladetector.ModuleName, h.accessor, uint(eventID))
 	if err != nil {
 		log.Error(err)
 		httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{
