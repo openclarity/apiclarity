@@ -59,6 +59,7 @@ func NewBFLADetector(ctx context.Context, apiInfoProvider apiInfoProvider, event
 		apiInfoProvider:          apiInfoProvider,
 		authzModelsMap:           recovery.NewPersistedMap(sp, AuthzModelAnnotationName, reflect.TypeOf(AuthorizationModel{})),
 		tracesCounterMap:         recovery.NewPersistedMap(sp, AuthzProcessedTracesAnnotationName, reflect.TypeOf(1)),
+		findingsMap:              recovery.NewPersistedMap(sp, BFLAFindingsAnnotationName, reflect.TypeOf(1)),
 		statePersister:           sp,
 		eventAlerter:             eventAlerter,
 		controllerNotifier:       ctrlNotifier,
@@ -165,6 +166,7 @@ type learnAndDetectBFLA struct {
 
 	authzModelsMap   recovery.PersistedMap
 	tracesCounterMap recovery.PersistedMap
+	findingsMap      recovery.PersistedMap
 
 	statePersister recovery.StatePersister
 
@@ -281,10 +283,6 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 			return fmt.Errorf("unable to get authz model state: %w", err)
 		}
 		authzModel.Set(AuthorizationModel{})
-		if err := l.findingsRegistry.Clear(cmd.apiID); err != nil {
-			return fmt.Errorf("unable to get authz model state: %w", err)
-		}
-
 		l.logError(l.notifyController(ctx, cmd.apiID))
 
 	case *ProvideAuthzModelCommand:
@@ -428,8 +426,6 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		if err := l.eventAlerter.SetEventAlert(ctx, ModuleName, trace.APIEvent.ID, severity); err != nil {
 			log.Warnf("unable to set alert annotation: %s", err)
 		}
-
-		l.logError(l.notifyController(ctx, apiID))
 
 		aud.WarningStatus = ResolveBFLAStatusInt(int(trace.APIEvent.StatusCode))
 	}

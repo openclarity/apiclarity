@@ -69,7 +69,6 @@ func getLocation(path string, method models.HTTPMethod) *string {
 type FindingsRegistry interface {
 	Add(apiID uint, finding common.APIFinding) error
 	GetAll(apiID uint) ([]common.APIFinding, error)
-	Clear(apiID uint) error
 }
 
 func NewFindingsRegistry(sp recovery.StatePersister) FindingsRegistry {
@@ -139,17 +138,4 @@ func (f findingsRegistry) GetAll(apiID uint) ([]common.APIFinding, error) {
 		return *findings.Items, nil
 	}
 	return nil, nil
-}
-
-func (f findingsRegistry) Clear(apiID uint) error {
-	pv, err := f.findingsMap.Get(apiID)
-	if err != nil {
-		return fmt.Errorf("error getting findings annotation")
-	}
-	if !pv.Exists() {
-		return nil
-	}
-
-	pv.Set(common.APIFindings{})
-	return nil
 }
