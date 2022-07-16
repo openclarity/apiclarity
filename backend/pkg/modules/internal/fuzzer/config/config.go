@@ -47,7 +47,7 @@ const (
 	PlatformHostFromDocker   = "http://apiclarity-apiclarity:8080/api"
 	Fuzzers                  = "scn-fuzzer,restler,crud"
 	ShowDockerLogs           = false
-	FuzzerTestTraceFile      = "data.txt"
+	FuzzerTestTraceFile      = "fuzzer-demo-test.json"
 	DebugMode                = false
 	RestlerTimeBudget        = "0.005" // In hours =~ 20s
 	TokenInjectorPath        = "/app/"

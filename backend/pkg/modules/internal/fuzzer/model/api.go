@@ -115,10 +115,14 @@ func NewTest() *TestItem {
 }
 
 func ConvertRawFindingToAPIFinding(finding restapi.RawFindings) *common.APIFinding {
-	var additionalInfo *map[string]interface{} // = nil
+	var additionalInfo map[string]interface{}
+
 	if finding.AdditionalInfo != nil {
-		additionalInfo = &map[string]interface{}{
-			"Description": finding.AdditionalInfo,
+		err := json.Unmarshal([]byte(*finding.AdditionalInfo), &additionalInfo)
+		if err != nil {
+			additionalInfo = map[string]interface{}{
+				"Details": finding.AdditionalInfo,
+			}
 		}
 	}
 	result := common.APIFinding{
@@ -127,7 +131,7 @@ func ConvertRawFindingToAPIFinding(finding restapi.RawFindings) *common.APIFindi
 		Source:         *finding.Namespace,
 		Description:    *finding.Description,
 		Severity:       convertSeverity(*finding.Request.Severity),
-		AdditionalInfo: additionalInfo,
+		AdditionalInfo: &additionalInfo,
 	}
 	return &result
 }
@@ -307,16 +311,12 @@ func (api *API) GetLastShortStatus() (*restapi.ShortTestReport, error) {
 				verb := (*finding.Location)[3]
 				method := (*finding.Location)[2]
 				verb = strings.ToUpper(verb)
-				err := AddFindingOnShortReport(&shortReport, method, verb, finding)
-				if err != nil {
-					// The error has been already logged, then simply skip the current report item
-					continue
-				}
+				AddFindingOnShortReport(&shortReport, method, verb, finding)
 			}
 		}
 
-		// Some guys ask to not have Tags item if no tags on it...
-		if len(*shortReport.Tags) == 0 {
+		// Remove Tags item if no tags are present
+		if shortReport.Tags != nil && len(*shortReport.Tags) == 0 {
 			shortReport.Tags = nil
 		}
 
