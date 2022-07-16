@@ -152,6 +152,7 @@ func (p *pluginFuzzer) sendTestReportNotification(ctx context.Context, apiID uin
 	}
 	notification := notifications.APIClarityNotification{}
 	err := notification.FromTestReportNotification(testReportNotification)
+
 	if err != nil {
 		return fmt.Errorf("failed to create 'TestReport' notification, err=(%v)", err)
 	}
@@ -245,7 +246,7 @@ func (p *pluginFuzzer) FuzzTarget(ctx context.Context, apiID oapicommon.ApiID, p
 	return timestamp, nil
 }
 
-func (p *pluginFuzzer) StopFuzzing(ctx context.Context, apiID oapicommon.ApiID) error {
+func (p *pluginFuzzer) StopFuzzing(ctx context.Context, apiID oapicommon.ApiID, complete bool) error {
 	// Retrieve the API
 	api, err := p.model.GetAPI(ctx, uint(apiID))
 	if err != nil {
@@ -274,7 +275,7 @@ func (p *pluginFuzzer) StopFuzzing(ctx context.Context, apiID oapicommon.ApiID) 
 	}
 
 	// Stop the fuzzing job
-	err = p.fuzzerClient.StopFuzzingJob(apiID)
+	err = p.fuzzerClient.StopFuzzingJob(apiID, complete)
 	if err != nil {
 		logging.Errorf("[Fuzzer] StopFuzzing(): can't trigger fuzzing job for API (%v), error=(%v)", apiID, err)
 		// Set an error status for ongoing test
@@ -469,7 +470,7 @@ func (p *pluginFuzzerHTTPHandler) PostUpdateStatus(writer http.ResponseWriter, r
 	if api.InFuzzing && tools.IsDone(&data) {
 		// A job is in progress, and the report said it is now completed (DONE or ERROR). Note that no need to manage
 		// report & findings notifications here as it is managed by StopFuzzing()
-		err = p.fuzzer.StopFuzzing(req.Context(), apiID)
+		err = p.fuzzer.StopFuzzing(req.Context(), apiID, true)
 		if err != nil {
 			logging.Errorf("[Fuzzer] PostUpdateStatus(%v): failed to stop fuzzing status, error=%v", apiID, err)
 		}
@@ -744,7 +745,7 @@ func (p *pluginFuzzerHTTPHandler) StopTest(writer http.ResponseWriter, req *http
 
 	// Note that no need to manage
 	// report & findings notifications here as it is managed by StopAPIFuzzing()
-	err = p.fuzzer.StopFuzzing(req.Context(), apiID)
+	err = p.fuzzer.StopFuzzing(req.Context(), apiID, false)
 	if err != nil {
 		writer.Header().Set("Content-Type", "application/json")
 		//nolint: errorlint // no wrapped error here
