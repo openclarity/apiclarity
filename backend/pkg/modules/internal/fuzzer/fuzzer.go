@@ -26,7 +26,6 @@ import (
 	oapicommon "github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/api3/global"
 	"github.com/openclarity/apiclarity/api3/notifications"
-
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/clients"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/config"
@@ -152,7 +151,6 @@ func (p *pluginFuzzer) sendTestReportNotification(ctx context.Context, apiID uin
 	}
 	notification := notifications.APIClarityNotification{}
 	err := notification.FromTestReportNotification(testReportNotification)
-
 	if err != nil {
 		return fmt.Errorf("failed to create 'TestReport' notification, err=(%v)", err)
 	}
@@ -635,12 +633,11 @@ func (p *pluginFuzzerHTTPHandler) GetTestProgress(writer http.ResponseWriter, re
 		httpResponse(writer, http.StatusNotFound, EmptyJSON)
 		return
 	}
-	report := test.Report
 
-	if report.Status == restapi.INPROGRESS {
+	if test.Report.Status == restapi.INPROGRESS {
 		testProgress := restapi.ShortTestProgress{
 			ApiID:     &apiID,
-			Progress:  report.Progress,
+			Progress:  test.Report.Progress,
 			Starttime: *test.Starttime,
 		}
 		writer.Header().Set("Content-Type", "application/json")

@@ -26,9 +26,10 @@ import (
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 
-	// Enables the demo module.
-	// _ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/demo" .
+	// Enables the fuzzer module.
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer"
+
+	// Enables the traceanalyzer module.
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer"
 	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
 )
