@@ -38,6 +38,8 @@ func APIFindingBFLAScopesMismatch(specType SpecType, path string, method models.
 		f.ReconstructedSpecLocation = getLocation(path, method)
 	case SpecTypeProvided:
 		f.ProvidedSpecLocation = getLocation(path, method)
+	case SpecTypeNone:
+		// Nothing
 	}
 	return f
 }
@@ -55,6 +57,8 @@ func APIFindingBFLASuspiciousCallMedium(specType SpecType, path string, method m
 		f.ReconstructedSpecLocation = getLocation(path, method)
 	case SpecTypeProvided:
 		f.ProvidedSpecLocation = getLocation(path, method)
+	case SpecTypeNone:
+		// Nothing
 	}
 	return f
 }
@@ -72,6 +76,8 @@ func APIFindingBFLASuspiciousCallHigh(specType SpecType, path string, method mod
 		f.ReconstructedSpecLocation = getLocation(path, method)
 	case SpecTypeProvided:
 		f.ProvidedSpecLocation = getLocation(path, method)
+	case SpecTypeNone:
+		// Nothing
 	}
 	return f
 }

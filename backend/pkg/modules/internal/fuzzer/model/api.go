@@ -474,6 +474,8 @@ func (api *API) AddNewStatusReport(report restapi.FuzzingStatusAndReport) error 
 					medium++
 				case common.LOW:
 					low++
+				case common.INFO:
+					// Nothing
 				}
 			}
 		}

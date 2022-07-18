@@ -28,7 +28,7 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
 )
 
-var staticFakeTest string = `
+var staticFakeTest = `
 {
 	"steps": [
 		{"report":{},"progress":0,"status":"IN_PROGRESS"},
@@ -94,12 +94,12 @@ func FakeTriggerFuzzingJob(ctx context.Context, pipe chan bool, testFilename str
 	}
 
 	fakeTest := FakeTest{}
-	err = json.Unmarshal([]byte(testBytes), &fakeTest)
+	err = json.Unmarshal(testBytes, &fakeTest)
 	if err != nil {
 		logging.Errorf("can't load test file (%v): %v", testFilename, err)
 	}
 	logging.Errorf("can't read file (%v): %v", testFilename, err)
-	apic_client, err := globalapi.NewClient(remoteHost)
+	apicClient, err := globalapi.NewClient(remoteHost)
 	if err != nil {
 		logging.Errorf("[Fuzzer][FakeClient] unable to connect to APIClarity: %v", err)
 	}
@@ -110,7 +110,7 @@ func FakeTriggerFuzzingJob(ctx context.Context, pipe chan bool, testFilename str
 			return
 		default:
 			logging.Logf("[Fuzzer][FakeClient] inject data %v", step)
-			err = SendReport(ctx, apic_client, apiID, step)
+			err = SendReport(ctx, apicClient, apiID, step)
 			if err != nil {
 				logging.Errorf("Failed to send report to (%v): %v", remoteHost, err)
 			}
