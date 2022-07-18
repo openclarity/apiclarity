@@ -24,7 +24,7 @@ import (
 
 func sameAnn(got utils.TraceAnalyzerAnnotation, expected utils.TraceAnalyzerAnnotation) bool {
 	wanted := expected.(*AnnotationNLID) //nolint:forcetypeassert
-	observed := got.(*AnnotationNLID) //nolint:forcetypeassert
+	observed := got.(*AnnotationNLID)    //nolint:forcetypeassert
 
 	if wanted.SpecLocation != observed.SpecLocation {
 		return false

@@ -618,26 +618,28 @@ func (h httpHandler) StopTraceAnalysis(w http.ResponseWriter, r *http.Request, a
 
 func httpResponse(w http.ResponseWriter, code int, v interface{}) {
 	w.WriteHeader(code)
-	if err := json.NewEncoder(w).Encode(v); err != nil {
-		log.Error(err)
-		http.Error(w, err.Error(), code)
-		return
+	if v != nil {
+		if err := json.NewEncoder(w).Encode(v); err != nil {
+			log.Error(err)
+			http.Error(w, err.Error(), code)
+			return
+		}
 	}
 }
 
+//nolint:revive,stylecheck // Api is not uppercased because it's defined as is in the specification
 func (h httpHandler) ResetApiFindings(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
 	h.ta.aggregator.ResetAPIFindings(uint64(apiID))
 
 	err := h.ta.accessor.DeleteAllAPIInfoAnnotations(r.Context(), utils.ModuleName, uint(apiID))
 	if err != nil {
-		err := oapicommon.ApiResponse{Message: "Internal error, could not delete data from database"}
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(err)
+		log.Error(err)
+		httpResponse(w, http.StatusInternalServerError, oapicommon.ApiResponse{Message: "Internal error, could not delete data from database"})
 		return
-
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	log.Infof("API Findings successfully reset for api=%d", apiID)
+	httpResponse(w, http.StatusNoContent, nil)
 }
 
 //nolint:gochecknoinits
