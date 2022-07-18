@@ -23,22 +23,9 @@ import (
 	"github.com/go-openapi/spec"
 
 	"github.com/openclarity/apiclarity/backend/pkg/database"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 )
 
-type OpenAPIProvider interface {
-	GetOpenAPI(invInfo *database.APIInfo, apiID uint) (*spec.Swagger, error)
-}
-
-func NewBFLAOpenAPIProvider(accessor core.BackendAccessor) OpenAPIProvider {
-	return &bflaOpenAPIProvider{accessor: accessor}
-}
-
-type bflaOpenAPIProvider struct {
-	accessor core.BackendAccessor
-}
-
-func (d *bflaOpenAPIProvider) GetOpenAPI(invInfo *database.APIInfo, apiID uint) (spec *spec.Swagger, err error) {
+func GetOpenAPI(invInfo *database.APIInfo, apiID uint) (spec *spec.Swagger, err error) {
 	if invInfo.HasProvidedSpec {
 		spec, err = GetServiceOpenapiSpec([]byte(invInfo.ProvidedSpec))
 	} else if invInfo.HasReconstructedSpec {

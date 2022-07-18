@@ -76,13 +76,14 @@ func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Modul
 	ctrlNotifier := bfladetector.NewBFLANotifier(bfladetector.ModuleName, accessor)
 	p.bflaDetector = bfladetector.NewBFLADetector(ctx, bfladetector.ModuleName, accessor, eventAlerter{accessor}, ctrlNotifier, sp, controllerResyncInterval)
 
-	handler := &httpHandler{
-		bflaDetector:    p.bflaDetector,
-		state:           sp,
-		accessor:        accessor,
-		openAPIProvider: bfladetector.NewBFLAOpenAPIProvider(accessor),
-	}
-	p.httpHandler = restapi.HandlerWithOptions(handler, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + bfladetector.ModuleName})
+	p.httpHandler = restapi.HandlerWithOptions(&httpHandler{
+		bflaDetector:     p.bflaDetector,
+		state:            sp,
+		accessor:         accessor,
+		findingsRegistry: bfladetector.NewFindingsRegistry(sp),
+	}, restapi.ChiServerOptions{
+		BaseURL: core.BaseHTTPPath + "/" + bfladetector.ModuleName,
+	})
 	return p, nil
 }
 
@@ -251,11 +252,19 @@ func (p *bfla) APIAnnotationNotify(modName string, apiID uint, ann *core.Annotat
 }
 
 type httpHandler struct {
-	state           recovery.StatePersister
-	bflaDetector    bfladetector.BFLADetector
-	openAPIProvider bfladetector.OpenAPIProvider
-	accessor        core.BackendAccessor
-	modName         string
+	state            recovery.StatePersister
+	bflaDetector     bfladetector.BFLADetector
+	accessor         core.BackendAccessor
+	findingsRegistry bfladetector.FindingsRegistry
+}
+
+func (h httpHandler) GetAPIFindingsForAPI(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.GetAPIFindingsForAPIParams) {
+	findings, err := h.findingsRegistry.GetAll(uint(apiID))
+	if err != nil {
+		httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
+		return
+	}
+	httpResponse(w, http.StatusOK, findings)
 }
 
 func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID int) {
@@ -271,7 +280,7 @@ func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID in
 	}
 	event := events[0]
 
-	dest, src, user, err := getBFLAAnnotations(r.Context(), h.modName, h.accessor, uint(eventID))
+	dest, src, user, err := getBFLAAnnotations(r.Context(), bfladetector.ModuleName, h.accessor, uint(eventID))
 	if err != nil {
 		httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
 		return
@@ -287,7 +296,7 @@ func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID in
 		httpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
 		return
 	}
-	spc, err := h.openAPIProvider.GetOpenAPI(apiinfo, event.APIInfoID)
+	spc, err := bfladetector.GetOpenAPI(apiinfo, event.APIInfoID)
 	if err != nil {
 		log.Error("unable to get the spec")
 	}
@@ -594,7 +603,7 @@ func (h httpHandler) PutEventIdOperation(w http.ResponseWriter, r *http.Request,
 	}
 	apiEvent := events[0]
 
-	_, src, user, err := getBFLAAnnotations(r.Context(), h.modName, h.accessor, uint(eventID))
+	_, src, user, err := getBFLAAnnotations(r.Context(), bfladetector.ModuleName, h.accessor, uint(eventID))
 	if err != nil {
 		log.Error(err)
 		httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{
