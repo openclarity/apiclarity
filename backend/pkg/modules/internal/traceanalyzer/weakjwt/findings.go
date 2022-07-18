@@ -102,15 +102,6 @@ func (a APIAnnotationNoAlgField) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	return &newA
 }
 
-func (a *APIAnnotationNoAlgField) ToFinding() utils.Finding {
-	return utils.Finding{
-		ShortDesc:    "JWT has no algorithm specified",
-		DetailedDesc: "The JOSE header of the JWT header does not contain an 'alg' field",
-		Severity:     a.Severity(),
-		Alert:        utils.SeverityToAlert(a.Severity()),
-	}
-}
-
 func (a *APIAnnotationNoAlgField) ToAPIFinding() oapicommon.APIFinding {
 	jsonPointer := a.SpecLocation()
 	return oapicommon.APIFinding{
@@ -193,15 +184,6 @@ func (a *APIAnnotationAlgFieldNone) Deserialize(serialized []byte) error {
 func (a APIAnnotationAlgFieldNone) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
 	return &newA
-}
-
-func (a *APIAnnotationAlgFieldNone) ToFinding() utils.Finding {
-	return utils.Finding{
-		ShortDesc:    "'alg' field set to None",
-		DetailedDesc: "The JOSE header of the JWT header contains an 'alg' field but it's set to none",
-		Severity:     a.Severity(),
-		Alert:        utils.SeverityToAlert(a.Severity()),
-	}
 }
 
 func (a *APIAnnotationAlgFieldNone) ToAPIFinding() oapicommon.APIFinding {
@@ -294,15 +276,6 @@ func (a *APIAnnotationNotRecommendedAlg) Deserialize(serialized []byte) error {
 func (a APIAnnotationNotRecommendedAlg) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
 	return &newA
-}
-
-func (a *APIAnnotationNotRecommendedAlg) ToFinding() utils.Finding {
-	return utils.Finding{
-		ShortDesc:    "Not a recommanded JWT signing algorithm",
-		DetailedDesc: "Signing algorithms that are not recommended were used",
-		Severity:     a.Severity(),
-		Alert:        utils.SeverityToAlert(a.Severity()),
-	}
 }
 
 func (a *APIAnnotationNotRecommendedAlg) ToAPIFinding() oapicommon.APIFinding {
@@ -399,15 +372,6 @@ func (a *APIAnnotationNoExpireClaim) Deserialize(serialized []byte) error {
 func (a APIAnnotationNoExpireClaim) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
 	return &newA
-}
-
-func (a *APIAnnotationNoExpireClaim) ToFinding() utils.Finding {
-	return utils.Finding{
-		ShortDesc:    "JWT does not have any expire claims",
-		DetailedDesc: "JWT does not have any expire claims",
-		Severity:     a.Severity(),
-		Alert:        utils.SeverityToAlert(a.Severity()),
-	}
 }
 
 func (a *APIAnnotationNoExpireClaim) ToAPIFinding() oapicommon.APIFinding {
@@ -520,15 +484,6 @@ func (a APIAnnotationExpTooFar) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	return &newA
 }
 
-func (a *APIAnnotationExpTooFar) ToFinding() utils.Finding {
-	return utils.Finding{
-		ShortDesc:    "JWT expire too far in the future",
-		DetailedDesc: fmt.Sprintf("It has been observed JWT which expire far in the future (ex: %s)", expireString(a.ExpireInExample)),
-		Severity:     a.Severity(),
-		Alert:        utils.SeverityToAlert(a.Severity()),
-	}
-}
-
 func (a *APIAnnotationExpTooFar) ToAPIFinding() oapicommon.APIFinding {
 	additionalInfo := &map[string]interface{}{
 		"expire_in_example": uint64(a.ExpireInExample.Seconds()),
@@ -632,15 +587,6 @@ func (a APIAnnotationWeakSymetricSecret) Redacted() utils.TraceAnalyzerAPIAnnota
 	return &newA
 }
 
-func (a *APIAnnotationWeakSymetricSecret) ToFinding() utils.Finding {
-	return utils.Finding{
-		ShortDesc:    "JWT signed with a weak key",
-		DetailedDesc: "It has been observed one or more JWT with weak, known keys",
-		Severity:     a.Severity(),
-		Alert:        utils.SeverityToAlert(a.Severity()),
-	}
-}
-
 func (a *APIAnnotationWeakSymetricSecret) ToAPIFinding() oapicommon.APIFinding {
 	jsonPointer := a.SpecLocation()
 	return oapicommon.APIFinding{
@@ -740,15 +686,6 @@ func (a *APIAnnotationSensitiveContent) Deserialize(serialized []byte) error {
 func (a APIAnnotationSensitiveContent) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
 	return &newA
-}
-
-func (a *APIAnnotationSensitiveContent) ToFinding() utils.Finding {
-	return utils.Finding{
-		ShortDesc:    "JWT claims or headers may contains sensitive content",
-		DetailedDesc: "JWT are signed, not encrypted, hence sensitive information can be seen in clear by a potential attacker",
-		Severity:     a.Severity(),
-		Alert:        utils.SeverityToAlert(a.Severity()),
-	}
 }
 
 func (a *APIAnnotationSensitiveContent) ToAPIFinding() oapicommon.APIFinding {

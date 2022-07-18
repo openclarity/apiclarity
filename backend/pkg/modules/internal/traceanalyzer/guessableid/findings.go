@@ -138,26 +138,6 @@ func (a APIAnnotationGuessableID) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	return &newA
 }
 
-func (a *APIAnnotationGuessableID) ToFinding() utils.Finding {
-	var detailedDesc string
-	if len(a.ParamNames) > 0 {
-		paramNames := []string{}
-		for name := range a.ParamNames {
-			paramNames = append(paramNames, name)
-		}
-		detailedDesc = fmt.Sprintf("In call '%s %s', parameter(s) '%s' seems to be guessable", a.SpecMethod, a.SpecPath, strings.Join(paramNames, ","))
-	} else {
-		detailedDesc = fmt.Sprintf("In call '%s %s', parameter(s) seems to be guessable", a.SpecMethod, a.SpecPath)
-	}
-
-	return utils.Finding{
-		ShortDesc:    "Guessable identifier",
-		DetailedDesc: detailedDesc,
-		Severity:     a.Severity(),
-		Alert:        utils.SeverityToAlert(a.Severity()),
-	}
-}
-
 func (a *APIAnnotationGuessableID) ToAPIFinding() oapicommon.APIFinding {
 	var additionalInfo *map[string]interface{}
 	if len(a.ParamNames) > 0 {

@@ -43,7 +43,6 @@ type TraceAnalyzerAPIAnnotation interface {
 	Serialize() ([]byte, error)
 	Deserialize([]byte) error
 	Redacted() TraceAnalyzerAPIAnnotation
-	ToFinding() Finding
 	ToAPIFinding() oapicommon.APIFinding
 }
 
