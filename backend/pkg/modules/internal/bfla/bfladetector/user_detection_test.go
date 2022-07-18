@@ -16,10 +16,11 @@
 package bfladetector
 
 import (
-	"github.com/golang-jwt/jwt/v4"
 	"net/http"
 	"reflect"
 	"testing"
+
+	"github.com/golang-jwt/jwt/v4"
 )
 
 func TestGetUserID(t *testing.T) {

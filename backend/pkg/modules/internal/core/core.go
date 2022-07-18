@@ -24,9 +24,10 @@ import (
 	"strconv"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/openclarity/apiclarity/backend/pkg/config"
 	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
-	log "github.com/sirupsen/logrus"
 )
 
 const BaseHTTPPath = "/api/modules"

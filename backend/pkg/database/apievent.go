@@ -187,7 +187,7 @@ type APIEventsFilters struct {
 	StatusCodeIsNot       []string
 	StatusCodeIs          []string
 	StatusCodeLte         *string
-	ApiInfoIdIs           *uint32
+	APIInfoIDIs           *uint32
 }
 
 const dashboardTopAPIsNum = 5
@@ -367,8 +367,7 @@ func (a *APIEventsTableHandler) GetAPIEventsAndTotal(params operations.GetAPIEve
 			tx = tx.Where(fmt.Sprintf("ea.%s IN ?", moduleNameColumnName), params.AlertTypeIs).Where(fmt.Sprintf("ea.%s = 'ALERT'", nameColumnName))
 		}
 		if len(params.AlertIs) > 0 {
-			or := tx.Session(&gorm.Session{NewDB: true})
-			or = tx.Where(fmt.Sprintf("ea.%s LIKE ?", annotationColumnName), params.AlertIs[0])
+			or := tx.Where(fmt.Sprintf("ea.%s LIKE ?", annotationColumnName), params.AlertIs[0])
 			for severity := range params.AlertIs[1:] {
 				or = or.Or(fmt.Sprintf("ea.%s LIKE ?", annotationColumnName), severity)
 			}
@@ -493,7 +492,7 @@ func (a *APIEventsTableHandler) setAPIEventsFilters(filters *APIEventsFilters) *
 	tx = FilterEndsWith(tx, hostSpecNameColumnName, filters.SpecEnd)
 
 	// API Id filter
-	tx = FilterIsUint32(tx, apiInfoIDColumnName, filters.ApiInfoIdIs)
+	tx = FilterIsUint32(tx, apiInfoIDColumnName, filters.APIInfoIDIs)
 
 	// ignore non APIs
 	if !filters.ShowNonAPI {
@@ -588,7 +587,7 @@ func getAPIEventsParamsToFilters(params operations.GetAPIEventsParams) *APIEvent
 		StatusCodeIsNot:      params.StatusCodeIsNot,
 		StatusCodeIs:         params.StatusCodeIs,
 		StatusCodeLte:        params.StatusCodeLte,
-		ApiInfoIdIs:          params.APIInfoIDIs,
+		APIInfoIDIs:          params.APIInfoIDIs,
 	}
 }
 
