@@ -90,8 +90,10 @@ apiclarity:
 apiclarity-postgresql:
   enabled: true
 
-  image:
-  ## Use specified image tag
+  ## Specify posgtresql image
+  # image:
+    # registry: docker.io
+    # repository: bitnami/postgresql
     # tag: 14.4.0-debian-11-r4
 
   ## initdb parameters

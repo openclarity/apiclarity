@@ -22,7 +22,7 @@ spec:
       serviceAccountName: {{ include "apiclarity.serviceAccountName" . }}
       initContainers:
         - name: '{{ include "apiclarity.name" . }}-wait-for-db'
-          image: docker.io/bitnami/postgresql:{{ index .Values "apiclarity-postgresql" "image" "tag" | default "14.4.0-debian-11-r4" }}
+          image: {{ index .Values "apiclarity-postgresql" "image" "registry" | default "docker.io" }}/{{ index .Values "apiclarity-postgresql" "image" "repository" | default "bitnami/postgresql" }}:{{ index .Values "apiclarity-postgresql" "image" "tag" | default "14.4.0-debian-11-r4" }}
           command: ['sh', '-c', 'until pg_isready -h {{ include "apiclarity.name" . }}-postgresql -p 5432 -U "postgres" -d "dbname={{ index .Values "apiclarity-postgresql" "auth" "database" }}";
             do echo waiting for database; sleep 2; done;']
           securityContext:
