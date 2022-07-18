@@ -1456,8 +1456,8 @@ paths:
         API hosts (in the form 'host:port') the feature requires to get trace for
   /modules/bfla/api/findings/{apiID}:
     get:
-      description: Asks APIClarity for all findings of all modules of a specific API.
-        Implemented at the core of APIClarity.
+      description: Asks APIClarity for all findings of BFLA modules of a specific
+        API.
       operationId: bflaGetAPIFindingsForAPI
       parameters:
       - description: The path parameter for apiID type
