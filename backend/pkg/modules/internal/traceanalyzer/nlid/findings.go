@@ -125,26 +125,6 @@ func (a APIAnnotationNLID) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	return &newA
 }
 
-func (a *APIAnnotationNLID) ToFinding() utils.Finding {
-	var detailedDesc string
-	if len(a.ParamNames) > 0 {
-		paramNames := []string{}
-		for name := range a.ParamNames {
-			paramNames = append(paramNames, name)
-		}
-		detailedDesc = fmt.Sprintf("In call '%s %s', parameter(s) '%s' were used but not previously retrieved. Potential BOLA.", a.SpecMethod, a.SpecPath, strings.Join(paramNames, ","))
-	} else {
-		detailedDesc = fmt.Sprintf("In call '%s %s', parameter(s) were used but not previously retrieved. Potential BOLA.", a.SpecMethod, a.SpecPath)
-	}
-
-	return utils.Finding{
-		ShortDesc:    "NLID (Non learnt Identifier)",
-		DetailedDesc: detailedDesc,
-		Severity:     a.Severity(),
-		Alert:        utils.SeverityToAlert(a.Severity()),
-	}
-}
-
 func (a *APIAnnotationNLID) ToAPIFinding() oapicommon.APIFinding {
 	var additionalInfo *map[string]interface{}
 	if len(a.ParamNames) > 0 {
