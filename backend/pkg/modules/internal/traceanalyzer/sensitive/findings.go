@@ -103,15 +103,6 @@ func (a APIAnnotationRegexpMatching) Redacted() utils.TraceAnalyzerAPIAnnotation
 	return &newA
 }
 
-func (a *APIAnnotationRegexpMatching) ToFinding() utils.Finding {
-	return utils.Finding{
-		ShortDesc:    "Matching regular expression",
-		DetailedDesc: "This event matches sensitive information",
-		Severity:     a.Severity(),
-		Alert:        utils.SeverityToAlert(a.Severity()),
-	}
-}
-
 func (a *APIAnnotationRegexpMatching) ToAPIFinding() oapicommon.APIFinding {
 	var additionalInfo *map[string]interface{}
 	if len(a.MatchingRules) > 0 {
