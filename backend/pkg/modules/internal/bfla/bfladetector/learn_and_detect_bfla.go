@@ -29,6 +29,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/k8straceannotator"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/recovery"
@@ -43,8 +44,9 @@ const (
 	K8sDstAnnotationName     = "bfla_k8s_dst"
 	DetectedIDAnnotationName = "bfla_detected_id"
 
-	AuthzModelAnnotationName = "authz_model"
-	BFLAStateAnnotationName  = "bfla_state"
+	AuthzModelAnnotationName   = "authz_model"
+	BFLAStateAnnotationName    = "bfla_state"
+	BFLAFindingsAnnotationName = "bfla_findings"
 )
 
 type BFLAStateEnum uint
@@ -89,6 +91,7 @@ func NewBFLADetector(ctx context.Context, modName string, bflaBackendAccessor bf
 		eventAlerter:           eventAlerter,
 		bflaNotifier:           bflaNotifier,
 		notifierResyncInterval: notifierResyncInterval,
+		findingsRegistry:       NewFindingsRegistry(sp),
 		mu:                     &sync.RWMutex{},
 		modName:                modName,
 	}
@@ -231,6 +234,7 @@ type learnAndDetectBFLA struct {
 	eventAlerter           EventAlerter
 	bflaNotifier           BFLANotifier
 	notifierResyncInterval time.Duration
+	findingsRegistry       FindingsRegistry
 	mu                     *sync.RWMutex
 	modName                string
 }
@@ -403,6 +407,9 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		authzModel.Set(AuthorizationModel{})
 		state.state = BFLAStart
 		stateValue.Set(state)
+		if err := l.findingsRegistry.Clear(cmd.apiID); err != nil {
+			return fmt.Errorf("unable to get authz model state: %w", err)
+		}
 		l.logError(l.notify(ctx, cmd.apiID))
 
 	case *StartDetectionCommand:
@@ -508,7 +515,8 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	}
 	resolvedPath := ResolvePath(tags, trace.APIEvent)
 
-	if SpecTypeFromAPIInfo(apiInfo) == SpecTypeNone {
+	specType := SpecTypeFromAPIInfo(apiInfo)
+	if specType == SpecTypeNone {
 		return fmt.Errorf("spec not present cannot learn BFLA; apiID=%d", trace.APIEvent.APIInfoID)
 	}
 
@@ -557,18 +565,39 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	aud.WarningStatus = restapi.LEGITIMATE
 	if !aud.Authorized {
 		// updates the auth model but this time as unauthorized
-		severity := core.AlertWarn
+		var severity core.AlertSeverity
+		var finding common.APIFinding
 		code := trace.APIEvent.StatusCode
 		if 200 > code || code > 299 {
 			severity = core.AlertInfo
+			finding = APIFindingBFLASuspiciousCallMedium(specType, resolvedPath, trace.APIEvent.Method)
+		} else {
+			severity = core.AlertWarn
+			finding = APIFindingBFLASuspiciousCallHigh(specType, resolvedPath, trace.APIEvent.Method)
 		}
 
+		if err := l.findingsRegistry.Add(apiID, finding); err != nil {
+			log.Warnf("unable to add findings: %s", err)
+		}
 		if err := l.eventAlerter.SetEventAlert(ctx, l.modName, trace.APIEvent.ID, severity); err != nil {
-			return fmt.Errorf("unable to set alert annotation: %w", err)
+			log.Warnf("unable to set alert annotation: %s", err)
 		}
 
 		l.logError(l.notify(ctx, trace.APIEvent.APIInfoID))
 		aud.WarningStatus = ResolveBFLAStatusInt(int(trace.APIEvent.StatusCode))
+	}
+
+	spc, err := GetOpenAPI(apiInfo, apiID)
+	if err != nil {
+		log.Warnf("unable to get openapi spec")
+	}
+	op := GetSpecOperation(spc, trace.APIEvent.Method, resolvedPath)
+	for _, user := range aud.EndUsers {
+		if user.IsMismatchedScopes(op) {
+			if err := l.findingsRegistry.Add(trace.APIEvent.APIInfoID, APIFindingBFLAScopesMismatch(specType, resolvedPath, trace.APIEvent.Method)); err != nil {
+				log.Warnf("unable to add scope mismatch findings: %s", err)
+			}
+		}
 	}
 	aud.StatusCode = trace.APIEvent.StatusCode
 	aud.LastTime = time.Time(trace.APIEvent.Time)
@@ -579,7 +608,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 func (l *learnAndDetectBFLA) notify(ctx context.Context, apiID uint) error {
 	ntf := AuthzModelNotification{}
 
-	if l.IsLearning(apiID) {
+	if l.isLearning(apiID) {
 		ntf.Learning = true
 	} else {
 		v, err := l.authzModelsMap.Get(apiID)
@@ -689,6 +718,10 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, pa
 func (l *learnAndDetectBFLA) IsLearning(apiID uint) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
+	return l.isLearning(apiID)
+}
+
+func (l *learnAndDetectBFLA) isLearning(apiID uint) bool {
 	_, _, err := l.checkBFLAState(apiID, BFLALearning)
 	return err == nil
 }

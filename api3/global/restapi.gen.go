@@ -873,6 +873,12 @@ type GetDashboardApiUsageParams struct {
 	EndTime EndTime `form:"endTime" json:"endTime"`
 }
 
+// BflaGetAPIFindingsForAPIParams defines parameters for BflaGetAPIFindingsForAPI.
+type BflaGetAPIFindingsForAPIParams struct {
+	// Should findings include sensitive data ?
+	Sensitive *externalRef0.Sensitive `form:"sensitive,omitempty" json:"sensitive,omitempty"`
+}
+
 // BflaGetApiFindingsParams defines parameters for BflaGetApiFindings.
 type BflaGetApiFindingsParams struct {
 	// Should findings include sensitive data ?
@@ -1151,6 +1157,9 @@ type ClientInterface interface {
 
 	// GetFeatures request
 	GetFeatures(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// BflaGetAPIFindingsForAPI request
+	BflaGetAPIFindingsForAPI(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetAPIFindingsForAPIParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// BflaGetApiFindings request
 	BflaGetApiFindings(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetApiFindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1506,6 +1515,18 @@ func (c *Client) GetDashboardApiUsageMostUsed(ctx context.Context, reqEditors ..
 
 func (c *Client) GetFeatures(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetFeaturesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) BflaGetAPIFindingsForAPI(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetAPIFindingsForAPIParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewBflaGetAPIFindingsForAPIRequest(c.Server, apiID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3757,6 +3778,60 @@ func NewGetFeaturesRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewBflaGetAPIFindingsForAPIRequest generates requests for BflaGetAPIFindingsForAPI
+func NewBflaGetAPIFindingsForAPIRequest(server string, apiID externalRef0.ApiID, params *BflaGetAPIFindingsForAPIParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/modules/bfla/api/findings/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	queryValues := queryURL.Query()
+
+	if params.Sensitive != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sensitive", runtime.ParamLocationQuery, *params.Sensitive); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewBflaGetApiFindingsRequest generates requests for BflaGetApiFindings
 func NewBflaGetApiFindingsRequest(server string, apiID externalRef0.ApiID, params *BflaGetApiFindingsParams) (*http.Request, error) {
 	var err error
@@ -5122,6 +5197,9 @@ type ClientWithResponsesInterface interface {
 	// GetFeatures request
 	GetFeaturesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFeaturesResponse, error)
 
+	// BflaGetAPIFindingsForAPI request
+	BflaGetAPIFindingsForAPIWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetAPIFindingsForAPIParams, reqEditors ...RequestEditorFn) (*BflaGetAPIFindingsForAPIResponse, error)
+
 	// BflaGetApiFindings request
 	BflaGetApiFindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetApiFindingsParams, reqEditors ...RequestEditorFn) (*BflaGetApiFindingsResponse, error)
 
@@ -5665,6 +5743,29 @@ func (r GetFeaturesResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetFeaturesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type BflaGetAPIFindingsForAPIResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *externalRef0.APIFindings
+	JSONDefault  *externalRef0.ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r BflaGetAPIFindingsForAPIResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r BflaGetAPIFindingsForAPIResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -6570,6 +6671,15 @@ func (c *ClientWithResponses) GetFeaturesWithResponse(ctx context.Context, reqEd
 		return nil, err
 	}
 	return ParseGetFeaturesResponse(rsp)
+}
+
+// BflaGetAPIFindingsForAPIWithResponse request returning *BflaGetAPIFindingsForAPIResponse
+func (c *ClientWithResponses) BflaGetAPIFindingsForAPIWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetAPIFindingsForAPIParams, reqEditors ...RequestEditorFn) (*BflaGetAPIFindingsForAPIResponse, error) {
+	rsp, err := c.BflaGetAPIFindingsForAPI(ctx, apiID, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseBflaGetAPIFindingsForAPIResponse(rsp)
 }
 
 // BflaGetApiFindingsWithResponse request returning *BflaGetApiFindingsResponse
@@ -7508,6 +7618,39 @@ func ParseGetFeaturesResponse(rsp *http.Response) (*GetFeaturesResponse, error) 
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseBflaGetAPIFindingsForAPIResponse parses an HTTP response from a BflaGetAPIFindingsForAPIWithResponse call
+func ParseBflaGetAPIFindingsForAPIResponse(rsp *http.Response) (*BflaGetAPIFindingsForAPIResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &BflaGetAPIFindingsForAPIResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest externalRef0.APIFindings
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
 
 	}
 
@@ -8544,6 +8687,9 @@ type ServerInterface interface {
 	// Get the list of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for
 	// (GET /features)
 	GetFeatures(w http.ResponseWriter, r *http.Request)
+	// Get Findings for an API
+	// (GET /modules/bfla/api/findings/{apiID})
+	BflaGetAPIFindingsForAPI(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params BflaGetAPIFindingsForAPIParams)
 	// Get findings for an API and module
 	// (GET /modules/bfla/apiFindings/{apiID})
 	BflaGetApiFindings(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params BflaGetApiFindingsParams)
@@ -9977,6 +10123,46 @@ func (siw *ServerInterfaceWrapper) GetFeatures(w http.ResponseWriter, r *http.Re
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// BflaGetAPIFindingsForAPI operation middleware
+func (siw *ServerInterfaceWrapper) BflaGetAPIFindingsForAPI(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params BflaGetAPIFindingsForAPIParams
+
+	// ------------- Optional query parameter "sensitive" -------------
+	if paramValue := r.URL.Query().Get("sensitive"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "sensitive", r.URL.Query(), &params.Sensitive)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sensitive", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.BflaGetAPIFindingsForAPI(w, r, apiID, params)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 // BflaGetApiFindings operation middleware
 func (siw *ServerInterfaceWrapper) BflaGetApiFindings(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -11088,6 +11274,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/features", wrapper.GetFeatures)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/modules/bfla/api/findings/{apiID}", wrapper.BflaGetAPIFindingsForAPI)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/modules/bfla/apiFindings/{apiID}", wrapper.BflaGetApiFindings)
 	})
 	r.Group(func(r chi.Router) {
@@ -11268,29 +11457,31 @@ var swaggerSpec = []string{
 	"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",
-	"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",
+	"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",
+	"AgAA//83BJ/BvMwAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
