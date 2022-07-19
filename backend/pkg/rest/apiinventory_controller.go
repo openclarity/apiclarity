@@ -16,12 +16,14 @@
 package rest
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/go-openapi/runtime/middleware"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
@@ -97,7 +99,11 @@ func (s *Server) GetAPIInventoryAPIIDFromHostAndPort(params operations.GetAPIInv
 	apiID, err := s.dbHandler.APIInventoryTable().GetAPIID(params.Host, params.Port)
 	if err != nil {
 		log.Errorf("Failed to get API ID: %v", err)
-		return operations.NewGetAPIInventoryAPIIDFromHostAndPortDefault(http.StatusInternalServerError)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return operations.NewGetAPIInventoryAPIIDFromHostAndPortNotFound().WithPayload(&models.APIResponse{Message: err.Error()})
+		} else {
+			return operations.NewGetAPIInventoryAPIIDFromHostAndPortDefault(http.StatusInternalServerError)
+		}
 	}
 
 	return operations.NewGetAPIInventoryAPIIDFromHostAndPortOK().WithPayload(uint32(apiID))

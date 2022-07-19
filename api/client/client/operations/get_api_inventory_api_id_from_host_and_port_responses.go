@@ -29,6 +29,12 @@ func (o *GetAPIInventoryAPIIDFromHostAndPortReader) ReadResponse(response runtim
 			return nil, err
 		}
 		return result, nil
+	case 404:
+		result := NewGetAPIInventoryAPIIDFromHostAndPortNotFound()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	default:
 		result := NewGetAPIInventoryAPIIDFromHostAndPortDefault(response.Code())
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -65,6 +71,38 @@ func (o *GetAPIInventoryAPIIDFromHostAndPortOK) readResponse(response runtime.Cl
 
 	// response payload
 	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewGetAPIInventoryAPIIDFromHostAndPortNotFound creates a GetAPIInventoryAPIIDFromHostAndPortNotFound with default headers values
+func NewGetAPIInventoryAPIIDFromHostAndPortNotFound() *GetAPIInventoryAPIIDFromHostAndPortNotFound {
+	return &GetAPIInventoryAPIIDFromHostAndPortNotFound{}
+}
+
+/* GetAPIInventoryAPIIDFromHostAndPortNotFound describes a response with status code 404, with default header values.
+
+API ID Not Found
+*/
+type GetAPIInventoryAPIIDFromHostAndPortNotFound struct {
+	Payload *models.APIResponse
+}
+
+func (o *GetAPIInventoryAPIIDFromHostAndPortNotFound) Error() string {
+	return fmt.Sprintf("[GET /apiInventory/apiId/fromHostAndPort][%d] getApiInventoryApiIdFromHostAndPortNotFound  %+v", 404, o.Payload)
+}
+func (o *GetAPIInventoryAPIIDFromHostAndPortNotFound) GetPayload() *models.APIResponse {
+	return o.Payload
+}
+
+func (o *GetAPIInventoryAPIIDFromHostAndPortNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.APIResponse)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 
