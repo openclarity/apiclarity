@@ -136,14 +136,14 @@ func (s *specDiffer) EventNotify(ctx context.Context, event *core.Event) {
 	}
 
 	if apiEvent.HasProvidedSpecDiff {
-		s.addDiffToSend(apiEvent.NewProvidedSpec, apiEvent.OldProvidedSpec, providedDiffType, common.PROVIDED, apiEvent)
+		s.addDiffToSend(providedDiff, apiEvent.NewProvidedSpec, apiEvent.OldProvidedSpec, providedDiffType, common.PROVIDED, apiEvent)
 	}
 	if apiEvent.HasReconstructedSpecDiff {
-		s.addDiffToSend(apiEvent.NewReconstructedSpec, apiEvent.OldReconstructedSpec, reconstructedDiffType, common.RECONSTRUCTED, apiEvent)
+		s.addDiffToSend(reconstructedDiff, apiEvent.NewReconstructedSpec, apiEvent.OldReconstructedSpec, reconstructedDiffType, common.RECONSTRUCTED, apiEvent)
 	}
 }
 
-func (s *specDiffer) addDiffToSend(newSpec, oldSpec string, diffType models.DiffType, specType common.SpecType, event *database.APIEvent) {
+func (s *specDiffer) addDiffToSend(diff *_spec.APIDiff, newSpec, oldSpec string, diffType models.DiffType, specType common.SpecType, event *database.APIEvent, ) {
 	if diffType == models.DiffTypeNODIFF {
 		return
 	}
@@ -184,7 +184,7 @@ func (s *specDiffer) addDiffToSend(newSpec, oldSpec string, diffType models.Diff
 		Method:        convertFromModelsMethod(event.Method),
 		NewSpec:       newSpec,
 		OldSpec:       oldSpec,
-		Path:          event.Path,
+		Path:          diff.Path,
 		SpecTimestamp: specTimestamp,
 		SpecType:      specType,
 	}
