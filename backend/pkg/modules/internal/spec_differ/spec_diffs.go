@@ -136,14 +136,14 @@ func (s *specDiffer) EventNotify(ctx context.Context, event *core.Event) {
 	}
 
 	if apiEvent.HasProvidedSpecDiff {
-		s.addDiffToSend(providedDiff, apiEvent.NewProvidedSpec, apiEvent.OldProvidedSpec, providedDiffType, common.PROVIDED, apiEvent)
+		s.addDiffToSend(providedDiff, providedDiff.ModifiedPathItem, providedDiff.OriginalPathItem, providedDiffType, common.PROVIDED, apiEvent)
 	}
 	if apiEvent.HasReconstructedSpecDiff {
-		s.addDiffToSend(reconstructedDiff, apiEvent.NewReconstructedSpec, apiEvent.OldReconstructedSpec, reconstructedDiffType, common.RECONSTRUCTED, apiEvent)
+		s.addDiffToSend(reconstructedDiff, reconstructedDiff.ModifiedPathItem, reconstructedDiff.OriginalPathItem, reconstructedDiffType, common.RECONSTRUCTED, apiEvent)
 	}
 }
 
-func (s *specDiffer) addDiffToSend(diff *_spec.APIDiff, newSpec, oldSpec string, diffType models.DiffType, specType common.SpecType, event *database.APIEvent, ) {
+func (s *specDiffer) addDiffToSend(diff *_spec.APIDiff, modifiedPathItem, originalPathItem *spec.PathItem, diffType models.DiffType, specType common.SpecType, event *database.APIEvent, ) {
 	if diffType == models.DiffTypeNODIFF {
 		return
 	}
@@ -151,6 +151,19 @@ func (s *specDiffer) addDiffToSend(diff *_spec.APIDiff, newSpec, oldSpec string,
 		log.Warnf("Diff events threshold reached (%v), ignoring event", diffsSendThreshold)
 		return
 	}
+
+	newSpecB, err := yaml.Marshal(modifiedPathItem)
+	if err != nil {
+		log.Errorf("Failed to marshal modified path item: %v", err)
+		return
+	}
+	oldSpecB, err := yaml.Marshal(originalPathItem)
+	if err != nil {
+		log.Errorf("Failed to marshal original path item: %v", err)
+		return
+	}
+	newSpec := string(newSpecB)
+	oldSpec := string(oldSpecB)
 
 	var hash diffHash
 
