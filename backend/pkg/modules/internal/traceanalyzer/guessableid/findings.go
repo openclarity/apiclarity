@@ -20,8 +20,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/go-openapi/jsonpointer"
-
 	oapicommon "github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
 )
@@ -44,21 +42,12 @@ type GuessableParameter struct {
 }
 
 type AnnotationGuessableID struct {
-	SpecLocation string               `json:"spec_location"`
-	Params       []GuessableParameter `json:"parameters"`
+	Params []GuessableParameter `json:"parameters"`
 }
 
 func NewAnnotationGuessableID(path, method string, parameters []GuessableParameter) *AnnotationGuessableID {
-	pointerTokens := []string{
-		jsonpointer.Escape("paths"),
-		jsonpointer.Escape(path),
-		jsonpointer.Escape(strings.ToLower(method)),
-	}
-	pointer := strings.Join(pointerTokens, "/")
-
 	return &AnnotationGuessableID{
-		SpecLocation: pointer,
-		Params:       parameters,
+		Params: parameters,
 	}
 }
 func (a *AnnotationGuessableID) Name() string { return GuessableType }

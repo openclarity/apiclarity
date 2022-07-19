@@ -17,6 +17,8 @@ package sensitive
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
 
 	oapicommon "github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
@@ -54,9 +56,13 @@ func (a AnnotationRegexpMatching) Redacted() utils.TraceAnalyzerAnnotation {
 }
 
 func (a *AnnotationRegexpMatching) ToFinding() utils.Finding {
+	matchingRules := []string{}
+	for _, r := range a.Matches {
+		matchingRules = append(matchingRules, r.Rule.ID)
+	}
 	return utils.Finding{
 		ShortDesc:    "Matching regular expression",
-		DetailedDesc: "This event matches sensitive information",
+		DetailedDesc: fmt.Sprintf("This event matches sensitive information (rules: %s)", strings.Join(matchingRules, ", ")),
 		Severity:     a.Severity(),
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}

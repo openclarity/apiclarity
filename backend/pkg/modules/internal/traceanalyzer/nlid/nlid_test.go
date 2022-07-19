@@ -26,10 +26,6 @@ func sameAnn(got utils.TraceAnalyzerAnnotation, expected utils.TraceAnalyzerAnno
 	wanted := expected.(*AnnotationNLID) //nolint:forcetypeassert
 	observed := got.(*AnnotationNLID)    //nolint:forcetypeassert
 
-	if wanted.SpecLocation != observed.SpecLocation {
-		return false
-	}
-
 	if len(wanted.Params) != len(observed.Params) {
 		return false
 	}
