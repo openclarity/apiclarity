@@ -20,8 +20,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/go-openapi/jsonpointer"
-
 	oapicommon "github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
 )
@@ -31,21 +29,12 @@ const (
 )
 
 type AnnotationNLID struct {
-	SpecLocation string      `json:"spec_location"`
-	Params       []parameter `json:"parameters"`
+	Params []parameter `json:"parameters"`
 }
 
 func NewAnnotationNLID(path, method string, parameters []parameter) *AnnotationNLID {
-	pointerTokens := []string{
-		jsonpointer.Escape("paths"),
-		jsonpointer.Escape(path),
-		jsonpointer.Escape(strings.ToLower(method)),
-	}
-	pointer := strings.Join(pointerTokens, "/")
-
 	return &AnnotationNLID{
-		SpecLocation: pointer,
-		Params:       parameters,
+		Params: parameters,
 	}
 }
 func (a *AnnotationNLID) Name() string { return NLIDType }
@@ -78,7 +67,7 @@ func (a *AnnotationNLID) ToFinding() utils.Finding {
 
 	return utils.Finding{
 		ShortDesc:    "NLID (Non learnt Identifier)",
-		DetailedDesc: fmt.Sprintf("In call '%s', parameter(s) '%s' were used but not previously retrieved. Potential BOLA.", a.SpecLocation, strings.Join(paramValues, ",")),
+		DetailedDesc: fmt.Sprintf("Parameter(s) '%s' were used but not previously retrieved. Potential BOLA.", strings.Join(paramValues, ",")),
 		Severity:     a.Severity(),
 		Alert:        utils.SeverityToAlert(a.Severity()),
 	}
