@@ -137,6 +137,13 @@ components:
       name: hasSpecDiff[is]
       schema:
         type: boolean
+    host:
+      description: api host name
+      in: query
+      name: host
+      required: true
+      schema:
+        type: string
     methodIsFilter:
       in: query
       name: method[is]
@@ -189,6 +196,13 @@ components:
     pathStartsWithFilter:
       in: query
       name: path[start]
+      schema:
+        type: string
+    port:
+      description: api port
+      in: query
+      name: port
+      required: true
       schema:
         type: string
     portIsFilter:
@@ -1233,6 +1247,20 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       summary: Create API inventory item
+  /apiInventory/{apiId}/apiInfo:
+    get:
+      parameters:
+      - $ref: '#/components/parameters/apiId'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiInfoWithType
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Get api info from apiId
   /apiInventory/{apiId}/provided_swagger.json:
     get:
       parameters:
@@ -1364,6 +1392,29 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       summary: Apply the approved review to create the reconstructed spec
+  /apiInventory/apiId/fromHostAndPort:
+    get:
+      parameters:
+      - $ref: '#/components/parameters/host'
+      - $ref: '#/components/parameters/port'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                description: api id
+                format: uint32
+                type: integer
+          description: Success
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: API ID Not Found
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Get apiId from host and port
   /apiUsage/hitCount:
     get:
       parameters:
