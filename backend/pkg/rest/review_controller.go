@@ -24,7 +24,6 @@ import (
 
 	spec "github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/spec"
 	"github.com/go-openapi/strfmt"
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
