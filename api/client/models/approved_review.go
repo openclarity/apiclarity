@@ -7,17 +7,23 @@ package models
 
 import (
 	"context"
+	"encoding/json"
 	"strconv"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // ApprovedReview approved review
 //
 // swagger:model ApprovedReview
 type ApprovedReview struct {
+
+	// OpenAPI specification version to use when saving the approved spec
+	// Enum: [OASv2.0 OASv3.0]
+	OasVersion string `json:"oasVersion,omitempty"`
 
 	// review path items
 	ReviewPathItems []*ReviewPathItem `json:"reviewPathItems"`
@@ -27,6 +33,10 @@ type ApprovedReview struct {
 func (m *ApprovedReview) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateOasVersion(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateReviewPathItems(formats); err != nil {
 		res = append(res, err)
 	}
@@ -34,6 +44,48 @@ func (m *ApprovedReview) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+var approvedReviewTypeOasVersionPropEnum []interface{}
+
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["OASv2.0","OASv3.0"]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		approvedReviewTypeOasVersionPropEnum = append(approvedReviewTypeOasVersionPropEnum, v)
+	}
+}
+
+const (
+
+	// ApprovedReviewOasVersionOASv2Dot0 captures enum value "OASv2.0"
+	ApprovedReviewOasVersionOASv2Dot0 string = "OASv2.0"
+
+	// ApprovedReviewOasVersionOASv3Dot0 captures enum value "OASv3.0"
+	ApprovedReviewOasVersionOASv3Dot0 string = "OASv3.0"
+)
+
+// prop value enum
+func (m *ApprovedReview) validateOasVersionEnum(path, location string, value string) error {
+	if err := validate.EnumCase(path, location, value, approvedReviewTypeOasVersionPropEnum, true); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *ApprovedReview) validateOasVersion(formats strfmt.Registry) error {
+	if swag.IsZero(m.OasVersion) { // not required
+		return nil
+	}
+
+	// value enum
+	if err := m.validateOasVersionEnum("oasVersion", "body", m.OasVersion); err != nil {
+		return err
+	}
+
 	return nil
 }
 
