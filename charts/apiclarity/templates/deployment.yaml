@@ -73,6 +73,16 @@ spec:
                   key: postgres-password
             - name: STATE_BACKUP_FILE_NAME
               value: /apiclarity/state.gob
+            {{- if .Values.apiclarity.tls.enabled }}
+            - name: ENABLE_TLS
+              value: "{{ .Values.apiclarity.tls.enabled }}"
+            - name: ROOT_CERT_FILE_PATH
+              value: /etc/root-ca/{{ .Values.apiclarity.tls.rootCertFileName }}
+            - name: TLS_SERVER_CERT_FILE_PATH
+              value: /etc/certs/{{ .Values.apiclarity.tls.tlsServerCertFileName }}
+            - name: TLS_SERVER_KEY_FILE_PATH
+              value: /etc/certs/{{ .Values.apiclarity.tls.tlsServerKeyFileName }}
+            {{- end }}
             {{- if .Values.apiclarity.notificationURLPrefix }}
             - name: NOTIFICATION_BACKEND_PREFIX
               value: {{ .Values.apiclarity.notificationURLPrefix }}
@@ -81,8 +91,13 @@ spec:
               value: kubernetes
             - name: FUZZER_IMAGE_NAME
               value: {{ .Values.apiclarity.modules.fuzzer.docker.image }}
+            {{- if .Values.apiclarity.tls.enabled }}
             - name: FUZZER_PLATFORM_HOST_FROM_FUZZER
               value: http://{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:8080/api
+            {{- else }}
+            - name: FUZZER_PLATFORM_HOST_FROM_FUZZER
+              value: http://{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:8080/api
+            {{- end }}
           {{- range $key, $val := .Values.apiclarity.env.plugins }}
             - name: {{ $key }}
               value: {{ $val | quote }}
@@ -117,9 +132,25 @@ spec:
           volumeMounts:
             - name: {{ include "apiclarity.name" . }}
               mountPath: '/apiclarity'
+            {{- if .Values.apiclarity.tls.enabled }}
+            - name: certs
+              mountPath: /etc/certs
+              readOnly: true
+            - name: root-ca
+              mountPath: /etc/root-ca
+              readOnly: true
+            {{- end }}
       volumes:
       - name: {{ include "apiclarity.name" . }}
         persistentVolumeClaim:
           claimName: {{ include "apiclarity.name" . }}-pvc
+      {{- if .Values.apiclarity.tls.enabled }}
+      - name: certs
+        secret:
+          secretName: {{ .Values.apiclarity.tls.tlsServerCertsSecretName }}
+      - name: root-ca
+        configMap:
+          name: {{ .Values.apiclarity.tls.rootCACertConfigMapName }}
+      {{- end }}
       securityContext:
         fsGroup: 1000

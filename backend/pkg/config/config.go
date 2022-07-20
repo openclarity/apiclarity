@@ -27,8 +27,10 @@ import (
 
 const (
 	BackendRestPort              = "BACKEND_REST_PORT"
+	BackendRestTLSPort           = "BACKEND_REST_TLS_PORT"
 	TraceSamplingEnabled         = "TRACE_SAMPLING_ENABLED"
 	HTTPTracesPort               = "HTTP_TRACES_PORT"
+	HTTPTracesTLSPort            = "HTTP_TRACES_TLS_PORT"
 	HTTPTraceSamplingManagerPort = "HTTP_TRACE_SAMPLING_MANAGER_PORT"
 	GRPCTraceSamplingManagerPort = "GRPC_TRACE_SAMPLING_MANAGER_PORT"
 	HostToTraceSecretName        = "HOST_TO_TRACE_SECRET_NAME"       //nolint:gosec
@@ -40,6 +42,10 @@ const (
 	StateBackupFileName          = "STATE_BACKUP_FILE_NAME"
 	NoMonitorEnvVar              = "NO_K8S_MONITOR"
 	K8sLocalEnvVar               = "K8S_LOCAL"
+	EnableTLS                    = "ENABLE_TLS"
+	TLSServerCertFilePath        = "TLS_SERVER_CERT_FILE_PATH"
+	TLSServerKeyFilePath         = "TLS_SERVER_KEY_FILE_PATH"
+	RootCertFilePath             = "ROOT_CERT_FILE_PATH"
 
 	DBNameEnvVar     = "DB_NAME"
 	DBUserEnvVar     = "DB_USER"
@@ -59,13 +65,21 @@ const (
 
 type Config struct {
 	BackendRestPort            int
+	BackendRestTLSPort         int
 	HTTPTracesPort             int
+	HTTPTracesTLSPort          int
 	HealthCheckAddress         string
 	StateBackupIntervalSec     int
 	DatabaseCleanerIntervalSec int
 	StateBackupFileName        string
 	SpeculatorConfig           _speculator.Config
 	K8sLocal                   bool
+	EnableTLS                  bool
+	TLSServerCertFilePath      string
+	TLSServerKeyFilePath       string
+	RootCertFilePath           string
+
+	NotificationPrefix string
 
 	// trace sampling config
 	HTTPTraceSamplingManagerPort int
@@ -89,7 +103,9 @@ func LoadConfig() (*Config, error) {
 	config := &Config{}
 
 	config.BackendRestPort = viper.GetInt(BackendRestPort)
+	config.BackendRestTLSPort = viper.GetInt(BackendRestTLSPort)
 	config.HTTPTracesPort = viper.GetInt(HTTPTracesPort)
+	config.HTTPTracesTLSPort = viper.GetInt(HTTPTracesTLSPort)
 	config.HTTPTraceSamplingManagerPort = viper.GetInt(HTTPTraceSamplingManagerPort)
 	config.GRPCTraceSamplingManagerPort = viper.GetInt(GRPCTraceSamplingManagerPort)
 	config.HostToTraceSecretName = viper.GetString(HostToTraceSecretName)
@@ -100,8 +116,13 @@ func LoadConfig() (*Config, error) {
 	config.StateBackupIntervalSec = viper.GetInt(StateBackupIntervalSec)
 	config.DatabaseCleanerIntervalSec = viper.GetInt(DatabaseCleanerIntervalSec)
 	config.StateBackupFileName = viper.GetString(StateBackupFileName)
+	config.TLSServerCertFilePath = viper.GetString(TLSServerCertFilePath)
+	config.TLSServerKeyFilePath = viper.GetString(TLSServerKeyFilePath)
+	config.RootCertFilePath = viper.GetString(RootCertFilePath)
+	config.NotificationPrefix = viper.GetString(NotificationPrefix)
 
 	config.K8sLocal = viper.GetBool(K8sLocalEnvVar)
+	config.EnableTLS = viper.GetBool(EnableTLS)
 	config.DatabaseDriver = viper.GetString(DatabaseDriver)
 	config.DBPassword = viper.GetString(DBPasswordEnvVar)
 	config.DBUser = viper.GetString(DBUserEnvVar)

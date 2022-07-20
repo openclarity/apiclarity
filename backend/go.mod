@@ -12,12 +12,14 @@ require (
 	github.com/go-openapi/jsonpointer v0.19.5
 	github.com/go-openapi/loads v0.21.0
 	github.com/go-openapi/runtime v0.21.0
+	github.com/go-openapi/spec v0.20.4
 	github.com/go-openapi/strfmt v0.21.0
 	github.com/go-openapi/validate v0.20.3 // indirect
 	github.com/golang-jwt/jwt/v4 v4.4.1
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.6
 	github.com/hbollon/go-edlib v1.6.0
+	github.com/jessevdk/go-flags v1.5.0
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/openclarity/apiclarity/api v0.0.0
 	github.com/openclarity/apiclarity/api3 v0.0.0
@@ -42,8 +44,6 @@ require (
 	k8s.io/utils v0.0.0-20211116205334-6203023598ed
 	sigs.k8s.io/yaml v1.2.0
 )
-
-require github.com/go-openapi/spec v0.20.4
 
 require (
 	cloud.google.com/go v0.81.0 // indirect
@@ -82,7 +82,6 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
 	github.com/jackc/pgtype v1.8.1 // indirect
 	github.com/jackc/pgx/v4 v4.13.0 // indirect
-	github.com/jessevdk/go-flags v1.5.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.2 // indirect
 	github.com/josharian/intern v1.0.0 // indirect

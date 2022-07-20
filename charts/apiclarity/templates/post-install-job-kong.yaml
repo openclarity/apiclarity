@@ -89,11 +89,19 @@ spec:
             - name: KONG_GATEWAY_INGRESS_NAMESPACE
               value: {{ .Values.trafficSource.kong.ingressNamespace }}
             - name: UPSTREAM_TELEMETRY_HOST_NAME
-              value: '{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:9000'
+              value: '{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}'
             - name: TRACE_SAMPLING_HOST_NAME
               value: '{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:9990'
             - name: TRACE_SAMPLING_ENABLED
               value: "{{ .Values.global.traceSampling.enable }}"
+            {{- if .Values.apiclarity.tls.enabled }}
+            - name: ENABLE_TLS
+              value: "{{ .Values.apiclarity.tls.enabled }}"
+            - name: ROOT_CERT_CONFIGMAP_NAME
+              value: {{ .Values.apiclarity.tls.rootCACertConfigMapName }}
+            - name: ROOT_CERT_CONFIGMAP_NAMESPACE
+              value: '{{ .Release.Namespace }}'
+            {{- end }}
           command:
           - /bin/bash
           - -c
@@ -104,7 +112,7 @@ spec:
 {{- if .Values.trafficSource.global.httpProxy }}
             git config --global http.proxy {{ .Values.trafficSource.global.httpProxy }} &&
 {{- end }}
-            git clone -b {{ .Chart.AppVersion }} https://github.com/openclarity/apiclarity.git &&
+            git clone -b devel-global-specs-tls-support https://github.com/openclarity/apiclarity.git &&
             cd apiclarity &&
             ./plugins/gateway/kong/deploy/deploy.sh"
       restartPolicy: Never

@@ -3,12 +3,22 @@ spec:
     spec:
       volumes:
       - emptyDir: {}
-        name: tyk-apiclarity-trace-plugin
+        name: tyk-trace-plugin
+# {{CERT VOLUME START}}
+      - name: trace-root-ca
+        configMap:
+          name: api-trace-root-ca
+# {{CERT VOLUME END}}
       containers:
       - name: {{TYK_PROXY_CONTAINER_NAME}}
         volumeMounts:
         - mountPath: /plugins/
-          name: tyk-apiclarity-trace-plugin
+          name: tyk-trace-plugin
+# {{CERT MOUNT START}}
+        - mountPath: /etc/traces/certs
+          name: trace-root-ca
+          readOnly: true
+# {{CERT MOUNT END}}
         env:
         - name: TYK_GATEWAY_NAMESPACE
           valueFrom:
@@ -16,6 +26,8 @@ spec:
               fieldPath: metadata.namespace
         - name: APICLARITY_HOST
           value: {{UPSTREAM_TELEMETRY_HOST_NAME}}
+        - name: ENABLE_TLS
+          value: "{{ENABLE_TLS}}"
         - name: TRACE_SAMPLING_ENABLED
           value: "{{TRACE_SAMPLING_ENABLED}}"
         - name: TRACE_SAMPLING_HOST_NAME
@@ -30,4 +42,4 @@ spec:
         name: apiclarity-tyk-plugin-injector
         volumeMounts:
         - mountPath: /plugin
-          name: tyk-apiclarity-trace-plugin
+          name: tyk-trace-plugin

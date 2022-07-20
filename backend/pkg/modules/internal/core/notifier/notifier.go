@@ -17,10 +17,14 @@ package notifier
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/apiclarity/api3/notifications"
+	coretls "github.com/openclarity/apiclarity/backend/pkg/modules/internal/core/tls"
 )
 
 type notificationWithParams struct {
@@ -32,19 +36,21 @@ type Notifier struct {
 	notificationURL   string
 	notificationQueue chan notificationWithParams
 	workers           int
+	tlsOptions        *coretls.ClientTLSOptions
 }
 
-func NewNotifier(notificationPrefixURL string, maxQueueSize int, workers int) *Notifier {
+func NewNotifier(notificationPrefixURL string, maxQueueSize int, workers int, tlsOptions *coretls.ClientTLSOptions) *Notifier {
 	return &Notifier{
 		notificationURL:   notificationPrefixURL,
 		notificationQueue: make(chan notificationWithParams, maxQueueSize),
 		workers:           workers,
+		tlsOptions:        tlsOptions,
 	}
 }
 
 func (n Notifier) Start(ctx context.Context) {
 	for i := 0; i < n.workers; i++ {
-		go worker(ctx, n.notificationURL, n.notificationQueue)
+		go worker(ctx, n.notificationURL, n.notificationQueue, n.tlsOptions)
 	}
 }
 
@@ -58,8 +64,22 @@ func (n Notifier) Notify(apiID uint, notif notifications.APIClarityNotification)
 	return nil
 }
 
-func worker(ctx context.Context, notificationPrefixURL string, notifQueue <-chan notificationWithParams) {
-	c, err := notifications.NewClient(notificationPrefixURL)
+func worker(ctx context.Context, notificationPrefixURL string, notifQueue <-chan notificationWithParams, tlsOptions *coretls.ClientTLSOptions) {
+	var clientOption notifications.ClientOption
+	var scheme string
+
+	if tlsOptions != nil {
+		clientOption = notifications.WithHTTPClient(&http.Client{Transport: tlsOptions.CustomTLSTransport.Clone()})
+		scheme = "https"
+	} else {
+		scheme = "http"
+		clientOption = func(c *notifications.Client) error {
+			// do nothing
+			return nil
+		}
+	}
+
+	c, err := notifications.NewClient(setSchemeIfNeeded(notificationPrefixURL, scheme), clientOption)
 	if err != nil {
 		log.Errorf("unable to create notification client: %s", err)
 		return
@@ -82,4 +102,12 @@ func worker(ctx context.Context, notificationPrefixURL string, notifQueue <-chan
 			return
 		}
 	}
+}
+
+func setSchemeIfNeeded(url string, scheme string) string {
+	if strings.Contains(url, "://") {
+		return url
+	}
+
+	return fmt.Sprintf("%s://%s", scheme, url)
 }
