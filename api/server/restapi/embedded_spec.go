@@ -1067,7 +1067,7 @@ func init() {
       "type": "object",
       "properties": {
         "oasVersion": {
-          "description": "OpenAPI version to use when saving the approved spec",
+          "description": "OpenAPI specification version to use when saving the approved spec",
           "type": "string",
           "enum": [
             "OASv2.0",
@@ -1152,7 +1152,7 @@ func init() {
       }
     },
     "OASVersion": {
-      "description": "OpenAPI version",
+      "description": "OpenAPI specification version",
       "type": "string",
       "enum": [
         "OASv2.0",
@@ -3264,7 +3264,7 @@ func init() {
       "type": "object",
       "properties": {
         "oasVersion": {
-          "description": "OpenAPI version to use when saving the approved spec",
+          "description": "OpenAPI specification version to use when saving the approved spec",
           "type": "string",
           "enum": [
             "OASv2.0",
@@ -3349,7 +3349,7 @@ func init() {
       }
     },
     "OASVersion": {
-      "description": "OpenAPI version",
+      "description": "OpenAPI specification version",
       "type": "string",
       "enum": [
         "OASv2.0",

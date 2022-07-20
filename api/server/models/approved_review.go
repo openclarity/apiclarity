@@ -21,7 +21,7 @@ import (
 // swagger:model ApprovedReview
 type ApprovedReview struct {
 
-	// OpenAPI version to use when saving the approved spec
+	// OpenAPI specification version to use when saving the approved spec
 	// Enum: [OASv2.0 OASv3.0]
 	OasVersion string `json:"oasVersion,omitempty"`
 
