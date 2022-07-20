@@ -22,8 +22,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/go-openapi/jsonpointer"
-
 	_models "github.com/openclarity/apiclarity/plugins/api/server/models"
 )
 
@@ -101,19 +99,3 @@ func FindHeader(headers []*_models.Header, headerName string) (index int, found 
 }
 
 type API = string
-
-func JSONPointer(tokens []string) string {
-	escapedTokens := []string{}
-	for _, token := range tokens {
-		if token == "" { // stop concatenation of token as soon as a token is empty
-			break
-		}
-		escapedTokens = append(escapedTokens, jsonpointer.Escape(token))
-	}
-
-	if len(escapedTokens) == 0 {
-		return ""
-	}
-
-	return "/" + strings.Join(escapedTokens, "/")
-}

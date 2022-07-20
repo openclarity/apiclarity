@@ -21,6 +21,7 @@ import (
 
 	oapicommon "github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/utils"
 )
 
 type TraceAnalyzerAnnotation interface {
@@ -56,7 +57,7 @@ func (a BaseTraceAnalyzerAPIAnnotation) Method() string     { return a.SpecMetho
 func (a BaseTraceAnalyzerAPIAnnotation) Severity() string   { return SeverityInfo }
 func (a BaseTraceAnalyzerAPIAnnotation) TTL() time.Duration { return 24 * time.Hour } //nolint:gomnd
 func (a BaseTraceAnalyzerAPIAnnotation) SpecLocation() string {
-	return JSONPointer([]string{"paths", a.SpecPath, strings.ToLower(a.SpecMethod)})
+	return utils.JSONPointer("paths", a.SpecPath, strings.ToLower(a.SpecMethod))
 }
 
 // A finding is an interpreted annotation.
