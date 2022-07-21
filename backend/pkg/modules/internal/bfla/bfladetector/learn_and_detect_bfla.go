@@ -336,6 +336,17 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Mark Legitimate': %w", err)
 		}
+		clientUid := ""
+		if cmd.clientRef != nil {
+			clientUid = cmd.clientRef.Uid
+		}
+		aud, setAud, err := l.findSourceObj(cmd.path, cmd.method, clientUid, cmd.apiID)
+		if err != nil {
+			return fmt.Errorf("unable to find source obj: %w", err)
+		}
+		aud.WarningStatus = restapi.LEGITIMATE
+		setAud(aud)
+
 		l.logError(l.notify(ctx, cmd.apiID))
 
 	case *MarkIllegitimateCommand:
@@ -355,6 +366,16 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Mark Illegitimate': %w", err)
 		}
+		clientUid := ""
+		if cmd.clientRef != nil {
+			clientUid = cmd.clientRef.Uid
+		}
+		aud, setAud, err := l.findSourceObj(cmd.path, cmd.method, clientUid, cmd.apiID)
+		if err != nil {
+			return fmt.Errorf("unable to find source obj: %w", err)
+		}
+		aud.WarningStatus = ResolveBFLAStatusInt(int(aud.StatusCode))
+		setAud(aud)
 
 	case *StopLearningCommand:
 		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLALearning)
@@ -524,6 +545,10 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	if err != nil {
 		return fmt.Errorf("unable to handle traces in the current state: %w", err)
 	}
+	var srcUID string
+	if trace.K8SSource != nil {
+		srcUID = trace.K8SSource.Uid
+	}
 	if state.state == BFLALearning {
 		/* We are in the learning state */
 		log.Debugf("api %d; To process: %d", trace.APIEvent.APIInfoID, state.traceCounter)
@@ -546,6 +571,13 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			}
 		}
 		stateValue.Set(state)
+		aud, setAud, err := l.findSourceObj(resolvedPath, string(trace.APIEvent.Method), srcUID, trace.APIEvent.APIInfoID)
+		if err != nil {
+			return fmt.Errorf("unable to find source obj: %w", err)
+		}
+		aud.StatusCode = trace.APIEvent.StatusCode
+		aud.LastTime = time.Time(trace.APIEvent.Time)
+		setAud(aud)
 		return err
 	}
 
@@ -554,15 +586,10 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		trace.K8SSource, trace.APIEvent.APIInfoID, trace.DetectedUser, false, false); err != nil {
 		return err
 	}
-	var srcUID string
-	if trace.K8SSource != nil {
-		srcUID = trace.K8SSource.Uid
-	}
 	aud, setAud, err := l.findSourceObj(resolvedPath, string(trace.APIEvent.Method), srcUID, trace.APIEvent.APIInfoID)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to find source obj: %w", err)
 	}
-	aud.WarningStatus = restapi.LEGITIMATE
 	if !aud.Authorized {
 		// updates the auth model but this time as unauthorized
 		var severity core.AlertSeverity
@@ -645,7 +672,7 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, pa
 				Method:   method,
 				Path:     path,
 				Tags:     resolveTagsForPathAndMethod(tags, path, method),
-				Audience: []*SourceObject{{External: external, K8sObject: clientRef, Authorized: authorize}},
+				Audience: []*SourceObject{{External: external, K8sObject: clientRef, Authorized: authorize, WarningStatus: restapi.LEGITIMATE}},
 			}},
 		}
 		if user != nil {
