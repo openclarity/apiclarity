@@ -19,7 +19,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/restapi"
 	"reflect"
 	"testing"
 	"time"
@@ -33,6 +32,7 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/bfladetector"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/k8straceannotator"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/recovery"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/restapi"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
 )
