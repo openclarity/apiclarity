@@ -23,7 +23,7 @@ import (
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/recovery"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/utils"
 )
 
 func APIFindingBFLAScopesMismatch(specType SpecType, path string, method models.HTTPMethod) common.APIFinding {
@@ -84,7 +84,7 @@ func APIFindingBFLASuspiciousCallHigh(specType SpecType, path string, method mod
 }
 
 func getLocation(path string, method models.HTTPMethod) *string {
-	s := utils.JSONPointer([]string{"paths", path, strings.ToLower(string(method))})
+	s := utils.JSONPointer("paths", path, strings.ToLower(string(method)))
 	return &s
 }
 
