@@ -336,11 +336,11 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Mark Legitimate': %w", err)
 		}
-		clientUid := ""
+		clientUID := ""
 		if cmd.clientRef != nil {
-			clientUid = cmd.clientRef.Uid
+			clientUID = cmd.clientRef.Uid
 		}
-		aud, setAud, err := l.findSourceObj(cmd.path, cmd.method, clientUid, cmd.apiID)
+		aud, setAud, err := l.findSourceObj(cmd.path, cmd.method, clientUID, cmd.apiID)
 		if err != nil {
 			return fmt.Errorf("unable to find source obj: %w", err)
 		}
@@ -366,11 +366,11 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Mark Illegitimate': %w", err)
 		}
-		clientUid := ""
+		clientUID := ""
 		if cmd.clientRef != nil {
-			clientUid = cmd.clientRef.Uid
+			clientUID = cmd.clientRef.Uid
 		}
-		aud, setAud, err := l.findSourceObj(cmd.path, cmd.method, clientUid, cmd.apiID)
+		aud, setAud, err := l.findSourceObj(cmd.path, cmd.method, clientUID, cmd.apiID)
 		if err != nil {
 			return fmt.Errorf("unable to find source obj: %w", err)
 		}
