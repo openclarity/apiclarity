@@ -28,6 +28,7 @@ paths:
         - name: apiID
           description: "The path parameter for apiID type"
           in: path
+          required: true
           schema:
             $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID'
         - $ref: '../../../../../../api3/common/openapi.yaml#/components/parameters/Sensitive'
