@@ -66,8 +66,8 @@ func APIFindingBFLASuspiciousCallMedium(specType SpecType, path string, method m
 
 func APIFindingBFLASuspiciousCallHigh(specType SpecType, path string, method models.HTTPMethod) common.APIFinding {
 	f := common.APIFinding{
-		Description: "Suspicious Source Allowed",
-		Name:        "This call looks suspicious, as it represents a violation of the current authorization model. Moreover, the API server accepted the call, which implies a possible Broken Function Level Authorisation. Please verify authorisation implementation in the API server.",
+		Name:        "Suspicious Source Allowed",
+		Description: "This call looks suspicious, as it represents a violation of the current authorization model. Moreover, the API server accepted the call, which implies a possible Broken Function Level Authorisation. Please verify authorisation implementation in the API server.",
 		Severity:    common.HIGH,
 		Source:      ModuleName,
 		Type:        "BFLA_SUSPICIOUS_CALL_HIGH",

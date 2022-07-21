@@ -663,7 +663,7 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, pa
 			Method:   method,
 			Path:     path,
 			Tags:     resolveTagsForPathAndMethod(tags, path, method),
-			Audience: []*SourceObject{{External: external, K8sObject: clientRef, Authorized: authorize}},
+			Audience: []*SourceObject{{External: external, K8sObject: clientRef, Authorized: authorize, WarningStatus: restapi.LEGITIMATE}},
 		}
 		if user != nil {
 			op.Audience[0].EndUsers = append(op.Audience[0].EndUsers, user)
@@ -683,7 +683,7 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, pa
 		return sa.K8sObject.Uid == clientRef.Uid
 	})
 	if audience == nil {
-		sa := &SourceObject{External: external, K8sObject: clientRef, Authorized: authorize}
+		sa := &SourceObject{External: external, K8sObject: clientRef, Authorized: authorize, WarningStatus: restapi.LEGITIMATE}
 		if user != nil {
 			sa.EndUsers = append(sa.EndUsers, user)
 		}
