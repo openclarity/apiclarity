@@ -45,25 +45,7 @@ var (
 )
 
 const (
-	fuzzerContainerName      = "scn-dast"
-	jobNamePrefix            = "scn-fuzzer-"
-	requestScopeDefaultValue = "global/internalservices/portshift_request"
-	tmpFolderPath            = "/tmp"
-	tmpEmptyDirVolumeName    = "tmp-volume"
-	user                     = 1001
-	convertToBase10          = 10
-
-	uriEnvVar               = "URI"
-	fuzzersEnvVar           = "FUZZER"
-	apiIDEnvVar             = "API_ID"
-	platformHostEnvVar      = "PLATFORM_HOST"
-	platformTypeEnvVar      = "PLATFORM_TYPE"
-	requestScopeEnvVar      = "REQUEST_SCOPE"
-	debugEnvVar             = "DEBUG"
-	authEnvVar              = "SERVICE_AUTH"
-	restlerRootPathEnvVar   = "RESTLER_ROOT_PATH"
-	restlerTimeBudgetEnvVar = "RESTLER_TIME_BUDGET"
-	authInjectorPathEnvVar  = "RESTLER_TOKEN_INJECTOR_PATH"
+	convertToBase10 = 10
 )
 
 type K8sClient struct {

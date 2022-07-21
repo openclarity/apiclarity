@@ -31,12 +31,14 @@ const (
 	DeploymentTypeDocker     = "docker"
 	DeploymentTypeKubernetes = "kubernetes"
 	DeploymentTypeFake       = "fake"
+	DeploymentTypeHelm       = "helm"
 )
 
 var SupportedDeployment = map[string]bool{
 	DeploymentTypeDocker:     true,
 	DeploymentTypeKubernetes: true,
 	DeploymentTypeFake:       true,
+	DeploymentTypeHelm:       true,
 }
 
 const (

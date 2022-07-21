@@ -132,6 +132,8 @@ func (p *pluginFuzzer) sendAPIFindingsNotification(ctx context.Context, apiID ui
 		return fmt.Errorf("failed to create 'APIFindings' notification, err=(%v)", err)
 	}
 
+	b, err := json.Marshal(notification)
+	logging.Logf("[Fuzzer] sendAPIFindingsNotification(%v): notification=%v", apiID, string(b))
 	err = p.accessor.Notify(ctx, p.info.Name, apiID, notification)
 
 	return err //nolint:wrapcheck // really want to return the result of the notify

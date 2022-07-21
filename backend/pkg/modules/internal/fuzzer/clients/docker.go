@@ -33,7 +33,6 @@ import (
 const (
 	ContainerAutoremove  = true
 	ContainerNetworkMode = "host"
-	ContainerNameDefault = "fuzzer"
 )
 
 type DockerClient struct {
@@ -54,7 +53,7 @@ func (c *DockerClient) TriggerFuzzingJob(apiID int64, endpoint string, securityI
 		return fmt.Errorf("unable to create new docker client: %w", err)
 	}
 
-	containerName := ContainerNameDefault // TODO must be unique. For demo only
+	containerName := fuzzerContainerName // TODO must be unique. For demo only
 
 	// Define environment for container
 	inputEnv := []string{
@@ -127,7 +126,7 @@ func (c *DockerClient) StopFuzzingJob(apiID int64, complete bool) error {
 	if err != nil {
 		return fmt.Errorf("unable to create new docker client: %w", err)
 	}
-	containerName := ContainerNameDefault // TODO must be unique. For demo only
+	containerName := fuzzerContainerName // TODO must be unique. For demo only
 
 	if err := cli.ContainerStop(ctx, containerName, nil); err != nil {
 		logging.Logf("[Fuzzer][DockerClient] StopFuzzingJob(%v): can't stop container %s (already stopped?): %v", apiID, containerName, err)

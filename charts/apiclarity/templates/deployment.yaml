@@ -88,7 +88,7 @@ spec:
               value: {{ .Values.apiclarity.notificationURLPrefix }}
             {{- end }}
             - name: FUZZER_DEPLOYMENT_TYPE
-              value: kubernetes
+              value: {{ .Values.apiclarity.env.plugins.FUZZER_DEPLOYMENT_TYPE }}
             - name: FUZZER_IMAGE_NAME
               value: {{ .Values.apiclarity.modules.fuzzer.docker.image }}
             {{- if .Values.apiclarity.tls.enabled }}
