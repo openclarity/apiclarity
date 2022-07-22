@@ -368,7 +368,9 @@ func (h httpHandler) PostAuthorizationModelApiID(w http.ResponseWriter, r *http.
 func (h httpHandler) GetAuthorizationModelApiID(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
 	apiinfo, err := h.accessor.GetAPIInfo(r.Context(), uint(apiID))
 	if err != nil {
+		httpResponse(w, http.StatusNotFound, &oapicommon.ApiResponse{Message: fmt.Sprintf("Error in retrieving API with id=%d", apiID)})
 		log.Errorf("error getting api info; id=%d", apiID)
+		return
 	}
 	specType := bfladetector.SpecTypeFromAPIInfo(apiinfo)
 	if specType == bfladetector.SpecTypeNone {
@@ -587,6 +589,32 @@ func (h httpHandler) PutAuthorizationModelApiIDDetectionStop(w http.ResponseWrit
 		log.Infof("stop detection applied successfully on api=%d", apiID)
 		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: "Requested stop detection operation on api event"})
 	}
+}
+
+func convertBFLAState(state bfladetector.BFLAStateEnum) restapi.BFLAState {
+	switch state {
+	case bfladetector.BFLAStart:
+		return restapi.BFLASTART
+	case bfladetector.BFLALearning:
+		return restapi.BFLALEARNING
+	case bfladetector.BFLADetecting:
+		return restapi.BFLADETECTING
+	case bfladetector.BFLALearnt:
+		return restapi.BFLALEARNT
+	}
+	return restapi.BFLASTART
+}
+
+// nolint:stylecheck,revive
+func (h httpHandler) GetAuthorizationModelApiIDState(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
+	state, err := h.bflaDetector.GetState(uint(apiID))
+	if err != nil {
+		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Error in retrieving API with id=%d", apiID)})
+		return
+	}
+
+	res := convertBFLAState(state)
+	httpResponse(w, http.StatusOK, res)
 }
 
 // nolint:stylecheck,revive

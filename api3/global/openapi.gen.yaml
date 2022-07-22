@@ -539,6 +539,13 @@ components:
       - BEARERTOKEN
       title: AuthorizationType
       type: string
+    BFLAState:
+      enum:
+      - BFLA_START
+      - BFLA_LEARNING
+      - BFLA_DETECTING
+      - BFLA_LEARNT
+      type: string
     BFLAStatus:
       enum:
       - NO_SPEC
@@ -1743,6 +1750,29 @@ paths:
             application/json:
               schema:
                 $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      tags:
+      - bfla
+  /modules/bfla/authorizationModel/{apiID}/state:
+    get:
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BFLAState'
           description: Success
         default:
           content:

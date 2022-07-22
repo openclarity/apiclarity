@@ -251,7 +251,7 @@ func (b *accessor) DisableTraces(ctx context.Context, modName string, apiID uint
 
 	b.samplingManager.RemoveHostsToTrace(
 		&interfacemanager.HostsByComponentID{
-			Hosts:       []string{apiInfo.Name},
+			Hosts:       []string{fmt.Sprintf("%s:%d", apiInfo.Name, apiInfo.Port)},
 			ComponentID: modName,
 		},
 	)

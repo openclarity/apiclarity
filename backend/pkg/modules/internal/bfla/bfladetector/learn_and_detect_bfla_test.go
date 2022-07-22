@@ -397,7 +397,7 @@ func Test_learnAndDetectBFLA_ApproveTrace(t *testing.T) {
 						K8sObject:     newClientRef("frontend"),
 						EndUsers:      bfladetector.EndUsers{{ID: "user1", Source: bfladetector.DetectedUserSourceJWT}},
 						WarningStatus: restapi.LEGITIMATE,
-						//StatusCode:200, you can mark as legitimate traces that were not encountered yet but the status code and listTime will be empty
+						// StatusCode:200, you can mark as legitimate traces that were not encountered yet but the status code and listTime will be empty
 						Authorized: true,
 					}},
 				}},
