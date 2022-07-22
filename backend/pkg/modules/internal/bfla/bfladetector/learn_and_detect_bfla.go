@@ -573,7 +573,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			state.state = BFLALearnt
 			err = l.bflaBackendAccessor.DisableTraces(ctx, l.modName, apiID)
 			if err != nil {
-				log.Errorf("cannot disable traces: %w", err)
+				log.Errorf("cannot disable traces: %v", err)
 			}
 		}
 		stateValue.Set(state)
