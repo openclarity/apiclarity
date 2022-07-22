@@ -392,7 +392,9 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		state.traceCounter = 0
 		stateValue.Set(state)
 		l.logError(l.notify(ctx, cmd.apiID))
-
+		if err = l.statePersister.Persist(ctx); err != nil {
+			return fmt.Errorf("unable to persist the new state: %w", err)
+		}
 	case *StartLearningCommand:
 		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLAStart, BFLALearnt, BFLADetecting)
 		if err != nil {
@@ -409,7 +411,9 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		stateValue.Set(state)
 
 		// TODO: Check if state is "start" and the (reconstructed or provided) spec is available
-
+		if err = l.statePersister.Persist(ctx); err != nil {
+			return fmt.Errorf("unable to persist the new state: %w", err)
+		}
 	case *ResetModelCommand:
 		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLALearning, BFLALearnt, BFLADetecting)
 		if err != nil {
@@ -434,7 +438,9 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 			return fmt.Errorf("unable to get authz model state: %w", err)
 		}
 		l.logError(l.notify(ctx, cmd.apiID))
-
+		if err = l.statePersister.Persist(ctx); err != nil {
+			return fmt.Errorf("unable to persist the new state: %w", err)
+		}
 	case *StartDetectionCommand:
 		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLALearning, BFLALearnt)
 		if err != nil {
@@ -448,7 +454,9 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		}
 		state.state = BFLADetecting
 		stateValue.Set(state)
-
+		if err = l.statePersister.Persist(ctx); err != nil {
+			return fmt.Errorf("unable to persist the new state: %w", err)
+		}
 	case *StopDetectionCommand:
 		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLADetecting)
 		if err != nil {
@@ -460,7 +468,9 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		}
 		state.state = BFLALearnt
 		stateValue.Set(state)
-
+		if err = l.statePersister.Persist(ctx); err != nil {
+			return fmt.Errorf("unable to persist the new state: %w", err)
+		}
 	case *ProvideAuthzModelCommand:
 		_, _, err = l.checkBFLAState(cmd.apiID, BFLALearnt, BFLADetecting)
 		if err != nil {
