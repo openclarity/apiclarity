@@ -307,6 +307,7 @@ func (l *learnAndDetectBFLA) checkBFLAState(apiID uint, allowedStates ...BFLASta
 		return BFLAState{}, nil, fmt.Errorf("unable to get state traces counter: %w", err)
 	}
 	state := stateValue.Get().(BFLAState) //nolint:forcetypeassert
+	log.Debugf("current state for api %d is %v", apiID, state.state)
 	for _, s := range allowedStates {
 		if state.state == s {
 			return state, stateValue, nil
