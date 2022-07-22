@@ -115,6 +115,7 @@ type BFLADetector interface {
 	SendTrace(trace *CompositeTrace)
 
 	IsLearning(apiID uint) bool
+	GetState(apiID uint) (BFLAStateEnum, error)
 	FindSourceObj(path, method, clientUID string, apiID uint) (*SourceObject, error)
 
 	ApproveTrace(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser)
@@ -453,6 +454,10 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Stop Detection': %w", err)
 		}
+		err = l.bflaBackendAccessor.DisableTraces(ctx, l.modName, cmd.apiID)
+		if err != nil {
+			return fmt.Errorf("cannot disable traces: %w", err)
+		}
 		state.state = BFLALearnt
 		stateValue.Set(state)
 
@@ -749,9 +754,29 @@ func (l *learnAndDetectBFLA) IsLearning(apiID uint) bool {
 	return l.isLearning(apiID)
 }
 
+func (l *learnAndDetectBFLA) GetState(apiID uint) (BFLAStateEnum, error) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	state, err := l.getState(apiID)
+	if err != nil {
+		return BFLAStart, err
+	}
+	return state.state, err
+}
+
 func (l *learnAndDetectBFLA) isLearning(apiID uint) bool {
 	_, _, err := l.checkBFLAState(apiID, BFLALearning)
 	return err == nil
+}
+
+func (l *learnAndDetectBFLA) getState(apiID uint) (BFLAState, error) {
+	stateValue, err := l.bflaStateMap.Get(apiID)
+	if err != nil {
+		return BFLAState{}, fmt.Errorf("unable to get state traces counter: %w", err)
+	}
+	state := stateValue.Get().(BFLAState) //nolint:forcetypeassert
+	log.Debugf("current state for api %d is %v", apiID, state.state)
+	return state, nil
 }
 
 func (l *learnAndDetectBFLA) FindSourceObj(path, method, clientUID string, apiID uint) (*SourceObject, error) {

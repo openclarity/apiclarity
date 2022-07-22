@@ -98,6 +98,30 @@ paths:
             'application/json':
               schema:
                 $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+  /authorizationModel/{apiID}/state:
+    get:
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+      tags:
+        - bfla
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/BFLAState'
+        default:
+          description: "Error response"
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+
   /authorizationModel/{apiID}/approve:
     put:
       tags:
@@ -420,6 +444,14 @@ components:
           type: string
         apiVersion:
           type: string
+    
+    BFLAState:
+      type: string
+      enum:
+        - BFLA_START
+        - BFLA_LEARNING
+        - BFLA_DETECTING
+        - BFLA_LEARNT
 
     BFLAStatus:
       type: string
