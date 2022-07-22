@@ -199,7 +199,9 @@ func (p *persister) UseState(apiID uint, name string, val interface{}) (setFn Se
 		log.Debugf("set new state moduleName=%s apiID=%d", p.modName, apiID)
 		// set the new state
 		p.statesMu.Lock()
+
 		p.states[apiID][name] = &stateValue{stateChanged: true, val: state}
+		log.Infof("************************* %v", p.states[apiID][name])
 		p.statesMu.Unlock()
 	}
 	p.statesMu.Lock()
