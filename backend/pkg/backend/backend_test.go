@@ -20,10 +20,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/getkin/kin-openapi/openapi2"
 	spec "github.com/getkin/kin-openapi/openapi3"
 	"github.com/golang/mock/gomock"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"gotest.tools/assert"
 
 	_spec "github.com/openclarity/speculator/pkg/spec"
@@ -647,128 +645,6 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 			if err := b.handleHTTPTrace(ctx, tt.args.trace); (err != nil) != tt.wantErr {
 				t.Errorf("handleHTTPTrace() error = %v, wantErr %v", err, tt.wantErr)
 			}
-		})
-	}
-}
-
-func Test_getPathItemForVersionOrOriginal(t *testing.T) {
-	var nilPathItem *spec.PathItem
-	type args struct {
-		v3PathItem *spec.PathItem
-		version    _spec.OASVersion
-	}
-	tests := []struct {
-		name string
-		args args
-		want interface{}
-	}{
-		{
-			name: "v2",
-			args: args{
-				v3PathItem: &spec.PathItem{
-					Get: &spec.Operation{
-						Responses: spec.Responses{
-							"200": &spec.ResponseRef{
-								Value: spec.NewResponse().
-									WithJSONSchemaRef(&spec.SchemaRef{
-										Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
-									},
-									),
-							},
-						},
-					},
-				},
-				version: _spec.OASv2,
-			},
-			want: &openapi2.PathItem{
-				Get: &openapi2.Operation{
-					Responses: map[string]*openapi2.Response{
-						"200": {
-							Schema: &spec.SchemaRef{
-								Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
-							},
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "v3",
-			args: args{
-				v3PathItem: &spec.PathItem{
-					Get: &spec.Operation{
-						Responses: spec.Responses{
-							"200": &spec.ResponseRef{
-								Value: spec.NewResponse().
-									WithJSONSchemaRef(&spec.SchemaRef{
-										Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
-									},
-									),
-							},
-						},
-					},
-				},
-				version: _spec.OASv3,
-			},
-			want: &spec.PathItem{
-				Get: &spec.Operation{
-					Responses: spec.Responses{
-						"200": &spec.ResponseRef{
-							Value: spec.NewResponse().
-								WithJSONSchemaRef(&spec.SchemaRef{
-									Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
-								},
-								),
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "unknown",
-			args: args{
-				v3PathItem: &spec.PathItem{
-					Get: &spec.Operation{
-						Responses: spec.Responses{
-							"200": &spec.ResponseRef{
-								Value: spec.NewResponse().
-									WithJSONSchemaRef(&spec.SchemaRef{
-										Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
-									},
-									),
-							},
-						},
-					},
-				},
-				version: _spec.Unknown,
-			},
-			want: &spec.PathItem{
-				Get: &spec.Operation{
-					Responses: spec.Responses{
-						"200": &spec.ResponseRef{
-							Value: spec.NewResponse().
-								WithJSONSchemaRef(&spec.SchemaRef{
-									Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
-								},
-								),
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "nil input",
-			args: args{
-				v3PathItem: nilPathItem,
-				version:    _spec.OASv3,
-			},
-			want: nilPathItem,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := getPathItemForVersionOrOriginal(tt.args.v3PathItem, tt.args.version)
-			assert.DeepEqual(t, got, tt.want, cmpopts.IgnoreUnexported(spec.Schema{}))
 		})
 	}
 }

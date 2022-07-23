@@ -28,8 +28,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/getkin/kin-openapi/openapi2conv"
-	spec "github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-openapi/strfmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -272,8 +270,6 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 
 	isNonAPI := isNonAPI(telemetry)
 
-	var reconstructedDiff, providedDiff *_spec.APIDiff
-	var reconstructedSpecVersion, providedSpecVersion _spec.OASVersion
 	// Don't link non APIs to an API in the inventory
 	if !isNonAPI {
 		// lock the API inventory to avoid creating API entries twice on trace handling races

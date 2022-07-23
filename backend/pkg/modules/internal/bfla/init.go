@@ -262,10 +262,10 @@ type httpHandler struct {
 func (h httpHandler) GetAPIFindingsForAPI(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.GetAPIFindingsForAPIParams) {
 	findings, err := h.findingsRegistry.GetAll(uint(apiID))
 	if err != nil {
-		httpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
+		common.HttpResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
 		return
 	}
-	httpResponse(w, http.StatusOK, findings)
+	common.HttpResponse(w, http.StatusOK, findings)
 }
 
 func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID int) {
@@ -369,7 +369,7 @@ func (h httpHandler) PostAuthorizationModelApiID(w http.ResponseWriter, r *http.
 func (h httpHandler) GetAuthorizationModelApiID(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
 	apiinfo, err := h.accessor.GetAPIInfo(r.Context(), uint(apiID))
 	if err != nil {
-		httpResponse(w, http.StatusNotFound, &oapicommon.ApiResponse{Message: fmt.Sprintf("Error in retrieving API with id=%d", apiID)})
+		common.HttpResponse(w, http.StatusNotFound, &oapicommon.ApiResponse{Message: fmt.Sprintf("Error in retrieving API with id=%d", apiID)})
 		log.Errorf("error getting api info; id=%d", apiID)
 		return
 	}
@@ -610,12 +610,12 @@ func convertBFLAState(state bfladetector.BFLAStateEnum) restapi.BFLAState {
 func (h httpHandler) GetAuthorizationModelApiIDState(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
 	state, err := h.bflaDetector.GetState(uint(apiID))
 	if err != nil {
-		httpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Error in retrieving API with id=%d", apiID)})
+		common.HttpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Error in retrieving API with id=%d", apiID)})
 		return
 	}
 
 	res := convertBFLAState(state)
-	httpResponse(w, http.StatusOK, res)
+	common.HttpResponse(w, http.StatusOK, res)
 }
 
 // nolint:stylecheck,revive

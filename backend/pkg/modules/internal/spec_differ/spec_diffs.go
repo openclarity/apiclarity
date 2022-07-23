@@ -9,7 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-openapi/spec"
+	v3spec "github.com/getkin/kin-openapi/openapi3"
+	"github.com/getkin/kin-openapi/openapi2conv"
 	_spec "github.com/openclarity/speculator/pkg/spec"
 	_speculator "github.com/openclarity/speculator/pkg/speculator"
 	log "github.com/sirupsen/logrus"
@@ -81,8 +82,8 @@ func (s *specDiffer) Info() core.ModuleInfo {
 }
 
 func (s *specDiffer) EventNotify(ctx context.Context, event *core.Event) {
-	var reconstructedDiff *_spec.APIDiff
-	var providedDiff *_spec.APIDiff
+	var reconstructedDiff, providedDiff *_spec.APIDiff
+	var reconstructedSpecVersion, providedSpecVersion _spec.OASVersion
 	var err error
 
 	log.Infof("Got new event notification. event=%+v", event)
@@ -107,7 +108,8 @@ func (s *specDiffer) EventNotify(ctx context.Context, event *core.Event) {
 			log.Errorf("Failed to diff telemetry against provided spec: %v", err)
 			return
 		}
-		if err := setAPIEventProvidedDiff(apiEvent, providedDiff); err != nil {
+		providedSpecVersion = s.accessor.GetSpeculatorAccessor().GetProvidedSpecVersion(specKey)
+		if err := setAPIEventProvidedDiff(apiEvent, providedDiff, providedSpecVersion); err != nil {
 			log.Errorf("Failed to set api event provided diff: %v", err)
 			return
 		}
@@ -120,7 +122,8 @@ func (s *specDiffer) EventNotify(ctx context.Context, event *core.Event) {
 			log.Errorf("Failed to diff telemetry against approved spec: %v", err)
 			return
 		}
-		if err := setAPIEventReconstructedDiff(apiEvent, reconstructedDiff); err != nil {
+		reconstructedSpecVersion = s.accessor.GetSpeculatorAccessor().GetApprovedSpecVersion(specKey)
+		if err := setAPIEventReconstructedDiff(apiEvent, reconstructedDiff, reconstructedSpecVersion); err != nil {
 			log.Errorf("Failed to set api event reconstructed diff: %v", err)
 			return
 		}
@@ -136,14 +139,14 @@ func (s *specDiffer) EventNotify(ctx context.Context, event *core.Event) {
 	}
 
 	if apiEvent.HasProvidedSpecDiff {
-		s.addDiffToSend(providedDiff, providedDiff.ModifiedPathItem, providedDiff.OriginalPathItem, providedDiffType, common.PROVIDED, apiEvent)
+		s.addDiffToSend(providedDiff, providedDiff.ModifiedPathItem, providedDiff.OriginalPathItem, providedDiffType, common.PROVIDED, apiEvent, providedSpecVersion)
 	}
 	if apiEvent.HasReconstructedSpecDiff {
-		s.addDiffToSend(reconstructedDiff, reconstructedDiff.ModifiedPathItem, reconstructedDiff.OriginalPathItem, reconstructedDiffType, common.RECONSTRUCTED, apiEvent)
+		s.addDiffToSend(reconstructedDiff, reconstructedDiff.ModifiedPathItem, reconstructedDiff.OriginalPathItem, reconstructedDiffType, common.RECONSTRUCTED, apiEvent, reconstructedSpecVersion)
 	}
 }
 
-func (s *specDiffer) addDiffToSend(diff *_spec.APIDiff, modifiedPathItem, originalPathItem *spec.PathItem, diffType models.DiffType, specType common.SpecType, event *database.APIEvent, ) {
+func (s *specDiffer) addDiffToSend(diff *_spec.APIDiff, modifiedPathItem, originalPathItem *v3spec.PathItem, diffType models.DiffType, specType common.SpecType, event *database.APIEvent, version _spec.OASVersion) {
 	if diffType == models.DiffTypeNODIFF {
 		return
 	}
@@ -152,12 +155,12 @@ func (s *specDiffer) addDiffToSend(diff *_spec.APIDiff, modifiedPathItem, origin
 		return
 	}
 
-	newSpecB, err := yaml.Marshal(modifiedPathItem)
+	newSpecB, err := yaml.Marshal(getPathItemForVersionOrOriginal(modifiedPathItem, version))
 	if err != nil {
 		log.Errorf("Failed to marshal modified path item: %v", err)
 		return
 	}
-	oldSpecB, err := yaml.Marshal(originalPathItem)
+	oldSpecB, err := yaml.Marshal(getPathItemForVersionOrOriginal(originalPathItem, version))
 	if err != nil {
 		log.Errorf("Failed to marshal original path item: %v", err)
 		return
@@ -203,9 +206,9 @@ func (s *specDiffer) addDiffToSend(diff *_spec.APIDiff, modifiedPathItem, origin
 	}
 }
 
-func setAPIEventReconstructedDiff(apiEvent *database.APIEvent, reconstructedDiff *_spec.APIDiff) error {
+func setAPIEventReconstructedDiff(apiEvent *database.APIEvent, reconstructedDiff *_spec.APIDiff, version _spec.OASVersion) error {
 	if reconstructedDiff.Type != _spec.DiffTypeNoDiff {
-		original, modified, err := convertSpecDiffToEventDiff(reconstructedDiff)
+		original, modified, err := convertSpecDiffToEventDiff(reconstructedDiff, version)
 		if err != nil {
 			return fmt.Errorf("failed to convert spec diff to event diff: %v", err)
 		}
@@ -218,9 +221,9 @@ func setAPIEventReconstructedDiff(apiEvent *database.APIEvent, reconstructedDiff
 	return nil
 }
 
-func setAPIEventProvidedDiff(apiEvent *database.APIEvent, providedDiff *_spec.APIDiff) error {
+func setAPIEventProvidedDiff(apiEvent *database.APIEvent, providedDiff *_spec.APIDiff, version _spec.OASVersion) error {
 	if providedDiff.Type != _spec.DiffTypeNoDiff {
-		original, modified, err := convertSpecDiffToEventDiff(providedDiff)
+		original, modified, err := convertSpecDiffToEventDiff(providedDiff, version)
 		if err != nil {
 			return fmt.Errorf("failed to convert spec diff to event diff: %v", err)
 		}
@@ -312,17 +315,17 @@ func getHighestPrioritySpecDiffType(providedDiffType, reconstructedDiffType mode
 
 type eventDiff struct {
 	Path     string
-	PathItem *spec.PathItem
+	PathItem interface{}
 }
 
-func convertSpecDiffToEventDiff(diff *_spec.APIDiff) (originalRet, modifiedRet []byte, err error) {
+func convertSpecDiffToEventDiff(diff *_spec.APIDiff, version _spec.OASVersion) (originalRet, modifiedRet []byte, err error) {
 	original := eventDiff{
 		Path:     diff.Path,
-		PathItem: diff.OriginalPathItem,
+		PathItem: getPathItemForVersionOrOriginal(diff.OriginalPathItem, version),
 	}
 	modified := eventDiff{
 		Path:     diff.Path,
-		PathItem: diff.ModifiedPathItem,
+		PathItem: getPathItemForVersionOrOriginal(diff.ModifiedPathItem, version),
 	}
 	originalRet, err = yaml.Marshal(original)
 	if err != nil {
@@ -334,6 +337,32 @@ func convertSpecDiffToEventDiff(diff *_spec.APIDiff) (originalRet, modifiedRet [
 	}
 
 	return originalRet, modifiedRet, nil
+}
+
+func getPathItemForVersionOrOriginal(v3PathItem *v3spec.PathItem, version _spec.OASVersion) interface{} {
+	if v3PathItem == nil {
+		return v3PathItem
+	}
+
+	switch version {
+	case _spec.OASv2:
+		log.Info("Converting to OASv2 path item")
+		v2PathItem, err := openapi2conv.FromV3PathItem(&v3spec.T{Components: v3spec.Components{}}, v3PathItem)
+		if err != nil {
+			log.Errorf("Failed to convert v3 path item to v2, keeping v3: %v", err)
+			return v3PathItem
+		}
+
+		return v2PathItem
+	case _spec.OASv3:
+		return v3PathItem
+	case _spec.Unknown:
+		log.Warnf("Unknown spec version, using v3. version=%v", version)
+	default:
+		log.Warnf("Unknown spec version, using v3. version=%v", version)
+	}
+
+	return v3PathItem
 }
 
 func (s *specDiffer) HTTPHandler() http.Handler {
