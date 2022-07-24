@@ -64,7 +64,8 @@ func createTLSTransport(conf *config.Config) (*http.Transport, error) {
 
 	// Trust the augmented cert pool in our client.
 	tlsConfig := &tls.Config{
-		RootCAs: rootCAs,
+		RootCAs:    rootCAs,
+		MinVersion: tls.VersionTLS12,
 	}
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
 	customTransport.TLSClientConfig = tlsConfig
