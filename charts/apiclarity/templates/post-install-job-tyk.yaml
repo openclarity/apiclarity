@@ -90,6 +90,8 @@ spec:
               value: {{ .Values.apiclarity.tls.rootCACertConfigMapName }}
             - name: ROOT_CERT_CONFIGMAP_NAMESPACE
               value: '{{ .Release.Namespace }}'
+            - name: ROOT_CERT_FILE_NAME
+              value: {{ .Values.apiclarity.tls.rootCertFileName }}
             {{- end }}
           command:
           - /bin/bash

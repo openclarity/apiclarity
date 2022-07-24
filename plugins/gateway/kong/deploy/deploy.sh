@@ -25,7 +25,7 @@ then
     echo "Root CA cert config map ($RootCertConfigMapName) is missing from $RootCertConfigMapNamespace namespace, consider setting ENABLE_TLS to false"
     exit 1
   fi
-  # copy root ca configmap from portshift namespace
+  # copy root ca configmap from provided namespace
   CERT=$(kubectl get configmap -n $RootCertConfigMapNamespace $RootCertConfigMapName -o jsonpath="{.data.${RootCertFileNameEscaped}}")
   ## if configmap already exists in namespace, delete it
   kubectl get configmap -n $KongGatewayDeploymentNamespace api-trace-root-ca > /dev/null 2>&1
