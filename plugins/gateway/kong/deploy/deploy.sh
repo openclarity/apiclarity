@@ -12,6 +12,8 @@ TraceSamplingEnabled="${TRACE_SAMPLING_ENABLED:-false}"
 EnableTLS="${ENABLE_TLS:-false}"
 RootCertConfigMapName="${ROOT_CERT_CONFIGMAP_NAME:-apiclarity-root-ca.crt}"
 RootCertConfigMapNamespace="${ROOT_CERT_CONFIGMAP_NAMESPACE:-apiclarity}"
+RootCertFileName="${ROOT_CERT_FILE_NAME:-ca.crt}"
+RootCertFileNameEscaped=$(echo ${RootCertFileName} | sed "s/[.]/\\\&/g")
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
@@ -24,7 +26,7 @@ then
     exit 1
   fi
   # copy root ca configmap from portshift namespace
-  CERT=$(kubectl get configmap -n $RootCertConfigMapNamespace $RootCertConfigMapName -o jsonpath="{.data.ca\.crt}")
+  CERT=$(kubectl get configmap -n $RootCertConfigMapNamespace $RootCertConfigMapName -o jsonpath="{.data.${RootCertFileNameEscaped}}")
   ## if configmap already exists in namespace, delete it
   kubectl get configmap -n $KongGatewayDeploymentNamespace api-trace-root-ca > /dev/null 2>&1
   if [ $? -eq 0 ]

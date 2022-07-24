@@ -191,6 +191,7 @@ func Run() {
 	serverConfig := &rest.ServerConfig{
 		EnableTLS:             config.EnableTLS,
 		Port:                  config.BackendRestPort,
+		TLSPort:               config.BackendRestTLSPort,
 		TLSServerCertFilePath: config.TLSServerCertFilePath,
 		TLSServerKeyFilePath:  config.TLSServerKeyFilePath,
 		Speculator:            speculator,
