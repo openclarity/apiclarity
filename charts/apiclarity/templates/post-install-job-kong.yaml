@@ -117,7 +117,7 @@ spec:
 {{- if .Values.trafficSource.global.httpProxy }}
             git config --global http.proxy {{ .Values.trafficSource.global.httpProxy }} &&
 {{- end }}
-            git clone -b devel-global-specs-tls-support https://github.com/openclarity/apiclarity.git &&
+            git clone -b {{ .Chart.AppVersion }} https://github.com/openclarity/apiclarity.git &&
             cd apiclarity &&
             ./plugins/gateway/kong/deploy/deploy.sh"
       restartPolicy: Never
