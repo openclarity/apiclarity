@@ -40,7 +40,7 @@ then
 else
   UpstreamTelemetryHostNameWithPort=$UpstreamTelemetryHostName:$UpstreamTelemetryHTTPPort
   # remove certs volume mount from the deployment
-  deploymentPatch=`cat "${DIR}/patch-deployment.yaml" | sed "s/{{KONG_PROXY_CONTAINER_NAME}}/$KongProxyContainerName/g"`
+  deploymentPatch=`cat "${DIR}/patch-deployment.yaml" | sed '/# {{CERT VOLUME START}}/,/# {{CERT VOLUME END}}/d' | sed '/# {{CERT MOUNT START}}/,/# {{CERT MOUNT END}}/d' | sed "s/{{KONG_PROXY_CONTAINER_NAME}}/$KongProxyContainerName/g"`
 fi
 
 cat "${DIR}/kongPlugin.yaml" | sed "s/{{UPSTREAM_TELEMETRY_HOST}}/$UpstreamTelemetryHostNameWithPort/g" | sed "s/{{TRACE_SAMPLING_HOST_NAME}}/$TraceSamplingHostName/g" | sed "s/{{TRACE_SAMPLING_ENABLED}}/$TraceSamplingEnabled/g" | sed "s/{{ENABLE_TLS}}/$EnableTLS/g" | kubectl -n ${KongGatewayIngressNamespace} apply -f -
