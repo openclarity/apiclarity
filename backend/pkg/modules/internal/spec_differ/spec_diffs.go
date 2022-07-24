@@ -67,7 +67,6 @@ func newSpecDiffer(ctx context.Context, accessor core.BackendAccessor) (core.Mod
 	h := restapi.HandlerWithOptions(&httpHandler{differ: d}, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + moduleName})
 	d.httpHandler = h
 
-	// TODO this should under the start method of API handler?
 	go d.StartDiffsSender(ctx)
 
 	return d, nil
@@ -180,10 +179,14 @@ func (s *specDiffer) addDiffToSend(diff *_spec.APIDiff, modifiedPathItem, origin
 	}
 
 	var specTimestamp time.Time
-	if specType == common.PROVIDED {
+	switch specType {
+	case common.PROVIDED:
 		specTimestamp = time.Time(apiInfo.ProvidedSpecCreatedAt)
-	} else {
+	case common.RECONSTRUCTED:
 		specTimestamp = time.Time(apiInfo.ReconstructedSpecCreatedAt)
+	default:
+		log.Warnf("Unknown spec type: %v", specType)
+		specTimestamp = time.Time(apiInfo.ProvidedSpecCreatedAt)
 	}
 
 	s.Lock()
