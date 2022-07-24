@@ -15,7 +15,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 if [ "$EnableTLS" == "true" ]
 then
-  kubectl get configmap -n $RootCertConfigMapNamespace $RootCertConfigMapName > /dev/null 2>&1
+  kubectl get configmap -n $RootCertConfigMapNamespace $RootCertConfigMapName
   if [[ $? -ne 0 ]]
   then
     echo "Root CA cert config map ($RootCertConfigMapName) is missing from $RootCertConfigMapNamespace namespace, consider setting ENABLE_TLS to false"
@@ -24,10 +24,10 @@ then
   # copy root ca configmap from portshift namespace
   CERT=$(kubectl get configmap -n $RootCertConfigMapNamespace $RootCertConfigMapName -o jsonpath="{.data.ca\.crt}")
   ## if configmap already exists in namespace, delete it
-  kubectl get cm -n $TykGatewayDeploymentNamespace api-trace-root-ca > /dev/null 2>&1
+  kubectl get configmap -n $TykGatewayDeploymentNamespace api-trace-root-ca > /dev/null 2>&1
   if [ $? -eq 0 ]
   then
-    kubectl delete cm -n $TykGatewayDeploymentNamespace api-trace-root-ca
+    kubectl delete configmap -n $TykGatewayDeploymentNamespace api-trace-root-ca
   fi
   kubectl create configmap -n $TykGatewayDeploymentNamespace api-trace-root-ca --from-literal=root-ca.crt="$CERT"
 

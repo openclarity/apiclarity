@@ -26,10 +26,10 @@ then
   # copy root ca configmap from portshift namespace
   CERT=$(kubectl get configmap -n $RootCertConfigMapNamespace $RootCertConfigMapName -o jsonpath="{.data.ca\.crt}")
   ## if configmap already exists in namespace, delete it
-  kubectl get cm -n $KongGatewayDeploymentNamespace api-trace-root-ca > /dev/null 2>&1
+  kubectl get configmap -n $KongGatewayDeploymentNamespace api-trace-root-ca > /dev/null 2>&1
   if [ $? -eq 0 ]
   then
-    kubectl delete cm -n $KongGatewayDeploymentNamespace api-trace-root-ca
+    kubectl delete configmap -n $KongGatewayDeploymentNamespace api-trace-root-ca
   fi
   kubectl create configmap -n $KongGatewayDeploymentNamespace api-trace-root-ca --from-literal=root-ca.crt="$CERT"
 
