@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	v3spec "github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi2conv"
+	v3spec "github.com/getkin/kin-openapi/openapi3"
 	_spec "github.com/openclarity/speculator/pkg/spec"
 	_speculator "github.com/openclarity/speculator/pkg/speculator"
 	log "github.com/sirupsen/logrus"

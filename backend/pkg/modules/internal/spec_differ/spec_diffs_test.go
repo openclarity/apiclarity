@@ -9,10 +9,8 @@ import (
 	spec "github.com/getkin/kin-openapi/openapi3"
 	v3spec "github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-openapi/strfmt"
-	//"github.com/go-openapi/strfmt"
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	//openapi_v3 "github.com/googleapis/gnostic/openapiv3"
 	_spec "github.com/openclarity/speculator/pkg/spec"
 	"gotest.tools/v3/assert"
 
@@ -135,7 +133,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 	mockAccessor := core.NewMockBackendAccessor(mockCtrlAccessor)
 
 	const (
-		path    = "/some/path"
+		path      = "/some/path"
 		newSpecV2 = "get:\n  responses:\n    \"200\":\n      schema:\n        properties:\n          test:\n            type: string\n        type: object\n"
 		oldSpecV2 = "get:\n  responses:\n    \"200\":\n      schema:\n        properties:\n          test:\n            format: int64\n            type: integer\n        type: object\n"
 		newSpecV3 = "get:\n  responses:\n    \"200\":\n      content:\n        application/json:\n          schema:\n            properties:\n              test:\n                type: string\n            type: object\n"
@@ -143,8 +141,8 @@ func Test_differ_addDiffToSend(t *testing.T) {
 	)
 
 	var (
-		hashV2                  = sha256.Sum256([]byte(newSpecV2 + oldSpecV2))
-		hashV3                  = sha256.Sum256([]byte(newSpecV3 + oldSpecV3))
+		hashV2                = sha256.Sum256([]byte(newSpecV2 + oldSpecV2))
+		hashV3                = sha256.Sum256([]byte(newSpecV3 + oldSpecV3))
 		methodGet             = common.GET
 		specTypeReconstructed = common.RECONSTRUCTED
 		specTypeProvided      = common.PROVIDED
@@ -161,7 +159,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 				},
 			},
 		}
-		modifiedPathItem      = v3spec.PathItem{
+		modifiedPathItem = v3spec.PathItem{
 			Get: &spec.Operation{
 				Responses: spec.Responses{
 					"200": &spec.ResponseRef{
@@ -288,7 +286,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 				originalPathItem: &originalPathItem,
 				diffType:         models.DiffTypeGENERALDIFF,
 				specType:         specTypeReconstructed,
-				version: _spec.OASv2,
+				version:          _spec.OASv2,
 			},
 			expectAccessor: func(accessor *core.MockBackendAccessor) {
 				accessor.EXPECT().GetAPIInfo(gomock.Any(), uint(1)).Return(&database.APIInfo{
@@ -329,7 +327,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 				originalPathItem: &originalPathItem,
 				diffType:         models.DiffTypeGENERALDIFF,
 				specType:         specTypeReconstructed,
-				version: _spec.OASv3,
+				version:          _spec.OASv3,
 			},
 			expectAccessor: func(accessor *core.MockBackendAccessor) {
 				accessor.EXPECT().GetAPIInfo(gomock.Any(), uint(1)).Return(&database.APIInfo{
@@ -382,7 +380,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 				originalPathItem: &originalPathItem,
 				diffType:         models.DiffTypeGENERALDIFF,
 				specType:         specTypeProvided,
-				version: _spec.OASv2,
+				version:          _spec.OASv2,
 			},
 			expectAccessor: func(accessor *core.MockBackendAccessor) {
 				accessor.EXPECT().GetAPIInfo(gomock.Any(), uint(1)).Return(&database.APIInfo{
@@ -445,7 +443,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 				originalPathItem: &originalPathItem,
 				diffType:         models.DiffTypeGENERALDIFF,
 				specType:         specTypeProvided,
-				version: _spec.OASv2,
+				version:          _spec.OASv2,
 			},
 			expectAccessor: func(accessor *core.MockBackendAccessor) {
 				accessor.EXPECT().GetAPIInfo(gomock.Any(), uint(1)).Return(&database.APIInfo{
