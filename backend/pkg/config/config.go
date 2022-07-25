@@ -31,6 +31,9 @@ const (
 	HTTPTracesPort               = "HTTP_TRACES_PORT"
 	HTTPTraceSamplingManagerPort = "HTTP_TRACE_SAMPLING_MANAGER_PORT"
 	GRPCTraceSamplingManagerPort = "GRPC_TRACE_SAMPLING_MANAGER_PORT"
+	HostToTraceSecretName        = "HOST_TO_TRACE_SECRET_NAME"       //nolint:gosec
+	HostToTraceSecretNamespace   = "HOST_TO_TRACE_SECRET_NAMESPACE"  //nolint:gosec
+	HostToTraceSecretOwnerName   = "HOST_TO_TRACE_SECRET_OWNER_NAME" //nolint:gosec
 	HealthCheckAddress           = "HEALTH_CHECK_ADDRESS"
 	StateBackupIntervalSec       = "STATE_BACKUP_INTERVAL_SEC"
 	DatabaseCleanerIntervalSec   = "DATABASE_CLEANER_INTERVAL_SEC"
@@ -68,6 +71,9 @@ type Config struct {
 	HTTPTraceSamplingManagerPort int
 	GRPCTraceSamplingManagerPort int
 	TraceSamplingEnabled         bool
+	HostToTraceSecretName        string
+	HostToTraceSecretNamespace   string
+	HostToTraceSecretOwnerName   string
 
 	// database config
 	DatabaseDriver   string
@@ -86,6 +92,9 @@ func LoadConfig() (*Config, error) {
 	config.HTTPTracesPort = viper.GetInt(HTTPTracesPort)
 	config.HTTPTraceSamplingManagerPort = viper.GetInt(HTTPTraceSamplingManagerPort)
 	config.GRPCTraceSamplingManagerPort = viper.GetInt(GRPCTraceSamplingManagerPort)
+	config.HostToTraceSecretName = viper.GetString(HostToTraceSecretName)
+	config.HostToTraceSecretNamespace = viper.GetString(HostToTraceSecretNamespace)
+	config.HostToTraceSecretOwnerName = viper.GetString(HostToTraceSecretOwnerName)
 	config.TraceSamplingEnabled = viper.GetBool(TraceSamplingEnabled)
 	config.HealthCheckAddress = viper.GetString(HealthCheckAddress)
 	config.StateBackupIntervalSec = viper.GetInt(StateBackupIntervalSec)

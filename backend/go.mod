@@ -23,7 +23,7 @@ require (
 	github.com/openclarity/apiclarity/api3 v0.0.0
 	github.com/openclarity/apiclarity/plugins/api v0.0.0
 	github.com/openclarity/speculator v0.1.0
-	github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220701140339-4cc0ec209fea
+	github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220725090837-53a6c9777dd6
 	github.com/petar-dambovaliev/aho-corasick v0.0.0-20211021192214-5ab2d9280aa9
 	github.com/rs/cors v1.8.2 // indirect
 	github.com/satori/go.uuid v1.2.0
@@ -144,7 +144,7 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 )
 
-replace github.com/openclarity/trace-sampling-manager/api v0.0.0 => github.com/openclarity/trace-sampling-manager/api v0.0.0-20220622111449-ff7eed2b2b39
+replace github.com/openclarity/trace-sampling-manager/api v0.0.0 => github.com/openclarity/trace-sampling-manager/api v0.0.0-20220725090837-53a6c9777dd6
 
 replace github.com/openclarity/apiclarity/api v0.0.0 => ./../api
 
