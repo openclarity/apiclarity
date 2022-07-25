@@ -462,6 +462,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		}
 		state.State = BFLALearnt
 		stateValue.Set(state)
+		l.logError(l.notify(ctx, cmd.apiID))
 
 	case *ProvideAuthzModelCommand:
 		_, _, err = l.checkBFLAState(cmd.apiID, BFLALearnt, BFLADetecting)
