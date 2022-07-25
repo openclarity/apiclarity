@@ -41,9 +41,9 @@ func (s *Server) PostAPIInventory(params operations.PostAPIInventoryParams) midd
 			Message: "please provide name",
 		})
 	}
-	if params.Body.DestinationNamespace == "" {
+	if params.Body.APIType == models.APITypeINTERNAL && params.Body.DestinationNamespace == "" {
 		return operations.NewPostAPIInventoryDefault(http.StatusBadRequest).WithPayload(&models.APIResponse{
-			Message: "please provide destinationNamespace",
+			Message: "please provide destinationNamespace for internal apis",
 		})
 	}
 	if params.Body.Port < 1 {
