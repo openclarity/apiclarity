@@ -313,6 +313,43 @@ paths:
                 type: object
         default:
           $ref: "#/components/responses/UnknownError"
+  "/apiInventory/{apiId}/apiInfo":
+    get:
+      summary: Get api info from apiId
+      parameters:
+        - $ref: "#/components/parameters/apiId"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "../common/openapi.yaml#/components/schemas/ApiInfoWithType"
+        default:
+          $ref: "#/components/responses/UnknownError"
+  "/apiInventory/apiId/fromHostAndPort":
+    get:
+      summary: Get apiId from host and port
+      parameters:
+        - $ref: "#/components/parameters/host"
+        - $ref: "#/components/parameters/port"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                description: api id
+                type: integer
+                format: uint32
+        "404":
+          description: API ID Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "../common/openapi.yaml#/components/schemas/ApiResponse"
+        default:
+          $ref: "#/components/responses/UnknownError"
   "/apiInventory/{apiId}/provided_swagger.json":
     get:
       summary: Get provided API spec json file
@@ -745,6 +782,20 @@ components:
       required: false
       schema:
         type: boolean
+    port:
+      name: port
+      description: api port
+      in: query
+      required: true
+      schema:
+        type: string
+    host:
+      name: host
+      description: api host name
+      in: query
+      required: true
+      schema:
+        type: string
     alertIsFilter:
       name: alert[is]
       in: query

@@ -367,6 +367,12 @@ func init() {
               "format": "uint32"
             }
           },
+          "404": {
+            "description": "API ID Not Found",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
           "default": {
             "$ref": "#/responses/UnknownError"
           }
@@ -2329,6 +2335,12 @@ func init() {
               "description": "api id",
               "type": "integer",
               "format": "uint32"
+            }
+          },
+          "404": {
+            "description": "API ID Not Found",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
             }
           },
           "default": {

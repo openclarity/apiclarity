@@ -55,6 +55,50 @@ func (o *GetAPIInventoryAPIIDFromHostAndPortOK) WriteResponse(rw http.ResponseWr
 	}
 }
 
+// GetAPIInventoryAPIIDFromHostAndPortNotFoundCode is the HTTP code returned for type GetAPIInventoryAPIIDFromHostAndPortNotFound
+const GetAPIInventoryAPIIDFromHostAndPortNotFoundCode int = 404
+
+/*GetAPIInventoryAPIIDFromHostAndPortNotFound API ID Not Found
+
+swagger:response getApiInventoryApiIdFromHostAndPortNotFound
+*/
+type GetAPIInventoryAPIIDFromHostAndPortNotFound struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.APIResponse `json:"body,omitempty"`
+}
+
+// NewGetAPIInventoryAPIIDFromHostAndPortNotFound creates GetAPIInventoryAPIIDFromHostAndPortNotFound with default headers values
+func NewGetAPIInventoryAPIIDFromHostAndPortNotFound() *GetAPIInventoryAPIIDFromHostAndPortNotFound {
+
+	return &GetAPIInventoryAPIIDFromHostAndPortNotFound{}
+}
+
+// WithPayload adds the payload to the get Api inventory Api Id from host and port not found response
+func (o *GetAPIInventoryAPIIDFromHostAndPortNotFound) WithPayload(payload *models.APIResponse) *GetAPIInventoryAPIIDFromHostAndPortNotFound {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the get Api inventory Api Id from host and port not found response
+func (o *GetAPIInventoryAPIIDFromHostAndPortNotFound) SetPayload(payload *models.APIResponse) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *GetAPIInventoryAPIIDFromHostAndPortNotFound) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(404)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
+}
+
 /*GetAPIInventoryAPIIDFromHostAndPortDefault unknown error
 
 swagger:response getApiInventoryApiIdFromHostAndPortDefault
