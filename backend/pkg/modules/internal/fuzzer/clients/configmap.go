@@ -73,12 +73,6 @@ spec:
         value: "/app/"
       - name: DEBUG
         value: true
-      - name: URI
-        value: <URI>
-      - name: API_ID
-        value: <API_ID>
-      - name: RESTLER_TIME_BUDGET
-        value: <RESTLER_TIME_BUDGET>
       securityContext:
         capabilities:
           drop:
@@ -101,11 +95,8 @@ spec:
           emptyDir: {}
 `)
 
-const ()
-
 type ConfigMapClient struct {
 	hClient            kubernetes.Interface
-	namespace          string
 	configMapName      string
 	configMapNamespace string
 	currentJob         *batchv1.Job
@@ -114,9 +105,8 @@ type ConfigMapClient struct {
 func (l *ConfigMapClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem string, timeBudget string) error {
 	logging.Logf("[Fuzzer][ConfigMapClient] TriggerFuzzingJob(%v, %v, %v, %v):: -->", apiID, endpoint, securityItem, timeBudget)
 
-	// Retrieve the env var slice that will configure our pod
+	// Retrieve the env var slice for dynamic parameters from which we will configure our pod
 	envVars := l.getEnvs(apiID, endpoint, securityItem, timeBudget)
-	logging.Logf("[Fuzzer][ConfigMapClient] envVars=%v", envVars)
 
 	// Create job struct
 	fuzzerJob, err := l.createFuzzerJob(envVars)
@@ -125,7 +115,7 @@ func (l *ConfigMapClient) TriggerFuzzingJob(apiID int64, endpoint string, securi
 		return fmt.Errorf("failed to get create job struct")
 	}
 
-	// Create job
+	// Create pod from job
 	if _, err := l.Create(fuzzerJob); err != nil {
 		logging.Logf("[Fuzzer][ConfigMapClient] Failed to create fuzzer job: %v", err)
 		return fmt.Errorf("failed to get create job")
@@ -164,7 +154,7 @@ func (l *ConfigMapClient) createFuzzerJob(dynEnvVars []v1.EnvVar) (*batchv1.Job,
 		fuzzerTemplate = fuzzerJobTemplate
 	} else {
 		// Get fuzzer job template from config map.
-		logging.Logf("[Fuzzer][ConfigMapClient] Load configmap (%v) from namespace (%v)", l.configMapName, l.configMapNamespace)
+		logging.Debugf("[Fuzzer][ConfigMapClient] Load configmap (%v) from namespace (%v)", l.configMapName, l.configMapNamespace)
 		cm, err := l.hClient.CoreV1().ConfigMaps(l.configMapNamespace).Get(context.TODO(), l.configMapName, metav1.GetOptions{})
 		if err != nil {
 			return nil, fmt.Errorf("failed to get fuzzer template config map: %v", err)
@@ -178,7 +168,7 @@ func (l *ConfigMapClient) createFuzzerJob(dynEnvVars []v1.EnvVar) (*batchv1.Job,
 		fuzzerTemplate = []byte(config)
 	}
 
-	logging.Logf("[Fuzzer][ConfigMapClient] Using fuzzerTemplate:\n%+v", string(fuzzerTemplate))
+	logging.Debugf("[Fuzzer][ConfigMapClient] Using fuzzerTemplate:\n%+v", string(fuzzerTemplate))
 
 	err := yaml.Unmarshal(fuzzerTemplate, &job)
 	if err != nil {
@@ -188,12 +178,12 @@ func (l *ConfigMapClient) createFuzzerJob(dynEnvVars []v1.EnvVar) (*batchv1.Job,
 	// Add dynamic env variables to the job existing ones
 	containers := job.Spec.Template.Spec.Containers
 	if len(containers) != 1 {
-		return nil, fmt.Errorf("No container found in fuzzer template")
+		return nil, fmt.Errorf("must have one and only one container in fuzzer template")
 	}
 	curEnvVars := job.Spec.Template.Spec.Containers[0].Env
 	job.Spec.Template.Spec.Containers[0].Env = append(curEnvVars, dynEnvVars...)
 
-	logging.Logf("[Fuzzer][ConfigMapClient] Using job:\n%+v", job)
+	logging.Debugf("[Fuzzer][ConfigMapClient] Using job:\n%+v", job)
 
 	// Check for job name
 	if job.GetName() == "" {
@@ -237,8 +227,8 @@ func (l *ConfigMapClient) Create(job *batchv1.Job) (*batchv1.Job, error) {
 	var err error
 
 	namespace := job.GetNamespace()
-	if len(l.namespace) == 0 {
-		logging.Logf("[Fuzzer][ConfigMapClient] no namespace found in job templete. Use the configmapnamespace in place (%v).", l.configMapNamespace)
+	if len(namespace) == 0 {
+		logging.Logf("[Fuzzer][ConfigMapClient] no namespace found in job template. Use the configmapnamespace in place (%v).", l.configMapNamespace)
 		namespace = l.configMapNamespace
 	}
 	logging.Logf("[Fuzzer][ConfigMapClient] Create new Job in namespace: %v/%v, name=%v", namespace, l.configMapNamespace, job.Name)
