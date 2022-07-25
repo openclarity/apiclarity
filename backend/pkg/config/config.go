@@ -31,9 +31,9 @@ const (
 	HTTPTracesPort               = "HTTP_TRACES_PORT"
 	HTTPTraceSamplingManagerPort = "HTTP_TRACE_SAMPLING_MANAGER_PORT"
 	GRPCTraceSamplingManagerPort = "GRPC_TRACE_SAMPLING_MANAGER_PORT"
-	HostToTraceSecretName        = "HOST_TO_TRACE_SECRET_NAME"
-	HostToTraceSecretNamespace   = "HOST_TO_TRACE_SECRET_NAMESPACE"
-	HostToTraceSecretOwnerName   = "HOST_TO_TRACE_SECRET_OWNER_NAME"
+	HostToTraceSecretName        = "HOST_TO_TRACE_SECRET_NAME"       //nolint:gosec
+	HostToTraceSecretNamespace   = "HOST_TO_TRACE_SECRET_NAMESPACE"  //nolint:gosec
+	HostToTraceSecretOwnerName   = "HOST_TO_TRACE_SECRET_OWNER_NAME" //nolint:gosec
 	HealthCheckAddress           = "HEALTH_CHECK_ADDRESS"
 	StateBackupIntervalSec       = "STATE_BACKUP_INTERVAL_SEC"
 	DatabaseCleanerIntervalSec   = "DATABASE_CLEANER_INTERVAL_SEC"
