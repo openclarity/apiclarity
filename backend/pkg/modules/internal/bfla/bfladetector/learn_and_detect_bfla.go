@@ -73,8 +73,8 @@ func (s BFLAStateEnum) String() string {
 }
 
 type BFLAState struct {
-	state        BFLAStateEnum
-	traceCounter int
+	State        BFLAStateEnum `json:"state"`
+	TraceCounter int           `json:"trace_counter"`
 }
 
 var ErrUnsupportedAuthScheme = errors.New("unsupported auth scheme")
@@ -302,28 +302,19 @@ func runtimeRecover() {
 	}
 }
 
-func (l *learnAndDetectBFLA) setBFLAState(apiID uint, state BFLAState) error {
-	stateValue, err := l.bflaStateMap.Get(apiID)
-	if err != nil {
-		return fmt.Errorf("unable to get state traces counter: %w", err)
-	}
-	stateValue.Set(state)
-	return nil
-}
-
 func (l *learnAndDetectBFLA) checkBFLAState(apiID uint, allowedStates ...BFLAStateEnum) (BFLAState, recovery.PersistedValue, error) {
 	stateValue, err := l.bflaStateMap.Get(apiID)
 	if err != nil {
 		return BFLAState{}, nil, fmt.Errorf("unable to get state traces counter: %w", err)
 	}
 	state := stateValue.Get().(BFLAState) //nolint:forcetypeassert
-	log.Debugf("current state for api %d is %v", apiID, state.state)
+	log.Debugf("current state for api %d is %v", apiID, state.State)
 	for _, s := range allowedStates {
-		if state.state == s {
+		if state.State == s {
 			return state, stateValue, nil
 		}
 	}
-	return state, stateValue, fmt.Errorf("state %v does not allow for the requested operation", state.state)
+	return state, stateValue, fmt.Errorf("state %v does not allow for the requested operation", state.State)
 }
 
 //nolint:gocyclo
@@ -389,7 +380,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		setAud(aud)
 
 	case *StopLearningCommand:
-		state, _, err := l.checkBFLAState(cmd.apiID, BFLALearning)
+		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLALearning)
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Stop Learning': %w", err)
 		}
@@ -397,38 +388,34 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if err != nil {
 			return fmt.Errorf("cannot disable traces: %w", err)
 		}
-		state.state = BFLALearnt
-		state.traceCounter = 0
-		l.setBFLAState(cmd.apiID, state)
+		state.State = BFLALearnt
+		state.TraceCounter = 0
+		stateValue.Set(state)
 		l.logError(l.notify(ctx, cmd.apiID))
-		if err = l.statePersister.Persist(ctx); err != nil {
-			return fmt.Errorf("unable to persist the new state: %w", err)
-		}
+
 	case *StartLearningCommand:
-		state, _, err := l.checkBFLAState(cmd.apiID, BFLAStart, BFLALearnt, BFLADetecting)
+		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLAStart, BFLALearnt, BFLADetecting)
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Start Learning': %w", err)
 		}
-		if state.state == BFLAStart || state.state == BFLALearnt {
+		if state.State == BFLAStart || state.State == BFLALearnt {
 			err = l.bflaBackendAccessor.EnableTraces(ctx, l.modName, cmd.apiID)
 			if err != nil {
 				return fmt.Errorf("cannot enable traces: %w", err)
 			}
 		}
-		state.state = BFLALearning
-		state.traceCounter = cmd.numberOfTraces
-		l.setBFLAState(cmd.apiID, state)
+		state.State = BFLALearning
+		state.TraceCounter = cmd.numberOfTraces
+		stateValue.Set(state)
 
 		// TODO: Check if state is "start" and the (reconstructed or provided) spec is available
-		if err = l.statePersister.Persist(ctx); err != nil {
-			return fmt.Errorf("unable to persist the new state: %w", err)
-		}
+
 	case *ResetModelCommand:
-		state, _, err := l.checkBFLAState(cmd.apiID, BFLALearning, BFLALearnt, BFLADetecting)
+		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLALearning, BFLALearnt, BFLADetecting)
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Reset Model': %w", err)
 		}
-		if state.state == BFLADetecting || state.state == BFLALearning {
+		if state.State == BFLADetecting || state.State == BFLALearning {
 			err = l.bflaBackendAccessor.DisableTraces(ctx, l.modName, cmd.apiID)
 			if err != nil {
 				return fmt.Errorf("cannot disable traces: %w", err)
@@ -441,33 +428,29 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 			return fmt.Errorf("unable to get authz model state: %w", err)
 		}
 		authzModel.Set(AuthorizationModel{})
-		state.state = BFLAStart
-		l.setBFLAState(cmd.apiID, state)
+		state.State = BFLAStart
+		stateValue.Set(state)
 		if err := l.findingsRegistry.Clear(cmd.apiID); err != nil {
 			return fmt.Errorf("unable to get authz model state: %w", err)
 		}
 		l.logError(l.notify(ctx, cmd.apiID))
-		if err = l.statePersister.Persist(ctx); err != nil {
-			return fmt.Errorf("unable to persist the new state: %w", err)
-		}
+
 	case *StartDetectionCommand:
-		state, _, err := l.checkBFLAState(cmd.apiID, BFLALearning, BFLALearnt)
+		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLALearning, BFLALearnt)
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Start Detection': %w", err)
 		}
-		if state.state == BFLALearnt {
+		if state.State == BFLALearnt {
 			err = l.bflaBackendAccessor.EnableTraces(ctx, l.modName, cmd.apiID)
 			if err != nil {
 				return fmt.Errorf("cannot enable traces: %w", err)
 			}
 		}
-		state.state = BFLADetecting
-		l.setBFLAState(cmd.apiID, state)
-		if err = l.statePersister.Persist(ctx); err != nil {
-			return fmt.Errorf("unable to persist the new state: %w", err)
-		}
+		state.State = BFLADetecting
+		stateValue.Set(state)
+
 	case *StopDetectionCommand:
-		state, _, err := l.checkBFLAState(cmd.apiID, BFLADetecting)
+		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLADetecting)
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Stop Detection': %w", err)
 		}
@@ -475,11 +458,9 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if err != nil {
 			return fmt.Errorf("cannot disable traces: %w", err)
 		}
-		state.state = BFLALearnt
-		l.setBFLAState(cmd.apiID, state)
-		if err = l.statePersister.Persist(ctx); err != nil {
-			return fmt.Errorf("unable to persist the new state: %w", err)
-		}
+		state.State = BFLALearnt
+		stateValue.Set(state)
+
 	case *ProvideAuthzModelCommand:
 		_, _, err = l.checkBFLAState(cmd.apiID, BFLALearnt, BFLADetecting)
 		if err != nil {
@@ -566,7 +547,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		return fmt.Errorf("spec not present cannot learn BFLA; apiID=%d", trace.APIEvent.APIInfoID)
 	}
 
-	state, _, err := l.checkBFLAState(apiID, BFLALearning, BFLADetecting)
+	state, stateValue, err := l.checkBFLAState(apiID, BFLALearning, BFLADetecting)
 	if err != nil {
 		return fmt.Errorf("unable to handle traces in the current state: %w", err)
 	}
@@ -574,28 +555,28 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	if trace.K8SSource != nil {
 		srcUID = trace.K8SSource.Uid
 	}
-	if state.state == BFLALearning {
+	if state.State == BFLALearning {
 		/* We are in the learning state */
-		log.Debugf("api %d; To process: %d", trace.APIEvent.APIInfoID, state.traceCounter)
+		log.Debugf("api %d; To process: %d", trace.APIEvent.APIInfoID, state.TraceCounter)
 		err := l.updateAuthorizationModel(tags, resolvedPath, string(trace.APIEvent.Method),
 			trace.K8SSource, trace.APIEvent.APIInfoID, trace.DetectedUser, true, false)
 		if err != nil {
 			return err
 		}
 
-		if state.traceCounter == -1 {
+		if state.TraceCounter == -1 {
 			return nil
 		}
-		state.traceCounter--
+		state.TraceCounter--
 
-		if state.traceCounter == 0 {
-			state.state = BFLALearnt
+		if state.TraceCounter == 0 {
+			state.State = BFLALearnt
 			err = l.bflaBackendAccessor.DisableTraces(ctx, l.modName, apiID)
 			if err != nil {
 				log.Errorf("cannot disable traces: %v", err)
 			}
 		}
-		l.setBFLAState(apiID, state)
+		stateValue.Set(state)
 		aud, setAud, err := l.findSourceObj(resolvedPath, string(trace.APIEvent.Method), srcUID, trace.APIEvent.APIInfoID)
 		if err != nil {
 			return fmt.Errorf("unable to find source obj: %w", err)
@@ -780,7 +761,7 @@ func (l *learnAndDetectBFLA) GetState(apiID uint) (BFLAStateEnum, error) {
 	if err != nil {
 		return BFLAStart, err
 	}
-	return state.state, err
+	return state.State, err
 }
 
 func (l *learnAndDetectBFLA) isLearning(apiID uint) bool {
@@ -794,7 +775,7 @@ func (l *learnAndDetectBFLA) getState(apiID uint) (BFLAState, error) {
 		return BFLAState{}, fmt.Errorf("unable to get state traces counter: %w", err)
 	}
 	state := stateValue.Get().(BFLAState) //nolint:forcetypeassert
-	log.Debugf("current state for api %d is %v", apiID, state.state)
+	log.Debugf("current state for api %d is %v", apiID, state.State)
 	return state, nil
 }
 
