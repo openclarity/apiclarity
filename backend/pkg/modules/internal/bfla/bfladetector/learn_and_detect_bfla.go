@@ -407,7 +407,10 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		state.State = BFLALearning
 		state.TraceCounter = cmd.numberOfTraces
 		stateValue.Set(state)
-
+		err = l.initAuthorizationModel(cmd.apiID)
+		if err != nil {
+			return fmt.Errorf("cannot initialize authorization model: %w", err)
+		}
 		// TODO: Check if state is "start" and the (reconstructed or provided) spec is available
 
 	case *ResetModelCommand:
@@ -663,6 +666,19 @@ func (l *learnAndDetectBFLA) notify(ctx context.Context, apiID uint) error {
 		}
 	}
 	return l.bflaNotifier.Notify(ctx, apiID, ntf) //nolint:wrapcheck
+}
+
+func (l *learnAndDetectBFLA) initAuthorizationModel(apiID uint) error {
+	authzModelEntry, err := l.authzModelsMap.Get(apiID)
+	if err != nil {
+		return fmt.Errorf("unable to get authz model state: %w", err)
+	}
+	if authzModelEntry.Exists() {
+		return nil
+	}
+	authzModel := AuthorizationModel{}
+	authzModelEntry.Set(authzModel)
+	return nil
 }
 
 func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser, authorize, updateAuthorized bool) error {
