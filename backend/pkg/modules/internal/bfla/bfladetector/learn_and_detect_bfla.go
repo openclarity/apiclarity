@@ -106,7 +106,6 @@ func NewBFLADetector(ctx context.Context, modName string, bflaBackendAccessor bf
 			}
 		}
 	}()
-	go l.notifier(ctx)
 	go l.run(ctx)
 	return l
 }
@@ -903,23 +902,6 @@ func (l *learnAndDetectBFLA) ProvideAuthzModel(apiID uint, am AuthorizationModel
 		apiID:      apiID,
 		authzModel: am,
 	})
-}
-
-func (l *learnAndDetectBFLA) notifier(ctx context.Context) {
-	t := time.NewTicker(l.notifierResyncInterval)
-	defer t.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			log.Errorf("Bfla notifier finished working %s", ctx.Err())
-			return
-		case <-t.C:
-			for _, key := range l.authzModelsMap.Keys() {
-				l.logError(l.notify(ctx, key))
-			}
-		}
-	}
 }
 
 func ResolveBFLAStatus(statusCode string) restapi.BFLAStatus {
