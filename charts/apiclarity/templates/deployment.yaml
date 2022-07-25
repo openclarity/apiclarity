@@ -91,13 +91,8 @@ spec:
               value: {{ .Values.apiclarity.env.plugins.FUZZER_DEPLOYMENT_TYPE }}
             - name: FUZZER_IMAGE_NAME
               value: {{ .Values.apiclarity.modules.fuzzer.docker.image }}
-            {{- if .Values.apiclarity.tls.enabled }}
-            - name: FUZZER_PLATFORM_HOST_FROM_FUZZER
-              value: http://{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:8080/api
-            {{- else }}
-            - name: FUZZER_PLATFORM_HOST_FROM_FUZZER
-              value: http://{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:8080/api
-            {{- end }}
+            - name: FUZZER_JOB_TEMPLATE_CONFIG_MAP_NAME
+              value: "{{ include "apiclarity.name" . }}-fuzzer-template"
           {{- range $key, $val := .Values.apiclarity.env.plugins }}
             - name: {{ $key }}
               value: {{ $val | quote }}

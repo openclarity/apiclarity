@@ -31,14 +31,14 @@ const (
 	DeploymentTypeDocker     = "docker"
 	DeploymentTypeKubernetes = "kubernetes"
 	DeploymentTypeFake       = "fake"
-	DeploymentTypeHelm       = "helm"
+	DeploymentTypeConfigMap  = "configmap"
 )
 
 var SupportedDeployment = map[string]bool{
 	DeploymentTypeDocker:     true,
 	DeploymentTypeKubernetes: true,
 	DeploymentTypeFake:       true,
-	DeploymentTypeHelm:       true,
+	DeploymentTypeConfigMap:  true,
 }
 
 const (
@@ -73,6 +73,7 @@ const (
 	FuzzerTestReportTimeoutEnvVar    = "FUZZER_TESTREPORT_TIMEOUT"
 	FuzzerJobNamespaceEnvVar         = "FUZZER_JOB_NAMESPACE"
 	PODNamespaceEnvVar               = "POD_NAMESPACE"
+	FuzzerJobTemplateConfigMapName   = "FUZZER_JOB_TEMPLATE_CONFIG_MAP_NAME"
 )
 
 type Config struct {
@@ -89,7 +90,8 @@ type Config struct {
 	tokenInjectorPath      string
 	testReportTimeout      int
 
-	jobNamespace string
+	jobNamespace             string
+	jobTemplateConfigMapName string
 }
 
 // the Mutex to restrict access to configSingleton.
@@ -158,6 +160,10 @@ func (c *Config) GetJobNamespace() string {
 	return c.jobNamespace
 }
 
+func (c *Config) GetJobTemplateConfigMapName() string {
+	return c.jobTemplateConfigMapName
+}
+
 func (c *Config) Dump() {
 	/*
 	* properly display the config
@@ -177,6 +183,7 @@ func (c *Config) Dump() {
 	logging.Debugf("%v    tokenInjectorPath (%v)", prefix, c.tokenInjectorPath)
 	logging.Debugf("%v    testReportTimeout (%v)", prefix, c.testReportTimeout)
 	logging.Debugf("%v    jobNamespace      (%v)", prefix, c.jobNamespace)
+	logging.Debugf("%v    jobTemplateConfigMapName (%v)", prefix, c.jobTemplateConfigMapName)
 	logging.Debugf("%v ----------------------", prefix)
 }
 
@@ -195,6 +202,7 @@ func NewFuzzerConfig() *Config {
 	viper.SetDefault(FuzzerAuthInjectorPathEnvVar, TokenInjectorPath)
 	viper.SetDefault(FuzzerTestReportTimeoutEnvVar, TestReportTimeout)
 	viper.SetDefault(PODNamespaceEnvVar, DefaultJobNamespace)
+	viper.SetDefault(FuzzerJobTemplateConfigMapName, "")
 
 	// FuzzerJobNamespaceEnvVar takes priority over PODNamespaceEnvVar
 	jobNamespace := viper.GetString(FuzzerJobNamespaceEnvVar)
@@ -205,19 +213,20 @@ func NewFuzzerConfig() *Config {
 	// Create a Fuzzer Configuration
 
 	config := Config{
-		imageName:              viper.GetString(FuzzerImageNameEnvVar),
-		platformType:           viper.GetString(FuzzerPlatformTypeEnvVar),
-		deploymentType:         viper.GetString(FuzzerDeploymentTypeEnvVar),
-		platformHost:           viper.GetString(FuzzerPlatformHostEnvVar),
-		platformHostFromFuzzer: viper.GetString(FuzzerPlatformHostFromFuzzEnvVar),
-		subFuzzer:              viper.GetString(FuzzerSubFuzzerEnvVar),
-		showDockerLog:          viper.GetBool(FuzzerShowDockerLogsEnvVar),
-		testTraceFile:          viper.GetString(FuzzerTestTraceFileEnvVar),
-		debug:                  viper.GetBool(FuzzerDebugEnvVar),
-		restlerTimeBudget:      viper.GetString(FuzzerRestlerTimeBudgetEnvVar),
-		tokenInjectorPath:      viper.GetString(FuzzerAuthInjectorPathEnvVar),
-		testReportTimeout:      viper.GetInt(FuzzerTestReportTimeoutEnvVar),
-		jobNamespace:           jobNamespace,
+		imageName:                viper.GetString(FuzzerImageNameEnvVar),
+		platformType:             viper.GetString(FuzzerPlatformTypeEnvVar),
+		deploymentType:           viper.GetString(FuzzerDeploymentTypeEnvVar),
+		platformHost:             viper.GetString(FuzzerPlatformHostEnvVar),
+		platformHostFromFuzzer:   viper.GetString(FuzzerPlatformHostFromFuzzEnvVar),
+		subFuzzer:                viper.GetString(FuzzerSubFuzzerEnvVar),
+		showDockerLog:            viper.GetBool(FuzzerShowDockerLogsEnvVar),
+		testTraceFile:            viper.GetString(FuzzerTestTraceFileEnvVar),
+		debug:                    viper.GetBool(FuzzerDebugEnvVar),
+		restlerTimeBudget:        viper.GetString(FuzzerRestlerTimeBudgetEnvVar),
+		tokenInjectorPath:        viper.GetString(FuzzerAuthInjectorPathEnvVar),
+		testReportTimeout:        viper.GetInt(FuzzerTestReportTimeoutEnvVar),
+		jobNamespace:             jobNamespace,
+		jobTemplateConfigMapName: viper.GetString(FuzzerJobTemplateConfigMapName),
 	}
 
 	// ... then override by env, if present

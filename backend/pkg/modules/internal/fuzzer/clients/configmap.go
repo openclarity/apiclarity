@@ -19,7 +19,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"gopkg.in/yaml.v2"
 	batchv1 "k8s.io/api/batch/v1"
@@ -32,11 +31,12 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/config"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
+	uuid "github.com/satori/go.uuid"
 )
 
 var fuzzerJobTemplate = []byte(`apiVersion: batch/v1
 kind: Job
-metadata:
+objectmeta:
   name: apiclarity-fuzzer
   namespace: apiclarity
   labels:
@@ -45,13 +45,13 @@ spec:
   backoffLimit: 0
   ttlSecondsAfterFinished: 300
   template:
-    metadata:
+    objectmeta:
       name: apiclarity-fuzzer
       namespace: apiclarity
       labels:
         app: apiclarity-fuzzer
     spec:
-      restartPolicy: Never
+      restartpolicy: Never
       containers:
       - name: fuzzer
         volumeMounts:
@@ -103,39 +103,40 @@ spec:
 
 const ()
 
-type HelmChartClient struct {
+type ConfigMapClient struct {
 	hClient            kubernetes.Interface
+	namespace          string
 	configMapName      string
 	configMapNamespace string
 	currentJob         *batchv1.Job
 }
 
-func (l *HelmChartClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem string, timeBudget string) error {
-	logging.Logf("[Fuzzer][HelmChartClient] TriggerFuzzingJob(%v, %v, %v, %v):: -->", apiID, endpoint, securityItem, timeBudget)
+func (l *ConfigMapClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem string, timeBudget string) error {
+	logging.Logf("[Fuzzer][ConfigMapClient] TriggerFuzzingJob(%v, %v, %v, %v):: -->", apiID, endpoint, securityItem, timeBudget)
 
 	// Retrieve the env var slice that will configure our pod
 	envVars := l.getEnvs(apiID, endpoint, securityItem, timeBudget)
-	logging.Logf("[Fuzzer][HelmChartClient] envVars=%v", envVars)
+	logging.Logf("[Fuzzer][ConfigMapClient] envVars=%v", envVars)
 
 	// Create job struct
 	fuzzerJob, err := l.createFuzzerJob(envVars)
 	if err != nil {
-		logging.Logf("[Fuzzer][HelmChartClient] Failed to create fuzzer job struct: %v", err)
+		logging.Logf("[Fuzzer][ConfigMapClient] Failed to create fuzzer job struct: %v", err)
 		return fmt.Errorf("failed to get create job struct")
 	}
 
 	// Create job
 	if _, err := l.Create(fuzzerJob); err != nil {
-		logging.Logf("[Fuzzer][HelmChartClient] Failed to create fuzzer job: %v", err)
+		logging.Logf("[Fuzzer][ConfigMapClient] Failed to create fuzzer job: %v", err)
 		return fmt.Errorf("failed to get create job")
 	}
 
-	logging.Logf("[Fuzzer][HelmChartClient] TriggerFuzzingJob():: <--")
+	logging.Logf("[Fuzzer][ConfigMapClient] TriggerFuzzingJob():: <--")
 	return nil
 }
 
-func (l *HelmChartClient) StopFuzzingJob(apiID int64, complete bool) error {
-	logging.Logf("[Fuzzer][HelmChartClient] StopFuzzingJob(%v): -->", apiID)
+func (l *ConfigMapClient) StopFuzzingJob(apiID int64, complete bool) error {
+	logging.Logf("[Fuzzer][ConfigMapClient] StopFuzzingJob(%v): -->", apiID)
 	if l.currentJob == nil {
 		return fmt.Errorf("no current k8s job to terminate")
 	}
@@ -147,98 +148,63 @@ func (l *HelmChartClient) StopFuzzingJob(apiID int64, complete bool) error {
 	}
 	err := l.hClient.BatchV1().Jobs(l.currentJob.Namespace).Delete(context.TODO(), l.currentJob.Name, *deleteOptions)
 	if err != nil {
-		logging.Logf("[Fuzzer][HelmChartClient] StopFuzzingJob(%v): failed to stop k8s fuzzer job: %v", apiID, err)
+		logging.Logf("[Fuzzer][ConfigMapClient] StopFuzzingJob(%v): failed to stop k8s fuzzer job: %v", apiID, err)
 	}
 	l.currentJob = nil
-	logging.Logf("[Fuzzer][HelmChartClient] StopFuzzingJob(%v): <--", apiID)
+	logging.Logf("[Fuzzer][ConfigMapClient] StopFuzzingJob(%v): <--", apiID)
 	return nil
 }
 
-func (l *HelmChartClient) createFuzzerJob(envVars []v1.EnvVar) (*batchv1.Job, error) {
+func (l *ConfigMapClient) createFuzzerJob(dynEnvVars []v1.EnvVar) (*batchv1.Job, error) {
 	var job batchv1.Job
 	var fuzzerTemplate []byte
 
 	if l.configMapName == "" {
-		// Use default scanner job template from config map.
+		// Use default fuzzer job template from config map.
 		fuzzerTemplate = fuzzerJobTemplate
 	} else {
-		// Get scanner job template from config map.
+		// Get fuzzer job template from config map.
+		logging.Logf("[Fuzzer][ConfigMapClient] Load configmap (%v) from namespace (%v)", l.configMapName, l.configMapNamespace)
 		cm, err := l.hClient.CoreV1().ConfigMaps(l.configMapNamespace).Get(context.TODO(), l.configMapName, metav1.GetOptions{})
 		if err != nil {
-			return nil, fmt.Errorf("failed to get scanner template config map: %v", err)
+			return nil, fmt.Errorf("failed to get fuzzer template config map: %v", err)
 		}
 
 		config, ok := cm.Data["config"]
 		if !ok {
-			return nil, fmt.Errorf("no scanner template config in configmap")
+			return nil, fmt.Errorf("no fuzzer template config in configmap")
 		}
 
 		fuzzerTemplate = []byte(config)
 	}
 
-	fuzzerTemplateStr := string(fuzzerTemplate)
-	for _, item := range envVars {
-		fuzzerTemplateStr = strings.Replace(fuzzerTemplateStr, "<"+item.Name+">", item.Value, 1)
-	}
-	fuzzerTemplate = []byte(fuzzerTemplateStr)
-
-	logging.Logf("Using fuzzerTemplate:\n%+v", string(fuzzerTemplate))
+	logging.Logf("[Fuzzer][ConfigMapClient] Using fuzzerTemplate:\n%+v", string(fuzzerTemplate))
 
 	err := yaml.Unmarshal(fuzzerTemplate, &job)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal scanner template: %v", err)
+		return nil, fmt.Errorf("failed to unmarshal fuzzer template: %v", err)
 	}
 
-	/*return &batchv1.Job{
-		TypeMeta: jobMeta,
-		ObjectMeta: metav1.ObjectMeta{
-			Name: jobNamePrefix + uuid.NewV4().String(),
-			//Namespace: l.namespace,
-			Labels: fuzzerLabels,
-		},
-		Spec: batchv1.JobSpec{
-			Template: v1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: fuzzerLabels,
-				},
-				Spec: v1.PodSpec{
-					Containers: []v1.Container{
-						{
-							Name: fuzzerContainerName,
-							//Image:           l.imageName,
-							Env:             envVars,
-							SecurityContext: containerSecurityContext,
-							VolumeMounts: []v1.VolumeMount{
-								{
-									Name:      tmpEmptyDirVolumeName,
-									MountPath: tmpFolderPath,
-								},
-							},
-						},
-					},
-					RestartPolicy: v1.RestartPolicyNever,
-					SecurityContext: &v1.PodSecurityContext{
-						FSGroup: containerSecurityContext.RunAsUser,
-					},
-					Volumes: []v1.Volume{
-						{
-							Name: tmpEmptyDirVolumeName,
-							VolumeSource: v1.VolumeSource{
-								EmptyDir: &v1.EmptyDirVolumeSource{},
-							},
-						},
-					},
-				},
-			},
-			BackoffLimit:            &backOffLimit,
-			TTLSecondsAfterFinished: &ttlSecondsAfterFinished,
-		},
-	}*/
+	// Add dynamic env variables to the job existing ones
+	containers := job.Spec.Template.Spec.Containers
+	if len(containers) != 1 {
+		return nil, fmt.Errorf("No container found in fuzzer template")
+	}
+	curEnvVars := job.Spec.Template.Spec.Containers[0].Env
+	job.Spec.Template.Spec.Containers[0].Env = append(curEnvVars, dynEnvVars...)
+
+	logging.Logf("[Fuzzer][ConfigMapClient] Using job:\n%+v", job)
+
+	// Check for job name
+	if job.GetName() == "" {
+		// Manually set one
+		job.ObjectMeta.Name = jobNamePrefix + uuid.NewV4().String()
+	}
 
 	return &job, nil
 }
 
-func (l *HelmChartClient) getEnvs(apiID int64, endpoint string, securityItem string, timeBudget string) []v1.EnvVar {
+func (l *ConfigMapClient) getEnvs(apiID int64, endpoint string, securityItem string, timeBudget string) []v1.EnvVar {
 	envs := []v1.EnvVar{
 		{
 			Name:  uriEnvVar,
@@ -262,7 +228,7 @@ func (l *HelmChartClient) getEnvs(apiID int64, endpoint string, securityItem str
 	return envs
 }
 
-func (l *HelmChartClient) Create(job *batchv1.Job) (*batchv1.Job, error) {
+func (l *ConfigMapClient) Create(job *batchv1.Job) (*batchv1.Job, error) {
 	if job == nil {
 		return nil, fmt.Errorf("invalid job: nil")
 	}
@@ -270,27 +236,34 @@ func (l *HelmChartClient) Create(job *batchv1.Job) (*batchv1.Job, error) {
 	var ret *batchv1.Job
 	var err error
 
-	logging.Logf("[Fuzzer][HelmChartClient] Create new Job in namespace: %v/%v, name=%v", job.GetNamespace(), job.Namespace, job.Name)
-	if ret, err = l.hClient.BatchV1().Jobs(job.GetNamespace()).Create(context.TODO(), job, metav1.CreateOptions{}); err != nil {
+	namespace := job.GetNamespace()
+	if len(l.namespace) == 0 {
+		logging.Logf("[Fuzzer][ConfigMapClient] no namespace found in job templete. Use the configmapnamespace in place (%v).", l.configMapNamespace)
+		namespace = l.configMapNamespace
+	}
+	logging.Logf("[Fuzzer][ConfigMapClient] Create new Job in namespace: %v/%v, name=%v", namespace, l.configMapNamespace, job.Name)
+	if ret, err = l.hClient.BatchV1().Jobs(namespace).Create(context.TODO(), job, metav1.CreateOptions{}); err != nil {
 		if !k8serrors.IsAlreadyExists(err) {
 			return nil, fmt.Errorf("failed to create job: %v", err)
 		}
-		logging.Logf("[Fuzzer][HelmChartClient] Job already exists: %v", job.Name)
+		logging.Logf("[Fuzzer][ConfigMapClient] Job already exists: %v", job.Name)
 		return ret, nil
 	}
 	l.currentJob = ret
-	logging.Logf("[Fuzzer][HelmChartClient] Job was created successfully. name=%v, namespace=%v", job.Name, job.Namespace)
+	logging.Logf("[Fuzzer][ConfigMapClient] Job was created successfully. name=%v, namespace=%v", job.Name, job.Namespace)
 	return ret, nil
 }
 
 //nolint: ireturn,nolintlint
-func NewHelmChartClient(config *config.Config, accessor core.BackendAccessor) (Client, error) {
-	client := &HelmChartClient{
-		hClient:    accessor.K8SClient(),
-		currentJob: nil,
+func NewConfigMapClient(config *config.Config, accessor core.BackendAccessor) (Client, error) {
+	client := &ConfigMapClient{
+		hClient:            accessor.K8SClient(),
+		configMapName:      config.GetJobTemplateConfigMapName(),
+		configMapNamespace: config.GetJobNamespace(),
+		currentJob:         nil,
 	}
 	if client.hClient == nil {
-		logging.Logf("[Fuzzer][HelmChartClient] Create new Kubernetes client accessor.K8SClient()=%v", accessor.K8SClient())
+		logging.Logf("[Fuzzer][ConfigMapClient] Create new Kubernetes client accessor.K8SClient()=%v", accessor.K8SClient())
 		client.hClient, _ = k8smonitor.CreateK8sClientset()
 	}
 	if client.hClient == nil {

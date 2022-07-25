@@ -54,8 +54,8 @@ func NewClient(moduleConfig *config.Config, accessor core.BackendAccessor) (Clie
 		}
 		logging.Logf("[Fuzzer] Docker Fake creation, ok")
 		return client, nil
-	} else if moduleConfig.GetDeploymentType() == config.DeploymentTypeHelm {
-		client, err := NewHelmChartClient(moduleConfig, accessor)
+	} else if moduleConfig.GetDeploymentType() == config.DeploymentTypeConfigMap {
+		client, err := NewConfigMapClient(moduleConfig, accessor)
 		if err != nil {
 			logging.Logf("[Fuzzer] Error, can't create Helm client, err=(%v)", err)
 			return nil, err
