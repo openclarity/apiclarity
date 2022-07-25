@@ -148,8 +148,8 @@ func Run() {
 		log.Errorf("Failed to start trace sampling manager: %v", err)
 		return
 	}
-	if !config.K8sLocal && !viper.GetBool(_config.NoMonitorEnvVar) && !viper.GetBool(_database.FakeTracesEnvVar) && !viper.GetBool(_database.FakeDataEnvVar) {
 
+	if !config.K8sLocal && !viper.GetBool(_config.NoMonitorEnvVar) && !viper.GetBool(_database.FakeTracesEnvVar) && !viper.GetBool(_database.FakeDataEnvVar) {
 		monitor, err = k8smonitor.CreateMonitor(clientset)
 		if err != nil {
 			log.Errorf("Failed to create a monitor: %v", err)
