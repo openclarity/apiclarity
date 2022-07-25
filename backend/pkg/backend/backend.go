@@ -135,8 +135,11 @@ func Run() {
 	var samplingManager *manager.Manager
 
 	samplingManager, err = manager.Create(clientset, &manager.Config{
-		RestServerPort: config.HTTPTraceSamplingManagerPort,
-		GRPCServerPort: config.GRPCTraceSamplingManagerPort,
+		RestServerPort:             config.HTTPTraceSamplingManagerPort,
+		GRPCServerPort:             config.GRPCTraceSamplingManagerPort,
+		HostToTraceSecretName:      config.HostToTraceSecretName,
+		HostToTraceSecretNamespace: config.HostToTraceSecretNamespace,
+		HostToTraceSecretOwnerName: config.HostToTraceSecretOwnerName,
 	})
 	if err != nil {
 		log.Errorf("Failed to create a trace sampling manager: %v", err)
