@@ -190,7 +190,10 @@ func (m *Model) ReceiveFullReport(ctx context.Context, apiID uint, body []byte) 
 	}
 
 	logging.Logf("[Fuzzer] ReceiveFullReport(): API_id (%v) => API (%v)", apiID, api)
-	api.AddNewStatusReport(data)
+	err = api.AddNewStatusReport(data)
+	if err != nil {
+		logging.Errorf("unable to add new status report: %v", err)
+	}
 	// If the status indicate a completion, close the job
 	if data.Progress == 100 && data.Status != "IN_PROGRESS" {
 		err = m.StopAPIFuzzing(ctx, apiID, nil) // TODO handle error

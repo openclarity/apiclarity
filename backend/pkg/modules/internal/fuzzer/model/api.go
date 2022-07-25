@@ -311,7 +311,10 @@ func (api *API) GetLastShortStatus() (*restapi.ShortTestReport, error) {
 				verb := (*finding.Location)[3]
 				method := (*finding.Location)[2]
 				verb = strings.ToUpper(verb)
-				AddFindingOnShortReport(&shortReport, method, verb, finding)
+				err := AddFindingOnShortReport(&shortReport, method, verb, finding)
+				if err != nil {
+					logging.Errorf("unable to add finding to report: %v", err)
+				}
 			}
 		}
 
@@ -727,9 +730,15 @@ func (api *API) RetrieveInfoFromStore(ctx context.Context, accessor core.Backend
 			if len(api.TestsList) == 0 {
 				// Add the report in a new test
 				api.TestsList = append(api.TestsList, NewTest())
-				api.AddNewStatusReport(data)
+				err = api.AddNewStatusReport(data)
+				if err != nil {
+					logging.Errorf("unable to add new status report: %v", err)
+				}
 			}
-			api.AddNewStatusReport(data)
+			err = api.AddNewStatusReport(data)
+			if err != nil {
+				logging.Errorf("unable to add new status report: %v", err)
+			}
 			api.InFuzzing = false
 		}
 		if annotation.Name == "Fuzzer report" || annotation.Name == "Fuzzer findings" {
