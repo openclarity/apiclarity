@@ -101,9 +101,9 @@ func (s *Server) GetAPIInventoryAPIIDFromHostAndPort(params operations.GetAPIInv
 		log.Errorf("Failed to get API ID: %v", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return operations.NewGetAPIInventoryAPIIDFromHostAndPortNotFound().WithPayload(&models.APIResponse{Message: err.Error()})
-		} else {
-			return operations.NewGetAPIInventoryAPIIDFromHostAndPortDefault(http.StatusInternalServerError)
 		}
+
+		return operations.NewGetAPIInventoryAPIIDFromHostAndPortDefault(http.StatusInternalServerError)
 	}
 
 	return operations.NewGetAPIInventoryAPIIDFromHostAndPortOK().WithPayload(uint32(apiID))
