@@ -57,10 +57,10 @@ func NewClient(moduleConfig *config.Config, accessor core.BackendAccessor) (Clie
 	} else if moduleConfig.GetDeploymentType() == config.DeploymentTypeConfigMap {
 		client, err := NewConfigMapClient(moduleConfig, accessor)
 		if err != nil {
-			logging.Logf("[Fuzzer] Error, can't create Helm client, err=(%v)", err)
+			logging.Logf("[Fuzzer] Error, can't create ConfigMap client, err=(%v)", err)
 			return nil, err
 		}
-		logging.Logf("[Fuzzer] Docker Helm creation, ok")
+		logging.Logf("[Fuzzer] Docker ConfigMap creation, ok")
 		return client, nil
 	}
 

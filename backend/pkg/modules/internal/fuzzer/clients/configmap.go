@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"gopkg.in/yaml.v2"
+	"github.com/ghodss/yaml"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -36,7 +36,7 @@ import (
 
 var fuzzerJobTemplate = []byte(`apiVersion: batch/v1
 kind: Job
-objectmeta:
+metadata:
   name: apiclarity-fuzzer
   namespace: apiclarity
   labels:
@@ -45,13 +45,13 @@ spec:
   backoffLimit: 0
   ttlSecondsAfterFinished: 300
   template:
-    objectmeta:
+    metadata:
       name: apiclarity-fuzzer
       namespace: apiclarity
       labels:
         app: apiclarity-fuzzer
     spec:
-      restartpolicy: Never
+      restartPolicy: Never
       containers:
       - name: fuzzer
         volumeMounts:

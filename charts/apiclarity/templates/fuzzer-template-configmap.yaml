@@ -15,13 +15,13 @@ data:
 {{- toYaml (index .Values "apiclarity" "labels") | nindent 8 }}
     spec:
       backoffLimit: 0
-      ttlsecondsafterfinished: 300
+      ttlSecondsAfterFinished: 300
       template:
         metadata:
           labels:
 {{- toYaml (index .Values "apiclarity" "labels") | nindent 12 }}
         spec:
-          restartpolicy: Never
+          restartPolicy: Never
           volumes:
           - name: tmp-volume
             emptyDir: {}
@@ -38,8 +38,8 @@ data:
           - name: vulnerability-scanner
             image: '{{ index .Values "apiclarity" "modules" "fuzzer" "docker" "image" }}'
             imagePullPolicy: Always
-            volumemounts:
-              - mountpath: /tmp
+            volumeMounts:
+              - mountPath: /tmp
                 name: tmp-volume
             env:
             - name: PLATFORM_TYPE
