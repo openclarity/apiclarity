@@ -88,6 +88,7 @@ func TestTraceSamplingManager_ShouldTrace(t1 *testing.T) {
 	}
 	type args struct {
 		host string
+		port string
 	}
 	tests := []struct {
 		name   string
@@ -96,7 +97,7 @@ func TestTraceSamplingManager_ShouldTrace(t1 *testing.T) {
 		want   bool
 	}{
 		{
-			name: "should trace",
+			name: "should trace - no port",
 			fields: fields{
 				Hosts: map[string]bool{
 					"host1": true,
@@ -106,11 +107,12 @@ func TestTraceSamplingManager_ShouldTrace(t1 *testing.T) {
 			},
 			args: args{
 				host: "host1",
+				port: "",
 			},
 			want: true,
 		},
 		{
-			name: "should not trace",
+			name: "should not trace - no port",
 			fields: fields{
 				Hosts: map[string]bool{
 					"host1": true,
@@ -120,6 +122,35 @@ func TestTraceSamplingManager_ShouldTrace(t1 *testing.T) {
 			},
 			args: args{
 				host: "host4",
+			},
+			want: false,
+		},
+		{
+			name: "should trace - with port",
+			fields: fields{
+				Hosts: map[string]bool{
+					"host1:8080": true,
+					"host2": true,
+					"host3": true,
+				},
+			},
+			args: args{
+				host: "host1",
+				port: "8080",
+			},
+			want: true,
+		},
+		{
+			name: "should not trace - with port",
+			fields: fields{
+				Hosts: map[string]bool{
+					"host1:9000": true,
+					"host2": true,
+					"host3": true,
+				},
+			},
+			args: args{
+				host: "host1:8000",
 			},
 			want: false,
 		},
@@ -153,7 +184,7 @@ func TestTraceSamplingManager_ShouldTrace(t1 *testing.T) {
 			t := &Client{
 				Hosts: tt.fields.Hosts,
 			}
-			if got := t.ShouldTrace(tt.args.host); got != tt.want {
+			if got := t.ShouldTrace(tt.args.host, tt.args.port); got != tt.want {
 				t1.Errorf("ShouldTrace() = %v, want %v", got, tt.want)
 			}
 		})

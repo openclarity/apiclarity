@@ -153,3 +153,59 @@ func TestCreateHeaders(t *testing.T) {
 		})
 	}
 }
+
+func Test_getHostAndPortFromTargetURL(t *testing.T) {
+	type args struct {
+		url string
+	}
+	tests := []struct {
+		name     string
+		args     args
+		wantHost string
+		wantPort string
+	}{
+		{
+			name: "no port",
+			args: args{
+				url: "http://catalogue.sock-shop",
+			},
+			wantHost: "catalogue.sock-shop",
+			wantPort: "80",
+		},
+		{
+			name: "with port",
+			args: args{
+				url: "http://catalogue.sock-shop:8080",
+			},
+			wantHost: "catalogue.sock-shop",
+			wantPort: "8080",
+		},
+		{
+			name: "https",
+			args: args{
+				url: "https://catalogue.sock-shop:8080",
+			},
+			wantHost: "catalogue.sock-shop",
+			wantPort: "8080",
+		},
+		{
+			name: "https no port",
+			args: args{
+				url: "https://catalogue.sock-shop",
+			},
+			wantHost: "catalogue.sock-shop",
+			wantPort: "443",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotHost, gotPort := GetHostAndPortFromURL(tt.args.url)
+			if gotHost != tt.wantHost {
+				t.Errorf("GetHostAndPortFromURL() gotHost = %v, want %v", gotHost, tt.wantHost)
+			}
+			if gotPort != tt.wantPort {
+				t.Errorf("GetHostAndPortFromURL() gotPort = %v, want %v", gotPort, tt.wantPort)
+			}
+		})
+	}
+}

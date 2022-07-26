@@ -72,7 +72,7 @@ func run(c *cli.Context) {
 			RootCAFileName: common.CACertFile,
 		}
 	}
-	apiClient, err := common.NewTelemetryAPIClient(runConfig.UpstreamAddress, tlsOptions)
+	apiClient, err := common.NewTelemetryAPIClient(runConfig.UpstreamTelemetryAddress, tlsOptions)
 	if err != nil {
 		log.Errorf("Failed to create new api client: %v", err)
 		return
@@ -82,7 +82,7 @@ func run(c *cli.Context) {
 	}
 
 	if runConfig.TraceSamplingEnabled {
-		TSM, err := trace_sampling_client.Create(false, runConfig.TraceSamplingManagerAddress, common.SamplingInterval)
+		TSM, err := trace_sampling_client.Create(false, runConfig.TraceSamplingAddress, common.SamplingInterval)
 		if err != nil {
 			log.Errorf("Failed to create trace sampling client: %v", err)
 			return
@@ -134,8 +134,7 @@ func (a *Agent) startReadOutputItems(ctx context.Context, outputItems chan *api.
 					log.Errorf("Failed to create telemetry: %v", err)
 					return
 				}
-				// TODO format host to host.namespace (or whatever format we will decide on for hosts)
-				if !a.shouldTrace(telemetry.Request.Host) {
+				if !a.shouldTrace(telemetry.Request.Host, item.ConnectionInfo.ServerPort) {
 					log.Infof("Ignoring host: %v", telemetry.Request.Host)
 					return
 				}
@@ -153,11 +152,11 @@ func (a *Agent) startReadOutputItems(ctx context.Context, outputItems chan *api.
 	}
 }
 
-func (a *Agent) shouldTrace(host string) bool {
+func (a *Agent) shouldTrace(host, port string) bool {
 	if a.traceSamplingClient == nil {
 		return true
 	}
-	if a.traceSamplingClient.ShouldTrace(host) {
+	if a.traceSamplingClient.ShouldTrace(host, port) {
 		return true
 	}
 
@@ -211,6 +210,8 @@ func (a *Agent) createTelemetry(item *api.OutputChannelItem) (*models.Telemetry,
 
 	pathAndQuery := common.GetPathWithQuery(request.URL)
 
+	host, _ := common.GetHostAndPortFromURL(request.URL.String())
+
 	return &models.Telemetry{
 		DestinationAddress:   item.ConnectionInfo.ServerIP + ":" + item.ConnectionInfo.ServerPort,
 		DestinationNamespace: "", // will dont have this info here, will be figure out by apiclarity
@@ -221,7 +222,7 @@ func (a *Agent) createTelemetry(item *api.OutputChannelItem) (*models.Telemetry,
 				Headers:       common.CreateHeaders(request.Header),
 				Version:       item.Protocol.Version,
 			},
-			Host:   request.Host,
+			Host:   host,
 			Method: request.Method,
 			Path:   pathAndQuery,
 		},

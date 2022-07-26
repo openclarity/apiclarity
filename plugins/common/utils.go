@@ -32,6 +32,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 
 	tracesamplingclient "github.com/openclarity/trace-sampling-manager/api/client/client"
+
 	"github.com/openclarity/apiclarity/plugins/api/client/client"
 	"github.com/openclarity/apiclarity/plugins/api/client/models"
 )
@@ -158,3 +159,33 @@ func createClientTransportTLS(host string, tlsOptions *ClientTLSOptions) (runtim
 
 	return transport, nil
 }
+
+func GetHostAndPortFromURL(URL string) (host, port string) {
+	if !strings.Contains(URL, "://") {
+		// need to add scheme to host in order for url.Parse to parse properly
+		URL = "http://" + URL
+	}
+
+	parsedHost, err := url.Parse(URL)
+	if err != nil {
+		return URL, ""
+	}
+
+	host = parsedHost.Hostname()
+	port = parsedHost.Port()
+
+	host = strings.TrimSuffix(host, ".svc.cluster.local")
+	host = strings.TrimSuffix(host, ".svc.cluster")
+	host = strings.TrimSuffix(host, ".svc")
+
+	if port == "" {
+		if parsedHost.Scheme == "https" {
+			port = "443"
+		} else {
+			port = "80"
+		}
+	}
+
+	return
+}
+

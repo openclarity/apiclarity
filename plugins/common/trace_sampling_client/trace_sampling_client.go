@@ -74,13 +74,18 @@ func (t *Client) Start() {
 	}()
 }
 
-func (t *Client) ShouldTrace(host string) bool {
+func (t *Client) ShouldTrace(host, port string) bool {
 	t.lock.RLock()
 	defer t.lock.RUnlock()
 
 	if len(t.Hosts) == 0 {
 		return false
 	}
+
+	if port != "" {
+		host = host + ":" + port
+	}
+
 	if t.Hosts[allHosts] || t.Hosts[host] {
 		return true
 	}
