@@ -19,6 +19,7 @@ import (
 	"github.com/openclarity/apiclarity/api3/global"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/spec_differ/config"
 )
 
 func Test_getHighestPrioritySpecDiffType(t *testing.T) {
@@ -473,7 +474,9 @@ func Test_differ_addDiffToSend(t *testing.T) {
 				apiIDToDiffs:     tt.fields.apiIDToDiffs,
 				totalUniqueDiffs: tt.fields.totalEvents,
 				accessor:         mockAccessor,
+				config: config.GetConfig(),
 			}
+
 
 			p.addDiffToSend(tt.args.diff, tt.args.modifiedPathItem, tt.args.originalPathItem, tt.args.diffType, tt.args.specType, tt.args.event, tt.args.version)
 
