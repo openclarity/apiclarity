@@ -567,19 +567,19 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			return err
 		}
 
-		if state.TraceCounter == -1 {
-			return nil
-		}
-		state.TraceCounter--
+		if state.TraceCounter != -1 {
+			state.TraceCounter--
 
-		if state.TraceCounter == 0 {
-			state.State = BFLALearnt
-			err = l.bflaBackendAccessor.DisableTraces(ctx, l.modName, apiID)
-			if err != nil {
-				log.Errorf("cannot disable traces: %v", err)
+			if state.TraceCounter == 0 {
+				state.State = BFLALearnt
+				err = l.bflaBackendAccessor.DisableTraces(ctx, l.modName, apiID)
+				if err != nil {
+					log.Errorf("cannot disable traces: %v", err)
+				}
 			}
+			stateValue.Set(state)
 		}
-		stateValue.Set(state)
+
 		aud, setAud, err := l.findSourceObj(resolvedPath, string(trace.APIEvent.Method), srcUID, trace.APIEvent.APIInfoID)
 		if err != nil {
 			return fmt.Errorf("unable to find source obj: %w", err)
