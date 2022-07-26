@@ -88,6 +88,8 @@ func (a *APIAnnotationShortPassword) Aggregate(ann utils.TraceAnalyzerAnnotation
 	return false
 }
 
+func (a APIAnnotationShortPassword) Severity() string { return utils.SeverityHigh }
+
 func (a APIAnnotationShortPassword) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 
 func (a *APIAnnotationShortPassword) Deserialize(serialized []byte) error {
@@ -115,7 +117,7 @@ func (a *APIAnnotationShortPassword) ToAPIFinding() oapicommon.APIFinding {
 		ProvidedSpecLocation:      &jsonPointer,
 		ReconstructedSpecLocation: &jsonPointer,
 
-		Severity: oapicommon.INFO,
+		Severity: oapicommon.HIGH,
 
 		AdditionalInfo: nil,
 	}
@@ -174,6 +176,8 @@ func (a *APIAnnotationKnownPassword) Aggregate(ann utils.TraceAnalyzerAnnotation
 	return false
 }
 
+func (a APIAnnotationKnownPassword) Severity() string { return utils.SeverityHigh }
+
 func (a APIAnnotationKnownPassword) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 
 func (a *APIAnnotationKnownPassword) Deserialize(serialized []byte) error {
@@ -201,7 +205,7 @@ func (a *APIAnnotationKnownPassword) ToAPIFinding() oapicommon.APIFinding {
 		ProvidedSpecLocation:      &jsonPointer,
 		ReconstructedSpecLocation: &jsonPointer,
 
-		Severity: oapicommon.INFO,
+		Severity: oapicommon.HIGH,
 
 		AdditionalInfo: nil,
 	}
@@ -273,6 +277,8 @@ func (a *APIAnnotationSamePassword) Aggregate(ann utils.TraceAnalyzerAnnotation)
 	return updated
 }
 
+func (a APIAnnotationSamePassword) Severity() string { return utils.SeverityMedium }
+
 func (a APIAnnotationSamePassword) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 
 func (a *APIAnnotationSamePassword) Deserialize(serialized []byte) error {
@@ -299,7 +305,7 @@ func (a *APIAnnotationSamePassword) ToAPIFinding() oapicommon.APIFinding {
 		ProvidedSpecLocation:      nil,
 		ReconstructedSpecLocation: nil,
 
-		Severity: oapicommon.INFO,
+		Severity: oapicommon.MEDIUM,
 
 		AdditionalInfo: nil,
 	}

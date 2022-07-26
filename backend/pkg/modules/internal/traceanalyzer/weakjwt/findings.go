@@ -87,6 +87,8 @@ func (a *APIAnnotationNoAlgField) Aggregate(ann utils.TraceAnalyzerAnnotation) (
 	return false
 }
 
+func (a APIAnnotationNoAlgField) Severity() string { return utils.SeverityHigh }
+
 func (a APIAnnotationNoAlgField) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 
 func (a *APIAnnotationNoAlgField) Deserialize(serialized []byte) error {
@@ -114,7 +116,7 @@ func (a *APIAnnotationNoAlgField) ToAPIFinding() oapicommon.APIFinding {
 		ProvidedSpecLocation:      &jsonPointer,
 		ReconstructedSpecLocation: &jsonPointer,
 
-		Severity: oapicommon.INFO,
+		Severity: oapicommon.HIGH,
 
 		AdditionalInfo: nil,
 	}
@@ -171,6 +173,8 @@ func (a *APIAnnotationAlgFieldNone) Aggregate(ann utils.TraceAnalyzerAnnotation)
 	return false
 }
 
+func (a APIAnnotationAlgFieldNone) Severity() string { return utils.SeverityHigh }
+
 func (a APIAnnotationAlgFieldNone) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 
 func (a *APIAnnotationAlgFieldNone) Deserialize(serialized []byte) error {
@@ -198,7 +202,7 @@ func (a *APIAnnotationAlgFieldNone) ToAPIFinding() oapicommon.APIFinding {
 		ProvidedSpecLocation:      &jsonPointer,
 		ReconstructedSpecLocation: &jsonPointer,
 
-		Severity: oapicommon.INFO,
+		Severity: oapicommon.HIGH,
 
 		AdditionalInfo: nil,
 	}
@@ -263,6 +267,8 @@ func (a *APIAnnotationNotRecommendedAlg) Aggregate(ann utils.TraceAnalyzerAnnota
 	return initialSize != len(a.NotRecommendedAlgs)
 }
 
+func (a APIAnnotationNotRecommendedAlg) Severity() string { return utils.SeverityHigh }
+
 func (a APIAnnotationNotRecommendedAlg) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 
 func (a *APIAnnotationNotRecommendedAlg) Deserialize(serialized []byte) error {
@@ -302,7 +308,7 @@ func (a *APIAnnotationNotRecommendedAlg) ToAPIFinding() oapicommon.APIFinding {
 		ProvidedSpecLocation:      &jsonPointer,
 		ReconstructedSpecLocation: &jsonPointer,
 
-		Severity: oapicommon.INFO,
+		Severity: oapicommon.HIGH,
 
 		AdditionalInfo: additionalInfo,
 	}
@@ -359,6 +365,8 @@ func (a *APIAnnotationNoExpireClaim) Aggregate(ann utils.TraceAnalyzerAnnotation
 	return false
 }
 
+func (a APIAnnotationNoExpireClaim) Severity() string { return utils.SeverityMedium }
+
 func (a APIAnnotationNoExpireClaim) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 
 func (a *APIAnnotationNoExpireClaim) Deserialize(serialized []byte) error {
@@ -386,7 +394,7 @@ func (a *APIAnnotationNoExpireClaim) ToAPIFinding() oapicommon.APIFinding {
 		ProvidedSpecLocation:      &jsonPointer,
 		ReconstructedSpecLocation: &jsonPointer,
 
-		Severity: oapicommon.INFO,
+		Severity: oapicommon.MEDIUM,
 
 		AdditionalInfo: nil,
 	}
@@ -469,6 +477,8 @@ func (a *APIAnnotationExpTooFar) Aggregate(ann utils.TraceAnalyzerAnnotation) (u
 	return false
 }
 
+func (a APIAnnotationExpTooFar) Severity() string { return utils.SeverityMedium }
+
 func (a APIAnnotationExpTooFar) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 
 func (a *APIAnnotationExpTooFar) Deserialize(serialized []byte) error {
@@ -499,7 +509,7 @@ func (a *APIAnnotationExpTooFar) ToAPIFinding() oapicommon.APIFinding {
 		ProvidedSpecLocation:      &jsonPointer,
 		ReconstructedSpecLocation: &jsonPointer,
 
-		Severity: oapicommon.INFO,
+		Severity: oapicommon.MEDIUM,
 
 		AdditionalInfo: additionalInfo,
 	}
@@ -572,6 +582,8 @@ func (a *APIAnnotationWeakSymetricSecret) Aggregate(ann utils.TraceAnalyzerAnnot
 	return false
 }
 
+func (a APIAnnotationWeakSymetricSecret) Severity() string { return utils.SeverityHigh }
+
 func (a APIAnnotationWeakSymetricSecret) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 
 func (a *APIAnnotationWeakSymetricSecret) Deserialize(serialized []byte) error {
@@ -599,7 +611,7 @@ func (a *APIAnnotationWeakSymetricSecret) ToAPIFinding() oapicommon.APIFinding {
 		ProvidedSpecLocation:      &jsonPointer,
 		ReconstructedSpecLocation: &jsonPointer,
 
-		Severity: oapicommon.INFO,
+		Severity: oapicommon.HIGH,
 
 		AdditionalInfo: nil,
 	}
@@ -674,6 +686,8 @@ func (a *APIAnnotationSensitiveContent) Aggregate(ann utils.TraceAnalyzerAnnotat
 	return false
 }
 
+func (a APIAnnotationSensitiveContent) Severity() string { return utils.SeverityHigh }
+
 func (a *APIAnnotationSensitiveContent) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 func (a *APIAnnotationSensitiveContent) Deserialize(serialized []byte) error {
 	var tmp APIAnnotationSensitiveContent
@@ -700,7 +714,7 @@ func (a *APIAnnotationSensitiveContent) ToAPIFinding() oapicommon.APIFinding {
 		ProvidedSpecLocation:      &jsonPointer,
 		ReconstructedSpecLocation: &jsonPointer,
 
-		Severity: oapicommon.INFO,
+		Severity: oapicommon.HIGH,
 
 		AdditionalInfo: nil,
 	}
