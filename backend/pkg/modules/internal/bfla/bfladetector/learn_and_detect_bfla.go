@@ -413,9 +413,12 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		// TODO: Check if state is "start" and the (reconstructed or provided) spec is available
 
 	case *ResetModelCommand:
-		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLALearning, BFLALearnt, BFLADetecting)
+		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLAStart, BFLALearning, BFLALearnt, BFLADetecting)
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Reset Model': %w", err)
+		}
+		if state.State == BFLAStart {
+			break
 		}
 		if state.State == BFLADetecting || state.State == BFLALearning {
 			err = l.bflaBackendAccessor.DisableTraces(ctx, l.modName, cmd.apiID)
