@@ -29,9 +29,8 @@ import (
 type diffHash [32]byte
 
 const (
-	moduleName         = "spec_differ"
-	moduleInfo         = "Calculate spec diffs base on events and send diffs notifications"
-	diffsSendThreshold = 500
+	moduleName = "spec_differ"
+	moduleInfo = "Calculate API events spec diffs based on provided and reconstructed specs, and send diffs as notifications"
 )
 
 type specDiffer struct {
@@ -92,7 +91,7 @@ func (s *specDiffer) EventNotify(ctx context.Context, event *core.Event) {
 	speculatorAccessor := s.accessor.GetSpeculatorAccessor()
 
 	if !speculatorAccessor.HasProvidedSpec(specKey) && !speculatorAccessor.HasApprovedSpec(specKey) {
-		log.Debugf("No diffs to calculate")
+		log.Debugf("No specs to calculate diffs")
 		return
 	}
 
@@ -149,6 +148,7 @@ func (s *specDiffer) addDiffToSend(diff *_spec.APIDiff, modifiedPathItem, origin
 	if diffType == models.DiffTypeNODIFF {
 		return
 	}
+	diffsSendThreshold := s.config.DiffsSendThreshold()
 	if s.getTotalUniqueDiffs() > diffsSendThreshold {
 		log.Warnf("Diff events threshold reached (%v), ignoring event", diffsSendThreshold)
 		return
@@ -185,7 +185,7 @@ func (s *specDiffer) addDiffToSend(diff *_spec.APIDiff, modifiedPathItem, origin
 	case common.RECONSTRUCTED:
 		specTimestamp = time.Time(apiInfo.ReconstructedSpecCreatedAt)
 	default:
-		log.Warnf("Unknown spec type: %v", specType)
+		log.Warnf("Unknown spec type %v, Using provided", specType)
 		specTimestamp = time.Time(apiInfo.ProvidedSpecCreatedAt)
 	}
 

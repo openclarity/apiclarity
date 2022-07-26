@@ -22,11 +22,13 @@ import (
 )
 
 const (
-	SendNotificationIntervalSec = "DIFFER_SEND_NOTIFICATION_INTERVAL_SEC"
+	sendNotificationIntervalSec = "DIFFER_SEND_NOTIFICATION_INTERVAL_SEC"
+	diffsSendThreshold          = "DIFF_SEND_THRESHOLD"
 )
 
 type Config struct {
 	sendNotificationIntervalSec int
+	diffsSendThreshold          int
 }
 
 // the Mutex to restrict access to configSingleton.
@@ -50,11 +52,17 @@ func (c *Config) SendNotificationIntervalSec() int {
 	return c.sendNotificationIntervalSec
 }
 
+func (c *Config) DiffsSendThreshold() int {
+	return c.diffsSendThreshold
+}
+
 func NewDifferConfig() *Config {
-	viper.SetDefault(SendNotificationIntervalSec, "300")
+	viper.SetDefault(sendNotificationIntervalSec, "300")
+	viper.SetDefault(diffsSendThreshold, "500")
 
 	config := Config{
-		sendNotificationIntervalSec: viper.GetInt(SendNotificationIntervalSec),
+		sendNotificationIntervalSec: viper.GetInt(sendNotificationIntervalSec),
+		diffsSendThreshold:          viper.GetInt(diffsSendThreshold),
 	}
 
 	return &config
