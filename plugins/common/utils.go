@@ -188,4 +188,3 @@ func GetHostAndPortFromURL(URL string) (host, port string) {
 
 	return
 }
-

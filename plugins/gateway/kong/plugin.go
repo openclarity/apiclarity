@@ -114,7 +114,6 @@ func shouldTrace(kong *pdk.PDK) (bool, error) {
 		return false, fmt.Errorf("failed to get routed service: %v", err)
 	}
 	host, port, _ := parseKongHost(routedService.Host)
-
 	if traceSamplingClient.ShouldTrace(host, port) {
 		return true, nil
 	}

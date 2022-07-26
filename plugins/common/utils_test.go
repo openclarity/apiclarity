@@ -181,6 +181,30 @@ func Test_getHostAndPortFromTargetURL(t *testing.T) {
 			wantPort: "8080",
 		},
 		{
+			name: "with port, no scheme - remove svc.cluster.local suffix",
+			args: args{
+				url: "catalogue.sock-shop.svc.cluster.local:8080",
+			},
+			wantHost: "catalogue.sock-shop",
+			wantPort: "8080",
+		},
+		{
+			name: "with port, no scheme - remove svc.cluster suffix",
+			args: args{
+				url: "catalogue.sock-shop.svc.cluster:8080",
+			},
+			wantHost: "catalogue.sock-shop",
+			wantPort: "8080",
+		},
+		{
+			name: "with port, no scheme - remove svc suffix",
+			args: args{
+				url: "catalogue.sock-shop.svc:8080",
+			},
+			wantHost: "catalogue.sock-shop",
+			wantPort: "8080",
+		},
+		{
 			name: "https",
 			args: args{
 				url: "https://catalogue.sock-shop:8080",

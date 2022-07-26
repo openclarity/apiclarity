@@ -130,8 +130,8 @@ func TestTraceSamplingManager_ShouldTrace(t1 *testing.T) {
 			fields: fields{
 				Hosts: map[string]bool{
 					"host1:8080": true,
-					"host2": true,
-					"host3": true,
+					"host2":      true,
+					"host3":      true,
 				},
 			},
 			args: args{
@@ -145,8 +145,8 @@ func TestTraceSamplingManager_ShouldTrace(t1 *testing.T) {
 			fields: fields{
 				Hosts: map[string]bool{
 					"host1:9000": true,
-					"host2": true,
-					"host3": true,
+					"host2":      true,
+					"host3":      true,
 				},
 			},
 			args: args{
