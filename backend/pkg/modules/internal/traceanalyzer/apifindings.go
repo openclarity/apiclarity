@@ -16,6 +16,8 @@
 package traceanalyzer
 
 import (
+	"context"
+
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
 )
@@ -74,9 +76,7 @@ func (r *APIsFindingsRepo) aggregate(apiID uint64, path, method string, ann util
 	// Check if we already have an entry for this apiID
 	findings, found := r.apis[apiID]
 	if !found {
-		findings = apiFindings{
-			paths: make(map[findingKey]utils.TraceAnalyzerAPIAnnotation),
-		}
+		findings = getPreviousAPIFindings(context.TODO(), r.accessor, apiID)
 		r.apis[apiID] = findings
 	}
 
@@ -86,14 +86,37 @@ func (r *APIsFindingsRepo) aggregate(apiID uint64, path, method string, ann util
 	if !found {
 		apiAnn = ann.NewAPIAnnotation(path, method)
 		if apiAnn != nil {
+			findings.paths[key] = apiAnn
 			updated = true
 		}
 	}
-	if apiAnn != nil {
-		findings.paths[key] = apiAnn
-		u := apiAnn.Aggregate(ann)
-		updated = updated || u
-	}
+
+	u := apiAnn.Aggregate(ann)
+	updated = updated || u
 
 	return apiAnn, updated
+}
+
+func getPreviousAPIFindings(ctx context.Context, accessor core.BackendAccessor, apiID uint64) apiFindings {
+	dbAnns, err := accessor.ListAPIInfoAnnotations(ctx, utils.ModuleName, uint(apiID))
+	if err != nil {
+		return apiFindings{
+			paths: map[findingKey]utils.TraceAnalyzerAPIAnnotation{},
+		}
+	}
+
+	paths := map[findingKey]utils.TraceAnalyzerAPIAnnotation{}
+	for _, dbAnn := range dbAnns {
+		taAnn, err := fromCoreAPIAnnotation(dbAnn)
+		if err != nil {
+			return apiFindings{
+				paths: map[findingKey]utils.TraceAnalyzerAPIAnnotation{},
+			}
+		}
+		paths[findingKey{path: taAnn.Path(), method: taAnn.Method(), name: taAnn.Name()}] = taAnn
+	}
+
+	return apiFindings{
+		paths: paths,
+	}
 }
