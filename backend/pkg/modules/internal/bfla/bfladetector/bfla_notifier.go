@@ -24,7 +24,8 @@ import (
 )
 
 type BFLANotifier interface {
-	Notify(ctx context.Context, apiID uint, notification AuthzModelNotification) error
+	NotifyAuthzModel(ctx context.Context, apiID uint, notification AuthzModelNotification) error
+	NotifyFindings(ctx context.Context, apiID uint, notification notifications.ApiFindingsNotification) error
 }
 
 type AuthzModelNotification struct {
@@ -45,13 +46,21 @@ type Notifier struct {
 	moduleName string
 }
 
-func (n *Notifier) Notify(ctx context.Context, apiID uint, notification AuthzModelNotification) error {
+func (n *Notifier) NotifyAuthzModel(ctx context.Context, apiID uint, notification AuthzModelNotification) error {
 	ntf := notifications.APIClarityNotification{}
 	if err := ntf.FromAuthorizationModelNotification(notifications.AuthorizationModelNotification{
 		Learning:   notification.Learning,
 		Operations: ToGlobalOperations(notification.AuthzModel.Operations),
 		SpecType:   global.SpecType(ToRestapiSpecType(notification.SpecType)),
 	}); err != nil {
+		return err //nolint:wrapcheck
+	}
+	return n.accessor.Notify(ctx, n.moduleName, apiID, ntf) //nolint:wrapcheck
+}
+
+func (n *Notifier) NotifyFindings(ctx context.Context, apiID uint, notification notifications.ApiFindingsNotification) error {
+	ntf := notifications.APIClarityNotification{}
+	if err := ntf.FromApiFindingsNotification(notification); err != nil {
 		return err //nolint:wrapcheck
 	}
 	return n.accessor.Notify(ctx, n.moduleName, apiID, ntf) //nolint:wrapcheck

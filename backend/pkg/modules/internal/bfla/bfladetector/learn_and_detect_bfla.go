@@ -30,6 +30,7 @@ import (
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api3/common"
+	"github.com/openclarity/apiclarity/api3/notifications"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/k8straceannotator"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/recovery"
@@ -348,7 +349,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		aud.WarningStatus = restapi.LEGITIMATE
 		setAud(aud)
 
-		l.logError(l.notify(ctx, cmd.apiID))
+		l.logError(l.notifyAuthzModel(ctx, cmd.apiID))
 
 	case *MarkIllegitimateCommand:
 		apiInfo, err := l.bflaBackendAccessor.GetAPIInfo(ctx, cmd.apiID)
@@ -390,7 +391,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		state.State = BFLALearnt
 		state.TraceCounter = 0
 		stateValue.Set(state)
-		l.logError(l.notify(ctx, cmd.apiID))
+		l.logError(l.notifyAuthzModel(ctx, cmd.apiID))
 
 	case *StartLearningCommand:
 		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLAStart, BFLALearnt, BFLADetecting)
@@ -438,7 +439,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if err := l.findingsRegistry.Clear(cmd.apiID); err != nil {
 			return fmt.Errorf("unable to get authz model state: %w", err)
 		}
-		l.logError(l.notify(ctx, cmd.apiID))
+		l.logError(l.notifyAuthzModel(ctx, cmd.apiID))
 
 	case *StartDetectionCommand:
 		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLALearning, BFLALearnt)
@@ -603,6 +604,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	if err != nil {
 		return fmt.Errorf("unable to find source obj: %w", err)
 	}
+	findingsUpdated := false
 	if !aud.Authorized {
 		// updates the auth model but this time as unauthorized
 		var severity core.AlertSeverity
@@ -616,14 +618,15 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			finding = APIFindingBFLASuspiciousCallHigh(specType, resolvedPath, trace.APIEvent.Method)
 		}
 
-		if err := l.findingsRegistry.Add(apiID, finding); err != nil {
+		findingsUpdated, err = l.findingsRegistry.Add(apiID, finding)
+		if err != nil {
 			log.Warnf("unable to add findings: %s", err)
 		}
 		if err := l.eventAlerter.SetEventAlert(ctx, l.modName, trace.APIEvent.ID, severity); err != nil {
 			log.Warnf("unable to set alert annotation: %s", err)
 		}
 
-		l.logError(l.notify(ctx, trace.APIEvent.APIInfoID))
+		l.logError(l.notifyAuthzModel(ctx, trace.APIEvent.APIInfoID))
 		aud.WarningStatus = ResolveBFLAStatusInt(int(trace.APIEvent.StatusCode))
 	}
 
@@ -634,10 +637,15 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	op := GetSpecOperation(spc, trace.APIEvent.Method, resolvedPath)
 	for _, user := range aud.EndUsers {
 		if user.IsMismatchedScopes(op) {
-			if err := l.findingsRegistry.Add(trace.APIEvent.APIInfoID, APIFindingBFLAScopesMismatch(specType, resolvedPath, trace.APIEvent.Method)); err != nil {
+			updated, err := l.findingsRegistry.Add(trace.APIEvent.APIInfoID, APIFindingBFLAScopesMismatch(specType, resolvedPath, trace.APIEvent.Method))
+			if err != nil {
 				log.Warnf("unable to add scope mismatch findings: %s", err)
 			}
+			findingsUpdated = findingsUpdated || updated
 		}
+	}
+	if findingsUpdated {
+		l.notifyFindings(ctx, apiID)
 	}
 	aud.StatusCode = trace.APIEvent.StatusCode
 	aud.LastTime = time.Time(trace.APIEvent.Time)
@@ -645,7 +653,18 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	return nil
 }
 
-func (l *learnAndDetectBFLA) notify(ctx context.Context, apiID uint) error {
+func (l *learnAndDetectBFLA) notifyFindings(ctx context.Context, apiID uint) error {
+	findings, err := l.findingsRegistry.GetAll(apiID)
+	if err != nil {
+		log.Errorf("unable to retrieve findings for API %v: %v", apiID, err)
+	}
+	ntf := notifications.ApiFindingsNotification{}
+	ntf.Items = &findings
+
+	return l.bflaNotifier.NotifyFindings(ctx, apiID, ntf) //nolint:wrapcheck
+}
+
+func (l *learnAndDetectBFLA) notifyAuthzModel(ctx context.Context, apiID uint) error {
 	ntf := AuthzModelNotification{}
 
 	if l.isLearning(apiID) {
@@ -669,7 +688,7 @@ func (l *learnAndDetectBFLA) notify(ctx context.Context, apiID uint) error {
 			ntf.AuthzModel, _ = v.Get().(AuthorizationModel)
 		}
 	}
-	return l.bflaNotifier.Notify(ctx, apiID, ntf) //nolint:wrapcheck
+	return l.bflaNotifier.NotifyAuthzModel(ctx, apiID, ntf) //nolint:wrapcheck
 }
 
 func (l *learnAndDetectBFLA) initAuthorizationModel(apiID uint) error {

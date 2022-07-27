@@ -89,7 +89,7 @@ func getLocation(path string, method models.HTTPMethod) *string {
 }
 
 type FindingsRegistry interface {
-	Add(apiID uint, finding common.APIFinding) error
+	Add(apiID uint, finding common.APIFinding) (bool, error)
 	GetAll(apiID uint) ([]common.APIFinding, error)
 	Clear(apiID uint) error
 }
@@ -111,10 +111,10 @@ type typeAndLoc struct {
 	loc string
 }
 
-func (f findingsRegistry) Add(apiID uint, ff common.APIFinding) error {
+func (f findingsRegistry) Add(apiID uint, ff common.APIFinding) (updated bool, err error) {
 	pv, err := f.findingsMap.Get(apiID)
 	if err != nil {
-		return fmt.Errorf("error getting findings annotation")
+		return updated, fmt.Errorf("error getting findings annotation")
 	}
 	var findings common.APIFindings
 	if pv.Exists() {
@@ -129,9 +129,10 @@ func (f findingsRegistry) Add(apiID uint, ff common.APIFinding) error {
 	_, ok := f.findingsByTypeAndLoc[getTypeAndLoc(ff)]
 	if !ok {
 		*findings.Items = append(*findings.Items, ff)
+		updated = true
 		pv.Set(findings)
 	}
-	return nil
+	return updated, err
 }
 
 func getTypeAndLoc(f common.APIFinding) typeAndLoc {
