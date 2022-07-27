@@ -546,7 +546,7 @@ func (h httpHandler) GetEventAnnotations(w http.ResponseWriter, r *http.Request,
 	dbAnns, err := h.ta.accessor.ListAPIEventAnnotations(r.Context(), utils.ModuleName, uint(eventID))
 	if err != nil {
 		log.Error(err)
-		common.HttpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: "Internal error, could not read data from database"})
+		common.HTTPResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: "Internal error, could not read data from database"})
 		return
 	}
 	annList := []restapi.Annotation{}
@@ -570,7 +570,7 @@ func (h httpHandler) GetEventAnnotations(w http.ResponseWriter, r *http.Request,
 		Total: len(annList),
 	}
 
-	common.HttpResponse(w, http.StatusOK, result)
+	common.HTTPResponse(w, http.StatusOK, result)
 }
 
 func (h httpHandler) GetApiFindings(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.GetApiFindingsParams) { //nolint:revive,stylecheck
@@ -579,7 +579,7 @@ func (h httpHandler) GetApiFindings(w http.ResponseWriter, r *http.Request, apiI
 	apiFindings, err := h.ta.getAPIFindings(r.Context(), uint(apiID), sensitive)
 	if err != nil {
 		log.Error(err)
-		common.HttpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: "Internal error, could not read data from database"})
+		common.HTTPResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: "Internal error, could not read data from database"})
 		return
 	}
 
@@ -590,32 +590,32 @@ func (h httpHandler) GetApiFindings(w http.ResponseWriter, r *http.Request, apiI
 	apiFindingsObject := oapicommon.APIFindings{
 		Items: &apiFindings,
 	}
-	common.HttpResponse(w, http.StatusOK, apiFindingsObject)
+	common.HTTPResponse(w, http.StatusOK, apiFindingsObject)
 }
 
 func (h httpHandler) StartTraceAnalysis(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
 	err := h.ta.accessor.EnableTraces(r.Context(), utils.ModuleName, uint(apiID))
 	if err != nil {
 		log.Error(err)
-		common.HttpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
+		common.HTTPResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
 		return
 	}
 
 	log.Infof("Tracing successfully started for api=%d", apiID)
-	common.HttpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Trace analysis successfully started for api %d", apiID)})
+	common.HTTPResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Trace analysis successfully started for api %d", apiID)})
 }
 
 func (h httpHandler) StopTraceAnalysis(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
 	err := h.ta.accessor.DisableTraces(r.Context(), utils.ModuleName, uint(apiID))
 	if err != nil {
 		log.Error(err)
-		common.HttpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
+		common.HTTPResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
 		return
 	}
 
 	log.Infof("Tracing successfully stopped for api=%d", apiID)
 
-	common.HttpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Trace analysis stopped for api %d", apiID)})
+	common.HTTPResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Trace analysis stopped for api %d", apiID)})
 }
 
 //nolint:revive,stylecheck // Api is not uppercased because it's defined as is in the specification
@@ -625,12 +625,12 @@ func (h httpHandler) ResetApiFindings(w http.ResponseWriter, r *http.Request, ap
 	err := h.ta.accessor.DeleteAllAPIInfoAnnotations(r.Context(), utils.ModuleName, uint(apiID))
 	if err != nil {
 		log.Error(err)
-		common.HttpResponse(w, http.StatusInternalServerError, oapicommon.ApiResponse{Message: "Internal error, could not delete data from database"})
+		common.HTTPResponse(w, http.StatusInternalServerError, oapicommon.ApiResponse{Message: "Internal error, could not delete data from database"})
 		return
 	}
 
 	log.Infof("API Findings successfully reset for api=%d", apiID)
-	common.HttpResponse(w, http.StatusNoContent, nil)
+	common.HTTPResponse(w, http.StatusNoContent, nil)
 }
 
 //nolint:gochecknoinits

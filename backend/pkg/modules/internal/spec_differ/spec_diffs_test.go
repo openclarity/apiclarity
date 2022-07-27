@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//nolint: revive,stylecheck
 package spec_differ
 
 import (
@@ -21,12 +22,10 @@ import (
 	"time"
 
 	"github.com/getkin/kin-openapi/openapi2"
-	spec "github.com/getkin/kin-openapi/openapi3"
 	v3spec "github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-openapi/strfmt"
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	_spec "github.com/openclarity/speculator/pkg/spec"
 	"gotest.tools/v3/assert"
 
 	"github.com/openclarity/apiclarity/api/server/models"
@@ -35,6 +34,7 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/spec_differ/config"
+	_spec "github.com/openclarity/speculator/pkg/spec"
 )
 
 func Test_getHighestPrioritySpecDiffType(t *testing.T) {
@@ -163,12 +163,12 @@ func Test_differ_addDiffToSend(t *testing.T) {
 		specTypeReconstructed = common.RECONSTRUCTED
 		specTypeProvided      = common.PROVIDED
 		originalPathItem      = v3spec.PathItem{
-			Get: &spec.Operation{
-				Responses: spec.Responses{
-					"200": &spec.ResponseRef{
-						Value: spec.NewResponse().
-							WithJSONSchemaRef(&spec.SchemaRef{
-								Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
+			Get: &v3spec.Operation{
+				Responses: v3spec.Responses{
+					"200": &v3spec.ResponseRef{
+						Value: v3spec.NewResponse().
+							WithJSONSchemaRef(&v3spec.SchemaRef{
+								Value: v3spec.NewObjectSchema().WithProperty("test", v3spec.NewInt64Schema()),
 							},
 							),
 					},
@@ -176,12 +176,12 @@ func Test_differ_addDiffToSend(t *testing.T) {
 			},
 		}
 		modifiedPathItem = v3spec.PathItem{
-			Get: &spec.Operation{
-				Responses: spec.Responses{
-					"200": &spec.ResponseRef{
-						Value: spec.NewResponse().
-							WithJSONSchemaRef(&spec.SchemaRef{
-								Value: spec.NewObjectSchema().WithProperty("test", spec.NewStringSchema()),
+			Get: &v3spec.Operation{
+				Responses: v3spec.Responses{
+					"200": &v3spec.ResponseRef{
+						Value: v3spec.NewResponse().
+							WithJSONSchemaRef(&v3spec.SchemaRef{
+								Value: v3spec.NewObjectSchema().WithProperty("test", v3spec.NewStringSchema()),
 							},
 							),
 					},
@@ -208,7 +208,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 		fields           fields
 		args             args
 		expectAccessor   func(accessor *core.MockBackendAccessor)
-		wantApiIDToDiffs map[uint]map[diffHash]global.Diff
+		wantAPIIDToDiffs map[uint]map[diffHash]global.Diff
 		wantTotalEvents  int
 	}{
 		{
@@ -232,7 +232,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 				event:    &database.APIEvent{},
 				diffType: models.DiffTypeNODIFF,
 			},
-			wantApiIDToDiffs: map[uint]map[diffHash]global.Diff{
+			wantAPIIDToDiffs: map[uint]map[diffHash]global.Diff{
 				1: {hashV2: global.Diff{
 					DiffType:      common.GENERALDIFF,
 					LastSeen:      time.Unix(1234, 0),
@@ -268,7 +268,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 				event:    &database.APIEvent{},
 				diffType: models.DiffTypeZOMBIEDIFF,
 			},
-			wantApiIDToDiffs: map[uint]map[diffHash]global.Diff{
+			wantAPIIDToDiffs: map[uint]map[diffHash]global.Diff{
 				1: {hashV2: global.Diff{
 					DiffType:      common.GENERALDIFF,
 					LastSeen:      time.Unix(1234, 0),
@@ -310,7 +310,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 					ProvidedSpecCreatedAt:      strfmt.DateTime(time.Unix(13, 0)),
 				}, nil)
 			},
-			wantApiIDToDiffs: map[uint]map[diffHash]global.Diff{
+			wantAPIIDToDiffs: map[uint]map[diffHash]global.Diff{
 				1: {hashV2: global.Diff{
 					DiffType:      common.GENERALDIFF,
 					LastSeen:      time.Unix(11, 0),
@@ -351,7 +351,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 					ProvidedSpecCreatedAt:      strfmt.DateTime(time.Unix(13, 0)),
 				}, nil)
 			},
-			wantApiIDToDiffs: map[uint]map[diffHash]global.Diff{
+			wantAPIIDToDiffs: map[uint]map[diffHash]global.Diff{
 				1: {hashV3: global.Diff{
 					DiffType:      common.GENERALDIFF,
 					LastSeen:      time.Unix(11, 0),
@@ -404,7 +404,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 					ProvidedSpecCreatedAt:      strfmt.DateTime(time.Unix(13, 0)),
 				}, nil)
 			},
-			wantApiIDToDiffs: map[uint]map[diffHash]global.Diff{
+			wantAPIIDToDiffs: map[uint]map[diffHash]global.Diff{
 				1: {hashV2: global.Diff{
 					DiffType:      common.GENERALDIFF,
 					LastSeen:      time.Unix(11, 0),
@@ -467,7 +467,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 					ProvidedSpecCreatedAt:      strfmt.DateTime(time.Unix(13, 0)),
 				}, nil)
 			},
-			wantApiIDToDiffs: map[uint]map[diffHash]global.Diff{
+			wantAPIIDToDiffs: map[uint]map[diffHash]global.Diff{
 				1: {hashV2: global.Diff{
 					DiffType:      common.GENERALDIFF,
 					LastSeen:      time.Unix(12, 0),
@@ -489,22 +489,21 @@ func Test_differ_addDiffToSend(t *testing.T) {
 				apiIDToDiffs:     tt.fields.apiIDToDiffs,
 				totalUniqueDiffs: tt.fields.totalEvents,
 				accessor:         mockAccessor,
-				config: config.GetConfig(),
+				config:           config.GetConfig(),
 			}
-
 
 			p.addDiffToSend(tt.args.diff, tt.args.modifiedPathItem, tt.args.originalPathItem, tt.args.diffType, tt.args.specType, tt.args.event, tt.args.version)
 
-			assert.DeepEqual(t, tt.wantApiIDToDiffs, p.apiIDToDiffs)
+			assert.DeepEqual(t, tt.wantAPIIDToDiffs, p.apiIDToDiffs)
 			assert.Assert(t, tt.wantTotalEvents == p.totalUniqueDiffs)
 		})
 	}
 }
 
 func Test_getPathItemForVersionOrOriginal(t *testing.T) {
-	var nilPathItem *spec.PathItem
+	var nilPathItem *v3spec.PathItem
 	type args struct {
-		v3PathItem *spec.PathItem
+		v3PathItem *v3spec.PathItem
 		version    _spec.OASVersion
 	}
 	tests := []struct {
@@ -515,13 +514,13 @@ func Test_getPathItemForVersionOrOriginal(t *testing.T) {
 		{
 			name: "v2",
 			args: args{
-				v3PathItem: &spec.PathItem{
-					Get: &spec.Operation{
-						Responses: spec.Responses{
-							"200": &spec.ResponseRef{
-								Value: spec.NewResponse().
-									WithJSONSchemaRef(&spec.SchemaRef{
-										Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
+				v3PathItem: &v3spec.PathItem{
+					Get: &v3spec.Operation{
+						Responses: v3spec.Responses{
+							"200": &v3spec.ResponseRef{
+								Value: v3spec.NewResponse().
+									WithJSONSchemaRef(&v3spec.SchemaRef{
+										Value: v3spec.NewObjectSchema().WithProperty("test", v3spec.NewInt64Schema()),
 									},
 									),
 							},
@@ -534,8 +533,8 @@ func Test_getPathItemForVersionOrOriginal(t *testing.T) {
 				Get: &openapi2.Operation{
 					Responses: map[string]*openapi2.Response{
 						"200": {
-							Schema: &spec.SchemaRef{
-								Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
+							Schema: &v3spec.SchemaRef{
+								Value: v3spec.NewObjectSchema().WithProperty("test", v3spec.NewInt64Schema()),
 							},
 						},
 					},
@@ -545,13 +544,13 @@ func Test_getPathItemForVersionOrOriginal(t *testing.T) {
 		{
 			name: "v3",
 			args: args{
-				v3PathItem: &spec.PathItem{
-					Get: &spec.Operation{
-						Responses: spec.Responses{
-							"200": &spec.ResponseRef{
-								Value: spec.NewResponse().
-									WithJSONSchemaRef(&spec.SchemaRef{
-										Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
+				v3PathItem: &v3spec.PathItem{
+					Get: &v3spec.Operation{
+						Responses: v3spec.Responses{
+							"200": &v3spec.ResponseRef{
+								Value: v3spec.NewResponse().
+									WithJSONSchemaRef(&v3spec.SchemaRef{
+										Value: v3spec.NewObjectSchema().WithProperty("test", v3spec.NewInt64Schema()),
 									},
 									),
 							},
@@ -560,13 +559,13 @@ func Test_getPathItemForVersionOrOriginal(t *testing.T) {
 				},
 				version: _spec.OASv3,
 			},
-			want: &spec.PathItem{
-				Get: &spec.Operation{
-					Responses: spec.Responses{
-						"200": &spec.ResponseRef{
-							Value: spec.NewResponse().
-								WithJSONSchemaRef(&spec.SchemaRef{
-									Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
+			want: &v3spec.PathItem{
+				Get: &v3spec.Operation{
+					Responses: v3spec.Responses{
+						"200": &v3spec.ResponseRef{
+							Value: v3spec.NewResponse().
+								WithJSONSchemaRef(&v3spec.SchemaRef{
+									Value: v3spec.NewObjectSchema().WithProperty("test", v3spec.NewInt64Schema()),
 								},
 								),
 						},
@@ -577,13 +576,13 @@ func Test_getPathItemForVersionOrOriginal(t *testing.T) {
 		{
 			name: "unknown",
 			args: args{
-				v3PathItem: &spec.PathItem{
-					Get: &spec.Operation{
-						Responses: spec.Responses{
-							"200": &spec.ResponseRef{
-								Value: spec.NewResponse().
-									WithJSONSchemaRef(&spec.SchemaRef{
-										Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
+				v3PathItem: &v3spec.PathItem{
+					Get: &v3spec.Operation{
+						Responses: v3spec.Responses{
+							"200": &v3spec.ResponseRef{
+								Value: v3spec.NewResponse().
+									WithJSONSchemaRef(&v3spec.SchemaRef{
+										Value: v3spec.NewObjectSchema().WithProperty("test", v3spec.NewInt64Schema()),
 									},
 									),
 							},
@@ -592,13 +591,13 @@ func Test_getPathItemForVersionOrOriginal(t *testing.T) {
 				},
 				version: _spec.Unknown,
 			},
-			want: &spec.PathItem{
-				Get: &spec.Operation{
-					Responses: spec.Responses{
-						"200": &spec.ResponseRef{
-							Value: spec.NewResponse().
-								WithJSONSchemaRef(&spec.SchemaRef{
-									Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
+			want: &v3spec.PathItem{
+				Get: &v3spec.Operation{
+					Responses: v3spec.Responses{
+						"200": &v3spec.ResponseRef{
+							Value: v3spec.NewResponse().
+								WithJSONSchemaRef(&v3spec.SchemaRef{
+									Value: v3spec.NewObjectSchema().WithProperty("test", v3spec.NewInt64Schema()),
 								},
 								),
 						},
@@ -618,7 +617,7 @@ func Test_getPathItemForVersionOrOriginal(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := getPathItemForVersionOrOriginal(tt.args.v3PathItem, tt.args.version)
-			assert.DeepEqual(t, got, tt.want, cmpopts.IgnoreUnexported(spec.Schema{}))
+			assert.DeepEqual(t, got, tt.want, cmpopts.IgnoreUnexported(v3spec.Schema{}))
 		})
 	}
 }

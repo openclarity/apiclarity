@@ -11,7 +11,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	notifications "github.com/openclarity/apiclarity/api3/notifications"
-	speculatorAccessor "github.com/openclarity/apiclarity/backend/pkg/backend/speculatorAccessor"
+	speculatorAccessor "github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
 	database "github.com/openclarity/apiclarity/backend/pkg/database"
 	kubernetes "k8s.io/client-go/kubernetes"
 )

@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//nolint: revive,stylecheck
 package spec_differ
 
 import (
@@ -42,11 +43,10 @@ func Test_pluginDiffer_getSpecDiffsNotifications(t *testing.T) {
 		oldSpec  = "newSpec"
 		newSpec2 = "newSpec2"
 		oldSpec2 = "newSpec2"
-
 	)
 	var (
-		hash1 = sha256.Sum256([]byte(newSpec + oldSpec))
-		hash2 = sha256.Sum256([]byte(newSpec2 + oldSpec2))
+		hash1   = sha256.Sum256([]byte(newSpec + oldSpec))
+		hash2   = sha256.Sum256([]byte(newSpec2 + oldSpec2))
 		apiType = common.INTERNAL
 	)
 
@@ -63,16 +63,17 @@ func Test_pluginDiffer_getSpecDiffsNotifications(t *testing.T) {
 			name: "2 apis - one with 2 diffs, one with one diff",
 			fields: fields{
 				apiIDToDiffs: map[uint]map[diffHash]global.Diff{
-					1: {hash1: global.Diff{
-						DiffType:      common.GENERALDIFF,
-						LastSeen:      time.Unix(10, 0),
-						Method:        common.GET,
-						NewSpec:       newSpec,
-						OldSpec:       oldSpec,
-						Path:          "/some/path",
-						SpecTimestamp: time.Unix(1, 0),
-						SpecType:      common.PROVIDED,
-					},
+					1: {
+						hash1: global.Diff{
+							DiffType:      common.GENERALDIFF,
+							LastSeen:      time.Unix(10, 0),
+							Method:        common.GET,
+							NewSpec:       newSpec,
+							OldSpec:       oldSpec,
+							Path:          "/some/path",
+							SpecTimestamp: time.Unix(1, 0),
+							SpecType:      common.PROVIDED,
+						},
 						hash2: global.Diff{
 							DiffType:      common.ZOMBIEDIFF,
 							LastSeen:      time.Unix(11, 0),
@@ -82,17 +83,20 @@ func Test_pluginDiffer_getSpecDiffsNotifications(t *testing.T) {
 							Path:          "/some/path/2",
 							SpecTimestamp: time.Unix(2, 0),
 							SpecType:      common.PROVIDED,
-						}},
-					2: {hash1: global.Diff{
-						DiffType:      common.ZOMBIEDIFF,
-						LastSeen:      time.Unix(12, 0),
-						Method:        common.GET,
-						NewSpec:       newSpec,
-						OldSpec:       oldSpec,
-						Path:          "/some/path/3",
-						SpecTimestamp: time.Unix(3, 0),
-						SpecType:      common.PROVIDED,
-					}},
+						},
+					},
+					2: {
+						hash1: global.Diff{
+							DiffType:      common.ZOMBIEDIFF,
+							LastSeen:      time.Unix(12, 0),
+							Method:        common.GET,
+							NewSpec:       newSpec,
+							OldSpec:       oldSpec,
+							Path:          "/some/path/3",
+							SpecTimestamp: time.Unix(3, 0),
+							SpecType:      common.PROVIDED,
+						},
+					},
 				},
 			},
 			want: []notifications.SpecDiffsNotification{

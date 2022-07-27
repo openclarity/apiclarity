@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//nolint: revive,stylecheck
 package spec_differ
 
 import (
@@ -26,8 +27,6 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi2conv"
 	v3spec "github.com/getkin/kin-openapi/openapi3"
-	_spec "github.com/openclarity/speculator/pkg/spec"
-	_speculator "github.com/openclarity/speculator/pkg/speculator"
 	log "github.com/sirupsen/logrus"
 	"sigs.k8s.io/yaml"
 
@@ -39,6 +38,8 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/spec_differ/config"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/spec_differ/restapi"
 	speculatorutils "github.com/openclarity/apiclarity/backend/pkg/utils/speculator"
+	_spec "github.com/openclarity/speculator/pkg/spec"
+	_speculator "github.com/openclarity/speculator/pkg/speculator"
 )
 
 type diffHash [32]byte
@@ -182,10 +183,8 @@ func (s *specDiffer) addDiffToSend(diff *_spec.APIDiff, modifiedPathItem, origin
 	newSpec := string(newSpecB)
 	oldSpec := string(oldSpecB)
 
-	var hash diffHash
-
 	// TODO should we include also specType in the hash?
-	hash = sha256.Sum256([]byte(newSpec + oldSpec))
+	hash := sha256.Sum256([]byte(newSpec + oldSpec))
 
 	apiInfo, err := s.accessor.GetAPIInfo(context.TODO(), event.APIInfoID)
 	if err != nil {
@@ -199,6 +198,9 @@ func (s *specDiffer) addDiffToSend(diff *_spec.APIDiff, modifiedPathItem, origin
 		specTimestamp = time.Time(apiInfo.ProvidedSpecCreatedAt)
 	case common.RECONSTRUCTED:
 		specTimestamp = time.Time(apiInfo.ReconstructedSpecCreatedAt)
+	case common.NONE:
+		log.Warnf("spec type NONE, Using provided")
+		specTimestamp = time.Time(apiInfo.ProvidedSpecCreatedAt)
 	default:
 		log.Warnf("Unknown spec type %v, Using provided", specType)
 		specTimestamp = time.Time(apiInfo.ProvidedSpecCreatedAt)

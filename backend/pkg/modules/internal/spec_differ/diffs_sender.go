@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//nolint: revive,stylecheck
 package spec_differ
 
 import (
@@ -118,7 +119,7 @@ func convertAPIInfo(apiInfo *database.APIInfo) common.ApiInfoWithType {
 	id := uint32(apiInfo.ID)
 	port := int(apiInfo.Port)
 	return common.ApiInfoWithType{
-		ApiType:              convertApiType(apiInfo.Type),
+		ApiType:              convertAPIType(apiInfo.Type),
 		DestinationNamespace: &apiInfo.DestinationNamespace,
 		HasProvidedSpec:      &apiInfo.HasProvidedSpec,
 		HasReconstructedSpec: &apiInfo.HasReconstructedSpec,
@@ -128,7 +129,7 @@ func convertAPIInfo(apiInfo *database.APIInfo) common.ApiInfoWithType {
 	}
 }
 
-func convertApiType(apiType models.APIType) *common.ApiTypeEnum {
+func convertAPIType(apiType models.APIType) *common.ApiTypeEnum {
 	switch apiType {
 	case models.APITypeINTERNAL:
 		typ := common.INTERNAL

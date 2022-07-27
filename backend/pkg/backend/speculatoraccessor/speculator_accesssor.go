@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package speculatorAccessor
+package speculatoraccessor
 
 import (
 	_spec "github.com/openclarity/speculator/pkg/spec"
@@ -29,29 +29,30 @@ type SpeculatorAccessor interface {
 }
 
 func NewSpeculatorAccessor(speculator *_speculator.Speculator) SpeculatorAccessor {
-	return &SpeculatorAccessorImpl{speculator: speculator}
+	return &Impl{speculator: speculator}
 }
 
-type SpeculatorAccessorImpl struct {
+type Impl struct {
 	speculator *_speculator.Speculator
 }
 
-func (s *SpeculatorAccessorImpl) DiffTelemetry(telemetry *_spec.Telemetry, diffSource _spec.DiffSource) (*_spec.APIDiff, error) {
+func (s *Impl) DiffTelemetry(telemetry *_spec.Telemetry, diffSource _spec.DiffSource) (*_spec.APIDiff, error) {
+	//nolint: wrapcheck
 	return s.speculator.DiffTelemetry(telemetry, diffSource)
 }
 
-func (s *SpeculatorAccessorImpl) HasApprovedSpec(specKey _speculator.SpecKey) bool {
+func (s *Impl) HasApprovedSpec(specKey _speculator.SpecKey) bool {
 	return s.speculator.HasApprovedSpec(specKey)
 }
 
-func (s *SpeculatorAccessorImpl) HasProvidedSpec(specKey _speculator.SpecKey) bool {
+func (s *Impl) HasProvidedSpec(specKey _speculator.SpecKey) bool {
 	return s.speculator.HasProvidedSpec(specKey)
 }
 
-func (s *SpeculatorAccessorImpl) GetProvidedSpecVersion(specKey _speculator.SpecKey) _spec.OASVersion {
+func (s *Impl) GetProvidedSpecVersion(specKey _speculator.SpecKey) _spec.OASVersion {
 	return s.speculator.GetProvidedSpecVersion(specKey)
 }
 
-func (s *SpeculatorAccessorImpl) GetApprovedSpecVersion(specKey _speculator.SpecKey) _spec.OASVersion {
+func (s *Impl) GetApprovedSpecVersion(specKey _speculator.SpecKey) _spec.OASVersion {
 	return s.speculator.GetApprovedSpecVersion(specKey)
 }

@@ -16,9 +16,8 @@
 package speculator
 
 import (
-	"github.com/openclarity/speculator/pkg/spec"
-
 	"github.com/openclarity/apiclarity/plugins/api/server/models"
+	"github.com/openclarity/speculator/pkg/spec"
 )
 
 func ConvertModelsToSpeculatorTelemetry(telemetry *models.Telemetry) *spec.Telemetry {

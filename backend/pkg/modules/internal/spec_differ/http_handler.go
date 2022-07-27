@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//nolint: revive,stylecheck
 package spec_differ
 
 import (
@@ -25,7 +26,7 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/common"
 )
 
-type httpHandler struct{
+type httpHandler struct {
 	differ *specDiffer
 }
 
@@ -33,22 +34,22 @@ func (h *httpHandler) StartDiffer(w http.ResponseWriter, r *http.Request, apiID 
 	err := h.differ.accessor.EnableTraces(r.Context(), moduleName, uint(apiID))
 	if err != nil {
 		log.Error(err)
-		common.HttpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
+		common.HTTPResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
 		return
 	}
 
 	log.Infof("Differ successfully started for apiID=%v", apiID)
-	common.HttpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Differ successfully started for apiID=%v", apiID)})
+	common.HTTPResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Differ successfully started for apiID=%v", apiID)})
 }
 
 func (h *httpHandler) StopDiffer(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID) {
 	err := h.differ.accessor.DisableTraces(r.Context(), moduleName, uint(apiID))
 	if err != nil {
 		log.Error(err)
-		common.HttpResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
+		common.HTTPResponse(w, http.StatusInternalServerError, &oapicommon.ApiResponse{Message: err.Error()})
 		return
 	}
 
 	log.Infof("Differ successfully stopped for apiID=%v", apiID)
-	common.HttpResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Differ stopped for apiID=%v", apiID)})
+	common.HTTPResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Differ stopped for apiID=%v", apiID)})
 }

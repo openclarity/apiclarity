@@ -34,7 +34,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/openclarity/apiclarity/api/server/models"
-	"github.com/openclarity/apiclarity/backend/pkg/backend/speculatorAccessor"
+	"github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
 	_config "github.com/openclarity/apiclarity/backend/pkg/config"
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/healthz"
@@ -169,7 +169,7 @@ func Run() {
 		log.Infof("Using encoded speculator state")
 	}
 
-	modulesWrapper, modInfos := modules.New(globalCtx, dbHandler, clientset, samplingManager, speculatorAccessor.NewSpeculatorAccessor(speculator))
+	modulesWrapper, modInfos := modules.New(globalCtx, dbHandler, clientset, samplingManager, speculatoraccessor.NewSpeculatorAccessor(speculator))
 	features := append(modInfos, getCoreFeatures()...)
 	if !config.TraceSamplingEnabled {
 		for _, f := range features {

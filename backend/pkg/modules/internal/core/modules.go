@@ -23,7 +23,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/openclarity/apiclarity/api3/notifications"
-	"github.com/openclarity/apiclarity/backend/pkg/backend/speculatorAccessor"
+	"github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core/notifier"
 	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
@@ -64,7 +64,7 @@ type Module interface {
 
 type BackendAccessor interface {
 	K8SClient() kubernetes.Interface
-	GetSpeculatorAccessor() speculatorAccessor.SpeculatorAccessor
+	GetSpeculatorAccessor() speculatoraccessor.SpeculatorAccessor
 
 	GetAPIInfo(ctx context.Context, apiID uint) (*database.APIInfo, error)
 	GetAPIEvents(ctx context.Context, filter database.GetAPIEventsQuery) ([]*database.APIEvent, error)
@@ -86,7 +86,7 @@ type BackendAccessor interface {
 	Notify(ctx context.Context, modName string, apiID uint, notification notifications.APIClarityNotification) error
 }
 
-func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager, speculatorAccessor speculatorAccessor.SpeculatorAccessor) BackendAccessor {
+func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager, speculatorAccessor speculatoraccessor.SpeculatorAccessor) BackendAccessor {
 	notificationPrefix := GetNotificationPrefix()
 
 	var n *notifier.Notifier
@@ -95,27 +95,27 @@ func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface, sa
 		n.Start(context.Background())
 	}
 	return &accessor{
-		dbHandler:       dbHandler,
-		clientset:       clientset,
-		notifier:        n,
-		samplingManager: samplingManager,
+		dbHandler:          dbHandler,
+		clientset:          clientset,
+		notifier:           n,
+		samplingManager:    samplingManager,
 		speculatorAccessor: speculatorAccessor,
 	}
 }
 
 type accessor struct {
-	dbHandler       *database.Handler
-	clientset       kubernetes.Interface
-	notifier        *notifier.Notifier
-	samplingManager *manager.Manager
-	speculatorAccessor speculatorAccessor.SpeculatorAccessor
+	dbHandler          *database.Handler
+	clientset          kubernetes.Interface
+	notifier           *notifier.Notifier
+	samplingManager    *manager.Manager
+	speculatorAccessor speculatoraccessor.SpeculatorAccessor
 }
 
 func (b *accessor) K8SClient() kubernetes.Interface {
 	return b.clientset
 }
 
-func (b *accessor) GetSpeculatorAccessor() speculatorAccessor.SpeculatorAccessor {
+func (b *accessor) GetSpeculatorAccessor() speculatoraccessor.SpeculatorAccessor {
 	return b.speculatorAccessor
 }
 
@@ -128,6 +128,7 @@ func (b *accessor) GetAPIInfo(ctx context.Context, apiID uint) (*database.APIInf
 }
 
 func (b *accessor) UpdateAPIEvent(ctx context.Context, event *database.APIEvent) error {
+	//nolint: wrapcheck
 	return b.dbHandler.APIEventsTable().UpdateAPIEvent(event)
 }
 
