@@ -67,6 +67,8 @@ apiclarity:
   env:
     plugins:
       ## ENV_1: example123
+      FUZZER_DEPLOYMENT_TYPE: "configmap"
+ 
 
   ## Docker Image values.
   docker:
