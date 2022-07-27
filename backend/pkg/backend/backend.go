@@ -124,7 +124,7 @@ func Run() {
 		if err != nil {
 			log.Fatalf("failed to create K8s clientset: %v", err)
 		}
-	} else if !viper.GetBool(_database.FakeTracesEnvVar) && !viper.GetBool(_database.FakeDataEnvVar) {
+	} else {
 		clientset, err = k8smonitor.CreateK8sClientset()
 		if err != nil {
 			log.Fatalf("failed to create K8s clientset: %v", err)
@@ -150,7 +150,7 @@ func Run() {
 		return
 	}
 
-	if !config.K8sLocal && !viper.GetBool(_config.NoMonitorEnvVar) && !viper.GetBool(_database.FakeTracesEnvVar) && !viper.GetBool(_database.FakeDataEnvVar) {
+	if !config.K8sLocal && !viper.GetBool(_config.NoMonitorEnvVar) {
 		monitor, err = k8smonitor.CreateMonitor(clientset)
 		if err != nil {
 			log.Errorf("Failed to create a monitor: %v", err)
@@ -158,7 +158,9 @@ func Run() {
 		}
 		monitor.Start()
 		defer monitor.Stop()
-	} else if viper.GetBool(_database.FakeDataEnvVar) {
+	}
+
+	if viper.GetBool(_database.FakeTracesEnvVar) || viper.GetBool(_database.FakeDataEnvVar) {
 		go dbHandler.CreateFakeData()
 	}
 
