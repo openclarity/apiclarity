@@ -49,14 +49,14 @@ const (
 )
 
 type K8sClient struct {
-	hClient                kubernetes.Interface
-	namespace              string
-	imageName              string
-	platformType           string
-	platformHostFromFuzzer string
-	subFuzzer              string
-	tokenInjectorPath      string
-	currentJob             *batchv1.Job
+	hClient           kubernetes.Interface
+	namespace         string
+	imageName         string
+	platformType      string
+	platformHost      string
+	subFuzzer         string
+	tokenInjectorPath string
+	currentJob        *batchv1.Job
 }
 
 func (l *K8sClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem string, timeBudget string) error {
@@ -180,7 +180,7 @@ func (l *K8sClient) getEnvs(apiID int64, endpoint string, securityItem string, t
 		},
 		{
 			Name:  platformHostEnvVar,
-			Value: l.platformHostFromFuzzer,
+			Value: l.platformHost,
 		},
 		{
 			Name:  apiIDEnvVar,
@@ -244,14 +244,14 @@ func (l *K8sClient) Create(job *batchv1.Job) (*batchv1.Job, error) {
 //nolint: ireturn,nolintlint
 func NewKubernetesClient(config *config.Config, accessor core.BackendAccessor) (Client, error) {
 	client := &K8sClient{
-		hClient:                accessor.K8SClient(),
-		imageName:              config.GetImageName(),
-		namespace:              config.GetJobNamespace(),
-		platformType:           config.GetPlatformType(),
-		platformHostFromFuzzer: config.GetPlatformHostFromFuzzer(),
-		subFuzzer:              config.GetSubFuzzerList(),
-		tokenInjectorPath:      config.GetRestlerTokenInjectorPath(),
-		currentJob:             nil,
+		hClient:           accessor.K8SClient(),
+		imageName:         config.GetImageName(),
+		namespace:         config.GetJobNamespace(),
+		platformType:      config.GetPlatformType(),
+		platformHost:      config.GetPlatformHost(),
+		subFuzzer:         config.GetSubFuzzerList(),
+		tokenInjectorPath: config.GetRestlerTokenInjectorPath(),
+		currentJob:        nil,
 	}
 	if client.hClient == nil {
 		logging.Logf("[Fuzzer][K8sClient] Create new Kubernetes client accessor.K8SClient()=%v", accessor.K8SClient())

@@ -150,7 +150,7 @@ func NewDockerClient(config *config.Config) (Client, error) {
 		imageName:         config.GetImageName(),
 		showDockerLog:     config.GetShowDockerLogFlag(),
 		platformType:      config.GetPlatformType(),
-		platformHost:      config.GetPlatformHostFromFuzzer(),
+		platformHost:      config.GetPlatformHost(),
 		subFuzzer:         config.GetSubFuzzerList(),
 		tokenInjectorPath: config.GetRestlerTokenInjectorPath(),
 	}

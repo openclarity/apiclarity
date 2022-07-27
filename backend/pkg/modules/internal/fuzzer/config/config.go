@@ -45,8 +45,7 @@ const (
 	DeploymentType           = DeploymentTypeFake // One of SUPPORTED_DEPLOYMENT[] value.
 	ImageName                = "xxx"
 	PlatformType             = "API_CLARITY"
-	PlatformHost             = "http://localhost:8080/api"
-	PlatformHostFromDocker   = "http://apiclarity-apiclarity:8080/api"
+	PlatformHost             = "http://apiclarity-apiclarity:8080/api"
 	Fuzzers                  = "scn-fuzzer,restler,crud"
 	ShowDockerLogs           = false
 	FuzzerTestTraceFile      = "fuzzer-demo-test.json"
@@ -59,36 +58,34 @@ const (
 	RestlerDeepTimeBudget    = "1"     // In hours
 	DefaultJobNamespace      = "apiclarity"
 
-	FuzzerImageNameEnvVar            = "FUZZER_IMAGE_NAME"
-	FuzzerDeploymentTypeEnvVar       = "FUZZER_DEPLOYMENT_TYPE"
-	FuzzerShowDockerLogsEnvVar       = "FUZZER_SHOW_DOCKER_LOGS"
-	FuzzerPlatformTypeEnvVar         = "FUZZER_PLATFORM_TYPE"
-	FuzzerPlatformHostEnvVar         = "FUZZER_PLATFORM_HOST"
-	FuzzerPlatformHostFromFuzzEnvVar = "FUZZER_PLATFORM_HOST_FROM_FUZZER"
-	FuzzerSubFuzzerEnvVar            = "FUZZER_SUBFUZZER"
-	FuzzerTestTraceFileEnvVar        = "FUZZER_TEST_TRACE_FILE"
-	FuzzerDebugEnvVar                = "FUZZER_DEBUG"
-	FuzzerRestlerTimeBudgetEnvVar    = "FUZZER_RESTLER_TIME_BUDGET"
-	FuzzerAuthInjectorPathEnvVar     = "FUZZER_RESTLER_TOKEN_INJECTOR_PATH"
-	FuzzerTestReportTimeoutEnvVar    = "FUZZER_TESTREPORT_TIMEOUT"
-	FuzzerJobNamespaceEnvVar         = "FUZZER_JOB_NAMESPACE"
-	PODNamespaceEnvVar               = "POD_NAMESPACE"
-	FuzzerJobTemplateConfigMapName   = "FUZZER_JOB_TEMPLATE_CONFIG_MAP_NAME"
+	FuzzerImageNameEnvVar          = "FUZZER_IMAGE_NAME"
+	FuzzerDeploymentTypeEnvVar     = "FUZZER_DEPLOYMENT_TYPE"
+	FuzzerShowDockerLogsEnvVar     = "FUZZER_SHOW_DOCKER_LOGS"
+	FuzzerPlatformTypeEnvVar       = "FUZZER_PLATFORM_TYPE"
+	FuzzerPlatformHostEnvVar       = "FUZZER_PLATFORM_HOST"
+	FuzzerSubFuzzerEnvVar          = "FUZZER_SUBFUZZER"
+	FuzzerTestTraceFileEnvVar      = "FUZZER_TEST_TRACE_FILE"
+	FuzzerDebugEnvVar              = "FUZZER_DEBUG"
+	FuzzerRestlerTimeBudgetEnvVar  = "FUZZER_RESTLER_TIME_BUDGET"
+	FuzzerAuthInjectorPathEnvVar   = "FUZZER_RESTLER_TOKEN_INJECTOR_PATH"
+	FuzzerTestReportTimeoutEnvVar  = "FUZZER_TESTREPORT_TIMEOUT"
+	FuzzerJobNamespaceEnvVar       = "FUZZER_JOB_NAMESPACE"
+	PODNamespaceEnvVar             = "POD_NAMESPACE"
+	FuzzerJobTemplateConfigMapName = "FUZZER_JOB_TEMPLATE_CONFIG_MAP_NAME"
 )
 
 type Config struct {
-	imageName              string
-	platformType           string
-	deploymentType         string
-	platformHost           string
-	platformHostFromFuzzer string
-	subFuzzer              string
-	showDockerLog          bool
-	testTraceFile          string
-	debug                  bool
-	restlerTimeBudget      string
-	tokenInjectorPath      string
-	testReportTimeout      int
+	imageName         string
+	platformType      string
+	deploymentType    string
+	platformHost      string
+	subFuzzer         string
+	showDockerLog     bool
+	testTraceFile     string
+	debug             bool
+	restlerTimeBudget string
+	tokenInjectorPath string
+	testReportTimeout int
 
 	jobNamespace             string
 	jobTemplateConfigMapName string
@@ -132,10 +129,6 @@ func (c *Config) GetPlatformHost() string {
 	return c.platformHost
 }
 
-func (c *Config) GetPlatformHostFromFuzzer() string {
-	return c.platformHostFromFuzzer
-}
-
 func (c *Config) GetSubFuzzerList() string {
 	return c.subFuzzer
 }
@@ -176,7 +169,6 @@ func (c *Config) Dump() {
 	logging.Debugf("%v    deploymentType    (%v)", prefix, c.deploymentType)
 	logging.Debugf("%v    showDockerLog     (%v)", prefix, c.showDockerLog)
 	logging.Debugf("%v    platformHost      (%v)", prefix, c.platformHost)
-	logging.Debugf("%v    platformHostFromFuzzer (%v)", prefix, c.platformHostFromFuzzer)
 	logging.Debugf("%v    subFuzzer         (%v)", prefix, c.subFuzzer)
 	logging.Debugf("%v    testTraceFile     (%v)", prefix, c.testTraceFile)
 	logging.Debugf("%v    restlerTimeBudget (%v)", prefix, c.restlerTimeBudget)
@@ -193,7 +185,6 @@ func NewFuzzerConfig() *Config {
 	viper.SetDefault(FuzzerPlatformTypeEnvVar, PlatformType)
 	viper.SetDefault(FuzzerDeploymentTypeEnvVar, DeploymentType)
 	viper.SetDefault(FuzzerPlatformHostEnvVar, PlatformHost)
-	viper.SetDefault(FuzzerPlatformHostFromFuzzEnvVar, PlatformHostFromDocker)
 	viper.SetDefault(FuzzerSubFuzzerEnvVar, Fuzzers)
 	viper.SetDefault(FuzzerShowDockerLogsEnvVar, ShowDockerLogs)
 	viper.SetDefault(FuzzerTestTraceFileEnvVar, FuzzerTestTraceFile)
@@ -217,7 +208,6 @@ func NewFuzzerConfig() *Config {
 		platformType:             viper.GetString(FuzzerPlatformTypeEnvVar),
 		deploymentType:           viper.GetString(FuzzerDeploymentTypeEnvVar),
 		platformHost:             viper.GetString(FuzzerPlatformHostEnvVar),
-		platformHostFromFuzzer:   viper.GetString(FuzzerPlatformHostFromFuzzEnvVar),
 		subFuzzer:                viper.GetString(FuzzerSubFuzzerEnvVar),
 		showDockerLog:            viper.GetBool(FuzzerShowDockerLogsEnvVar),
 		testTraceFile:            viper.GetString(FuzzerTestTraceFileEnvVar),
