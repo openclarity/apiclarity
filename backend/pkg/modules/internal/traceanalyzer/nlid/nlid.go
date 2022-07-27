@@ -93,19 +93,19 @@ func (n *NLID) getNLIDS(pathParams map[string]string, trace pluginsmodels.Teleme
 	// Get all parameters of the Request
 
 	// Get all parameters
-	reqParams := params{}
+	reqParamsList := map[string][]parameter{}
 
 	// - Header
 	for _, h := range trace.Request.Common.Headers {
 		if maybeID(h.Key, h.Value) {
-			reqParams[h.Value] = true
+			reqParamsList[h.Value] = append(reqParamsList[h.Value], parameter{Name: h.Key, Value: h.Value})
 		}
 	}
 
 	// - Path
 	for k, v := range pathParams {
 		if maybeID(k, v) {
-			reqParams[v] = true
+			reqParamsList[v] = append(reqParamsList[v], parameter{Name: k, Value: v})
 		}
 	}
 
@@ -122,12 +122,11 @@ func (n *NLID) getNLIDS(pathParams map[string]string, trace pluginsmodels.Teleme
 			return
 		}
 
-		for param := range reqParams {
+		for param := range reqParamsList {
 			if prevParams[param] {
 				// This parameter was already present, that OK, it's not an NLID
 				// Remove it from the parameters to checks
-				reqParams[param] = false // Mark this parameter as already learnt
-				// delete(reqParams, kReq)
+				delete(reqParamsList, param)
 			}
 		}
 	})
@@ -136,10 +135,8 @@ func (n *NLID) getNLIDS(pathParams map[string]string, trace pluginsmodels.Teleme
 	// Request were found in the history, there is no observation to
 	// return. The parameters that are left in reqParams are the one which
 	// were not found in the history, meaning that they are non learnt IDs
-	for k := range reqParams {
-		if reqParams[k] {
-			NLIDparams = append(NLIDparams, parameter{"XXX", k})
-		}
+	for value := range reqParamsList {
+		NLIDparams = append(NLIDparams, reqParamsList[value]...)
 	}
 
 	return NLIDparams
