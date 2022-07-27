@@ -34,9 +34,10 @@ data:
             runAsUser: 1001
             privileged: false
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
           containers:
-          - name: vulnerability-scanner
-            image: '{{ index .Values "apiclarity" "modules" "fuzzer" "docker" "image" }}'
+          - name: fuzzer
+            image: "{{ .Values.apiclarity.modules.fuzzer.docker.image }}"
             imagePullPolicy: Always
             volumeMounts:
               - mountPath: /tmp
@@ -44,10 +45,10 @@ data:
             env:
             - name: PLATFORM_TYPE
               value: "API_CLARITY"
-            - name: PLATFORM_HOST
-              value: "http://apiclarity-apiclarity:8080/api"
+            - name: FUZZER_PLATFORM_HOST_FROM_FUZZER
+              value: http://{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:8080/api
             - name: FUZZER
-              value: "scn-fuzzer,restler,crud"
+              value: "{{ .Values.apiclarity.modules.fuzzer.methods }}"
             - name: REQUEST_SCOPE
               value: "global/internalservices/portshift_request"
             - name: RESTLER_ROOT_PATH

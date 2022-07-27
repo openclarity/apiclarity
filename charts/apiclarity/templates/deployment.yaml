@@ -87,10 +87,6 @@ spec:
             - name: NOTIFICATION_BACKEND_PREFIX
               value: {{ .Values.apiclarity.notificationURLPrefix }}
             {{- end }}
-            - name: FUZZER_DEPLOYMENT_TYPE
-              value: {{ .Values.apiclarity.env.plugins.FUZZER_DEPLOYMENT_TYPE }}
-            - name: FUZZER_IMAGE_NAME
-              value: {{ .Values.apiclarity.modules.fuzzer.docker.image }}
             - name: FUZZER_JOB_TEMPLATE_CONFIG_MAP_NAME
               value: "{{ include "apiclarity.name" . }}-fuzzer-template"
           {{- range $key, $val := .Values.apiclarity.env.plugins }}

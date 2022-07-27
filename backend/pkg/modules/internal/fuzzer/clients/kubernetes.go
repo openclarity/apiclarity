@@ -72,7 +72,7 @@ func (l *K8sClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem
 	// Create job item
 	if _, err := l.Create(fuzzerJob); err != nil {
 		logging.Logf("[Fuzzer][K8sClient] Failed to create fuzzer job: %v", err)
-		return fmt.Errorf("failed to get create job")
+		return fmt.Errorf("failed to get create job: %v", err)
 	}
 
 	logging.Logf("[Fuzzer][K8sClient] TriggerFuzzingJob():: <--")

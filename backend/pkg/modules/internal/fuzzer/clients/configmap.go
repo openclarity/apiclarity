@@ -82,7 +82,7 @@ spec:
         runAsUser: 1001
         privileged: false
         allowPrivilegeEscalation: false
-      readOnlyRootFilesystem: false
+        readOnlyRootFilesystem: true
       resources:
       requests:
         memory: "50Mi"
@@ -112,13 +112,13 @@ func (l *ConfigMapClient) TriggerFuzzingJob(apiID int64, endpoint string, securi
 	fuzzerJob, err := l.createFuzzerJob(envVars)
 	if err != nil {
 		logging.Logf("[Fuzzer][ConfigMapClient] Failed to create fuzzer job struct: %v", err)
-		return fmt.Errorf("failed to get create job struct")
+		return fmt.Errorf("failed to get create job struct: %v", err)
 	}
 
 	// Create pod from job
 	if _, err := l.Create(fuzzerJob); err != nil {
 		logging.Logf("[Fuzzer][ConfigMapClient] Failed to create fuzzer job: %v", err)
-		return fmt.Errorf("failed to get create job")
+		return fmt.Errorf("failed to get create job: %v", err)
 	}
 
 	logging.Logf("[Fuzzer][ConfigMapClient] TriggerFuzzingJob():: <--")
