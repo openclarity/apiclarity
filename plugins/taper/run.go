@@ -48,6 +48,7 @@ type Agent struct {
 	podMonitor          *monitor.PodMonitor
 	apiClient           *client.APIClarityPluginsTelemetriesAPI
 	traceSamplingClient *trace_sampling_client.Client
+	config *config.Config
 }
 
 func run(c *cli.Context) {
@@ -79,6 +80,7 @@ func run(c *cli.Context) {
 	}
 	agent := &Agent{
 		apiClient: apiClient,
+		config: runConfig,
 	}
 
 	if runConfig.TraceSamplingEnabled {
@@ -210,11 +212,12 @@ func (a *Agent) createTelemetry(item *api.OutputChannelItem) (*models.Telemetry,
 
 	pathAndQuery := common.GetPathWithQuery(request.URL)
 
-	host, _ := common.GetHostAndPortFromURL(request.URL.String())
+	host, _ := common.GetHostAndPortFromURL(request.URL.String(), a.config.TapperNamespace)
+	destinationNamespace := common.GetDestinationNamespaceFromHostOrDefault(host, a.config.TapperNamespace)
 
 	return &models.Telemetry{
 		DestinationAddress:   item.ConnectionInfo.ServerIP + ":" + item.ConnectionInfo.ServerPort,
-		DestinationNamespace: "", // will dont have this info here, will be figure out by apiclarity
+		DestinationNamespace: destinationNamespace,
 		Request: &models.Request{
 			Common: &models.Common{
 				TruncatedBody: truncatedBodyReq,

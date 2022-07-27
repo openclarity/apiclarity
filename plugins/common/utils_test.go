@@ -156,7 +156,8 @@ func TestCreateHeaders(t *testing.T) {
 
 func Test_getHostAndPortFromTargetURL(t *testing.T) {
 	type args struct {
-		url string
+		url              string
+		defaultNamespace string
 	}
 	tests := []struct {
 		name     string
@@ -176,6 +177,15 @@ func Test_getHostAndPortFromTargetURL(t *testing.T) {
 			name: "with port",
 			args: args{
 				url: "http://catalogue.sock-shop:8080",
+			},
+			wantHost: "catalogue.sock-shop",
+			wantPort: "8080",
+		},
+		{
+			name: "with port - no namespace - use default",
+			args: args{
+				url: "http://catalogue:8080",
+				defaultNamespace: "sock-shop",
 			},
 			wantHost: "catalogue.sock-shop",
 			wantPort: "8080",
@@ -223,7 +233,7 @@ func Test_getHostAndPortFromTargetURL(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotHost, gotPort := GetHostAndPortFromURL(tt.args.url)
+			gotHost, gotPort := GetHostAndPortFromURL(tt.args.url, tt.args.defaultNamespace)
 			if gotHost != tt.wantHost {
 				t.Errorf("GetHostAndPortFromURL() gotHost = %v, want %v", gotHost, tt.wantHost)
 			}

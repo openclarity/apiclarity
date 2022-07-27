@@ -22,6 +22,7 @@ import (
 
 const (
 	UpstreamTelemetryAddressEnv = "UPSTREAM_TELEMETRY_ADDRESS"
+	TapperNamespace             = "TAPPER_NAMESPACE"
 	NamespacesToTapEnv          = "NAMESPACES_TO_TAP"
 	TapLogLevelEnv              = "TAP_LOG_LEVEL"
 	EnableTLSEnv                = "ENABLE_TLS"
@@ -31,6 +32,7 @@ const (
 
 type Config struct {
 	NamespaceToTap           []string
+	TapperNamespace          string
 	UpstreamTelemetryAddress string
 	MizuLogLevel             logging.Level
 	EnableTLS                bool
@@ -45,5 +47,6 @@ func LoadConfig() *Config {
 		EnableTLS:                viper.GetBool(EnableTLSEnv),
 		TraceSamplingAddress:     viper.GetString(TraceSamplingAddressEnv),
 		TraceSamplingEnabled:     viper.GetBool(TraceSamplingEnabled),
+		TapperNamespace:          viper.GetString(TapperNamespace),
 	}
 }

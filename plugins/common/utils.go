@@ -160,7 +160,8 @@ func createClientTransportTLS(host string, tlsOptions *ClientTLSOptions) (runtim
 	return transport, nil
 }
 
-func GetHostAndPortFromURL(URL string) (host, port string) {
+// If host from URL is not containing any dots, the defaultNamespace will be added to the host name
+func GetHostAndPortFromURL(URL, defaultNamespace string) (host, port string) {
 	if !strings.Contains(URL, "://") {
 		// need to add scheme to host in order for url.Parse to parse properly
 		URL = "http://" + URL
@@ -178,6 +179,11 @@ func GetHostAndPortFromURL(URL string) (host, port string) {
 	host = strings.TrimSuffix(host, ".svc.cluster")
 	host = strings.TrimSuffix(host, ".svc")
 
+	// we assume that host with no dots is an internal host, so we will "fix" it with default namespace.
+	if !strings.Contains(host, ".") && defaultNamespace != "" {
+		host = host + "." + defaultNamespace
+	}
+
 	if port == "" {
 		if parsedHost.Scheme == "https" {
 			port = "443"
@@ -188,3 +194,16 @@ func GetHostAndPortFromURL(URL string) (host, port string) {
 
 	return
 }
+
+const (
+	MinimumSeparatedHostSize = 2
+)
+
+// Will try to extract the namespace from the host name, and if not found, will use the provided default namespace.
+func GetDestinationNamespaceFromHostOrDefault(host, defaultNamespace string) string {
+	if sp := strings.Split(host, "."); len(sp) >= MinimumSeparatedHostSize {
+		return sp[1]
+	}
+	return defaultNamespace
+}
+

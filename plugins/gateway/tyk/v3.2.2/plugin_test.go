@@ -144,6 +144,7 @@ func Test_createTelemetry(t *testing.T) {
 func Test_getDestinationNamespaceFromHost(t *testing.T) {
 	type args struct {
 		host string
+		defaultNamespace string
 	}
 	tests := []struct {
 		name string
@@ -151,17 +152,26 @@ func Test_getDestinationNamespaceFromHost(t *testing.T) {
 		want string
 	}{
 		{
-			name: "sanity",
+			name: "namespace exists in host",
 			args: args{
 				host: "foo.bar",
+				defaultNamespace: "bor",
 			},
 			want: "bar",
+		},
+		{
+			name: "namespace does not exists in host",
+			args: args{
+				host: "foo",
+				defaultNamespace: "bor",
+			},
+			want: "bor",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getDestinationNamespaceFromHost(tt.args.host); got != tt.want {
-				t.Errorf("getDestinationNamespaceFromHost() = %v, want %v", got, tt.want)
+			if got := common.GetDestinationNamespaceFromHostOrDefault(tt.args.host, tt.args.defaultNamespace); got != tt.want {
+				t.Errorf("GetDestinationNamespaceFromHostOrDefault() = %v, want %v", got, tt.want)
 			}
 		})
 	}

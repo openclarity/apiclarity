@@ -24,7 +24,6 @@ import (
 	"os"
 	"reflect"
 	"strconv"
-	"strings"
 	"time"
 	"unsafe"
 
@@ -38,10 +37,6 @@ import (
 	"github.com/openclarity/apiclarity/plugins/api/client/models"
 	"github.com/openclarity/apiclarity/plugins/common"
 	"github.com/openclarity/apiclarity/plugins/common/trace_sampling_client"
-)
-
-const (
-	MinimumSeparatedHostSize = 2
 )
 
 var logger = log.Get()
@@ -108,7 +103,7 @@ func ResponseSendTelemetry(_ http.ResponseWriter, res *http.Response, req *http.
 		return
 	}
 	if traceSamplingEnabled && TraceSamplingClient != nil {
-		host, port := common.GetHostAndPortFromURL(apiDefinition.Proxy.TargetURL)
+		host, port := common.GetHostAndPortFromURL(apiDefinition.Proxy.TargetURL, gatewayNamespace)
 		if !TraceSamplingClient.ShouldTrace(host, port) {
 			logger.Infof("Ignoring host: %v:%v", host, port)
 			return
@@ -151,9 +146,9 @@ func createTelemetry(res *http.Response, req *http.Request, apiDefinition *apide
 
 	responseTime := time.Now().UTC().UnixNano() / int64(time.Millisecond)
 
-	host, port := common.GetHostAndPortFromURL(apiDefinition.Proxy.TargetURL)
+	host, port := common.GetHostAndPortFromURL(apiDefinition.Proxy.TargetURL, gatewayNamespace)
 	// TODO this is assuming internal service. for external services it will be wrong.
-	destinationNamespace := getDestinationNamespaceFromHost(host)
+	destinationNamespace := common.GetDestinationNamespaceFromHostOrDefault(host, gatewayNamespace)
 
 	reqBody, truncatedBodyReq, err := common.ReadBody(req.Body)
 	if err != nil {
@@ -214,14 +209,6 @@ func setRequestTimeOnSession(session *user.SessionState) *user.SessionState {
 		session.MetaData[common.RequestTimeContextKey] = requestTime
 	}
 	return session
-}
-
-// Will try to extract the namespace from the host name, and if not found, will use the namespace that the gateway is running in.
-func getDestinationNamespaceFromHost(host string) string {
-	if sp := strings.Split(host, "."); len(sp) >= MinimumSeparatedHostSize {
-		return sp[1]
-	}
-	return gatewayNamespace
 }
 
 // This is a hack. Currently there is an open bug in Tyk that the APIDefinition is nil
