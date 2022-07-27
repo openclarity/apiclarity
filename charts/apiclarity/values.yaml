@@ -31,6 +31,9 @@ global:
   traceSampling:
     enable: false
 
+  bflaAutomaticLearningAndDetection:
+    enable: true
+
 ## End of Global Values
 #######################################################################################
 

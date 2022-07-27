@@ -27,6 +27,7 @@ import (
 
 	"github.com/go-openapi/spec"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api3/common"
@@ -48,6 +49,12 @@ const (
 	AuthzModelAnnotationName   = "authz_model"
 	BFLAStateAnnotationName    = "bfla_state"
 	BFLAFindingsAnnotationName = "bfla_findings"
+
+	automaticLearningAndDetectionEnv     = "BFLA_AUTOMATIC_LEARNING_AND_DETECTION"
+	automaticLearningAndDetectionDefault = false
+
+	learningNrTracesEnv     = "BFLA_LEARNING_NR_TRACES"
+	learningNrTracesDefault = 100
 )
 
 type BFLAStateEnum uint
@@ -58,6 +65,21 @@ const (
 	BFLALearnt
 	BFLADetecting
 )
+
+type BflaConfig struct {
+	AutomaticLearningAndDetection bool
+	LearningNrTraces              uint
+}
+
+func loadConfig() BflaConfig {
+	viper.SetDefault(automaticLearningAndDetectionEnv, automaticLearningAndDetectionDefault)
+	viper.SetDefault(learningNrTracesEnv, learningNrTracesDefault)
+
+	return BflaConfig{
+		AutomaticLearningAndDetection: viper.GetBool(automaticLearningAndDetectionEnv),
+		LearningNrTraces:              viper.GetUint(learningNrTracesEnv),
+	}
+}
 
 func (s BFLAStateEnum) String() string {
 	switch s {
@@ -95,6 +117,7 @@ func NewBFLADetector(ctx context.Context, modName string, bflaBackendAccessor bf
 		findingsRegistry:       NewFindingsRegistry(sp),
 		mu:                     &sync.RWMutex{},
 		modName:                modName,
+		config:                 loadConfig(),
 	}
 	go func() {
 		for {
@@ -238,6 +261,7 @@ type learnAndDetectBFLA struct {
 	findingsRegistry       FindingsRegistry
 	mu                     *sync.RWMutex
 	modName                string
+	config                 BflaConfig
 }
 
 type CommandsChan chan Command
@@ -384,12 +408,16 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Stop Learning': %w", err)
 		}
-		err = l.bflaBackendAccessor.DisableTraces(ctx, l.modName, cmd.apiID)
-		if err != nil {
-			return fmt.Errorf("cannot disable traces: %w", err)
-		}
-		state.State = BFLALearnt
 		state.TraceCounter = 0
+		if l.config.AutomaticLearningAndDetection {
+			state.State = BFLADetecting
+		} else {
+			err = l.bflaBackendAccessor.DisableTraces(ctx, l.modName, cmd.apiID)
+			if err != nil {
+				return fmt.Errorf("cannot disable traces: %w", err)
+			}
+			state.State = BFLALearnt
+		}
 		stateValue.Set(state)
 		l.logError(l.notifyAuthzModel(ctx, cmd.apiID))
 
@@ -554,7 +582,16 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		return fmt.Errorf("spec not present cannot learn BFLA; apiID=%d", trace.APIEvent.APIInfoID)
 	}
 
-	state, stateValue, err := l.checkBFLAState(apiID, BFLALearning, BFLADetecting)
+	var (
+		state      BFLAState
+		stateValue recovery.PersistedValue
+	)
+
+	if l.config.AutomaticLearningAndDetection {
+		state, stateValue, err = l.checkBFLAState(apiID, BFLAStart, BFLALearning, BFLADetecting)
+	} else {
+		state, stateValue, err = l.checkBFLAState(apiID, BFLALearning, BFLADetecting)
+	}
 	if err != nil {
 		return fmt.Errorf("unable to handle traces in the current state: %w", err)
 	}
@@ -562,7 +599,21 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	if trace.K8SSource != nil {
 		srcUID = trace.K8SSource.Uid
 	}
-	if state.State == BFLALearning {
+
+	switch state.State {
+	case BFLAStart:
+		/* we are in the automatic learning and detection: start learning */
+		/* In this case we start learning automatically. This at the moment only works when selective tracing is disabled, otherwise we never receive the first trace */
+		/* TODO: Enable trace for BFLA as soon as the spec is added */
+		state.TraceCounter = int(l.config.LearningNrTraces)
+		state.State = BFLALearning
+		err = l.bflaBackendAccessor.EnableTraces(ctx, l.modName, trace.APIEvent.APIInfoID)
+		if err != nil {
+			return fmt.Errorf("cannot enable traces: %w", err)
+		}
+		stateValue.Set(state)
+		fallthrough
+	case BFLALearning:
 		/* We are in the learning state */
 		log.Debugf("api %d; To process: %d", trace.APIEvent.APIInfoID, state.TraceCounter)
 		err := l.updateAuthorizationModel(tags, resolvedPath, string(trace.APIEvent.Method),
@@ -577,10 +628,15 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		state.TraceCounter--
 
 		if state.TraceCounter == 0 {
-			state.State = BFLALearnt
-			err = l.bflaBackendAccessor.DisableTraces(ctx, l.modName, apiID)
-			if err != nil {
-				log.Errorf("cannot disable traces: %v", err)
+			if l.config.AutomaticLearningAndDetection {
+				/* switch directly to detecting */
+				state.State = BFLADetecting
+			} else {
+				state.State = BFLALearnt
+				err = l.bflaBackendAccessor.DisableTraces(ctx, l.modName, apiID)
+				if err != nil {
+					log.Errorf("cannot disable traces: %v", err)
+				}
 			}
 		}
 		stateValue.Set(state)
@@ -593,63 +649,64 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		aud.LastTime = time.Time(trace.APIEvent.Time)
 		setAud(aud)
 		return err
-	}
-
-	/* We are in detecting state */
-	if err := l.updateAuthorizationModel(tags, resolvedPath, string(trace.APIEvent.Method),
-		trace.K8SSource, trace.APIEvent.APIInfoID, trace.DetectedUser, false, false); err != nil {
-		return err
-	}
-	aud, setAud, err := l.findSourceObj(resolvedPath, string(trace.APIEvent.Method), srcUID, trace.APIEvent.APIInfoID)
-	if err != nil {
-		return fmt.Errorf("unable to find source obj: %w", err)
-	}
-	findingsUpdated := false
-	if !aud.Authorized {
-		// updates the auth model but this time as unauthorized
-		var severity core.AlertSeverity
-		var finding common.APIFinding
-		code := trace.APIEvent.StatusCode
-		if 200 > code || code > 299 {
-			severity = core.AlertInfo
-			finding = APIFindingBFLASuspiciousCallMedium(specType, resolvedPath, trace.APIEvent.Method)
-		} else {
-			severity = core.AlertWarn
-			finding = APIFindingBFLASuspiciousCallHigh(specType, resolvedPath, trace.APIEvent.Method)
+	case BFLADetecting:
+		/* We are in detecting state */
+		if err := l.updateAuthorizationModel(tags, resolvedPath, string(trace.APIEvent.Method),
+			trace.K8SSource, trace.APIEvent.APIInfoID, trace.DetectedUser, false, false); err != nil {
+			return err
 		}
-
-		findingsUpdated, err = l.findingsRegistry.Add(apiID, finding)
+		aud, setAud, err := l.findSourceObj(resolvedPath, string(trace.APIEvent.Method), srcUID, trace.APIEvent.APIInfoID)
 		if err != nil {
-			log.Warnf("unable to add findings: %s", err)
+			return fmt.Errorf("unable to find source obj: %w", err)
 		}
-		if err := l.eventAlerter.SetEventAlert(ctx, l.modName, trace.APIEvent.ID, severity); err != nil {
-			log.Warnf("unable to set alert annotation: %s", err)
-		}
-
-		l.logError(l.notifyAuthzModel(ctx, trace.APIEvent.APIInfoID))
-		aud.WarningStatus = ResolveBFLAStatusInt(int(trace.APIEvent.StatusCode))
-	}
-
-	spc, err := GetOpenAPI(apiInfo, apiID)
-	if err != nil {
-		log.Warnf("unable to get openapi spec")
-	}
-	op := GetSpecOperation(spc, trace.APIEvent.Method, resolvedPath)
-	for _, user := range aud.EndUsers {
-		if user.IsMismatchedScopes(op) {
-			updated, err := l.findingsRegistry.Add(trace.APIEvent.APIInfoID, APIFindingBFLAScopesMismatch(specType, resolvedPath, trace.APIEvent.Method))
-			if err != nil {
-				log.Warnf("unable to add scope mismatch findings: %s", err)
+		findingsUpdated := false
+		if !aud.Authorized {
+			// updates the auth model but this time as unauthorized
+			var severity core.AlertSeverity
+			var finding common.APIFinding
+			code := trace.APIEvent.StatusCode
+			if 200 > code || code > 299 {
+				severity = core.AlertInfo
+				finding = APIFindingBFLASuspiciousCallMedium(specType, resolvedPath, trace.APIEvent.Method)
+			} else {
+				severity = core.AlertWarn
+				finding = APIFindingBFLASuspiciousCallHigh(specType, resolvedPath, trace.APIEvent.Method)
 			}
-			findingsUpdated = findingsUpdated || updated
+
+			findingsUpdated, err = l.findingsRegistry.Add(apiID, finding)
+			if err != nil {
+				log.Warnf("unable to add findings: %s", err)
+			}
+			if err := l.eventAlerter.SetEventAlert(ctx, l.modName, trace.APIEvent.ID, severity); err != nil {
+				log.Warnf("unable to set alert annotation: %s", err)
+			}
+
+			l.logError(l.notifyAuthzModel(ctx, trace.APIEvent.APIInfoID))
+			aud.WarningStatus = ResolveBFLAStatusInt(int(trace.APIEvent.StatusCode))
 		}
+
+		spc, err := GetOpenAPI(apiInfo, apiID)
+		if err != nil {
+			log.Warnf("unable to get openapi spec")
+		}
+		op := GetSpecOperation(spc, trace.APIEvent.Method, resolvedPath)
+		for _, user := range aud.EndUsers {
+			if user.IsMismatchedScopes(op) {
+				updated, err := l.findingsRegistry.Add(trace.APIEvent.APIInfoID, APIFindingBFLAScopesMismatch(specType, resolvedPath, trace.APIEvent.Method))
+				if err != nil {
+					log.Warnf("unable to add scope mismatch findings: %s", err)
+				}
+				findingsUpdated = findingsUpdated || updated
+			}
+		}
+		if findingsUpdated {
+			l.notifyFindings(ctx, apiID)
+		}
+		aud.StatusCode = trace.APIEvent.StatusCode
+		aud.LastTime = time.Time(trace.APIEvent.Time)
+		setAud(aud)
+		return nil
 	}
-	if findingsUpdated {
-		l.notifyFindings(ctx, apiID)
-	}
-	aud.StatusCode = trace.APIEvent.StatusCode
-	aud.LastTime = time.Time(trace.APIEvent.Time)
-	setAud(aud)
 	return nil
 }
 

@@ -155,7 +155,11 @@ const BflaTab = ({data, url, loading, refresh}) => {
     const [selectedPathData, setSelectedPathData] = useState(null);
     const {operations} = data || [];
     const methodPathList = operations ? operations.map((x, idx) => ({ id: idx, ...x })) : [];
-
+    var notselectedTitle = "No authorization model available"
+    
+    if (data.operations != null) {
+        notselectedTitle = "Select a path to see details."
+    }
     return (
         <div className="bfla-tab-wrapper">
             {loading ? <Loader /> :
@@ -170,7 +174,7 @@ const BflaTab = ({data, url, loading, refresh}) => {
                         />
                     </div>
                     <div className="display-pane">
-                        {!selectedPathData ? <NotSelected title="Select a path to see details." /> :
+                        {!selectedPathData ? <NotSelected title={notselectedTitle} /> :
                          <SelectedPathDisplay data={selectedPathData} refresh={refresh} url={url} onBack={() => setSelectedPathData(null)} />}
                     </div>
              </div>
