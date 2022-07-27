@@ -21,6 +21,7 @@ import (
 	"strconv"
 
 	"github.com/ghodss/yaml"
+	uuid "github.com/satori/go.uuid"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -31,7 +32,6 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/config"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
-	uuid "github.com/satori/go.uuid"
 )
 
 var fuzzerJobTemplate = []byte(`apiVersion: batch/v1
