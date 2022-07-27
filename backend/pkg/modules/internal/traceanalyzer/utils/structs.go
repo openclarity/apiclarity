@@ -57,7 +57,13 @@ func (a BaseTraceAnalyzerAPIAnnotation) Method() string     { return a.SpecMetho
 func (a BaseTraceAnalyzerAPIAnnotation) Severity() string   { return SeverityInfo }
 func (a BaseTraceAnalyzerAPIAnnotation) TTL() time.Duration { return 24 * time.Hour } //nolint:gomnd
 func (a BaseTraceAnalyzerAPIAnnotation) SpecLocation() string {
-	return utils.JSONPointer("paths", a.SpecPath, strings.ToLower(a.SpecMethod))
+	if a.SpecPath != "" {
+		return utils.JSONPointer("paths", a.SpecPath, strings.ToLower(a.SpecMethod))
+	}
+
+	// When no spec is available, the trace analyzer can not specify the
+	// location inside the spec. In that case we return an empty location.
+	return ""
 }
 
 // A finding is an interpreted annotation.
