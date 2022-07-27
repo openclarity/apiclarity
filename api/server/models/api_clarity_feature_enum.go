@@ -38,8 +38,8 @@ const (
 	// APIClarityFeatureEnumBfla captures enum value "bfla"
 	APIClarityFeatureEnumBfla APIClarityFeatureEnum = "bfla"
 
-	// APIClarityFeatureEnumDiffer captures enum value "differ"
-	APIClarityFeatureEnumDiffer APIClarityFeatureEnum = "differ"
+	// APIClarityFeatureEnumSpecDiffer captures enum value "spec_differ"
+	APIClarityFeatureEnumSpecDiffer APIClarityFeatureEnum = "spec_differ"
 
 	// APIClarityFeatureEnumFuzzer captures enum value "fuzzer"
 	APIClarityFeatureEnumFuzzer APIClarityFeatureEnum = "fuzzer"
@@ -50,7 +50,7 @@ var apiClarityFeatureEnumEnum []interface{}
 
 func init() {
 	var res []APIClarityFeatureEnum
-	if err := json.Unmarshal([]byte(`["specreconstructor","specdiffs","traceanalyzer","bfla","differ","fuzzer"]`), &res); err != nil {
+	if err := json.Unmarshal([]byte(`["specreconstructor","specdiffs","traceanalyzer","bfla","spec_differ","fuzzer"]`), &res); err != nil {
 		panic(err)
 	}
 	for _, v := range res {

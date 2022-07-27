@@ -1,0 +1,118 @@
+openapi: 3.0.3
+info:
+  title: APIClarity Differ
+  version: 0.0.1
+  description: APIClarity Module API
+paths:
+  /{apiID}/start:
+    post:
+      operationId: StartDiffer
+      summary: Start Differ for an API
+      description: Start Differ for an API.
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+        default:
+          description: 'Error response'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+
+  /{apiID}/stop:
+    post:
+      operationId: StopDiffer
+      summary: Stop Differ for an API
+      description: Stop Differ for an API.
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+        default:
+          description: 'Error response'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+
+components:
+  schemas:
+    Diff:
+      type: object
+      properties:
+        lastSeen:
+          description: The time that the diff was last seen
+          type: 'string'
+          format: date-time
+        diffType:
+          $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/DiffType'
+        oldSpec:
+          description: 'Old spec json string'
+          type: 'string'
+        newSpec:
+          description: 'New spec json string'
+          type: 'string'
+        path:
+          description: 'Path of the diff element'
+          type: 'string'
+        method:
+          description: 'Method of the diff element'
+          $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/HttpMethod'
+        specType:
+          description: 'the spec type the diff was calculated against'
+          $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/SpecType'
+        specTimestamp:
+          description: 'the time that this spec was created. used also as spec version'
+          type: 'string'
+          format: date-time
+      required:
+        - lastSeen
+        - diffType
+        - oldSpec
+        - newSpec
+        - method
+        - path
+        - specType
+        - specTimestamp
+    APIDiffs:
+      type: object
+      properties:
+        apiInfo:
+          $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiInfoWithType'
+        diffs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Diff'
+      required:
+        - apiInfo
+        - diffs
+    SpecDiffs:
+      type: object
+      properties:
+        diffs:
+          $ref: '#/components/schemas/APIDiffs'
+      required:
+        - diffs
+    SpecDiffsNotification:
+      allOf:
+        - $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/BaseNotification'
+        - $ref: '#/components/schemas/SpecDiffs'

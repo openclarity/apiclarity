@@ -165,7 +165,7 @@ Update [values.yaml](https://github.com/openclarity/apiclarity/blob/master/chart
    rm state.gob; rm db.db
    ```
    ```shell
-   DATABASE_DRIVER=LOCAL FAKE_TRACES=true FAKE_TRACES_PATH=./backend/pkg/test/trace_files \
+   DATABASE_DRIVER=LOCAL K8S_LOCAL=true FAKE_TRACES=true FAKE_TRACES_PATH=./backend/pkg/test/trace_files \
    ENABLE_DB_INFO_LOGS=true ./backend/bin/backend run
    ```
 

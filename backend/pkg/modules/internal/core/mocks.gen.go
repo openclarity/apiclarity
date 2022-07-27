@@ -11,6 +11,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	notifications "github.com/openclarity/apiclarity/api3/notifications"
+	speculatorAccessor "github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
 	database "github.com/openclarity/apiclarity/backend/pkg/database"
 	kubernetes "k8s.io/client-go/kubernetes"
 )
@@ -241,6 +242,20 @@ func (mr *MockBackendAccessorMockRecorder) GetAPIInfoAnnotation(arg0, arg1, arg2
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAPIInfoAnnotation", reflect.TypeOf((*MockBackendAccessor)(nil).GetAPIInfoAnnotation), arg0, arg1, arg2, arg3)
 }
 
+// GetSpeculatorAccessor mocks base method.
+func (m *MockBackendAccessor) GetSpeculatorAccessor() speculatorAccessor.SpeculatorAccessor {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSpeculatorAccessor")
+	ret0, _ := ret[0].(speculatorAccessor.SpeculatorAccessor)
+	return ret0
+}
+
+// GetSpeculatorAccessor indicates an expected call of GetSpeculatorAccessor.
+func (mr *MockBackendAccessorMockRecorder) GetSpeculatorAccessor() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpeculatorAccessor", reflect.TypeOf((*MockBackendAccessor)(nil).GetSpeculatorAccessor))
+}
+
 // K8SClient mocks base method.
 func (m *MockBackendAccessor) K8SClient() kubernetes.Interface {
 	m.ctrl.T.Helper()
@@ -316,4 +331,18 @@ func (mr *MockBackendAccessorMockRecorder) StoreAPIInfoAnnotations(arg0, arg1, a
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreAPIInfoAnnotations", reflect.TypeOf((*MockBackendAccessor)(nil).StoreAPIInfoAnnotations), varargs...)
+}
+
+// UpdateAPIEvent mocks base method.
+func (m *MockBackendAccessor) UpdateAPIEvent(arg0 context.Context, arg1 *database.APIEvent) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateAPIEvent", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateAPIEvent indicates an expected call of UpdateAPIEvent.
+func (mr *MockBackendAccessorMockRecorder) UpdateAPIEvent(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAPIEvent", reflect.TypeOf((*MockBackendAccessor)(nil).UpdateAPIEvent), arg0, arg1)
 }

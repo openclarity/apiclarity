@@ -804,7 +804,7 @@ func init() {
         "specdiffs",
         "traceanalyzer",
         "bfla",
-        "differ",
+        "spec_differ",
         "fuzzer"
       ]
     },
@@ -3007,7 +3007,7 @@ func init() {
         "specdiffs",
         "traceanalyzer",
         "bfla",
-        "differ",
+        "spec_differ",
         "fuzzer"
       ]
     },

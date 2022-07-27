@@ -65,6 +65,12 @@ components:
       properties:
         message:
           type: string
+    SpecType:
+      enum:
+        - NONE
+        - PROVIDED
+        - RECONSTRUCTED
+      type: string
     Severity:
       description: 'Severity of a finding'
       type: string
