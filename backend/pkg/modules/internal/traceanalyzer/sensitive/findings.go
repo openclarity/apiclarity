@@ -94,6 +94,8 @@ func (a *APIAnnotationRegexpMatching) Aggregate(ann utils.TraceAnalyzerAnnotatio
 	return initialSize != len(a.MatchingRules)
 }
 
+func (a APIAnnotationRegexpMatching) Severity() string { return utils.SeverityHigh }
+
 func (a APIAnnotationRegexpMatching) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 
 func (a *APIAnnotationRegexpMatching) Deserialize(serialized []byte) error {
@@ -131,7 +133,7 @@ func (a *APIAnnotationRegexpMatching) ToAPIFinding() oapicommon.APIFinding {
 		ProvidedSpecLocation:      &jsonPointer,
 		ReconstructedSpecLocation: &jsonPointer,
 
-		Severity: oapicommon.INFO,
+		Severity: oapicommon.HIGH,
 
 		AdditionalInfo: additionalInfo,
 	}

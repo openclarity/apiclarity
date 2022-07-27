@@ -99,6 +99,8 @@ func (a *APIAnnotationNLID) Aggregate(ann utils.TraceAnalyzerAnnotation) (update
 	return initialSize != len(a.ParamNames)
 }
 
+func (a APIAnnotationNLID) Severity() string { return utils.SeverityMedium }
+
 func (a APIAnnotationNLID) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
 
 func (a *APIAnnotationNLID) Deserialize(serialized []byte) error {
@@ -136,7 +138,7 @@ func (a *APIAnnotationNLID) ToAPIFinding() oapicommon.APIFinding {
 		ProvidedSpecLocation:      &jsonPointer,
 		ReconstructedSpecLocation: &jsonPointer,
 
-		Severity: oapicommon.INFO,
+		Severity: oapicommon.MEDIUM,
 
 		AdditionalInfo: additionalInfo,
 	}
