@@ -599,6 +599,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		return fmt.Errorf("unable to parse spec info: %w", err)
 	}
 	resolvedPath := ResolvePath(tags, trace.APIEvent)
+	log.Debugf("resolved Path = %s", resolvedPath)
 
 	specType := SpecTypeFromAPIInfo(apiInfo)
 	if specType == SpecTypeNone {
@@ -789,7 +790,7 @@ func (l *learnAndDetectBFLA) initAuthorizationModel(apiID uint) error {
 }
 
 func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser, authorize, updateAuthorized bool) error {
-	log.Debug("Update auth model: tags = %v, path = %s, method=%s, apidId=%d", tags, path, method, apiID)
+	log.Debugf("Update auth model: tags = %v, path = %s, method=%s, apidId=%d", tags, path, method, apiID)
 	external := clientRef == nil
 	authzModelEntry, err := l.authzModelsMap.Get(apiID)
 	if err != nil {
@@ -826,7 +827,7 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, pa
 			op.Audience[0].EndUsers = append(op.Audience[0].EndUsers, user)
 		}
 		authzModel.Operations = append(authzModel.Operations, op)
-		log.Debug("Setting authModel %v", authzModel)
+		log.Debugf("Setting authModel %v", authzModel)
 		authzModelEntry.Set(authzModel)
 		return nil
 	}
@@ -963,7 +964,7 @@ func (l *learnAndDetectBFLA) setSourceObj(path, method, clientUID string, apiID 
 	}
 	op.Audience[audIndex] = obj
 
-	log.Debug("Update auth model: path = %s, method=%s, clientUID=%s, apidId=%d", path, method, clientUID, apiID)
+	log.Debugf("Update auth model: path = %s, method=%s, clientUID=%s, apidId=%d", path, method, clientUID, apiID)
 
 	authzModelEntry.Set(authzModel)
 
