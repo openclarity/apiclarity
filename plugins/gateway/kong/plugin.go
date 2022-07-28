@@ -113,11 +113,11 @@ func shouldTrace(kong *pdk.PDK) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("failed to get routed service: %v", err)
 	}
-	host, _ := parseHost(routedService.Host)
-	if traceSamplingClient.ShouldTrace(host) {
+	host, port, _ := parseKongHost(routedService.Host)
+	if traceSamplingClient.ShouldTrace(host, port) {
 		return true, nil
 	}
-	_ = kong.Log.Info("Ignoring host: %v", host)
+	_ = kong.Log.Info("Ignoring host: %v:%v", host, port)
 	return false, nil
 }
 
@@ -141,9 +141,6 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	if err != nil {
 		_ = kong.Log.Warn(fmt.Sprintf("Failed to get client forwarded ip: %v", err))
 	}
-
-	destPort := routedService.Port
-	host := routedService.Host
 
 	// Will get the actual path that the request was sent to, not the routed one
 	path, err := kong.Request.GetPathWithQuery()
@@ -193,10 +190,10 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get response headers: %v", err)
 	}
-	parsedHost, namespace := parseHost(host)
+	host, port, namespace := parseKongHost(routedService.Host)
 
 	telemetry := models.Telemetry{
-		DestinationAddress:   ":" + strconv.Itoa(destPort), // No destination ip for now
+		DestinationAddress:   ":" + port, // No destination ip for now
 		DestinationNamespace: namespace,
 		Request: &models.Request{
 			Common: &models.Common{
@@ -206,7 +203,7 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 				Version:       fmt.Sprintf("%f", version),
 				Time:          requestTime,
 			},
-			Host:   parsedHost,
+			Host:   host,
 			Method: method,
 			Path:   path,
 		},
@@ -237,17 +234,24 @@ func getRequestTimeFromContext(kong *pdk.PDK) (int64, error) {
 	return int64(requestTime), nil
 }
 
-// KongHost: <svc-name>.<namespace>.8000.svc
-// convert to name.namespace.
-func parseHost(kongHost string) (host, namespace string) {
+// KongHost format: <svc-name>.<namespace>.8000.svc.
+func parseKongHost(kongHost string) (host, port, namespace string) {
 	sp := strings.Split(kongHost, ".")
 
 	// nolint:gomnd
 	if len(sp) < 2 {
-		return kongHost, ""
+		host = kongHost
+		return
 	}
 	host = sp[0] + "." + sp[1]
 	namespace = sp[1]
+
+	// nolint:gomnd
+	if len(sp) < 3 {
+		return
+	}
+
+	port = sp[2]
 
 	return
 }
