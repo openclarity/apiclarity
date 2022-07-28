@@ -42,6 +42,7 @@ func TestAgent_shouldTrace(t *testing.T) {
 			},
 			args: args{
 				host: "host1",
+				port: "80",
 			},
 			want: true,
 		},
@@ -50,13 +51,14 @@ func TestAgent_shouldTrace(t *testing.T) {
 			fields: fields{
 				traceSamplingManager: &trace_sampling_client.Client{
 					Hosts: map[string]bool{
-						"host1.ns1": true,
-						"host2.ns2": true,
+						"host1.ns1:80": true,
+						"host2.ns2:80": true,
 					},
 				},
 			},
 			args: args{
 				host: "host1.ns1",
+				port: "80",
 			},
 			want: true,
 		},
@@ -65,13 +67,14 @@ func TestAgent_shouldTrace(t *testing.T) {
 			fields: fields{
 				traceSamplingManager: &trace_sampling_client.Client{
 					Hosts: map[string]bool{
-						"host1.ns1": true,
-						"host2.ns2": true,
+						"host1.ns1:80": true,
+						"host2.ns2:80": true,
 					},
 				},
 			},
 			args: args{
 				host: "host3",
+				port: "80",
 			},
 			want: false,
 		},

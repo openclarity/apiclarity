@@ -39,10 +39,11 @@ import (
 )
 
 const (
-	MaxBodySize           = 1000 * 1000
-	RequestIDHeaderKey    = "X-Request-Id"
-	RequestTimeContextKey = "request_time"
-	SamplingInterval      = 10 * time.Second
+	MaxBodySize              = 1000 * 1000
+	RequestIDHeaderKey       = "X-Request-Id"
+	RequestTimeContextKey    = "request_time"
+	SamplingInterval         = 10 * time.Second
+	MinimumSeparatedHostSize = 2
 )
 
 func ReadBody(body io.ReadCloser) ([]byte, bool, error) {
@@ -197,10 +198,6 @@ func GetHostAndPortFromURL(URL, defaultNamespace string) (host, port string) {
 	return
 }
 
-const (
-	MinimumSeparatedHostSize = 2
-)
-
 // Will try to extract the namespace from the host name, and if not found, will use the provided default namespace.
 func GetDestinationNamespaceFromHostOrDefault(host, defaultNamespace string) string {
 	if sp := strings.Split(host, "."); len(sp) >= MinimumSeparatedHostSize {
@@ -208,4 +205,3 @@ func GetDestinationNamespaceFromHostOrDefault(host, defaultNamespace string) str
 	}
 	return defaultNamespace
 }
-
