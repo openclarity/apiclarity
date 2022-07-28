@@ -212,8 +212,9 @@ func (a *Agent) createTelemetry(item *api.OutputChannelItem) (*models.Telemetry,
 
 	pathAndQuery := common.GetPathWithQuery(request.URL)
 
-	host, _ := common.GetHostAndPortFromURL(request.URL.String(), a.config.TapperNamespace)
-	destinationNamespace := common.GetDestinationNamespaceFromHostOrDefault(host, a.config.TapperNamespace)
+	clientNamespace := a.podMonitor.GetPodNamespaceByIP(item.ConnectionInfo.ClientIP)
+	host, _ := common.GetHostAndPortFromURL(request.Host, clientNamespace)
+	destinationNamespace := common.GetDestinationNamespaceFromHostOrDefault(host, clientNamespace)
 
 	return &models.Telemetry{
 		DestinationAddress:   item.ConnectionInfo.ServerIP + ":" + item.ConnectionInfo.ServerPort,

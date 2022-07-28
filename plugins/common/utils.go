@@ -30,6 +30,7 @@ import (
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 	uuid "github.com/satori/go.uuid"
+	log "github.com/sirupsen/logrus"
 
 	tracesamplingclient "github.com/openclarity/trace-sampling-manager/api/client/client"
 
@@ -169,6 +170,7 @@ func GetHostAndPortFromURL(URL, defaultNamespace string) (host, port string) {
 
 	parsedHost, err := url.Parse(URL)
 	if err != nil {
+		log.Errorf("Failed to parse URL=%v: %v", URL, err)
 		return URL, ""
 	}
 
