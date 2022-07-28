@@ -38,10 +38,10 @@ var (
 )
 
 type Config struct {
-	EnableTLS                bool   `json:"enable_tls"`
-	UpstreamTelemetryAddress string `json:"upstream_telemetry_address"`
-	TraceSamplingAddress     string `json:"trace_sampling_address"`
-	TraceSamplingEnabled     bool   `json:"trace_sampling_enabled"`
+	EnableTLS            bool   `json:"enable_tls"`
+	Host                 string `json:"host"`
+	TraceSamplingHost    string `json:"trace_sampling_host"`
+	TraceSamplingEnabled bool   `json:"trace_sampling_enabled"`
 }
 
 func New() interface{} {
@@ -52,7 +52,7 @@ func (conf Config) Access(kong *pdk.PDK) {
 	if conf.TraceSamplingEnabled && traceSamplingClient == nil {
 		_ = kong.Log.Info("Creating trace sampling client")
 		// TODO tls will not work since trace sampling manager is not supporting it currently
-		traceSampling, err := trace_sampling_client.Create(false, conf.TraceSamplingAddress, common.SamplingInterval)
+		traceSampling, err := trace_sampling_client.Create(false, conf.TraceSamplingHost, common.SamplingInterval)
 		if err != nil {
 			_ = kong.Log.Err(fmt.Sprintf("Failed to create trace sampling client: %v", err))
 		} else {
@@ -85,7 +85,7 @@ func (conf Config) Response(kong *pdk.PDK) {
 				RootCAFileName: common.CACertFile,
 			}
 		}
-		apiClient, err := common.NewTelemetryAPIClient(conf.UpstreamTelemetryAddress, tlsOptions)
+		apiClient, err := common.NewTelemetryAPIClient(conf.Host, tlsOptions)
 		if err != nil {
 			_ = kong.Log.Err(fmt.Sprintf("Failed to create new api client: %v", err))
 			return

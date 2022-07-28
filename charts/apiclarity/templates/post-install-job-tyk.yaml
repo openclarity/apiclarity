@@ -74,9 +74,9 @@ spec:
               value: {{ .Values.trafficSource.tyk.deploymentName }}
             - name: TYK_GATEWAY_DEPLOYMENT_NAMESPACE
               value: {{ .Values.trafficSource.tyk.deploymentNamespace }}
-            - name: UPSTREAM_TELEMETRY_ADDRESS
+            - name: UPSTREAM_TELEMETRY_HOST_NAME
               value: '{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:9000'
-            - name: TRACE_SAMPLING_ADDRESS
+            - name: TRACE_SAMPLING_HOST_NAME
               value: '{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:9990'
             - name: TRACE_SAMPLING_ENABLED
               value: "{{ .Values.global.traceSampling.enable }}"

@@ -42,24 +42,24 @@ import (
 var logger = log.Get()
 
 var (
-	upstreamTelemetryAddress string
-	gatewayNamespace         string
-	enableTLS                bool
-	traceSamplingAddress     string
-	traceSamplingEnabled     bool
-	TraceSamplingClient      *trace_sampling_client.Client
+	telemetryHost        string
+	gatewayNamespace     string
+	enableTLS            bool
+	traceSamplingHost    string
+	traceSamplingEnabled bool
+	TraceSamplingClient  *trace_sampling_client.Client
 )
 
 //nolint:gochecknoinits
 func init() {
-	upstreamTelemetryAddress = os.Getenv("UPSTREAM_TELEMETRY_ADDRESS")
+	telemetryHost = os.Getenv("APICLARITY_HOST")
 	gatewayNamespace = os.Getenv("TYK_GATEWAY_NAMESPACE")
 	if os.Getenv("ENABLE_TLS") == "true" {
 		enableTLS = true
 	}
 	if os.Getenv("TRACE_SAMPLING_ENABLED") == "true" {
-		traceSamplingAddress = os.Getenv("TRACE_SAMPLING_ADDRESS")
-		traceSamplingClient, err := trace_sampling_client.Create(false, traceSamplingAddress, common.SamplingInterval)
+		traceSamplingHost = os.Getenv("TRACE_SAMPLING_HOST_NAME")
+		traceSamplingClient, err := trace_sampling_client.Create(false, traceSamplingHost, common.SamplingInterval)
 		if err != nil {
 			logger.Errorf("Failed to create trace sampling client: %v", err)
 		} else {
@@ -122,7 +122,7 @@ func ResponseSendTelemetry(_ http.ResponseWriter, res *http.Response, req *http.
 			RootCAFileName: common.CACertFile,
 		}
 	}
-	apiClient, err := common.NewTelemetryAPIClient(upstreamTelemetryAddress, tlsOptions)
+	apiClient, err := common.NewTelemetryAPIClient(telemetryHost, tlsOptions)
 	if err != nil {
 		logger.Errorf("Failed to create new api client: %v", err)
 		return

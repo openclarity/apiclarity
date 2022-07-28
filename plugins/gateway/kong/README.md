@@ -56,7 +56,7 @@ If you just want to try it out with a demo application, and you don't have kong 
        KONG_GATEWAY_DEPLOYMENT_NAMESPACE=kong \
        KONG_GATEWAY_INGRESS_NAME=catalogue \
        KONG_GATEWAY_INGRESS_NAMESPACE=sock-shop \
-       UPSTREAM_TELEMETRY_ADDRESS=apiclarity-apiclarity.apiclarity:9000 \
+       UPSTREAM_TELEMETRY_HOST_NAME=apiclarity-apiclarity.apiclarity:9000 \
        deploy/deploy.sh
     ```   
     * Note: If you installed Kong using helm, the deployment name might be different. Please change the KONG_GATEWAY_DEPLOYMENT_NAME env var accordingly.    
@@ -104,7 +104,7 @@ If you just want to try it out with a demo application, and you don't have kong 
        KONG_GATEWAY_DEPLOYMENT_NAMESPACE=<namespace> \
        KONG_GATEWAY_INGRESS_NAME=<name> \
        KONG_GATEWAY_INGRESS_NAMESPACE=<namespace> \
-       UPSTREAM_TELEMETRY_ADDRESS=<telemetry service address> ./deploy/deploy.sh
+       UPSTREAM_TELEMETRY_HOST_NAME=<telemetry service address> ./deploy/deploy.sh
         ```
 
     2. Helm installation

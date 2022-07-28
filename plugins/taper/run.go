@@ -73,7 +73,7 @@ func run(c *cli.Context) {
 			RootCAFileName: common.CACertFile,
 		}
 	}
-	apiClient, err := common.NewTelemetryAPIClient(runConfig.UpstreamTelemetryAddress, tlsOptions)
+	apiClient, err := common.NewTelemetryAPIClient(runConfig.UpstreamAddress, tlsOptions)
 	if err != nil {
 		log.Errorf("Failed to create new api client: %v", err)
 		return
@@ -84,7 +84,7 @@ func run(c *cli.Context) {
 	}
 
 	if runConfig.TraceSamplingEnabled {
-		TSM, err := trace_sampling_client.Create(false, runConfig.TraceSamplingAddress, common.SamplingInterval)
+		TSM, err := trace_sampling_client.Create(false, runConfig.TraceSamplingManagerAddress, common.SamplingInterval)
 		if err != nil {
 			log.Errorf("Failed to create trace sampling client: %v", err)
 			return

@@ -37,21 +37,21 @@ func TestLoadConfig(t *testing.T) {
 			namespacesToTapEnv: "ns1 ns2",
 			upstreamAddressEnv: "addr:80",
 			want: &Config{
-				NamespaceToTap:           []string{"ns1", "ns2"},
-				UpstreamTelemetryAddress: "addr:80",
+				NamespaceToTap:  []string{"ns1", "ns2"},
+				UpstreamAddress: "addr:80",
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := os.Setenv(UpstreamTelemetryAddressEnv, tt.upstreamAddressEnv)
+			err := os.Setenv(UpstreamAddressEnv, tt.upstreamAddressEnv)
 			assert.NilError(t, err)
 			err = os.Setenv(NamespacesToTapEnv, tt.namespacesToTapEnv)
 			assert.NilError(t, err)
 
 			got := LoadConfig()
 			os.Unsetenv(NamespacesToTapEnv)
-			os.Unsetenv(UpstreamTelemetryAddressEnv)
+			os.Unsetenv(UpstreamAddressEnv)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("LoadConfig() got = %v, want %v", got, tt.want)
 			}
