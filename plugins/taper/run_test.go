@@ -27,6 +27,7 @@ func TestAgent_shouldTrace(t *testing.T) {
 	}
 	type args struct {
 		host string
+		port string
 	}
 	tests := []struct {
 		name   string
@@ -41,6 +42,7 @@ func TestAgent_shouldTrace(t *testing.T) {
 			},
 			args: args{
 				host: "host1",
+				port: "80",
 			},
 			want: true,
 		},
@@ -49,13 +51,14 @@ func TestAgent_shouldTrace(t *testing.T) {
 			fields: fields{
 				traceSamplingManager: &trace_sampling_client.Client{
 					Hosts: map[string]bool{
-						"host1.ns1": true,
-						"host2.ns2": true,
+						"host1.ns1:80": true,
+						"host2.ns2:80": true,
 					},
 				},
 			},
 			args: args{
 				host: "host1.ns1",
+				port: "80",
 			},
 			want: true,
 		},
@@ -64,13 +67,14 @@ func TestAgent_shouldTrace(t *testing.T) {
 			fields: fields{
 				traceSamplingManager: &trace_sampling_client.Client{
 					Hosts: map[string]bool{
-						"host1.ns1": true,
-						"host2.ns2": true,
+						"host1.ns1:80": true,
+						"host2.ns2:80": true,
 					},
 				},
 			},
 			args: args{
 				host: "host3",
+				port: "80",
 			},
 			want: false,
 		},
@@ -96,7 +100,7 @@ func TestAgent_shouldTrace(t *testing.T) {
 			a := &Agent{
 				traceSamplingClient: tt.fields.traceSamplingManager,
 			}
-			if got := a.shouldTrace(tt.args.host); got != tt.want {
+			if got := a.shouldTrace(tt.args.host, tt.args.port); got != tt.want {
 				t.Errorf("shouldTrace() = %v, want %v", got, tt.want)
 			}
 		})
