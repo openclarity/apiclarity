@@ -351,7 +351,7 @@ func (p *traceAnalyzer) toCoreAPIAnnotations(anns []utils.TraceAnalyzerAPIAnnota
 		if redacted {
 			a = a.Redacted()
 		}
-		annotation, err := a.Serialize()
+		annotation, err := json.Marshal(a)
 		if err != nil {
 			log.Errorf("unable to serialize annotation: %s", err)
 		}
@@ -398,7 +398,7 @@ func fromCoreAPIAnnotation(coreAnn *core.Annotation) (ann utils.TraceAnalyzerAPI
 		return nil, fmt.Errorf("unknown annotation '%s'", coreAnn.Name)
 	}
 
-	err = a.Deserialize(coreAnn.Annotation)
+	err = json.Unmarshal(coreAnn.Annotation, a)
 	if err != nil {
 		return a, fmt.Errorf("unable to convert API Annotation to DB representation: %w", err)
 	}

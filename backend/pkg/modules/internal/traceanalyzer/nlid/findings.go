@@ -101,16 +101,6 @@ func (a *APIAnnotationNLID) Aggregate(ann utils.TraceAnalyzerAnnotation) (update
 
 func (a APIAnnotationNLID) Severity() string { return utils.SeverityMedium }
 
-func (a APIAnnotationNLID) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-
-func (a *APIAnnotationNLID) Deserialize(serialized []byte) error {
-	var tmp APIAnnotationNLID
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
-
 func (a APIAnnotationNLID) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
 	return &newA

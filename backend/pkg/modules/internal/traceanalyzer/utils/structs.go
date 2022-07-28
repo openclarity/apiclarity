@@ -41,8 +41,6 @@ type TraceAnalyzerAPIAnnotation interface {
 	Aggregate(TraceAnalyzerAnnotation) (notify bool)
 	Severity() string
 	TTL() time.Duration
-	Serialize() ([]byte, error)
-	Deserialize([]byte) error
 	Redacted() TraceAnalyzerAPIAnnotation
 	ToAPIFinding() oapicommon.APIFinding
 }

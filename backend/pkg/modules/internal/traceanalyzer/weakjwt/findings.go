@@ -89,16 +89,6 @@ func (a *APIAnnotationNoAlgField) Aggregate(ann utils.TraceAnalyzerAnnotation) (
 
 func (a APIAnnotationNoAlgField) Severity() string { return utils.SeverityHigh }
 
-func (a APIAnnotationNoAlgField) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-
-func (a *APIAnnotationNoAlgField) Deserialize(serialized []byte) error {
-	var tmp APIAnnotationNoAlgField
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
-
 func (a APIAnnotationNoAlgField) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
 	return &newA
@@ -174,16 +164,6 @@ func (a *APIAnnotationAlgFieldNone) Aggregate(ann utils.TraceAnalyzerAnnotation)
 }
 
 func (a APIAnnotationAlgFieldNone) Severity() string { return utils.SeverityHigh }
-
-func (a APIAnnotationAlgFieldNone) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-
-func (a *APIAnnotationAlgFieldNone) Deserialize(serialized []byte) error {
-	var tmp APIAnnotationAlgFieldNone
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
 
 func (a APIAnnotationAlgFieldNone) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
@@ -268,16 +248,6 @@ func (a *APIAnnotationNotRecommendedAlg) Aggregate(ann utils.TraceAnalyzerAnnota
 }
 
 func (a APIAnnotationNotRecommendedAlg) Severity() string { return utils.SeverityHigh }
-
-func (a APIAnnotationNotRecommendedAlg) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-
-func (a *APIAnnotationNotRecommendedAlg) Deserialize(serialized []byte) error {
-	var tmp APIAnnotationNotRecommendedAlg
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
 
 func (a APIAnnotationNotRecommendedAlg) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
@@ -366,16 +336,6 @@ func (a *APIAnnotationNoExpireClaim) Aggregate(ann utils.TraceAnalyzerAnnotation
 }
 
 func (a APIAnnotationNoExpireClaim) Severity() string { return utils.SeverityMedium }
-
-func (a APIAnnotationNoExpireClaim) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-
-func (a *APIAnnotationNoExpireClaim) Deserialize(serialized []byte) error {
-	var tmp APIAnnotationNoExpireClaim
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
 
 func (a APIAnnotationNoExpireClaim) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
@@ -479,16 +439,6 @@ func (a *APIAnnotationExpTooFar) Aggregate(ann utils.TraceAnalyzerAnnotation) (u
 
 func (a APIAnnotationExpTooFar) Severity() string { return utils.SeverityMedium }
 
-func (a APIAnnotationExpTooFar) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-
-func (a *APIAnnotationExpTooFar) Deserialize(serialized []byte) error {
-	var tmp APIAnnotationExpTooFar
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
-
 func (a APIAnnotationExpTooFar) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
 	return &newA
@@ -584,16 +534,6 @@ func (a *APIAnnotationWeakSymetricSecret) Aggregate(ann utils.TraceAnalyzerAnnot
 
 func (a APIAnnotationWeakSymetricSecret) Severity() string { return utils.SeverityHigh }
 
-func (a APIAnnotationWeakSymetricSecret) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-
-func (a *APIAnnotationWeakSymetricSecret) Deserialize(serialized []byte) error {
-	var tmp APIAnnotationWeakSymetricSecret
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
-
 func (a APIAnnotationWeakSymetricSecret) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
 	return &newA
@@ -687,15 +627,6 @@ func (a *APIAnnotationSensitiveContent) Aggregate(ann utils.TraceAnalyzerAnnotat
 }
 
 func (a APIAnnotationSensitiveContent) Severity() string { return utils.SeverityHigh }
-
-func (a *APIAnnotationSensitiveContent) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-func (a *APIAnnotationSensitiveContent) Deserialize(serialized []byte) error {
-	var tmp APIAnnotationSensitiveContent
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
 
 func (a APIAnnotationSensitiveContent) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
