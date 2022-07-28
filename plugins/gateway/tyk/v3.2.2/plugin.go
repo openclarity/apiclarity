@@ -21,11 +21,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"os"
 	"reflect"
 	"strconv"
-	"strings"
 	"time"
 	"unsafe"
 
@@ -41,31 +39,27 @@ import (
 	"github.com/openclarity/apiclarity/plugins/common/trace_sampling_client"
 )
 
-const (
-	MinimumSeparatedHostSize = 2
-)
-
 var logger = log.Get()
 
 var (
-	telemetryHost        string
-	gatewayNamespace     string
-	enableTLS            bool
-	traceSamplingHost    string
-	traceSamplingEnabled bool
-	TraceSamplingClient  *trace_sampling_client.Client
+	upstreamTelemetryAddress string
+	gatewayNamespace         string
+	enableTLS                bool
+	traceSamplingAddress     string
+	traceSamplingEnabled     bool
+	TraceSamplingClient      *trace_sampling_client.Client
 )
 
 //nolint:gochecknoinits
 func init() {
-	telemetryHost = os.Getenv("APICLARITY_HOST")
+	upstreamTelemetryAddress = os.Getenv("UPSTREAM_TELEMETRY_ADDRESS")
 	gatewayNamespace = os.Getenv("TYK_GATEWAY_NAMESPACE")
 	if os.Getenv("ENABLE_TLS") == "true" {
 		enableTLS = true
 	}
 	if os.Getenv("TRACE_SAMPLING_ENABLED") == "true" {
-		traceSamplingHost = os.Getenv("TRACE_SAMPLING_HOST_NAME")
-		traceSamplingClient, err := trace_sampling_client.Create(false, traceSamplingHost, common.SamplingInterval)
+		traceSamplingAddress = os.Getenv("TRACE_SAMPLING_ADDRESS")
+		traceSamplingClient, err := trace_sampling_client.Create(false, traceSamplingAddress, common.SamplingInterval)
 		if err != nil {
 			logger.Errorf("Failed to create trace sampling client: %v", err)
 		} else {
@@ -109,9 +103,9 @@ func ResponseSendTelemetry(_ http.ResponseWriter, res *http.Response, req *http.
 		return
 	}
 	if traceSamplingEnabled && TraceSamplingClient != nil {
-		host, _ := getHostAndPortFromTargetURL(apiDefinition.Proxy.TargetURL)
-		if !TraceSamplingClient.ShouldTrace(host) {
-			logger.Infof("Ignoring host: %v", host)
+		host, port := common.GetHostAndPortFromURL(apiDefinition.Proxy.TargetURL, gatewayNamespace)
+		if !TraceSamplingClient.ShouldTrace(host, port) {
+			logger.Infof("Ignoring host: %v:%v", host, port)
 			return
 		}
 	}
@@ -128,7 +122,7 @@ func ResponseSendTelemetry(_ http.ResponseWriter, res *http.Response, req *http.
 			RootCAFileName: common.CACertFile,
 		}
 	}
-	apiClient, err := common.NewTelemetryAPIClient(telemetryHost, tlsOptions)
+	apiClient, err := common.NewTelemetryAPIClient(upstreamTelemetryAddress, tlsOptions)
 	if err != nil {
 		logger.Errorf("Failed to create new api client: %v", err)
 		return
@@ -152,8 +146,9 @@ func createTelemetry(res *http.Response, req *http.Request, apiDefinition *apide
 
 	responseTime := time.Now().UTC().UnixNano() / int64(time.Millisecond)
 
-	host, port := getHostAndPortFromTargetURL(apiDefinition.Proxy.TargetURL)
-	destinationNamespace := getDestinationNamespaceFromHost(host)
+	host, port := common.GetHostAndPortFromURL(apiDefinition.Proxy.TargetURL, gatewayNamespace)
+	// TODO this is assuming internal service. for external services it will be wrong.
+	destinationNamespace := common.GetDestinationNamespaceFromHostOrDefault(host, gatewayNamespace)
 
 	reqBody, truncatedBodyReq, err := common.ReadBody(req.Body)
 	if err != nil {
@@ -214,38 +209,6 @@ func setRequestTimeOnSession(session *user.SessionState) *user.SessionState {
 		session.MetaData[common.RequestTimeContextKey] = requestTime
 	}
 	return session
-}
-
-// Will try to extract the namespace from the host name, and if not found, will use the namespace that the gateway is running in.
-func getDestinationNamespaceFromHost(host string) string {
-	if sp := strings.Split(host, "."); len(sp) >= MinimumSeparatedHostSize {
-		return sp[0]
-	}
-	return gatewayNamespace
-}
-
-func getHostAndPortFromTargetURL(targetURL string) (host, port string) {
-	if !strings.Contains(targetURL, "://") {
-		// need to add scheme to host in order for url.Parse to parse properly
-		targetURL = "http://" + targetURL
-	}
-
-	parsedHost, err := url.Parse(targetURL)
-	if err != nil {
-		return targetURL, ""
-	}
-
-	host = parsedHost.Hostname()
-	port = parsedHost.Port()
-	if port == "" {
-		if parsedHost.Scheme == "https" {
-			port = "443"
-		} else {
-			port = "80"
-		}
-	}
-
-	return
 }
 
 // This is a hack. Currently there is an open bug in Tyk that the APIDefinition is nil

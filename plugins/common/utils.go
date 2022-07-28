@@ -30,17 +30,20 @@ import (
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 	uuid "github.com/satori/go.uuid"
+	log "github.com/sirupsen/logrus"
 
 	tracesamplingclient "github.com/openclarity/trace-sampling-manager/api/client/client"
+
 	"github.com/openclarity/apiclarity/plugins/api/client/client"
 	"github.com/openclarity/apiclarity/plugins/api/client/models"
 )
 
 const (
-	MaxBodySize           = 1000 * 1000
-	RequestIDHeaderKey    = "X-Request-Id"
-	RequestTimeContextKey = "request_time"
-	SamplingInterval      = 10 * time.Second
+	MaxBodySize              = 1000 * 1000
+	RequestIDHeaderKey       = "X-Request-Id"
+	RequestTimeContextKey    = "request_time"
+	SamplingInterval         = 10 * time.Second
+	MinimumSeparatedHostSize = 2
 )
 
 func ReadBody(body io.ReadCloser) ([]byte, bool, error) {
@@ -157,4 +160,48 @@ func createClientTransportTLS(host string, tlsOptions *ClientTLSOptions) (runtim
 		&http.Client{Transport: customTransport})
 
 	return transport, nil
+}
+
+// If host from URL is not containing any dots, the defaultNamespace will be added to the host name
+func GetHostAndPortFromURL(URL, defaultNamespace string) (host, port string) {
+	if !strings.Contains(URL, "://") {
+		// need to add scheme to host in order for url.Parse to parse properly
+		URL = "http://" + URL
+	}
+
+	parsedHost, err := url.Parse(URL)
+	if err != nil {
+		log.Errorf("Failed to parse URL=%v: %v", URL, err)
+		return URL, ""
+	}
+
+	host = parsedHost.Hostname()
+	port = parsedHost.Port()
+
+	host = strings.TrimSuffix(host, ".svc.cluster.local")
+	host = strings.TrimSuffix(host, ".svc.cluster")
+	host = strings.TrimSuffix(host, ".svc")
+
+	// we assume that host with no dots is an internal host, so we will "fix" it with default namespace.
+	if !strings.Contains(host, ".") && defaultNamespace != "" {
+		host = host + "." + defaultNamespace
+	}
+
+	if port == "" {
+		if parsedHost.Scheme == "https" {
+			port = "443"
+		} else {
+			port = "80"
+		}
+	}
+
+	return
+}
+
+// Will try to extract the namespace from the host name, and if not found, will use the provided default namespace.
+func GetDestinationNamespaceFromHostOrDefault(host, defaultNamespace string) string {
+	if sp := strings.Split(host, "."); len(sp) >= MinimumSeparatedHostSize {
+		return sp[1]
+	}
+	return defaultNamespace
 }
