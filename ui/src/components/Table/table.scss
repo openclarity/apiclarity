@@ -9,6 +9,7 @@ $cell-padding: 10px;
     .no-pagination-results-total {
         font-size: 14px;
         line-height: 19px;
+        min-height: 19px;
         color: $color-grey-black;
         display: flex;
         justify-content: flex-end;
@@ -24,7 +25,7 @@ $cell-padding: 10px;
 
             .table-tr {
                 border-bottom: 2px solid $color-grey-lighter;
-                
+
                 .table-th {
                     padding: $cell-padding;
                     margin: auto 0;
