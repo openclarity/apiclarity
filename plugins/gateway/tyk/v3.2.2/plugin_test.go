@@ -32,68 +32,12 @@ import (
 	"github.com/openclarity/apiclarity/plugins/common"
 )
 
-func Test_getHostAndPortFromTargetURL(t *testing.T) {
-	type args struct {
-		url string
-	}
-	tests := []struct {
-		name     string
-		args     args
-		wantHost string
-		wantPort string
-	}{
-		{
-			name: "no port",
-			args: args{
-				url: "http://catalogue.sock-shop",
-			},
-			wantHost: "catalogue.sock-shop",
-			wantPort: "80",
-		},
-		{
-			name: "with port",
-			args: args{
-				url: "http://catalogue.sock-shop:8080",
-			},
-			wantHost: "catalogue.sock-shop",
-			wantPort: "8080",
-		},
-		{
-			name: "https",
-			args: args{
-				url: "https://catalogue.sock-shop:8080",
-			},
-			wantHost: "catalogue.sock-shop",
-			wantPort: "8080",
-		},
-		{
-			name: "https no port",
-			args: args{
-				url: "https://catalogue.sock-shop",
-			},
-			wantHost: "catalogue.sock-shop",
-			wantPort: "443",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gotHost, gotPort := getHostAndPortFromTargetURL(tt.args.url)
-			if gotHost != tt.wantHost {
-				t.Errorf("getHostAndPortFromTargetURL() gotHost = %v, want %v", gotHost, tt.wantHost)
-			}
-			if gotPort != tt.wantPort {
-				t.Errorf("getHostAndPortFromTargetURL() gotPort = %v, want %v", gotPort, tt.wantPort)
-			}
-		})
-	}
-}
-
 func Test_createTelemetry(t *testing.T) {
 	tNow := time.Now().UTC().UnixNano() / int64(time.Millisecond)
 
 	apiDefinition := apidef.APIDefinition{
 		Proxy: apidef.ProxyConfig{
-			TargetURL: "ns.echo:9000",
+			TargetURL: "echo.ns:9000",
 		},
 	}
 
@@ -153,7 +97,7 @@ func Test_createTelemetry(t *testing.T) {
 						Version: "HTTP/1.0",
 						Time:    tNow,
 					},
-					Host:   "ns.echo",
+					Host:   "echo.ns",
 					Method: "GET",
 					Path:   "/api?foo=bar",
 				},
@@ -199,7 +143,8 @@ func Test_createTelemetry(t *testing.T) {
 
 func Test_getDestinationNamespaceFromHost(t *testing.T) {
 	type args struct {
-		host string
+		host             string
+		defaultNamespace string
 	}
 	tests := []struct {
 		name string
@@ -207,24 +152,26 @@ func Test_getDestinationNamespaceFromHost(t *testing.T) {
 		want string
 	}{
 		{
-			name: "host no port",
+			name: "namespace exists in host",
 			args: args{
-				host: "foo.bar",
+				host:             "foo.bar",
+				defaultNamespace: "bor",
 			},
-			want: "foo",
+			want: "bar",
 		},
 		{
-			name: "host with port",
+			name: "namespace does not exists in host",
 			args: args{
-				host: "foo.bar:8080",
+				host:             "foo",
+				defaultNamespace: "bor",
 			},
-			want: "foo",
+			want: "bor",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := getDestinationNamespaceFromHost(tt.args.host); got != tt.want {
-				t.Errorf("getDestinationNamespaceFromHost() = %v, want %v", got, tt.want)
+			if got := common.GetDestinationNamespaceFromHostOrDefault(tt.args.host, tt.args.defaultNamespace); got != tt.want {
+				t.Errorf("GetDestinationNamespaceFromHostOrDefault() = %v, want %v", got, tt.want)
 			}
 		})
 	}

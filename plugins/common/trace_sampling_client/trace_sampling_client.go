@@ -22,9 +22,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/openclarity/apiclarity/plugins/common"
 	"github.com/openclarity/trace-sampling-manager/api/client/client"
 	"github.com/openclarity/trace-sampling-manager/api/client/client/operations"
-	"github.com/openclarity/apiclarity/plugins/common"
 )
 
 type Client struct {
@@ -74,13 +74,18 @@ func (t *Client) Start() {
 	}()
 }
 
-func (t *Client) ShouldTrace(host string) bool {
+func (t *Client) ShouldTrace(host, port string) bool {
 	t.lock.RLock()
 	defer t.lock.RUnlock()
 
 	if len(t.Hosts) == 0 {
 		return false
 	}
+
+	if port != "" {
+		host = host + ":" + port
+	}
+
 	if t.Hosts[allHosts] || t.Hosts[host] {
 		return true
 	}
