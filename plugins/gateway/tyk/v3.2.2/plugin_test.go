@@ -143,7 +143,7 @@ func Test_createTelemetry(t *testing.T) {
 
 func Test_getDestinationNamespaceFromHost(t *testing.T) {
 	type args struct {
-		host string
+		host             string
 		defaultNamespace string
 	}
 	tests := []struct {
@@ -154,7 +154,7 @@ func Test_getDestinationNamespaceFromHost(t *testing.T) {
 		{
 			name: "namespace exists in host",
 			args: args{
-				host: "foo.bar",
+				host:             "foo.bar",
 				defaultNamespace: "bor",
 			},
 			want: "bar",
@@ -162,7 +162,7 @@ func Test_getDestinationNamespaceFromHost(t *testing.T) {
 		{
 			name: "namespace does not exists in host",
 			args: args{
-				host: "foo",
+				host:             "foo",
 				defaultNamespace: "bor",
 			},
 			want: "bor",

@@ -48,7 +48,7 @@ type Agent struct {
 	podMonitor          *monitor.PodMonitor
 	apiClient           *client.APIClarityPluginsTelemetriesAPI
 	traceSamplingClient *trace_sampling_client.Client
-	config *config.Config
+	config              *config.Config
 }
 
 func run(c *cli.Context) {
@@ -80,7 +80,7 @@ func run(c *cli.Context) {
 	}
 	agent := &Agent{
 		apiClient: apiClient,
-		config: runConfig,
+		config:    runConfig,
 	}
 
 	if runConfig.TraceSamplingEnabled {
