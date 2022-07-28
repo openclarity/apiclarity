@@ -234,7 +234,7 @@ func getRequestTimeFromContext(kong *pdk.PDK) (int64, error) {
 	return int64(requestTime), nil
 }
 
-// KongHost format: <svc-name>.<namespace>.8000.svc
+// KongHost format: <svc-name>.<namespace>.8000.svc.
 func parseKongHost(kongHost string) (host, port, namespace string) {
 	sp := strings.Split(kongHost, ".")
 
