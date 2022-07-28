@@ -366,13 +366,15 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if cmd.clientRef != nil {
 			clientUID = cmd.clientRef.Uid
 		}
-		aud, setAud, err := l.findSourceObj(cmd.path, cmd.method, clientUID, cmd.apiID)
+		aud, err := l.findSourceObj(cmd.path, cmd.method, clientUID, cmd.apiID)
 		if err != nil {
 			return fmt.Errorf("unable to find source obj: %w", err)
 		}
 		aud.WarningStatus = restapi.LEGITIMATE
-		setAud(aud)
-
+		err = l.setSourceObj(cmd.path, cmd.method, clientUID, cmd.apiID, aud)
+		if err != nil {
+			return fmt.Errorf("unable to update audience: %w", err)
+		}
 		l.logError(l.notifyAuthzModel(ctx, cmd.apiID))
 
 	case *MarkIllegitimateCommand:
@@ -396,13 +398,15 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if cmd.clientRef != nil {
 			clientUID = cmd.clientRef.Uid
 		}
-		aud, setAud, err := l.findSourceObj(cmd.path, cmd.method, clientUID, cmd.apiID)
+		aud, err := l.findSourceObj(cmd.path, cmd.method, clientUID, cmd.apiID)
 		if err != nil {
 			return fmt.Errorf("unable to find source obj: %w", err)
 		}
 		aud.WarningStatus = ResolveBFLAStatusInt(int(aud.StatusCode))
-		setAud(aud)
-
+		err = l.setSourceObj(cmd.path, cmd.method, clientUID, cmd.apiID, aud)
+		if err != nil {
+			return fmt.Errorf("unable to update audience: %w", err)
+		}
 	case *StopLearningCommand:
 		state, stateValue, err := l.checkBFLAState(cmd.apiID, BFLALearning)
 		if err != nil {
@@ -660,13 +664,13 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			stateValue.Set(state)
 		}
 
-		aud, setAud, err := l.findSourceObj(resolvedPath, string(trace.APIEvent.Method), srcUID, trace.APIEvent.APIInfoID)
+		aud, err := l.findSourceObj(resolvedPath, string(trace.APIEvent.Method), srcUID, trace.APIEvent.APIInfoID)
 		if err != nil {
 			return fmt.Errorf("unable to find source obj: %w", err)
 		}
 		aud.StatusCode = trace.APIEvent.StatusCode
 		aud.LastTime = time.Time(trace.APIEvent.Time)
-		setAud(aud)
+		err = l.setSourceObj(resolvedPath, string(trace.APIEvent.Method), srcUID, trace.APIEvent.APIInfoID, aud)
 		return err
 	case BFLADetecting:
 		/* We are in detecting state */
@@ -674,7 +678,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			trace.K8SSource, trace.APIEvent.APIInfoID, trace.DetectedUser, false, false); err != nil {
 			return err
 		}
-		aud, setAud, err := l.findSourceObj(resolvedPath, string(trace.APIEvent.Method), srcUID, trace.APIEvent.APIInfoID)
+		aud, err := l.findSourceObj(resolvedPath, string(trace.APIEvent.Method), srcUID, trace.APIEvent.APIInfoID)
 		if err != nil {
 			return fmt.Errorf("unable to find source obj: %w", err)
 		}
@@ -723,7 +727,11 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		}
 		aud.StatusCode = trace.APIEvent.StatusCode
 		aud.LastTime = time.Time(trace.APIEvent.Time)
-		setAud(aud)
+		err = l.setSourceObj(resolvedPath, string(trace.APIEvent.Method), srcUID, trace.APIEvent.APIInfoID, aud)
+		if err != nil {
+			return fmt.Errorf("unable to update audience: %w", err)
+		}
+
 		return nil
 	}
 	return nil
@@ -897,15 +905,15 @@ func (l *learnAndDetectBFLA) getState(apiID uint) (BFLAState, error) {
 func (l *learnAndDetectBFLA) FindSourceObj(path, method, clientUID string, apiID uint) (*SourceObject, error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	aud, _, err := l.findSourceObj(path, method, clientUID, apiID)
+	aud, err := l.findSourceObj(path, method, clientUID, apiID)
 	return aud, err
 }
 
-func (l *learnAndDetectBFLA) findSourceObj(path, method, clientUID string, apiID uint) (obj *SourceObject, setFn func(v *SourceObject), err error) {
+func (l *learnAndDetectBFLA) findSourceObj(path, method, clientUID string, apiID uint) (obj *SourceObject, err error) {
 	external := clientUID == ""
 	authzModelEntry, err := l.authzModelsMap.Get(apiID)
 	if err != nil {
-		return nil, nil, fmt.Errorf("authz model load error: %w", err)
+		return nil, fmt.Errorf("authz model load error: %w", err)
 	}
 	authzModel, _ := authzModelEntry.Get().(AuthorizationModel)
 	_, op := authzModel.Operations.Find(func(op *Operation) bool {
@@ -913,22 +921,49 @@ func (l *learnAndDetectBFLA) findSourceObj(path, method, clientUID string, apiID
 			op.Method == method
 	})
 	if op == nil {
-		return nil, nil, fmt.Errorf("operation not found: %w", err)
+		return nil, fmt.Errorf("operation not found: %w", err)
 	}
-	audIndex, obj := op.Audience.Find(func(sa *SourceObject) bool {
+	_, obj = op.Audience.Find(func(sa *SourceObject) bool {
 		if external {
 			return sa.External
 		}
 		return sa.K8sObject.Uid == clientUID
 	})
 	if obj == nil {
-		return nil, nil, fmt.Errorf("audience not found: %w", err)
+		return nil, fmt.Errorf("audience not found: %w", err)
 	}
 
-	return obj, func(v *SourceObject) {
-		op.Audience[audIndex] = v
-		authzModelEntry.Set(authzModel)
-	}, nil
+	return obj, nil
+}
+
+func (l *learnAndDetectBFLA) setSourceObj(path, method, clientUID string, apiID uint, obj *SourceObject) error {
+	external := clientUID == ""
+	authzModelEntry, err := l.authzModelsMap.Get(apiID)
+	if err != nil {
+		return fmt.Errorf("authz model load error: %w", err)
+	}
+	authzModel, _ := authzModelEntry.Get().(AuthorizationModel)
+	_, op := authzModel.Operations.Find(func(op *Operation) bool {
+		return op.Path == path &&
+			op.Method == method
+	})
+	if op == nil {
+		return fmt.Errorf("operation not found: %w", err)
+	}
+	audIndex, oldObj := op.Audience.Find(func(sa *SourceObject) bool {
+		if external {
+			return sa.External
+		}
+		return sa.K8sObject.Uid == clientUID
+	})
+	if oldObj == nil {
+		return fmt.Errorf("audience not found: %w", err)
+	}
+	op.Audience[audIndex] = obj
+
+	authzModelEntry.Set(authzModel)
+
+	return nil
 }
 
 func (l *learnAndDetectBFLA) SendTrace(trace *CompositeTrace) {
