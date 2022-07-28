@@ -16,7 +16,6 @@
 package nlid
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -41,15 +40,7 @@ func (a *AnnotationNLID) Name() string { return NLIDType }
 func (a AnnotationNLID) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
 	return NewAPIAnnotationNLID(path, method)
 }
-func (a *AnnotationNLID) Severity() string           { return utils.SeverityInfo }
-func (a *AnnotationNLID) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-func (a *AnnotationNLID) Deserialize(serialized []byte) error {
-	var tmp AnnotationNLID
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
+func (a *AnnotationNLID) Severity() string { return utils.SeverityInfo }
 
 func (a AnnotationNLID) Redacted() utils.TraceAnalyzerAnnotation {
 	newA := a

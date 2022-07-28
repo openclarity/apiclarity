@@ -28,8 +28,6 @@ type TraceAnalyzerAnnotation interface {
 	Name() string
 	NewAPIAnnotation(path, method string) TraceAnalyzerAPIAnnotation
 	Severity() string
-	Serialize() ([]byte, error)
-	Deserialize([]byte) error
 	Redacted() TraceAnalyzerAnnotation
 	ToFinding() Finding
 }

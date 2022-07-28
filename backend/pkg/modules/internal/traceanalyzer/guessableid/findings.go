@@ -16,7 +16,6 @@
 package guessableid
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -54,16 +53,7 @@ func (a *AnnotationGuessableID) Name() string { return GuessableType }
 func (a *AnnotationGuessableID) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
 	return NewAPIAnnotationGuessableID(path, method)
 }
-func (a *AnnotationGuessableID) Severity() string           { return utils.SeverityInfo }
-func (a *AnnotationGuessableID) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-func (a *AnnotationGuessableID) Deserialize(serialized []byte) error {
-	var tmp AnnotationGuessableID
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
-
+func (a *AnnotationGuessableID) Severity() string { return utils.SeverityInfo }
 func (a AnnotationGuessableID) Redacted() utils.TraceAnalyzerAnnotation {
 	newA := a
 	for i := range newA.Params {

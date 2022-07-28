@@ -16,7 +16,6 @@
 package weakjwt
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -45,15 +44,7 @@ func (a *AnnotationNoAlgField) Name() string { return JWTNoAlgField }
 func (a *AnnotationNoAlgField) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
 	return NewAPIAnnotationNoAlgField(path, method)
 }
-func (a *AnnotationNoAlgField) Severity() string           { return utils.SeverityHigh }
-func (a *AnnotationNoAlgField) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-func (a *AnnotationNoAlgField) Deserialize(serialized []byte) error {
-	var tmp AnnotationNoAlgField
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
+func (a *AnnotationNoAlgField) Severity() string { return utils.SeverityHigh }
 
 func (a AnnotationNoAlgField) Redacted() utils.TraceAnalyzerAnnotation {
 	return &a
@@ -119,18 +110,10 @@ func NewAnnotationAlgFieldNone() *AnnotationAlgFieldNone {
 }
 func (a *AnnotationAlgFieldNone) Name() string { return JWTAlgFieldNone }
 func (a *AnnotationAlgFieldNone) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
-	return nil
-}
-func (a *AnnotationAlgFieldNone) Severity() string           { return utils.SeverityHigh }
-func (a *AnnotationAlgFieldNone) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-func (a *AnnotationAlgFieldNone) Deserialize(serialized []byte) error {
-	var tmp AnnotationAlgFieldNone
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
+	return NewAPIAnnotationAlgFieldNone(path, method)
 }
 
+func (a *AnnotationAlgFieldNone) Severity() string { return utils.SeverityHigh }
 func (a AnnotationAlgFieldNone) Redacted() utils.TraceAnalyzerAnnotation {
 	return &a
 }
@@ -200,16 +183,7 @@ func (a *AnnotationNotRecommendedAlg) Name() string { return JWTNotRecommendedAl
 func (a *AnnotationNotRecommendedAlg) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
 	return NewAPIAnnotationNotRecommendedAlg(path, method)
 }
-func (a *AnnotationNotRecommendedAlg) Severity() string           { return utils.SeverityHigh }
-func (a *AnnotationNotRecommendedAlg) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-func (a *AnnotationNotRecommendedAlg) Deserialize(serialized []byte) error {
-	var tmp AnnotationNotRecommendedAlg
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
-
+func (a *AnnotationNotRecommendedAlg) Severity() string { return utils.SeverityHigh }
 func (a AnnotationNotRecommendedAlg) Redacted() utils.TraceAnalyzerAnnotation {
 	return &a
 }
@@ -293,16 +267,7 @@ func (a *AnnotationNoExpireClaim) Name() string { return JWTNoExpireClaim }
 func (a *AnnotationNoExpireClaim) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
 	return NewAPIAnnotationNoExpireClaim(path, method)
 }
-func (a *AnnotationNoExpireClaim) Severity() string           { return utils.SeverityLow }
-func (a *AnnotationNoExpireClaim) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-func (a *AnnotationNoExpireClaim) Deserialize(serialized []byte) error {
-	var tmp AnnotationNoExpireClaim
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
-
+func (a *AnnotationNoExpireClaim) Severity() string { return utils.SeverityLow }
 func (a AnnotationNoExpireClaim) Redacted() utils.TraceAnalyzerAnnotation {
 	return &a
 }
@@ -389,16 +354,7 @@ func (a *AnnotationExpTooFar) Name() string { return JWTExpTooFar }
 func (a *AnnotationExpTooFar) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
 	return NewAPIAnnotationExpTooFar(path, method)
 }
-func (a *AnnotationExpTooFar) Severity() string           { return utils.SeverityLow }
-func (a *AnnotationExpTooFar) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-func (a *AnnotationExpTooFar) Deserialize(serialized []byte) error {
-	var tmp AnnotationExpTooFar
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
-
+func (a *AnnotationExpTooFar) Severity() string { return utils.SeverityLow }
 func (a AnnotationExpTooFar) Redacted() utils.TraceAnalyzerAnnotation {
 	return &a
 }
@@ -480,15 +436,7 @@ func (a *AnnotationWeakSymetricSecret) Name() string { return JWTWeakSymetricSec
 func (a *AnnotationWeakSymetricSecret) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
 	return NewAPIAnnotationWeakSymetricSecret(path, method)
 }
-func (a *AnnotationWeakSymetricSecret) Severity() string           { return utils.SeverityMedium }
-func (a *AnnotationWeakSymetricSecret) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-func (a *AnnotationWeakSymetricSecret) Deserialize(serialized []byte) error {
-	var tmp AnnotationWeakSymetricSecret
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
+func (a *AnnotationWeakSymetricSecret) Severity() string { return utils.SeverityMedium }
 
 const maxRedactedKeyLen = 4
 
@@ -572,16 +520,7 @@ func (a *AnnotationSensitiveContent) Name() string { return JWTSensitiveContent 
 func (a *AnnotationSensitiveContent) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
 	return NewAPIAnnotationSensitiveContent(path, method)
 }
-func (a *AnnotationSensitiveContent) Severity() string           { return utils.SeverityMedium }
-func (a *AnnotationSensitiveContent) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-func (a *AnnotationSensitiveContent) Deserialize(serialized []byte) error {
-	var tmp AnnotationSensitiveContent
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
-
+func (a *AnnotationSensitiveContent) Severity() string { return utils.SeverityMedium }
 func (a AnnotationSensitiveContent) Redacted() utils.TraceAnalyzerAnnotation {
 	redactedHeaders := make([]string, len(a.SensitiveWordsInHeaders))
 	for i, r := range a.SensitiveWordsInHeaders {
