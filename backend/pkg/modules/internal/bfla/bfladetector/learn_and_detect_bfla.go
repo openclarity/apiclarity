@@ -505,7 +505,11 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if err != nil {
 			return fmt.Errorf("unable to get authz model state: %w", err)
 		}
-		pv.Set(cmd.authzModel)
+		authzModel, err := validateAuthzModel(cmd.authzModel)
+		if err != nil {
+			return fmt.Errorf("invalid authorization model provided: %w", err)
+		}
+		pv.Set(authzModel)
 	}
 	if err != nil {
 		return fmt.Errorf("error when trying to update the authz model: %w", err)
@@ -517,6 +521,21 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 
 	log.Info("bfla synced for authz model")
 	return nil
+}
+
+func validateAuthzModel(m AuthorizationModel) (AuthorizationModel, error) {
+	for _, op := range m.Operations {
+		for _, aud := range op.Audience {
+			if aud.Authorized {
+				aud.WarningStatus = restapi.LEGITIMATE
+			} else if aud.StatusCode < 200 || aud.StatusCode > 299 {
+				aud.WarningStatus = restapi.SUSPICIOUSHIGH
+			} else {
+				aud.WarningStatus = restapi.SUSPICIOUSMEDIUM
+			}
+		}
+	}
+	return m, nil
 }
 
 func GetSpecOperation(spc *spec.Swagger, method models.HTTPMethod, resolvedPath string) *spec.Operation {
@@ -622,24 +641,24 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			return err
 		}
 
-		if state.TraceCounter == -1 {
-			return nil
-		}
-		state.TraceCounter--
+		if state.TraceCounter != -1 {
 
-		if state.TraceCounter == 0 {
-			if l.config.AutomaticLearningAndDetection {
-				/* switch directly to detecting */
-				state.State = BFLADetecting
-			} else {
-				state.State = BFLALearnt
-				err = l.bflaBackendAccessor.DisableTraces(ctx, l.modName, apiID)
-				if err != nil {
-					log.Errorf("cannot disable traces: %v", err)
+			state.TraceCounter--
+
+			if state.TraceCounter == 0 {
+				if l.config.AutomaticLearningAndDetection {
+					/* switch directly to detecting */
+					state.State = BFLADetecting
+				} else {
+					state.State = BFLALearnt
+					err = l.bflaBackendAccessor.DisableTraces(ctx, l.modName, apiID)
+					if err != nil {
+						log.Errorf("cannot disable traces: %v", err)
+					}
 				}
 			}
+			stateValue.Set(state)
 		}
-		stateValue.Set(state)
 
 		aud, setAud, err := l.findSourceObj(resolvedPath, string(trace.APIEvent.Method), srcUID, trace.APIEvent.APIInfoID)
 		if err != nil {
@@ -681,7 +700,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 				log.Warnf("unable to set alert annotation: %s", err)
 			}
 
-			l.logError(l.notifyAuthzModel(ctx, trace.APIEvent.APIInfoID))
+			// l.logError(l.notifyAuthzModel(ctx, trace.APIEvent.APIInfoID))
 			aud.WarningStatus = ResolveBFLAStatusInt(int(trace.APIEvent.StatusCode))
 		}
 
@@ -897,11 +916,8 @@ func (l *learnAndDetectBFLA) findSourceObj(path, method, clientUID string, apiID
 		return nil, nil, fmt.Errorf("operation not found: %w", err)
 	}
 	audIndex, obj := op.Audience.Find(func(sa *SourceObject) bool {
-		if sa.External == external {
-			return true
-		}
-		if sa.External && !external {
-			return false
+		if external {
+			return sa.External
 		}
 		return sa.K8sObject.Uid == clientUID
 	})

@@ -28,6 +28,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/bfladetector"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/k8straceannotator"
@@ -67,14 +68,19 @@ func buildTrace(method, path, src, dest, userid string) *bfladetector.CompositeT
 	}
 }
 
-func getAPIInfoWithTags(path string) *database.APIInfo {
-	return &database.APIInfo{
-		ProvidedSpecInfo: fmt.Sprintf(`{"tags":[{"methodAndPathList":[{"pathId":"test","path":%q}]}]}`, path),
-		HasProvidedSpec:  true,
+func getAPIInfoWithTags(method string, path string) *database.APIInfo {
+	apiInfo := database.APIInfo{
+		HasProvidedSpec: true,
 	}
+
+	if method != "" && path != "" {
+		apiInfo.ProvidedSpecInfo = fmt.Sprintf(`{"tags":[{"methodAndPathList":[{"pathId":"test","path":%q}]}]}`, path)
+		apiInfo.ProvidedSpec = fmt.Sprintf(`{"swagger": "2.0","info": {"title": "","version": ""},"paths": {%q: {%q: {"responses": {"200": {"description": ""}}}}}}`, method, path)
+	}
+	return &apiInfo
 }
 
-func initBFLADetector(ctrl *gomock.Controller, backendAccessor *core.MockBackendAccessor, storedAuthModels map[uint]bfladetector.AuthorizationModel, storedBFLAStates map[uint]bfladetector.BFLAState) bfladetector.BFLADetector {
+func initBFLADetector(ctrl *gomock.Controller, backendAccessor *core.MockBackendAccessor, storedAuthModels map[uint]bfladetector.AuthorizationModel, storedBFLAStates map[uint]bfladetector.BFLAState, storedBFLAFindings map[uint]common.APIFindings) bfladetector.BFLADetector {
 	var (
 		ctx            = context.Background()
 		eventAlerter   = bfladetector.NewMockEventAlerter(ctrl)
@@ -104,6 +110,14 @@ func initBFLADetector(ctrl *gomock.Controller, backendAccessor *core.MockBackend
 				val := state.(bfladetector.BFLAState)
 				storedBFLAStates[arg0] = val
 			}, found, nil
+		case bfladetector.BFLAFindingsAnnotationName:
+			val, found := storedBFLAFindings[arg0]
+			reflect.ValueOf(arg2).Elem().Set(reflect.ValueOf(val))
+			return func(state interface{}) {
+				// nolint:forcetypeassert
+				val := state.(common.APIFindings)
+				storedBFLAFindings[arg0] = val
+			}, found, nil
 		}
 		panic("unknown annotation name")
 	}).AnyTimes()
@@ -114,7 +128,7 @@ func initBFLADetector(ctrl *gomock.Controller, backendAccessor *core.MockBackend
 	return bfladetector.NewBFLADetector(ctx, string(models.APIClarityFeatureEnumBfla), backendAccessor, eventAlerter, bflaNotifier, statePersister, 5*time.Second)
 }
 
-func Test_learnAndDetectBFLA_BuildAuthzModel(t *testing.T) {
+func Test_learnAndDetectBFLA_BuildAuthzModelTraceCounter(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	backendAccessor := core.NewMockBackendAccessor(ctrl)
@@ -122,7 +136,8 @@ func Test_learnAndDetectBFLA_BuildAuthzModel(t *testing.T) {
 
 	storedAuthModels := map[uint]bfladetector.AuthorizationModel{}
 	storedBFLAStates := map[uint]bfladetector.BFLAState{}
-	detector := initBFLADetector(ctrl, backendAccessor, storedAuthModels, storedBFLAStates)
+	storedBFLAFindings := map[uint]common.APIFindings{}
+	detector := initBFLADetector(ctrl, backendAccessor, storedAuthModels, storedBFLAStates, storedBFLAFindings)
 
 	type testTrace struct {
 		*bfladetector.CompositeTrace
@@ -144,7 +159,7 @@ func Test_learnAndDetectBFLA_BuildAuthzModel(t *testing.T) {
 			{buildTrace("GET", "/catalogue", "frontend", "catalogue", "user3"), "/catalogue"},
 			{buildTrace("GET", "/cards", "frontend", "catalogue", "user3"), "/cards"},
 		},
-		wantAuthModels: authModels(),
+		wantAuthModels: authModelsAfterLearning(),
 	}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -156,13 +171,107 @@ func Test_learnAndDetectBFLA_BuildAuthzModel(t *testing.T) {
 
 			for _, trace := range tt.traces {
 				backendAccessor.EXPECT().GetAPIInfo(context.TODO(), gomock.Any()).DoAndReturn(func(ctx context.Context, apiID uint) (*database.APIInfo, error) {
-					return getAPIInfoWithTags(trace.resolvedPath), nil
+					return getAPIInfoWithTags(string(trace.APIEvent.Method), trace.resolvedPath), nil
 				}).AnyTimes()
 				trace.APIEvent.APIInfoID = mapID2name[trace.K8SDestination.Uid]
 				detector.SendTrace(trace.CompositeTrace)
 				time.Sleep(100 * time.Millisecond)
 			}
 			assert(t, tt.wantAuthModels, storedAuthModels)
+		})
+	}
+}
+
+func Test_learnAndDetectBFLA_BuildAuthzModelNoTraceCounter(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	backendAccessor := core.NewMockBackendAccessor(ctrl)
+	backendAccessor.EXPECT().Notify(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+
+	storedAuthModels := map[uint]bfladetector.AuthorizationModel{}
+	storedBFLAStates := map[uint]bfladetector.BFLAState{}
+	storedBFLAFindings := map[uint]common.APIFindings{}
+	detector := initBFLADetector(ctrl, backendAccessor, storedAuthModels, storedBFLAStates, storedBFLAFindings)
+
+	type testTrace struct {
+		*bfladetector.CompositeTrace
+		resolvedPath string
+	}
+	tests := []struct {
+		name                         string
+		learningTraces               []*testTrace
+		wantAuthModelsAfterLearning  map[uint]bfladetector.AuthorizationModel
+		detectionTraces              []*testTrace
+		wantAuthModelsAfterDetection map[uint]bfladetector.AuthorizationModel
+	}{{
+		name: "Builds auth model correctly",
+		learningTraces: []*testTrace{
+			{buildTrace("GET", "/carts/61fbce65997a8ede0eea3c57/items", "frontend", "carts", "user1"), "/carts/{id}/items"},
+			{buildTrace("GET", "/carts/61fbce65997a8ede0eea3c53/items", "frontend", "carts", "user2"), "/carts/{id}/items"},
+			{buildTrace("POST", "/carts/61fbce65997a8ede0eea3c57/items", "frontend", "carts", "user1"), "/carts/{id}/items"},
+			{buildTrace("POST", "/addresses", "frontend", "carts", "user3"), "/addresses"},
+			{buildTrace("POST", "/login", "frontend", "user", "user2"), "/login"},
+			{buildTrace("POST", "/register", "frontend", "user", "user2"), "/register"},
+			{buildTrace("GET", "/catalogue", "frontend", "catalogue", "user3"), "/catalogue"},
+			{buildTrace("GET", "/cards", "frontend", "catalogue", "user3"), "/cards"},
+		},
+		wantAuthModelsAfterLearning: authModelsAfterLearning(),
+		detectionTraces: []*testTrace{
+			{buildTrace("POST", "/addresses", "attacker", "carts", "user33"), "/addresses"},
+		},
+		wantAuthModelsAfterDetection: authModelsAfterDetection(),
+	}}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			backendAccessor.EXPECT().EnableTraces(context.TODO(), gomock.Any(), gomock.Any()).Return(nil).Times(3)
+
+			assertNoErr(t, detector.StartLearning(mapID2name["user"], -1))
+			assertNoErr(t, detector.StartLearning(mapID2name["catalogue"], -1))
+			assertNoErr(t, detector.StartLearning(mapID2name["carts"], -1))
+
+			for _, trace := range tt.learningTraces {
+				backendAccessor.EXPECT().GetAPIInfo(context.TODO(), gomock.Any()).DoAndReturn(func(ctx context.Context, apiID uint) (*database.APIInfo, error) {
+					return getAPIInfoWithTags(string(trace.APIEvent.Method), trace.resolvedPath), nil
+				}).Times(1)
+				trace.APIEvent.APIInfoID = mapID2name[trace.K8SDestination.Uid]
+				detector.SendTrace(trace.CompositeTrace)
+				time.Sleep(100 * time.Millisecond)
+			}
+			assert(t, tt.wantAuthModelsAfterLearning, storedAuthModels)
+
+			backendAccessor.EXPECT().DisableTraces(context.TODO(), gomock.Any(), gomock.Any()).Return(nil).Times(3)
+			backendAccessor.EXPECT().GetAPIInfo(context.TODO(), gomock.Any()).DoAndReturn(func(ctx context.Context, apiID uint) (*database.APIInfo, error) {
+				return getAPIInfoWithTags("", ""), nil
+			}).Times(3)
+			assertNoErr(t, detector.StopLearning(mapID2name["user"]))
+			assertNoErr(t, detector.StopLearning(mapID2name["catalogue"]))
+			assertNoErr(t, detector.StopLearning(mapID2name["carts"]))
+			assert(t, tt.wantAuthModelsAfterLearning, storedAuthModels)
+
+			backendAccessor.EXPECT().EnableTraces(context.TODO(), gomock.Any(), gomock.Any()).Return(nil).Times(3)
+			assertNoErr(t, detector.StartDetection(mapID2name["user"]))
+			assertNoErr(t, detector.StartDetection(mapID2name["catalogue"]))
+			assertNoErr(t, detector.StartDetection(mapID2name["carts"]))
+
+			for _, trace := range tt.detectionTraces {
+				backendAccessor.EXPECT().GetAPIInfo(context.TODO(), gomock.Any()).DoAndReturn(func(ctx context.Context, apiID uint) (*database.APIInfo, error) {
+					return getAPIInfoWithTags(string(trace.APIEvent.Method), trace.resolvedPath), nil
+				}).AnyTimes()
+				trace.APIEvent.APIInfoID = mapID2name[trace.K8SDestination.Uid]
+				detector.SendTrace(trace.CompositeTrace)
+				time.Sleep(100 * time.Millisecond)
+			}
+
+			assert(t, tt.wantAuthModelsAfterDetection, storedAuthModels)
+			backendAccessor.EXPECT().DisableTraces(context.TODO(), gomock.Any(), gomock.Any()).Return(nil).Times(3)
+			backendAccessor.EXPECT().GetAPIInfo(context.TODO(), gomock.Any()).DoAndReturn(func(ctx context.Context, apiID uint) (*database.APIInfo, error) {
+				return getAPIInfoWithTags("", ""), nil
+			}).AnyTimes()
+			assertNoErr(t, detector.StopDetection(mapID2name["user"]))
+			assertNoErr(t, detector.StopDetection(mapID2name["catalogue"]))
+			assertNoErr(t, detector.StopDetection(mapID2name["carts"]))
+			assert(t, tt.wantAuthModelsAfterDetection, storedAuthModels)
+
 		})
 	}
 }
@@ -200,7 +309,7 @@ func Test_learnAndDetectBFLA_DenyTrace(t *testing.T) {
 		authModels, wantAuthModels map[uint]bfladetector.AuthorizationModel
 	}{{
 		name:       "deny trace success",
-		authModels: authModels(),
+		authModels: authModelsAfterLearning(),
 		wantAuthModels: map[uint]bfladetector.AuthorizationModel{
 			mapID2name["user"]: {
 				Operations: bfladetector.Operations{{
@@ -286,12 +395,13 @@ func Test_learnAndDetectBFLA_DenyTrace(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			storedBFLAStates := map[uint]bfladetector.BFLAState{}
+			storedBFLAFindings := map[uint]common.APIFindings{}
 			backendAccessor := core.NewMockBackendAccessor(ctrl)
 			backendAccessor.EXPECT().GetAPIInfo(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, apiID uint) (*database.APIInfo, error) {
-				return getAPIInfoWithTags("/carts/{id}/items"), nil
+				return getAPIInfoWithTags("get", "/carts/{id}/items"), nil
 			}).AnyTimes()
 			backendAccessor.EXPECT().Notify(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-			detector := initBFLADetector(ctrl, backendAccessor, tt.authModels, storedBFLAStates)
+			detector := initBFLADetector(ctrl, backendAccessor, tt.authModels, storedBFLAStates, storedBFLAFindings)
 			backendAccessor.EXPECT().EnableTraces(context.TODO(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
 			assertNoErr(t, detector.StartLearning(mapID2name["carts"], -1))
 			backendAccessor.EXPECT().DisableTraces(context.TODO(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -311,7 +421,7 @@ func Test_learnAndDetectBFLA_ApproveTrace(t *testing.T) {
 		authModels, wantAuthModels map[uint]bfladetector.AuthorizationModel
 	}{{
 		name:       "approve trace success",
-		authModels: authModels(),
+		authModels: authModelsAfterLearning(),
 		wantAuthModels: map[uint]bfladetector.AuthorizationModel{
 			mapID2name["user"]: {
 				Operations: bfladetector.Operations{{
@@ -407,13 +517,13 @@ func Test_learnAndDetectBFLA_ApproveTrace(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			storedBFLAStates := map[uint]bfladetector.BFLAState{}
-
+			storedBFLAFindings := map[uint]common.APIFindings{}
 			backendAccessor := core.NewMockBackendAccessor(ctrl)
 			backendAccessor.EXPECT().GetAPIInfo(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, apiID uint) (*database.APIInfo, error) {
-				return getAPIInfoWithTags("/carts/{id}/items"), nil
+				return getAPIInfoWithTags("get", "/carts/{id}/items"), nil
 			}).AnyTimes()
 			backendAccessor.EXPECT().Notify(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-			detector := initBFLADetector(ctrl, backendAccessor, tt.authModels, storedBFLAStates)
+			detector := initBFLADetector(ctrl, backendAccessor, tt.authModels, storedBFLAStates, storedBFLAFindings)
 			backendAccessor.EXPECT().EnableTraces(context.TODO(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
 			assertNoErr(t, detector.StartLearning(mapID2name["carts"], -1))
 			backendAccessor.EXPECT().DisableTraces(context.TODO(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -430,7 +540,7 @@ func toJSON(v interface{}) []byte {
 	return bb
 }
 
-func authModels() map[uint]bfladetector.AuthorizationModel {
+func authModelsAfterLearning() map[uint]bfladetector.AuthorizationModel {
 	return map[uint]bfladetector.AuthorizationModel{
 		mapID2name["user"]: {
 			Operations: bfladetector.Operations{{
@@ -512,6 +622,18 @@ func authModels() map[uint]bfladetector.AuthorizationModel {
 			}},
 		},
 	}
+}
+
+func authModelsAfterDetection() map[uint]bfladetector.AuthorizationModel {
+	model := authModelsAfterLearning()
+	model[mapID2name["carts"]].Operations[2].Audience = append(model[mapID2name["carts"]].Operations[2].Audience, &bfladetector.SourceObject{
+		K8sObject:     newClientRef("attacker"),
+		EndUsers:      bfladetector.EndUsers{{ID: "user33"}},
+		Authorized:    false,
+		WarningStatus: restapi.SUSPICIOUSHIGH,
+		StatusCode:    200,
+	})
+	return model
 }
 
 func Test_Contains(t *testing.T) {
