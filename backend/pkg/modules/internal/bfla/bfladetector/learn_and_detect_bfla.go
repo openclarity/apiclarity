@@ -626,8 +626,8 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			log.Warnf("unable to set alert annotation: %s", err)
 		}
 
-		l.logError(l.notifyAuthzModel(ctx, trace.APIEvent.APIInfoID))
 		aud.WarningStatus = ResolveBFLAStatusInt(int(trace.APIEvent.StatusCode))
+		// l.logError(l.notifyAuthzModel(ctx, trace.APIEvent.APIInfoID))
 	}
 
 	spc, err := GetOpenAPI(apiInfo, apiID)
