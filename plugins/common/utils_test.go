@@ -184,10 +184,19 @@ func Test_getHostAndPortFromTargetURL(t *testing.T) {
 		{
 			name: "with port - no namespace - use default",
 			args: args{
-				url: "http://catalogue:8080",
+				url:              "http://catalogue:8080",
 				defaultNamespace: "sock-shop",
 			},
 			wantHost: "catalogue.sock-shop",
+			wantPort: "8080",
+		},
+		{
+			name: "external with default namespace",
+			args: args{
+				url:              "www.example.com:8080",
+				defaultNamespace: "sock-shop",
+			},
+			wantHost: "www.example.com",
 			wantPort: "8080",
 		},
 		{
