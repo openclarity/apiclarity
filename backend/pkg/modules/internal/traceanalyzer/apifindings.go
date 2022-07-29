@@ -106,13 +106,8 @@ func getPreviousAPIFindings(ctx context.Context, accessor core.BackendAccessor, 
 	}
 
 	paths := map[findingKey]utils.TraceAnalyzerAPIAnnotation{}
-	for _, dbAnn := range dbAnns {
-		taAnn, err := fromCoreAPIAnnotation(dbAnn)
-		if err != nil {
-			return apiFindings{
-				paths: map[findingKey]utils.TraceAnalyzerAPIAnnotation{},
-			}
-		}
+	taAnns := fromCoreAPIAnnotations(dbAnns)
+	for _, taAnn := range taAnns {
 		paths[findingKey{path: taAnn.Path(), method: taAnn.Method(), name: taAnn.Name()}] = taAnn
 	}
 
