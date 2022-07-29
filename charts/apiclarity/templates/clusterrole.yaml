@@ -7,8 +7,8 @@ metadata:
     {{ include "apiclarity.labels" . }}
 rules:
 - apiGroups: [""]
-  resources: ["nodes", "services", "pods", "configmaps"]
-  verbs: ["get", "list", "watch"]
+  resources: ["nodes", "services", "pods", "configmaps", "secrets"]
+  verbs: ["get", "list", "watch", "create"]
 - apiGroups: ["apps"]
   resources: ["replicasets", "daemonsets", "deployments"]
   verbs: ["get", "list", "watch"]

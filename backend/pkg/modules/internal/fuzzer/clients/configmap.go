@@ -32,6 +32,7 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/config"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/tools"
 )
 
 var fuzzerJobTemplate = []byte(`apiVersion: batch/v1
@@ -100,6 +101,7 @@ type ConfigMapClient struct {
 	configMapName      string
 	configMapNamespace string
 	currentJob         *batchv1.Job
+	imagePullSecrets   map[int64]*tools.ImagePullSecret
 }
 
 func (l *ConfigMapClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem string, timeBudget string) error {
@@ -130,6 +132,16 @@ func (l *ConfigMapClient) StopFuzzingJob(apiID int64, complete bool) error {
 	if l.currentJob == nil {
 		return fmt.Errorf("no current k8s job to terminate")
 	}
+
+	secret, found := l.imagePullSecrets[apiID]
+	if found {
+		err := secret.Delete(context.TODO(), l.hClient)
+		if err != nil {
+			// Not blocking
+			logging.Logf("[Fuzzer][ConfigMapClient] StopFuzzingJob(%v): failed to delete secret: %v", apiID, err)
+		}
+	}
+
 	var zero int64 // = 0
 	policy := metav1.DeletePropagationForeground
 	deleteOptions := &metav1.DeleteOptions{
@@ -209,10 +221,33 @@ func (l *ConfigMapClient) getEnvs(apiID int64, endpoint string, securityItem str
 			Value: timeBudget,
 		},
 	}
+
 	if len(securityItem) > 0 {
+		// create the secret
+		secret, err := tools.NewSecret(l.configMapNamespace)
+		if err != nil {
+			logging.Errorf("Failed to create Secret, err=(%v)", err)
+			return envs
+		}
+		secret.Set(securityItem)
+		err = secret.Save(context.TODO(), l.hClient)
+		if err != nil {
+			logging.Errorf("Failed to write the Secret, err=(%v)", err)
+			return envs
+		}
+		l.imagePullSecrets[apiID] = secret
+
+		// pass the secret in Fuzzer pod container env
 		envs = append(envs, v1.EnvVar{
-			Name:  authEnvVar,
-			Value: securityItem,
+			Name: authEnvVar,
+			ValueFrom: &v1.EnvVarSource{
+				SecretKeyRef: &v1.SecretKeySelector{
+					LocalObjectReference: v1.LocalObjectReference{
+						Name: secret.Name(),
+					},
+					Key: secret.Key(),
+				},
+			},
 		})
 	}
 	return envs
@@ -251,6 +286,7 @@ func NewConfigMapClient(config *config.Config, accessor core.BackendAccessor) (C
 		configMapName:      config.GetJobTemplateConfigMapName(),
 		configMapNamespace: config.GetJobNamespace(),
 		currentJob:         nil,
+		imagePullSecrets:   make(map[int64]*tools.ImagePullSecret),
 	}
 	if client.hClient == nil {
 		logging.Logf("[Fuzzer][ConfigMapClient] Create new Kubernetes client accessor.K8SClient()=%v", accessor.K8SClient())
