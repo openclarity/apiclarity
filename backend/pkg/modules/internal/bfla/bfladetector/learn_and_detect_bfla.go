@@ -610,6 +610,7 @@ func Contains(items []string, val string) bool {
 	return false
 }
 
+//nolint: cyclomatic
 func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTrace) (err error) {
 	defer runtimeRecover()
 	defer l.statePersister.AckSubmit(trace.APIEvent.ID)
@@ -673,9 +674,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		if err != nil {
 			return err
 		}
-
 		if state.TraceCounter != -1 {
-
 			state.TraceCounter--
 
 			if state.TraceCounter == 0 {
@@ -752,15 +751,19 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			}
 		}
 		if findingsUpdated {
-			l.notifyFindings(ctx, apiID)
+			err = l.notifyFindings(ctx, apiID)
+			if err != nil {
+				log.Errorf("unable to send finding notification: %v", err)
+			}
 		}
 		aud.StatusCode = trace.APIEvent.StatusCode
 		aud.LastTime = time.Time(trace.APIEvent.Time)
 		setAud(aud)
 
 		return nil
+	default:
+		return fmt.Errorf("illegal state %s", state.State)
 	}
-	return nil
 }
 
 func (l *learnAndDetectBFLA) notifyFindings(ctx context.Context, apiID uint) error {

@@ -42,7 +42,6 @@ const testNamespace = "sock-shop"
 
 var mapID2name = map[string]uint{"user": 1, "carts": 2, "catalogue": 3}
 
-// nolint:unparam
 func buildTrace(method, path, src, dest, userid string) *bfladetector.CompositeTrace {
 	return &bfladetector.CompositeTrace{
 		K8SSource:      newClientRef(src),
