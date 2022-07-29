@@ -17,6 +17,7 @@ package bfladetector
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -528,6 +529,11 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 }
 
 func (l *learnAndDetectBFLA) validateAuthzModel(ctx context.Context, m AuthorizationModel, apiID uint) (AuthorizationModel, error) {
+	a, err := json.Marshal(m)
+	if err != nil {
+		log.Errorf("unable to marshal auth model %v", err)
+	}
+	log.Infof("*********************** auth model:%s\n", a)
 	apiInfo, err := l.bflaBackendAccessor.GetAPIInfo(ctx, apiID)
 	if err != nil {
 		return m, fmt.Errorf("unable to get api info: %w", err)
@@ -698,6 +704,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			trace.K8SSource, trace.APIEvent.APIInfoID, trace.DetectedUser, false, false); err != nil {
 			return err
 		}
+		log.Infof("******** detecting: auth model updated")
 		aud, err := l.findSourceObj(resolvedPath, string(trace.APIEvent.Method), srcUID, trace.APIEvent.APIInfoID)
 		if err != nil {
 			return fmt.Errorf("unable to find source obj: %w", err)
@@ -743,11 +750,13 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			}
 		}
 		if findingsUpdated {
+			log.Infof("******** detecting: notify findings")
 			l.notifyFindings(ctx, apiID)
 		}
 		aud.StatusCode = trace.APIEvent.StatusCode
 		aud.LastTime = time.Time(trace.APIEvent.Time)
 		err = l.setSourceObj(resolvedPath, string(trace.APIEvent.Method), srcUID, trace.APIEvent.APIInfoID, aud)
+		log.Infof("******** detecting: aud set %v %v", aud.StatusCode, aud.LastTime)
 		if err != nil {
 			return fmt.Errorf("unable to update audience: %w", err)
 		}
