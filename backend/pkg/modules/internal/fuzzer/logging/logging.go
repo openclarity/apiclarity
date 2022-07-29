@@ -16,34 +16,27 @@
 package logging
 
 import (
-	"os"
-
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
-
-var fuzzerLogger = logrus.New()
 
 // Logf logs message either via defined user logger or via system one if no user logger is defined.
 
 func Debugf(f string, args ...interface{}) {
-	fuzzerLogger.Debugf(f, args...)
+	log.Debugf(f, args...)
 }
 
 func Logf(f string, args ...interface{}) {
-	fuzzerLogger.Infof(f, args...)
+	log.Infof(f, args...)
 }
 
 func Warningf(f string, args ...interface{}) {
-	fuzzerLogger.Warningf(f, args...)
+	log.Warningf(f, args...)
 }
 
 func Errorf(f string, args ...interface{}) {
-	fuzzerLogger.Errorf(f, args...)
+	log.Errorf(f, args...)
 }
 
 func InitLogger() {
-	fuzzerLogger.SetFormatter(&logrus.TextFormatter{FullTimestamp: true, TimestampFormat: "2006-01-02 15:04:05"})
-	fuzzerLogger.SetOutput(os.Stdout)
-	// fuzzerLogger.SetReportCaller(true)
-	fuzzerLogger.SetLevel(logrus.InfoLevel)
+	// Use this function to init a logger if don't use the root one
 }
