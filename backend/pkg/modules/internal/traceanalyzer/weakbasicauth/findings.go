@@ -16,7 +16,6 @@
 package weakbasicauth
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -46,16 +45,7 @@ func (a *AnnotationShortPassword) Name() string { return KindShortPassword }
 func (a *AnnotationShortPassword) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
 	return NewAPIAnnotationShortPassword(path, method)
 }
-func (a *AnnotationShortPassword) Severity() string           { return utils.SeverityMedium }
-func (a *AnnotationShortPassword) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-func (a *AnnotationShortPassword) Deserialize(serialized []byte) error {
-	var tmp AnnotationShortPassword
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
-
+func (a *AnnotationShortPassword) Severity() string { return utils.SeverityMedium }
 func (a AnnotationShortPassword) Redacted() utils.TraceAnalyzerAnnotation {
 	return &AnnotationShortPassword{"XXX", a.Length, a.MinSize}
 }
@@ -89,16 +79,6 @@ func (a *APIAnnotationShortPassword) Aggregate(ann utils.TraceAnalyzerAnnotation
 }
 
 func (a APIAnnotationShortPassword) Severity() string { return utils.SeverityHigh }
-
-func (a APIAnnotationShortPassword) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-
-func (a *APIAnnotationShortPassword) Deserialize(serialized []byte) error {
-	var tmp APIAnnotationShortPassword
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
 
 func (a APIAnnotationShortPassword) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
@@ -134,16 +114,7 @@ func (a *AnnotationKnownPassword) Name() string { return KindKnownPassword }
 func (a *AnnotationKnownPassword) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
 	return NewAPIAnnotationKnownPassword(path, method)
 }
-func (a *AnnotationKnownPassword) Severity() string           { return utils.SeverityMedium }
-func (a *AnnotationKnownPassword) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-func (a *AnnotationKnownPassword) Deserialize(serialized []byte) error {
-	var tmp AnnotationKnownPassword
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
-
+func (a *AnnotationKnownPassword) Severity() string { return utils.SeverityMedium }
 func (a *AnnotationKnownPassword) Redacted() utils.TraceAnalyzerAnnotation {
 	return NewAnnotationKnownPassword("XXX")
 }
@@ -177,16 +148,6 @@ func (a *APIAnnotationKnownPassword) Aggregate(ann utils.TraceAnalyzerAnnotation
 }
 
 func (a APIAnnotationKnownPassword) Severity() string { return utils.SeverityHigh }
-
-func (a APIAnnotationKnownPassword) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-
-func (a *APIAnnotationKnownPassword) Deserialize(serialized []byte) error {
-	var tmp APIAnnotationKnownPassword
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
 
 func (a APIAnnotationKnownPassword) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a
@@ -224,16 +185,7 @@ func (a *AnnotationSamePassword) Name() string { return KindSamePassword }
 func (a *AnnotationSamePassword) NewAPIAnnotation(path, method string) utils.TraceAnalyzerAPIAnnotation {
 	return NewAPIAnnotationSamePassword(path, method)
 }
-func (a *AnnotationSamePassword) Severity() string           { return utils.SeverityMedium }
-func (a *AnnotationSamePassword) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-func (a *AnnotationSamePassword) Deserialize(serialized []byte) error {
-	var tmp AnnotationSamePassword
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
-
+func (a *AnnotationSamePassword) Severity() string { return utils.SeverityMedium }
 func (a *AnnotationSamePassword) Redacted() utils.TraceAnalyzerAnnotation {
 	return NewAnnotationSamePassword(a.User, "XXX", a.APIs)
 }
@@ -278,16 +230,6 @@ func (a *APIAnnotationSamePassword) Aggregate(ann utils.TraceAnalyzerAnnotation)
 }
 
 func (a APIAnnotationSamePassword) Severity() string { return utils.SeverityMedium }
-
-func (a APIAnnotationSamePassword) Serialize() ([]byte, error) { return json.Marshal(a) } //nolint:wrapcheck
-
-func (a *APIAnnotationSamePassword) Deserialize(serialized []byte) error {
-	var tmp APIAnnotationSamePassword
-	err := json.Unmarshal(serialized, &tmp)
-	*a = tmp
-
-	return err //nolint:wrapcheck
-}
 
 func (a APIAnnotationSamePassword) Redacted() utils.TraceAnalyzerAPIAnnotation {
 	newA := a

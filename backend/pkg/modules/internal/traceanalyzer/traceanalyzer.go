@@ -248,27 +248,20 @@ func (p *traceAnalyzer) EventNotify(ctx context.Context, e *core.Event) {
 			log.Error(err)
 		}
 		p.setAlertSeverity(ctx, event.ID, filteredEventAnns)
-	}
 
-	if len(filteredEventAnns) > 0 {
-		updated := p.aggregator.Aggregate(uint64(event.APIInfoID), specPath, trace.Request.Method, filteredEventAnns...)
-		if updated {
-			// Filter ignored findings for API annotations
-			filteredAPIAnns := []utils.TraceAnalyzerAPIAnnotation{}
-			for _, a := range p.aggregator.GetAPIFindings(uint64(event.APIInfoID)) {
-				if !p.ignoreFindings[a.Name()] {
-					filteredAPIAnns = append(filteredAPIAnns, a)
-				}
+		updatedFindings := p.aggregator.Aggregate(uint64(event.APIInfoID), specPath, trace.Request.Method, filteredEventAnns...)
+		// If API findings were updated:
+		// - only store the new ones in the database
+		// - send notification will ALL API findings
+		if len(updatedFindings) > 0 {
+			coreAPIAnnotations := p.toCoreAPIAnnotations(updatedFindings, false)
+			if err := p.accessor.StoreAPIInfoAnnotations(ctx, utils.ModuleName, event.APIInfoID, coreAPIAnnotations...); err != nil {
+				log.Error(err)
 			}
-			if len(filteredAPIAnns) > 0 {
-				coreAPIAnnotations := p.toCoreAPIAnnotations(filteredAPIAnns, false)
-				if err := p.accessor.StoreAPIInfoAnnotations(ctx, utils.ModuleName, event.APIInfoID, coreAPIAnnotations...); err != nil {
-					log.Error(err)
-				}
-				err := p.sendAPIFindingsNotification(ctx, event.APIInfoID, filteredAPIAnns)
-				if err != nil {
-					log.Error(err)
-				}
+			allAPIFindings := p.aggregator.GetAPIFindings(uint64(event.APIInfoID))
+			err := p.sendAPIFindingsNotification(ctx, event.APIInfoID, allAPIFindings)
+			if err != nil {
+				log.Error(err)
 			}
 		}
 	}
@@ -279,7 +272,7 @@ func (p *traceAnalyzer) toCoreEventAnnotations(eventAnns []utils.TraceAnalyzerAn
 		if redacted {
 			a = a.Redacted()
 		}
-		annotation, err := a.Serialize()
+		annotation, err := json.Marshal(a)
 		if err != nil {
 			log.Errorf("unable to serialize annotation: %s", err)
 		}
@@ -326,7 +319,7 @@ func fromCoreEventAnnotation(coreAnn *core.Annotation) (ann utils.TraceAnalyzerA
 		return nil, fmt.Errorf("unknown annotation '%s'", coreAnn.Name)
 	}
 
-	err = a.Deserialize(coreAnn.Annotation)
+	err = json.Unmarshal(coreAnn.Annotation, a)
 	if err != nil {
 		return a, fmt.Errorf("unable to convert trace analyzer annotation in database: %w", err)
 	}
@@ -347,20 +340,30 @@ func fromCoreEventAnnotations(coreAnns []*core.Annotation) (anns []utils.TraceAn
 }
 
 func (p *traceAnalyzer) toCoreAPIAnnotations(anns []utils.TraceAnalyzerAPIAnnotation, redacted bool) (coreAnnotations []core.Annotation) {
+	// In order to create Core Annotations, we need to group APIAnnotations by Name of annotations
+	groupedAnns := map[string][]utils.TraceAnalyzerAPIAnnotation{}
 	for _, a := range anns {
 		if redacted {
 			a = a.Redacted()
 		}
-		annotation, err := a.Serialize()
+		groupedAnns[a.Name()] = append(groupedAnns[a.Name()], a)
+	}
+	for annName, anns := range groupedAnns {
+		annotation, err := json.Marshal(anns)
 		if err != nil {
 			log.Errorf("unable to serialize annotation: %s", err)
 		}
-		coreAnnotations = append(coreAnnotations, core.Annotation{Name: a.Name(), Annotation: annotation})
+		coreAnnotations = append(coreAnnotations, core.Annotation{Name: annName, Annotation: annotation})
 	}
 	return coreAnnotations
 }
 
-func fromCoreAPIAnnotation(coreAnn *core.Annotation) (ann utils.TraceAnalyzerAPIAnnotation, err error) {
+func fromCoreAPIAnnotation(coreAnn *core.Annotation) (anns []utils.TraceAnalyzerAPIAnnotation, err error) {
+	var rawAnnotations []json.RawMessage
+	if err := json.Unmarshal(coreAnn.Annotation, &rawAnnotations); err != nil {
+		return anns, fmt.Errorf("unable to convert API Annotation to DB representation: %w", err)
+	}
+
 	var a utils.TraceAnalyzerAPIAnnotation
 	switch coreAnn.Name {
 	case weakbasicauth.KindShortPassword:
@@ -398,20 +401,24 @@ func fromCoreAPIAnnotation(coreAnn *core.Annotation) (ann utils.TraceAnalyzerAPI
 		return nil, fmt.Errorf("unknown annotation '%s'", coreAnn.Name)
 	}
 
-	err = a.Deserialize(coreAnn.Annotation)
-	if err != nil {
-		return a, fmt.Errorf("unable to convert API Annotation to DB representation: %w", err)
+	for _, rawJSON := range rawAnnotations {
+		if err := json.Unmarshal(rawJSON, a); err != nil {
+			log.Errorf("Unable to unmarshal one of the %s annotations", coreAnn.Name)
+			log.Debugf("Unable to unmarshal annotation of type %s %s", coreAnn.Name, string(rawJSON))
+		} else {
+			anns = append(anns, a)
+		}
 	}
-	return a, nil
+	return
 }
 
 func fromCoreAPIAnnotations(coreAnns []*core.Annotation) (anns []utils.TraceAnalyzerAPIAnnotation) {
 	for _, coreAnn := range coreAnns {
-		taAnn, err := fromCoreAPIAnnotation(coreAnn)
+		taAnns, err := fromCoreAPIAnnotation(coreAnn)
 		if err != nil {
 			log.Errorf("Unable to understand annotation: %v", err)
 		} else {
-			anns = append(anns, taAnn)
+			anns = append(anns, taAnns...)
 		}
 	}
 
