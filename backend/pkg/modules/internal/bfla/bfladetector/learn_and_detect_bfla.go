@@ -529,11 +529,11 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 }
 
 func (l *learnAndDetectBFLA) validateAuthzModel(ctx context.Context, m AuthorizationModel, apiID uint) (AuthorizationModel, error) {
-	a, err := json.Marshal(m)
+	jmodel, err := json.Marshal(m)
 	if err != nil {
 		log.Errorf("unable to marshal auth model %v", err)
 	}
-	log.Infof("*********************** auth model:%s\n", a)
+	log.Debugf("updated auth model:%s\n", jmodel)
 	apiInfo, err := l.bflaBackendAccessor.GetAPIInfo(ctx, apiID)
 	if err != nil {
 		return m, fmt.Errorf("unable to get api info: %w", err)
@@ -552,7 +552,16 @@ func (l *learnAndDetectBFLA) validateAuthzModel(ctx context.Context, m Authoriza
 		}
 		op.Tags = resolveTagsForPathAndMethod(tags, op.Path, op.Method)
 
-		for _, aud := range op.Audience {
+		for audIdx, aud := range op.Audience {
+			if !aud.External {
+				if aud.K8sObject == nil ||
+					aud.K8sObject.Name == "" ||
+					aud.K8sObject.Uid == "" ||
+					aud.K8sObject.ApiVersion == "" ||
+					aud.K8sObject.Kind == "" {
+					return m, fmt.Errorf("invalid auth model audience for operation %v: [%d] %v . apiID = %d", op, audIdx, aud, apiID)
+				}
+			}
 			if aud.Authorized {
 				aud.WarningStatus = restapi.LEGITIMATE
 			} else if aud.StatusCode < 200 || aud.StatusCode > 299 {

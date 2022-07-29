@@ -119,7 +119,8 @@ func (f findingsRegistry) Add(apiID uint, ff common.APIFinding) (updated bool, e
 	var findings common.APIFindings
 	if pv.Exists() {
 		findings, _ = pv.Get().(common.APIFindings)
-	} else {
+	}
+	if findings.Items == nil {
 		findings.Items = &[]common.APIFinding{}
 	}
 
