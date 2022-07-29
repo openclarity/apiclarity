@@ -133,7 +133,7 @@ func (f findingsRegistry) Add(apiID uint, ff common.APIFinding) (updated bool, e
 		updated = true
 		pv.Set(findings)
 	}
-	return updated, err
+	return updated, nil
 }
 
 func getTypeAndLoc(f common.APIFinding) typeAndLoc {

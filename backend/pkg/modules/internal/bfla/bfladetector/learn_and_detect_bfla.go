@@ -761,9 +761,10 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		setAud(aud)
 
 		return nil
-	default:
+	case BFLALearnt:
 		return fmt.Errorf("illegal state %s", state.State)
 	}
+	return nil
 }
 
 func (l *learnAndDetectBFLA) notifyFindings(ctx context.Context, apiID uint) error {
