@@ -385,12 +385,10 @@ func (h httpHandler) GetAuthorizationModelApiID(w http.ResponseWriter, r *http.R
 	authModel := &bfladetector.AuthorizationModel{}
 	_, found, err := h.state.UseState(uint(apiID), bfladetector.AuthzModelAnnotationName, authModel)
 	if err != nil {
-		common.HTTPResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
-		return
+		log.Infof("unable to retrieve auth model for api %d: %v", apiID, err)
 	}
 	if !found {
-		common.HTTPResponse(w, http.StatusNotFound, &oapicommon.ApiResponse{Message: fmt.Sprintf("auth model with id=%d not found", apiID)})
-		return
+		log.Infof("auth model not found for api %d", apiID)
 	}
 	res := ToRestapiAuthorizationModel(authModel)
 	res.SpecType = bfladetector.ToRestapiSpecType(specType)

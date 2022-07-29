@@ -56,6 +56,8 @@ spec:
                   key: request.headers
             - name: TRACE_SAMPLING_ENABLED
               value: "{{ .Values.global.traceSampling.enable }}"
+            - name: BFLA_AUTOMATIC_LEARNING_AND_DETECTION
+              value: "{{ .Values.global.bflaAutomaticLearningAndDetection.enable }}"
             - name: DB_NAME
               value: {{ index .Values "apiclarity-postgresql" "auth" "database" }}
             - name: DB_HOST

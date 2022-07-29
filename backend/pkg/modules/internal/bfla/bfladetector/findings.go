@@ -119,7 +119,8 @@ func (f findingsRegistry) Add(apiID uint, ff common.APIFinding) (updated bool, e
 	var findings common.APIFindings
 	if pv.Exists() {
 		findings, _ = pv.Get().(common.APIFindings)
-	} else {
+	}
+	if findings.Items == nil {
 		findings.Items = &[]common.APIFinding{}
 	}
 
@@ -132,7 +133,7 @@ func (f findingsRegistry) Add(apiID uint, ff common.APIFinding) (updated bool, e
 		updated = true
 		pv.Set(findings)
 	}
-	return updated, err
+	return updated, nil
 }
 
 func getTypeAndLoc(f common.APIFinding) typeAndLoc {
