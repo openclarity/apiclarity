@@ -46,15 +46,15 @@ components:
         severity:
             $ref: '#/components/schemas/Severity'
         reconstructed_spec_location:
-            description: 'JSON pointer to the location of the finding in the specification. See https://datatracker.ietf.org/doc/html/rfc6901'
+            description: 'JSON pointer to the location of the finding in the specification. See https://datatracker.ietf.org/doc/html/rfc6901. If at the time of creation of the finding, there is no specification, then this field is an empty string.'
             type: string
             example: '#/paths/~1blogs~1{blog_id}~1new~0posts'
         provided_spec_location:
-            description: 'JSON pointer to the location of the finding in the specification. See https://datatracker.ietf.org/doc/html/rfc6901'
+            description: 'JSON pointer to the location of the finding in the specification. See https://datatracker.ietf.org/doc/html/rfc6901. If at the time of creation of the finding, there is no specification, then this field is an empty string.'
             type: string
             example: '#/paths/~1blogs~1{blog_id}~1new~0posts'
         additional_info:
-          description: "Could be any opaque JSON object, will be interpreted by panoptica. Basically, it's what is stored in the database"
+          description: "Could be any opaque JSON object"
           type: object
           example: { "key_len": 12 }
     ApiResponse:
