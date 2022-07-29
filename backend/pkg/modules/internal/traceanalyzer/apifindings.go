@@ -43,13 +43,14 @@ func NewAPIsFindingsRepo(accessor core.BackendAccessor) *APIsFindingsRepo {
 	}
 }
 
-func (r *APIsFindingsRepo) Aggregate(apiID uint64, path, method string, anns ...utils.TraceAnalyzerAnnotation) (updated bool) {
+func (r *APIsFindingsRepo) Aggregate(apiID uint64, path, method string, anns ...utils.TraceAnalyzerAnnotation) (updatedFindings []utils.TraceAnalyzerAPIAnnotation) {
 	for _, ann := range anns {
-		u := r.aggregate(apiID, path, method, ann)
-		updated = updated || u
+		ann, updated := r.aggregate(apiID, path, method, ann)
+		if updated {
+			updatedFindings = append(updatedFindings, ann)
+		}
 	}
-
-	return updated
+	return
 }
 
 func (r *APIsFindingsRepo) GetAPIFindings(apiID uint64) (apiFindings []utils.TraceAnalyzerAPIAnnotation) {
@@ -69,7 +70,7 @@ func (r *APIsFindingsRepo) ResetAPIFindings(apiID uint64) {
 	delete(r.apis, apiID)
 }
 
-func (r *APIsFindingsRepo) aggregate(apiID uint64, path, method string, ann utils.TraceAnalyzerAnnotation) (updated bool) {
+func (r *APIsFindingsRepo) aggregate(apiID uint64, path, method string, ann utils.TraceAnalyzerAnnotation) (apiFinding utils.TraceAnalyzerAPIAnnotation, updated bool) {
 	// Check if we already have an entry for this apiID
 	findings, found := r.apis[apiID]
 	if !found {
@@ -94,5 +95,5 @@ func (r *APIsFindingsRepo) aggregate(apiID uint64, path, method string, ann util
 		updated = updated || u
 	}
 
-	return updated
+	return apiAnn, updated
 }

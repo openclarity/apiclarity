@@ -248,27 +248,20 @@ func (p *traceAnalyzer) EventNotify(ctx context.Context, e *core.Event) {
 			log.Error(err)
 		}
 		p.setAlertSeverity(ctx, event.ID, filteredEventAnns)
-	}
 
-	if len(filteredEventAnns) > 0 {
-		updated := p.aggregator.Aggregate(uint64(event.APIInfoID), specPath, trace.Request.Method, filteredEventAnns...)
-		if updated {
-			// Filter ignored findings for API annotations
-			filteredAPIAnns := []utils.TraceAnalyzerAPIAnnotation{}
-			for _, a := range p.aggregator.GetAPIFindings(uint64(event.APIInfoID)) {
-				if !p.ignoreFindings[a.Name()] {
-					filteredAPIAnns = append(filteredAPIAnns, a)
-				}
+		updatedFindings := p.aggregator.Aggregate(uint64(event.APIInfoID), specPath, trace.Request.Method, filteredEventAnns...)
+		// If API findings were updated:
+		// - only store the new ones in the database
+		// - send notification will ALL API findings
+		if len(updatedFindings) > 0 {
+			coreAPIAnnotations := p.toCoreAPIAnnotations(updatedFindings, false)
+			if err := p.accessor.StoreAPIInfoAnnotations(ctx, utils.ModuleName, event.APIInfoID, coreAPIAnnotations...); err != nil {
+				log.Error(err)
 			}
-			if len(filteredAPIAnns) > 0 {
-				coreAPIAnnotations := p.toCoreAPIAnnotations(filteredAPIAnns, false)
-				if err := p.accessor.StoreAPIInfoAnnotations(ctx, utils.ModuleName, event.APIInfoID, coreAPIAnnotations...); err != nil {
-					log.Error(err)
-				}
-				err := p.sendAPIFindingsNotification(ctx, event.APIInfoID, filteredAPIAnns)
-				if err != nil {
-					log.Error(err)
-				}
+			allAPIFindings := p.aggregator.GetAPIFindings(uint64(event.APIInfoID))
+			err := p.sendAPIFindingsNotification(ctx, event.APIInfoID, allAPIFindings)
+			if err != nil {
+				log.Error(err)
 			}
 		}
 	}
