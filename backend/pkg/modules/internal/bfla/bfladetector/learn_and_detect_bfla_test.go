@@ -74,7 +74,7 @@ func getAPIInfoWithTags(method string, path string) *database.APIInfo {
 
 	if method != "" && path != "" {
 		apiInfo.ProvidedSpecInfo = fmt.Sprintf(`{"tags":[{"methodAndPathList":[{"pathId":"test","path":%q}]}]}`, path)
-		apiInfo.ProvidedSpec = fmt.Sprintf(`{"swagger": "2.0","info": {"title": "","version": ""},"paths": {%q: {%q: {"responses": {"200": {"description": ""}}}}}}`, method, path)
+		apiInfo.ProvidedSpec = fmt.Sprintf(`{"swagger": "2.0","info": {"title": "","version": ""},"paths": {%q: {%q: {"responses": {"200": {"description": ""}}}}}}`, path, method)
 	}
 	return &apiInfo
 }
