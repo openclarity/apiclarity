@@ -270,7 +270,6 @@ func Test_learnAndDetectBFLA_BuildAuthzModelNoTraceCounter(t *testing.T) {
 			assertNoErr(t, detector.StopDetection(mapID2name["catalogue"]))
 			assertNoErr(t, detector.StopDetection(mapID2name["carts"]))
 			assert(t, tt.wantAuthModelsAfterDetection, storedAuthModels)
-
 		})
 	}
 }
