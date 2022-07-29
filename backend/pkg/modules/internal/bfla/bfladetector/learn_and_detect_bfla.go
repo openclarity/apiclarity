@@ -610,7 +610,7 @@ func Contains(items []string, val string) bool {
 	return false
 }
 
-//nolint: cyclomatic
+//nolint: gocyclo
 func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTrace) (err error) {
 	defer runtimeRecover()
 	defer l.statePersister.AckSubmit(trace.APIEvent.ID)
