@@ -32,7 +32,7 @@ global:
     enable: false
 
   bflaAutomaticLearningAndDetection:
-    enable: true
+    enable: false
 
 ## End of Global Values
 #######################################################################################
