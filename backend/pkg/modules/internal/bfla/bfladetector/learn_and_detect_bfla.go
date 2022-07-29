@@ -509,7 +509,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if err != nil {
 			return fmt.Errorf("unable to get authz model state: %w", err)
 		}
-		authzModel, err := validateAuthzModel(cmd.authzModel)
+		authzModel, err := l.validateAuthzModel(ctx, cmd.authzModel, cmd.apiID)
 		if err != nil {
 			return fmt.Errorf("invalid authorization model provided: %w", err)
 		}
@@ -527,8 +527,25 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 	return nil
 }
 
-func validateAuthzModel(m AuthorizationModel) (AuthorizationModel, error) {
+func (l *learnAndDetectBFLA) validateAuthzModel(ctx context.Context, m AuthorizationModel, apiID uint) (AuthorizationModel, error) {
+	apiInfo, err := l.bflaBackendAccessor.GetAPIInfo(ctx, apiID)
+	if err != nil {
+		return m, fmt.Errorf("unable to get api info: %w", err)
+	}
+	tags, err := ParseSpecInfo(apiInfo)
+	if err != nil {
+		return m, fmt.Errorf("unable to parse spec info: %w", err)
+	}
+	specType := SpecTypeFromAPIInfo(apiInfo)
+	if specType == SpecTypeNone {
+		return m, fmt.Errorf("spec not present cannot process authorization model; apiID=%d", apiID)
+	}
 	for _, op := range m.Operations {
+		if op.Path == "" || op.Method == "" {
+			return m, fmt.Errorf("invalid auth model operation: %v. apiID=%d", op, apiID)
+		}
+		op.Tags = resolveTagsForPathAndMethod(tags, op.Path, op.Method)
+
 		for _, aud := range op.Audience {
 			if aud.Authorized {
 				aud.WarningStatus = restapi.LEGITIMATE
@@ -599,7 +616,9 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		return fmt.Errorf("unable to parse spec info: %w", err)
 	}
 	resolvedPath := ResolvePath(tags, trace.APIEvent)
-	log.Debugf("resolved tags=%v, Path = %s", tags, resolvedPath)
+	if resolvedPath == "" {
+		return fmt.Errorf("unable to resolve path for event %d", trace.APIEvent.ID)
+	}
 
 	specType := SpecTypeFromAPIInfo(apiInfo)
 	if specType == SpecTypeNone {
@@ -791,6 +810,10 @@ func (l *learnAndDetectBFLA) initAuthorizationModel(apiID uint) error {
 
 func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser, authorize, updateAuthorized bool) error {
 	log.Debugf("Update auth model: tags = %v, path = %s, method=%s, apidId=%d", tags, path, method, apiID)
+
+	if path == "" || method == "" {
+		return fmt.Errorf("unable to update Authorization Model. Invalid method %s or path %s", method, path)
+	}
 	external := clientRef == nil
 	authzModelEntry, err := l.authzModelsMap.Get(apiID)
 	if err != nil {
