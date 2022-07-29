@@ -217,13 +217,17 @@ func (a *APIAnnotationSamePassword) Aggregate(ann utils.TraceAnalyzerAnnotation)
 	}
 
 	for _, newAPI := range eventAnn.APIs {
+		found := false
 		for _, api := range a.APIs {
 			if newAPI == api {
+				found = true
 				break
 			}
 		}
-		a.APIs = append(a.APIs, newAPI)
-		updated = true
+		if !found {
+			a.APIs = append(a.APIs, newAPI)
+			updated = true
+		}
 	}
 
 	return updated
