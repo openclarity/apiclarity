@@ -28,14 +28,25 @@ spec:
           env:
             - name: GOGC
               value: "12800"
+            {{- if .Values.apiclarity.tls.enabled }}
+            - name: UPSTREAM_TELEMETRY_HOST_NAME
+              value: '{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:9443'
+            {{- else }}
             - name: UPSTREAM_TELEMETRY_HOST_NAME
               value: '{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:9000'
+            {{- end }}
             - name: TRACE_SAMPLING_HOST_NAME
               value: '{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:9990'
             - name: TRACE_SAMPLING_ENABLED
               value: "{{ .Values.global.traceSampling.enable }}"
             - name: NAMESPACES_TO_TAP
               value: {{ join " " .Values.trafficSource.tap.namespaces }}
+            {{- if .Values.apiclarity.tls.enabled }}
+            - name: ENABLE_TLS
+              value: "{{ .Values.apiclarity.tls.enabled }}"
+            - name: ROOT_CERT_FILE_PATH
+              value: /etc/root-ca/{{ .Values.apiclarity.tls.rootCertFileName }}
+            {{- end }}
             - name: NODE_NAME
               valueFrom:
                 fieldRef:
@@ -53,6 +64,18 @@ spec:
               memory: 50Mi
           securityContext:
             privileged: true
+          volumeMounts:
+            {{- if .Values.apiclarity.tls.enabled }}
+            - name: root-ca
+              mountPath: /etc/root-ca
+              readOnly: true
+            {{- end }}
+      volumes:
+      {{- if .Values.apiclarity.tls.enabled }}
+      - name: root-ca
+        configMap:
+          name: {{ .Values.apiclarity.tls.rootCACertConfigMapName }}
+      {{- end }}
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       restartPolicy: Always

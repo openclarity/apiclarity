@@ -17,10 +17,12 @@ package modules
 
 import (
 	"context"
+	"fmt"
 
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
+	"github.com/openclarity/apiclarity/backend/pkg/config"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 
 	// Enables the bfla module.
@@ -50,6 +52,13 @@ var (
 	NewMockBackendAccessor = core.NewMockBackendAccessor
 )
 
-func New(ctx context.Context, dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager, speculatorAccessor speculatoraccessor.SpeculatorAccessor) (ModulesManager, []ModuleInfo) {
-	return core.New(ctx, core.NewAccessor(dbHandler, clientset, samplingManager, speculatorAccessor), samplingManager)
+func New(ctx context.Context, dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager, speculatorAccessor speculatoraccessor.SpeculatorAccessor, config *config.Config) (ModulesManager, []ModuleInfo, error) {
+	backendAccessor, err := core.NewAccessor(dbHandler, clientset, samplingManager, speculatorAccessor, config)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create backend accessor: %v", err)
+	}
+
+	module, infos := core.New(ctx, backendAccessor, samplingManager)
+
+	return module, infos, nil
 }

@@ -88,7 +88,7 @@ Contributions of integrations with additional traffic sources are more than welc
    ```
 2. Clean resources
 
-    By default Helm will not remove the PVCs and PVs for the StatefulSets. Run the following command to delete them all:
+    By default, Helm will not remove the PVCs and PVs for the StatefulSets. Run the following command to delete them all:
 
     ```shell
     kubectl delete pvc -l app.kubernetes.io/instance=apiclarity -n apiclarity

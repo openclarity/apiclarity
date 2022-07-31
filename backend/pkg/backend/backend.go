@@ -171,7 +171,12 @@ func Run() {
 		log.Infof("Using encoded speculator state")
 	}
 
-	modulesWrapper, modInfos := modules.New(globalCtx, dbHandler, clientset, samplingManager, speculatoraccessor.NewSpeculatorAccessor(speculator))
+	modulesWrapper, modInfos, err := modules.New(globalCtx, dbHandler, clientset, samplingManager, speculatoraccessor.NewSpeculatorAccessor(speculator), config)
+	if err != nil {
+		log.Errorf("Failed to create module wrapper and info: %v", err)
+		return
+	}
+
 	features := append(modInfos, getCoreFeatures()...)
 	if !config.TraceSamplingEnabled {
 		for _, f := range features {
@@ -183,14 +188,34 @@ func Run() {
 	}
 	backend := CreateBackend(config, monitor, speculator, dbHandler, modulesWrapper)
 
-	restServer, err := rest.CreateRESTServer(config.BackendRestPort, speculator, dbHandler, modulesWrapper, samplingManager, features)
+	serverConfig := &rest.ServerConfig{
+		EnableTLS:             config.EnableTLS,
+		Port:                  config.BackendRestPort,
+		TLSPort:               config.BackendRestTLSPort,
+		TLSServerCertFilePath: config.TLSServerCertFilePath,
+		TLSServerKeyFilePath:  config.TLSServerKeyFilePath,
+		Speculator:            speculator,
+		DBHandler:             dbHandler,
+		ModulesManager:        modulesWrapper,
+		SamplingManager:       samplingManager,
+		Features:              features,
+	}
+	restServer, err := rest.CreateRESTServer(serverConfig)
 	if err != nil {
 		log.Fatalf("Failed to create REST server: %v", err)
 	}
 	restServer.Start(errChan)
 	defer restServer.Stop()
 
-	tracesServer, err := traces.CreateHTTPTracesServer(config.HTTPTracesPort, backend.handleHTTPTrace)
+	httpTracesServerConfig := &traces.HTTPTracesServerConfig{
+		EnableTLS:             config.EnableTLS,
+		Port:                  config.HTTPTracesPort,
+		TLSPort:               config.HTTPTracesTLSPort,
+		TLSServerCertFilePath: config.TLSServerCertFilePath,
+		TLSServerKeyFilePath:  config.TLSServerKeyFilePath,
+		TraceHandleFunc:       backend.handleHTTPTrace,
+	}
+	tracesServer, err := traces.CreateHTTPTracesServer(httpTracesServerConfig)
 	if err != nil {
 		log.Fatalf("Failed to create trace server: %v", err)
 	}

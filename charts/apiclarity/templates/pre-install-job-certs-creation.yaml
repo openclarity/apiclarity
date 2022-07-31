@@ -1,0 +1,100 @@
+{{- if .Values.apiclarity.tls.enabled }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "apiclarity.name" . }}-certs-creation
+  namespace: '{{ .Release.Namespace }}'
+  labels:
+    {{ include "apiclarity.labels" . }}
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded,hook-failed
+rules:
+- apiGroups: [""]
+  resources: ["secrets","configmaps"]
+  verbs: ["create"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "apiclarity.name" . }}-certs-creation
+  namespace: '{{ .Release.Namespace }}'
+  labels:
+    {{ include "apiclarity.labels" . }}
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded,hook-failed
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "apiclarity.name" . }}-certs-creation
+  namespace: '{{ .Release.Namespace }}'
+  labels:
+    {{ include "apiclarity.labels" . }}
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded,hook-failed
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "apiclarity.name" . }}-certs-creation
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "apiclarity.name" . }}-certs-creation
+    namespace: '{{ .Release.Namespace }}'
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "apiclarity.name" . }}-certs-creation
+  namespace: '{{ .Release.Namespace }}'
+  labels:
+    {{ include "apiclarity.labels" . }}
+  annotations:
+    helm.sh/hook: pre-install
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded,hook-failed
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      name: {{ include "apiclarity.name" . }}-certs-creation
+    spec:
+      serviceAccountName: {{ include "apiclarity.name" . }}-certs-creation
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1999
+      containers:
+        - name: kubectl
+          image: "k8s.gcr.io/hyperkube:v1.16.12"
+          imagePullPolicy: "IfNotPresent"
+          env:
+            - name: SERVICE_NAME
+              value: {{ include "apiclarity.name" . }}
+            - name: SERVICE_NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: TLS_SECRET_NAME
+              value: {{ .Values.apiclarity.tls.tlsServerCertsSecretName }}
+            - name: TLS_CERT_FILE_NAME
+              value: {{ .Values.apiclarity.tls.tlsServerCertFileName }}
+            - name: TLS_KEY_FILE_NAME
+              value: {{ .Values.apiclarity.tls.tlsServerKeyFileName }}
+            - name: ROOT_CERT_CONFIGMAP_NAME
+              value: {{ .Values.apiclarity.tls.rootCACertConfigMapName }}
+            - name: ROOT_CERT_FILE_NAME
+              value: {{ .Values.apiclarity.tls.rootCertFileName }}
+          command:
+            - /bin/bash
+            - -c
+            - "cd /tmp &&
+{{- if .Values.trafficSource.global.httpsProxy }}
+            git config --global https.proxy {{ .Values.trafficSource.global.httpsProxy }} &&
+{{- end }}
+{{- if .Values.trafficSource.global.httpProxy }}
+            git config --global http.proxy {{ .Values.trafficSource.global.httpProxy }} &&
+{{- end }}
+            git clone -b {{ .Chart.AppVersion }} https://github.com/openclarity/apiclarity.git &&
+            ./apiclarity/tools/tls/certs_gen.sh"
+      restartPolicy: Never
+{{- end }}

@@ -13,6 +13,9 @@ rules:
 - apiGroups: ["apps"]
   resources: ["deployments", "statefulsets", "daemonsets"]
   verbs: ["get", "list", "create", "patch"]
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "create", "delete"]
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -75,11 +78,21 @@ spec:
             - name: TYK_GATEWAY_DEPLOYMENT_NAMESPACE
               value: {{ .Values.trafficSource.tyk.deploymentNamespace }}
             - name: UPSTREAM_TELEMETRY_HOST_NAME
-              value: '{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:9000'
+              value: '{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}'
             - name: TRACE_SAMPLING_HOST_NAME
               value: '{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:9990'
             - name: TRACE_SAMPLING_ENABLED
               value: "{{ .Values.global.traceSampling.enable }}"
+            {{- if .Values.apiclarity.tls.enabled }}
+            - name: ENABLE_TLS
+              value: "{{ .Values.apiclarity.tls.enabled }}"
+            - name: ROOT_CERT_CONFIGMAP_NAME
+              value: {{ .Values.apiclarity.tls.rootCACertConfigMapName }}
+            - name: ROOT_CERT_CONFIGMAP_NAMESPACE
+              value: '{{ .Release.Namespace }}'
+            - name: ROOT_CERT_FILE_NAME
+              value: {{ .Values.apiclarity.tls.rootCertFileName }}
+            {{- end }}
           command:
           - /bin/bash
           - -c

@@ -21,6 +21,7 @@ import (
 
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/jessevdk/go-flags"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/apiclarity/api/server/restapi"
@@ -41,13 +42,26 @@ type Server struct {
 	features        []modules.ModuleInfo
 }
 
-func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *database.Handler, modulesManager modules.ModulesManager, samplingManager *manager.Manager, features []modules.ModuleInfo) (*Server, error) {
+type ServerConfig struct {
+	EnableTLS             bool
+	Port                  int
+	TLSPort               int
+	TLSServerCertFilePath string
+	TLSServerKeyFilePath  string
+	Speculator            *_speculator.Speculator
+	DBHandler             *database.Handler
+	ModulesManager        modules.ModulesManager
+	SamplingManager       *manager.Manager
+	Features              []modules.ModuleInfo
+}
+
+func CreateRESTServer(config *ServerConfig) (*Server, error) {
 	s := &Server{
-		speculator:      speculator,
-		dbHandler:       dbHandler,
-		modulesManager:  modulesManager,
-		samplingManager: samplingManager,
-		features:        features,
+		speculator:      config.Speculator,
+		dbHandler:       config.DBHandler,
+		modulesManager:  config.ModulesManager,
+		samplingManager: config.SamplingManager,
+		features:        config.Features,
 	}
 
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)
@@ -149,13 +163,21 @@ func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *d
 
 	server.ConfigureFlags()
 	server.ConfigureAPI()
-	server.Port = port
+	server.Port = config.Port
+
+	// We want to serve both http and https
+	if config.EnableTLS {
+		server.EnabledListeners = []string{"https", "http"}
+		server.TLSCertificate = flags.Filename(config.TLSServerCertFilePath)
+		server.TLSCertificateKey = flags.Filename(config.TLSServerKeyFilePath)
+		server.TLSPort = config.TLSPort
+	}
 
 	origHandler := server.GetHandler()
 	newHandler := http.NewServeMux()
 
 	// Enhance the default handler with modules apis handlers
-	newHandler.Handle("/api/modules/", modulesManager.HTTPHandler())
+	newHandler.Handle("/api/modules/", config.ModulesManager.HTTPHandler())
 	newHandler.Handle("/", origHandler)
 	server.SetHandler(newHandler)
 	s.server = server

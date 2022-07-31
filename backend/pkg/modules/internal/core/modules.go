@@ -24,8 +24,10 @@ import (
 
 	"github.com/openclarity/apiclarity/api3/notifications"
 	"github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
+	"github.com/openclarity/apiclarity/backend/pkg/config"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core/notifier"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core/tls"
 	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
 	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
 	interfacemanager "github.com/openclarity/trace-sampling-manager/manager/pkg/manager/interface"
@@ -86,12 +88,15 @@ type BackendAccessor interface {
 	Notify(ctx context.Context, modName string, apiID uint, notification notifications.APIClarityNotification) error
 }
 
-func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager, speculatorAccessor speculatoraccessor.SpeculatorAccessor) BackendAccessor {
-	notificationPrefix := GetNotificationPrefix()
-
+func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager, speculatorAccessor speculatoraccessor.SpeculatorAccessor, conf *config.Config) (BackendAccessor, error) {
 	var n *notifier.Notifier
-	if notificationPrefix != "" {
-		n = notifier.NewNotifier(notificationPrefix, notificationMaxQueueSize, notificationWorkers)
+	if conf.NotificationPrefix != "" {
+		tlsOptions, err := tls.CreateClientTLSOptions(conf)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create client tls options: %v", err)
+		}
+
+		n = notifier.NewNotifier(conf.NotificationPrefix, notificationMaxQueueSize, notificationWorkers, tlsOptions)
 		n.Start(context.Background())
 	}
 	return &accessor{
@@ -100,7 +105,7 @@ func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface, sa
 		notifier:           n,
 		samplingManager:    samplingManager,
 		speculatorAccessor: speculatorAccessor,
-	}
+	}, nil
 }
 
 type accessor struct {
