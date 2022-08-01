@@ -45,8 +45,6 @@ data:
             env:
             - name: PLATFORM_TYPE
               value: "API_CLARITY"
-            - name: PLATFORM_HOST
-              value: http://{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:8080/api
             - name: FUZZER
               value: "{{ .Values.apiclarity.modules.fuzzer.methods }}"
             - name: REQUEST_SCOPE
