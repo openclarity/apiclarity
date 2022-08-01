@@ -62,7 +62,7 @@ func (s *AuthSecret) Save(_ context.Context, client kubernetes.Interface) error 
 		Type: secretType,
 	}
 
-	_, err := client.CoreV1().Secrets(s.namespace).Create(context.TODO(), &newSecret, metav1.CreateOptions{})
+	_, err := client.CoreV1().Secrets(s.namespace).Create(context.TODO(), &newSecret, metav1.CreateOptions{}) //nolint:contextcheck // use of context.TODO()
 	if err != nil {
 		return err //nolint:wrapcheck // really want to return the error only
 	}
@@ -71,7 +71,7 @@ func (s *AuthSecret) Save(_ context.Context, client kubernetes.Interface) error 
 }
 
 func (s *AuthSecret) Delete(_ context.Context, client kubernetes.Interface) error {
-	err := client.CoreV1().Secrets(s.namespace).Delete(context.TODO(), s.name, metav1.DeleteOptions{})
+	err := client.CoreV1().Secrets(s.namespace).Delete(context.TODO(), s.name, metav1.DeleteOptions{}) //nolint:contextcheck // use of context.TODO()
 	if err != nil && !errors.IsNotFound(err) {
 		return err //nolint:wrapcheck // really want to return the error only
 	}
