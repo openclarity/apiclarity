@@ -24,7 +24,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
+	dockerClient "github.com/docker/docker/client"
 
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/config"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
@@ -48,7 +48,7 @@ func (c *DockerClient) TriggerFuzzingJob(apiID int64, endpoint string, securityI
 	logging.Logf("[Fuzzer][DockerClient] TriggerFuzzingJob(%v, %v, %v, %v): -->", apiID, endpoint, securityItem, timeBudget)
 
 	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	cli, err := dockerClient.NewClientWithOpts(dockerClient.FromEnv, dockerClient.WithAPIVersionNegotiation())
 	if err != nil {
 		return fmt.Errorf("unable to create new docker client: %w", err)
 	}
@@ -122,7 +122,7 @@ func (c *DockerClient) TriggerFuzzingJob(apiID int64, endpoint string, securityI
 func (c *DockerClient) StopFuzzingJob(apiID int64, complete bool) error {
 	logging.Logf("[Fuzzer][DockerClient] StopFuzzingJob(%v): -->", apiID)
 	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	cli, err := dockerClient.NewClientWithOpts(dockerClient.FromEnv, dockerClient.WithAPIVersionNegotiation())
 	if err != nil {
 		return fmt.Errorf("unable to create new docker client: %w", err)
 	}

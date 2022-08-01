@@ -97,7 +97,7 @@ spec:
 `)
 
 type ConfigMapClient struct {
-	hClient            kubernetes.Interface
+	k8sClient          kubernetes.Interface
 	configMapName      string
 	configMapNamespace string
 	currentJob         *batchv1.Job
@@ -135,7 +135,7 @@ func (l *ConfigMapClient) StopFuzzingJob(apiID int64, complete bool) error {
 
 	secret, found := l.imagePullSecrets[apiID]
 	if found {
-		err := secret.Delete(context.TODO(), l.hClient)
+		err := secret.Delete(context.TODO(), l.k8sClient)
 		if err != nil {
 			// Not blocking
 			logging.Logf("[Fuzzer][ConfigMapClient] StopFuzzingJob(%v): failed to delete secret: %v", apiID, err)
@@ -148,7 +148,7 @@ func (l *ConfigMapClient) StopFuzzingJob(apiID int64, complete bool) error {
 		GracePeriodSeconds: &zero,
 		PropagationPolicy:  &policy,
 	}
-	err := l.hClient.BatchV1().Jobs(l.currentJob.Namespace).Delete(context.TODO(), l.currentJob.Name, *deleteOptions)
+	err := l.k8sClient.BatchV1().Jobs(l.currentJob.Namespace).Delete(context.TODO(), l.currentJob.Name, *deleteOptions)
 	if err != nil {
 		logging.Logf("[Fuzzer][ConfigMapClient] StopFuzzingJob(%v): failed to stop k8s fuzzer job: %v", apiID, err)
 	}
@@ -167,7 +167,7 @@ func (l *ConfigMapClient) createFuzzerJob(dynEnvVars []v1.EnvVar) (*batchv1.Job,
 	} else {
 		// Get fuzzer job template from config map.
 		logging.Debugf("[Fuzzer][ConfigMapClient] Load configmap (%v) from namespace (%v)", l.configMapName, l.configMapNamespace)
-		cm, err := l.hClient.CoreV1().ConfigMaps(l.configMapNamespace).Get(context.TODO(), l.configMapName, metav1.GetOptions{})
+		cm, err := l.k8sClient.CoreV1().ConfigMaps(l.configMapNamespace).Get(context.TODO(), l.configMapName, metav1.GetOptions{})
 		if err != nil {
 			return nil, fmt.Errorf("failed to get fuzzer template config map: %v", err)
 		}
@@ -230,7 +230,7 @@ func (l *ConfigMapClient) getEnvs(apiID int64, endpoint string, securityItem str
 			return envs
 		}
 		secret.Set(securityItem)
-		err = secret.Save(context.TODO(), l.hClient)
+		err = secret.Save(context.TODO(), l.k8sClient)
 		if err != nil {
 			logging.Errorf("Failed to write the Secret, err=(%v)", err)
 			return envs
@@ -267,7 +267,7 @@ func (l *ConfigMapClient) Create(job *batchv1.Job) (*batchv1.Job, error) {
 		namespace = l.configMapNamespace
 	}
 	logging.Logf("[Fuzzer][ConfigMapClient] Create new Job in namespace: %v/%v, name=%v", namespace, l.configMapNamespace, job.Name)
-	if ret, err = l.hClient.BatchV1().Jobs(namespace).Create(context.TODO(), job, metav1.CreateOptions{}); err != nil {
+	if ret, err = l.k8sClient.BatchV1().Jobs(namespace).Create(context.TODO(), job, metav1.CreateOptions{}); err != nil {
 		if !k8serrors.IsAlreadyExists(err) {
 			return nil, fmt.Errorf("failed to create job: %v", err)
 		}
@@ -282,17 +282,17 @@ func (l *ConfigMapClient) Create(job *batchv1.Job) (*batchv1.Job, error) {
 //nolint: ireturn,nolintlint
 func NewConfigMapClient(config *config.Config, accessor core.BackendAccessor) (Client, error) {
 	client := &ConfigMapClient{
-		hClient:            accessor.K8SClient(),
+		k8sClient:          accessor.K8SClient(),
 		configMapName:      config.GetJobTemplateConfigMapName(),
 		configMapNamespace: config.GetJobNamespace(),
 		currentJob:         nil,
 		imagePullSecrets:   make(map[int64]*tools.ImagePullSecret),
 	}
-	if client.hClient == nil {
+	if client.k8sClient == nil {
 		logging.Logf("[Fuzzer][ConfigMapClient] Create new Kubernetes client accessor.K8SClient()=%v", accessor.K8SClient())
-		client.hClient, _ = k8smonitor.CreateK8sClientset()
+		client.k8sClient, _ = k8smonitor.CreateK8sClientset()
 	}
-	if client.hClient == nil {
+	if client.k8sClient == nil {
 		return nil, fmt.Errorf("missing accessor kubernetes client")
 	}
 	return client, nil

@@ -49,7 +49,7 @@ const (
 )
 
 type K8sClient struct {
-	hClient           kubernetes.Interface
+	k8sClient         kubernetes.Interface
 	namespace         string
 	imageName         string
 	platformType      string
@@ -90,7 +90,7 @@ func (l *K8sClient) StopFuzzingJob(apiID int64, complete bool) error {
 		GracePeriodSeconds: &zero,
 		PropagationPolicy:  &policy,
 	}
-	err := l.hClient.BatchV1().Jobs(l.currentJob.Namespace).Delete(context.TODO(), l.currentJob.Name, *deleteOptions)
+	err := l.k8sClient.BatchV1().Jobs(l.currentJob.Namespace).Delete(context.TODO(), l.currentJob.Name, *deleteOptions)
 	if err != nil {
 		logging.Logf("[Fuzzer][K8sClient] StopFuzzingJob(%v): failed to stop k8s fuzzer job: %v", apiID, err)
 	}
@@ -229,7 +229,7 @@ func (l *K8sClient) Create(job *batchv1.Job) (*batchv1.Job, error) {
 	var err error
 
 	logging.Logf("[Fuzzer][K8sClient] Create new Job in namespace: %v/%v, name=%v", job.GetNamespace(), job.Namespace, job.Name)
-	if ret, err = l.hClient.BatchV1().Jobs(job.GetNamespace()).Create(context.TODO(), job, metav1.CreateOptions{}); err != nil {
+	if ret, err = l.k8sClient.BatchV1().Jobs(job.GetNamespace()).Create(context.TODO(), job, metav1.CreateOptions{}); err != nil {
 		if !k8serrors.IsAlreadyExists(err) {
 			return nil, fmt.Errorf("failed to create job: %v", err)
 		}
@@ -244,7 +244,7 @@ func (l *K8sClient) Create(job *batchv1.Job) (*batchv1.Job, error) {
 //nolint: ireturn,nolintlint
 func NewKubernetesClient(config *config.Config, accessor core.BackendAccessor) (Client, error) {
 	client := &K8sClient{
-		hClient:           accessor.K8SClient(),
+		k8sClient:         accessor.K8SClient(),
 		imageName:         config.GetImageName(),
 		namespace:         config.GetJobNamespace(),
 		platformType:      config.GetPlatformType(),
@@ -253,11 +253,11 @@ func NewKubernetesClient(config *config.Config, accessor core.BackendAccessor) (
 		tokenInjectorPath: config.GetRestlerTokenInjectorPath(),
 		currentJob:        nil,
 	}
-	if client.hClient == nil {
+	if client.k8sClient == nil {
 		logging.Logf("[Fuzzer][K8sClient] Create new Kubernetes client accessor.K8SClient()=%v", accessor.K8SClient())
-		client.hClient, _ = k8smonitor.CreateK8sClientset()
+		client.k8sClient, _ = k8smonitor.CreateK8sClientset()
 	}
-	if client.hClient == nil {
+	if client.k8sClient == nil {
 		return nil, fmt.Errorf("missing accessor kubernetes client")
 	}
 	return client, nil
