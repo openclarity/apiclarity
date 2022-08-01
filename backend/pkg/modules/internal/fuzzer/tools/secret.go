@@ -20,36 +20,37 @@ import (
 
 	uuid "github.com/satori/go.uuid"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 const (
-	ImagePullSecretNamePrefix = "imagepullsecret"
-	SecretType                = "Opaque"
-	SecretKey                 = "FuzzerAuthData" // nolint:gosec
+	secretNamePrefix = "authsecret"
+	secretType       = "Opaque"
+	secretKey        = "FuzzerAuthData" // nolint:gosec
 )
 
-type ImagePullSecret struct {
+type AuthSecret struct {
 	body      string
 	name      string
 	namespace string
 	key       string
 }
 
-func (s *ImagePullSecret) Name() string {
+func (s *AuthSecret) Name() string {
 	return s.name
 }
 
-func (s *ImagePullSecret) Key() string {
+func (s *AuthSecret) Key() string {
 	return s.key
 }
 
-func (s *ImagePullSecret) Set(value string) {
+func (s *AuthSecret) Set(value string) {
 	s.body = value
 }
 
-func (s *ImagePullSecret) Save(_ context.Context, client kubernetes.Interface) error {
+func (s *AuthSecret) Save(_ context.Context, client kubernetes.Interface) error {
 	secretDataMap := make(map[string][]byte)
 	secretDataMap[s.key] = []byte(s.body)
 
@@ -58,7 +59,7 @@ func (s *ImagePullSecret) Save(_ context.Context, client kubernetes.Interface) e
 			Name: s.name,
 		},
 		Data: secretDataMap,
-		Type: SecretType,
+		Type: secretType,
 	}
 
 	_, err := client.CoreV1().Secrets(s.namespace).Create(context.TODO(), &newSecret, metav1.CreateOptions{})
@@ -69,20 +70,20 @@ func (s *ImagePullSecret) Save(_ context.Context, client kubernetes.Interface) e
 	return nil
 }
 
-func (s *ImagePullSecret) Delete(_ context.Context, client kubernetes.Interface) error {
+func (s *AuthSecret) Delete(_ context.Context, client kubernetes.Interface) error {
 	err := client.CoreV1().Secrets(s.namespace).Delete(context.TODO(), s.name, metav1.DeleteOptions{})
-	if err != nil {
+	if err != nil && !errors.IsNotFound(err) {
 		return err //nolint:wrapcheck // really want to return the error only
 	}
 	return nil
 }
 
-func NewSecret(namespace string) (*ImagePullSecret, error) {
-	secret := &ImagePullSecret{
+func NewSecret(namespace string) (*AuthSecret, error) {
+	secret := &AuthSecret{
 		body:      "",
 		namespace: namespace,
-		name:      ImagePullSecretNamePrefix + "-" + uuid.NewV4().String(),
-		key:       SecretKey,
+		name:      secretNamePrefix + "-" + uuid.NewV4().String(),
+		key:       secretKey,
 	}
 	return secret, nil
 }

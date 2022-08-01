@@ -48,11 +48,11 @@ data:
             - name: FUZZER
               value: "{{ .Values.apiclarity.modules.fuzzer.methods }}"
             - name: REQUEST_SCOPE
-              value: "global/internalservices/portshift_request"
+              value: "{{ .Values.apiclarity.modules.fuzzer.requestScope }}"
             - name: RESTLER_ROOT_PATH
-              value: "/tmp"
+              value: "{{ .Values.apiclarity.modules.fuzzer.restlerRootPath }}"
             - name: RESTLER_TOKEN_INJECTOR_PATH
-              value: "/app/"
+              value: "{{ .Values.apiclarity.modules.fuzzer.restlerTokenInjPath }}"
             - name: DEBUG
-              value: true
+              value: "{{ .Values.apiclarity.modules.fuzzer.debug }}"
             resources:

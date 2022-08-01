@@ -106,7 +106,7 @@ type ConfigMapClient struct {
 	configMapNamespace string
 	currentJob         *batchv1.Job
 	fuzzerJobTemplate  []byte
-	imagePullSecrets   map[int64]*tools.ImagePullSecret
+	authSecrets        map[int64]*tools.AuthSecret
 	platformHost       string
 }
 
@@ -139,7 +139,7 @@ func (l *ConfigMapClient) StopFuzzingJob(apiID int64, complete bool) error {
 		return fmt.Errorf("no current k8s job to terminate")
 	}
 
-	secret, found := l.imagePullSecrets[apiID]
+	secret, found := l.authSecrets[apiID]
 	if found {
 		err := secret.Delete(context.TODO(), l.k8sClient)
 		if err != nil {
@@ -224,7 +224,7 @@ func (l *ConfigMapClient) getEnvs(apiID int64, endpoint string, securityItem str
 			logging.Errorf("Failed to write the Secret, err=(%v)", err)
 			return envs
 		}
-		l.imagePullSecrets[apiID] = secret
+		l.authSecrets[apiID] = secret
 
 		// pass the secret in Fuzzer pod container env
 		envs = append(envs, v1.EnvVar{
@@ -300,7 +300,7 @@ func NewConfigMapClient(config *config.Config, accessor core.BackendAccessor) (C
 		configMapName:      config.GetJobTemplateConfigMapName(),
 		configMapNamespace: config.GetJobNamespace(),
 		currentJob:         nil,
-		imagePullSecrets:   make(map[int64]*tools.ImagePullSecret),
+		authSecrets:        make(map[int64]*tools.AuthSecret),
 	}
 	if client.k8sClient == nil {
 		logging.Logf("[Fuzzer][ConfigMapClient] Create new Kubernetes client accessor.K8SClient()=%v", accessor.K8SClient())

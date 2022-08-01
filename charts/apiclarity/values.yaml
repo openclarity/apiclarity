@@ -63,6 +63,10 @@ apiclarity:
       docker:
         image: gcr.io/eticloud/k8sec/scn-dast:22e6ed54e0816942c82334a4ce2addc2333cd395
       methods: "scn-fuzzer,restler,crud"
+      requestScope: "global/internalservices/portshift_request"
+      restlerRootPath: "/tmp"
+      restlerTokenInjPath: "/app/"
+      debug: false
 
   # Defines env variables for apiclarity pod
   env:
