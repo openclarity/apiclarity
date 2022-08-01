@@ -101,6 +101,7 @@ type ConfigMapClient struct {
 	configMapName      string
 	configMapNamespace string
 	currentJob         *batchv1.Job
+	fuzzerJobTemplate  []byte
 	imagePullSecrets   map[int64]*tools.ImagePullSecret
 }
 
@@ -159,30 +160,9 @@ func (l *ConfigMapClient) StopFuzzingJob(apiID int64, complete bool) error {
 
 func (l *ConfigMapClient) createFuzzerJob(dynEnvVars []v1.EnvVar) (*batchv1.Job, error) {
 	var job batchv1.Job
-	var fuzzerTemplate []byte
+	logging.Debugf("[Fuzzer][ConfigMapClient] Using fuzzerTemplate:\n%+v", string(l.fuzzerJobTemplate))
 
-	if l.configMapName == "" {
-		// Use default fuzzer job template from config map.
-		fuzzerTemplate = fuzzerJobTemplate
-	} else {
-		// Get fuzzer job template from config map.
-		logging.Debugf("[Fuzzer][ConfigMapClient] Load configmap (%v) from namespace (%v)", l.configMapName, l.configMapNamespace)
-		cm, err := l.k8sClient.CoreV1().ConfigMaps(l.configMapNamespace).Get(context.TODO(), l.configMapName, metav1.GetOptions{})
-		if err != nil {
-			return nil, fmt.Errorf("failed to get fuzzer template config map: %v", err)
-		}
-
-		config, ok := cm.Data["config"]
-		if !ok {
-			return nil, fmt.Errorf("no fuzzer template config in configmap")
-		}
-
-		fuzzerTemplate = []byte(config)
-	}
-
-	logging.Debugf("[Fuzzer][ConfigMapClient] Using fuzzerTemplate:\n%+v", string(fuzzerTemplate))
-
-	err := yaml.Unmarshal(fuzzerTemplate, &job)
+	err := yaml.Unmarshal(l.fuzzerJobTemplate, &job)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal fuzzer template: %v", err)
 	}
@@ -253,6 +233,30 @@ func (l *ConfigMapClient) getEnvs(apiID int64, endpoint string, securityItem str
 	return envs
 }
 
+func (l *ConfigMapClient) loadConfigMap() ([]byte, error) {
+	var fuzzerTemplate []byte
+
+	if l.configMapName == "" {
+		// Use default fuzzer job template from config map.
+		fuzzerTemplate = fuzzerJobTemplate
+	} else {
+		// Get fuzzer job template from config map.
+		logging.Debugf("[Fuzzer][ConfigMapClient] Load configmap (%v) from namespace (%v)", l.configMapName, l.configMapNamespace)
+		cm, err := l.k8sClient.CoreV1().ConfigMaps(l.configMapNamespace).Get(context.TODO(), l.configMapName, metav1.GetOptions{})
+		if err != nil {
+			return nil, err //nolint:wrapcheck // really want to return the error that come from k8sClient
+		}
+
+		config, ok := cm.Data["config"]
+		if !ok {
+			return nil, fmt.Errorf("no fuzzer template config in configmap")
+		}
+
+		fuzzerTemplate = []byte(config)
+	}
+	return fuzzerTemplate, nil
+}
+
 func (l *ConfigMapClient) Create(job *batchv1.Job) (*batchv1.Job, error) {
 	if job == nil {
 		return nil, fmt.Errorf("invalid job: nil")
@@ -295,5 +299,10 @@ func NewConfigMapClient(config *config.Config, accessor core.BackendAccessor) (C
 	if client.k8sClient == nil {
 		return nil, fmt.Errorf("missing accessor kubernetes client")
 	}
+	fuzzerJobTemplate, err := client.loadConfigMap()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get fuzzer template config map: %v", err)
+	}
+	client.fuzzerJobTemplate = fuzzerJobTemplate
 	return client, nil
 }
