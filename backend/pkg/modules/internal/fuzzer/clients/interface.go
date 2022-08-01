@@ -30,15 +30,7 @@ type Client interface {
 
 //nolint: ireturn,nolintlint
 func NewClient(moduleConfig *config.Config, accessor core.BackendAccessor) (Client, error) {
-	if moduleConfig.GetDeploymentType() == config.DeploymentTypeKubernetes {
-		client, err := NewKubernetesClient(moduleConfig, accessor)
-		if err != nil {
-			logging.Errorf("[Fuzzer] Error, can't create Kubernetes client, err=(%v)", err)
-			return nil, err
-		}
-		logging.Debugf("[Fuzzer] kubernetes client creation, ok")
-		return client, nil
-	} else if moduleConfig.GetDeploymentType() == config.DeploymentTypeDocker {
+	if moduleConfig.GetDeploymentType() == config.DeploymentTypeDocker {
 		client, err := NewDockerClient(moduleConfig)
 		if err != nil {
 			logging.Errorf("[Fuzzer] Error, can't create Docker client, err=(%v)", err)

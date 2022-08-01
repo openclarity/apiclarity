@@ -28,21 +28,19 @@ import (
 
 const (
 	// List of supported deployment type.
-	DeploymentTypeDocker     = "docker"
-	DeploymentTypeKubernetes = "kubernetes"
-	DeploymentTypeFake       = "fake"
-	DeploymentTypeConfigMap  = "configmap"
+	DeploymentTypeDocker    = "docker"
+	DeploymentTypeFake      = "fake"
+	DeploymentTypeConfigMap = "configmap"
 )
 
 var SupportedDeployment = map[string]bool{
-	DeploymentTypeDocker:     true,
-	DeploymentTypeKubernetes: true,
-	DeploymentTypeFake:       true,
-	DeploymentTypeConfigMap:  true,
+	DeploymentTypeDocker:    true,
+	DeploymentTypeFake:      true,
+	DeploymentTypeConfigMap: true,
 }
 
 const (
-	DeploymentType           = DeploymentTypeFake // One of SUPPORTED_DEPLOYMENT[] value.
+	DeploymentType           = DeploymentTypeConfigMap // One of SUPPORTED_DEPLOYMENT[] value.
 	ImageName                = "xxx"
 	PlatformType             = "API_CLARITY"
 	PlatformHost             = "http://apiclarity-apiclarity:8080/api"

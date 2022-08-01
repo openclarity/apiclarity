@@ -35,6 +35,10 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/tools"
 )
 
+const (
+	convertToBase10 = 10
+)
+
 var fuzzerJobTemplate = []byte(`apiVersion: batch/v1
 kind: Job
 metadata:
