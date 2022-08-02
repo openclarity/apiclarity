@@ -49,8 +49,6 @@ data:
               value: http://{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:8080/api
             - name: FUZZER
               value: "{{ .Values.APIClarityRuntimeFuzzing.methods }}"
-            - name: REQUEST_SCOPE
-              value: "{{ .Values.APIClarityRuntimeFuzzing.requestScope }}"
             - name: RESTLER_ROOT_PATH
               value: "{{ .Values.APIClarityRuntimeFuzzing.restlerRootPath }}"
             - name: RESTLER_TOKEN_INJECTOR_PATH

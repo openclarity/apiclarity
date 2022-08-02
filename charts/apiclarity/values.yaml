@@ -248,9 +248,6 @@ APIClarityRuntimeFuzzing:
   methods: "scn-fuzzer,restler,crud"
   ## Internal use only, do not change
   ##
-  requestScope: "global/internalservices/portshift_request"
-  ## Internal use only, do not change
-  ##
   restlerRootPath: "/tmp"
   ## Internal use only, do not change
   ##
