@@ -27,7 +27,7 @@ import (
 
 const (
 	secretNamePrefix = "authsecret"
-	secretType       = "Opaque"
+	secretType       = corev1.SecretTypeOpaque
 	secretKey        = "FuzzerAuthData" // nolint:gosec
 )
 

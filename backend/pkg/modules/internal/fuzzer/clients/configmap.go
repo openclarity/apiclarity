@@ -107,7 +107,6 @@ type ConfigMapClient struct {
 	currentJob         *batchv1.Job
 	fuzzerJobTemplate  []byte
 	authSecrets        map[int64]*tools.AuthSecret
-	platformHost       string
 }
 
 func (l *ConfigMapClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem string, timeBudget string) error {
@@ -205,10 +204,6 @@ func (l *ConfigMapClient) getEnvs(apiID int64, endpoint string, securityItem str
 			Name:  restlerTimeBudgetEnvVar,
 			Value: timeBudget,
 		},
-		{
-			Name:  platformHostEnvVar,
-			Value: l.platformHost,
-		},
 	}
 
 	if len(securityItem) > 0 {
@@ -296,7 +291,6 @@ func (l *ConfigMapClient) Create(job *batchv1.Job) (*batchv1.Job, error) {
 func NewConfigMapClient(config *config.Config, accessor core.BackendAccessor) (Client, error) {
 	client := &ConfigMapClient{
 		k8sClient:          accessor.K8SClient(),
-		platformHost:       config.GetPlatformHost(),
 		configMapName:      config.GetJobTemplateConfigMapName(),
 		configMapNamespace: config.GetJobNamespace(),
 		currentJob:         nil,

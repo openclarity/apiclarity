@@ -37,7 +37,7 @@ data:
             readOnlyRootFilesystem: true
           containers:
           - name: fuzzer
-            image: "{{ .Values.apiclarity.modules.fuzzer.docker.image }}"
+            image: "{{ .Values.APIClarityRuntimeFuzzing.docker.image }}"
             imagePullPolicy: Always
             volumeMounts:
               - mountPath: /tmp
@@ -45,14 +45,17 @@ data:
             env:
             - name: PLATFORM_TYPE
               value: "API_CLARITY"
+            - name: PLATFORM_HOST
+              value: http://{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:8080/api
             - name: FUZZER
-              value: "{{ .Values.apiclarity.modules.fuzzer.methods }}"
+              value: "{{ .Values.APIClarityRuntimeFuzzing.methods }}"
             - name: REQUEST_SCOPE
-              value: "{{ .Values.apiclarity.modules.fuzzer.requestScope }}"
+              value: "{{ .Values.APIClarityRuntimeFuzzing.requestScope }}"
             - name: RESTLER_ROOT_PATH
-              value: "{{ .Values.apiclarity.modules.fuzzer.restlerRootPath }}"
+              value: "{{ .Values.APIClarityRuntimeFuzzing.restlerRootPath }}"
             - name: RESTLER_TOKEN_INJECTOR_PATH
-              value: "{{ .Values.apiclarity.modules.fuzzer.restlerTokenInjPath }}"
+              value: "{{ .Values.APIClarityRuntimeFuzzing.restlerTokenInjPath }}"
             - name: DEBUG
-              value: "{{ .Values.apiclarity.modules.fuzzer.debug }}"
+              value: "{{ .Values.APIClarityRuntimeFuzzing.debug }}"
             resources:
+{{- toYaml (index .Values "APIClarityRuntimeFuzzing" "resources") | nindent 14 }}
