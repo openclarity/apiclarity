@@ -12,14 +12,14 @@ data:
     metadata:
       namespace: '{{ .Release.Namespace }}'
       labels:
-{{- toYaml (index .Values "apiclarity" "labels") | nindent 8 }}
+{{- toYaml (index .Values "APIClarityRuntimeFuzzing" "labels") | nindent 8 }}
     spec:
       backoffLimit: 0
       ttlSecondsAfterFinished: 300
       template:
         metadata:
           labels:
-{{- toYaml (index .Values "apiclarity" "labels") | nindent 12 }}
+{{- toYaml (index .Values "APIClarityRuntimeFuzzing" "labels") | nindent 12 }}
         spec:
           restartPolicy: Never
           volumes:
