@@ -21,7 +21,6 @@ const (
 
 	uriEnvVar               = "URI"
 	apiIDEnvVar             = "API_ID"
-	platformHostEnvVar      = "PLATFORM_HOST"
 	authEnvVar              = "SERVICE_AUTH"
 	restlerTimeBudgetEnvVar = "RESTLER_TIME_BUDGET"
 )
