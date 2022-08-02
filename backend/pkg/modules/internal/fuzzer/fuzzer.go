@@ -64,7 +64,7 @@ func init() {
 //nolint:ireturn,nolintlint // was needed for the module implementation of ApiClarity
 func newFuzzer(ctx context.Context, accessor core.BackendAccessor) (core.Module, error) {
 	logging.InitLogger()
-	logging.Logf("[Fuzzer] Start():: -->")
+	logging.Debugf("[Fuzzer] Start():: -->")
 
 	// Use default values
 	plugin := pluginFuzzer{
@@ -90,7 +90,7 @@ func newFuzzer(ctx context.Context, accessor core.BackendAccessor) (core.Module,
 	if err != nil {
 		logging.Errorf("[Fuzzer] Error, failed to init model.")
 	}
-	logging.Logf("[Fuzzer] Model creation ok")
+	logging.Debugf("[Fuzzer] Model creation ok")
 
 	// Create the client according to the configuration
 	plugin.fuzzerClient, err = clients.NewClient(plugin.config, accessor)
@@ -98,9 +98,9 @@ func newFuzzer(ctx context.Context, accessor core.BackendAccessor) (core.Module,
 		logging.Errorf("[Fuzzer] Error, failed to create a client")
 		return nil, fmt.Errorf("ignoring fuzzer module due to missing fuzzer client")
 	}
-	logging.Logf("[Fuzzer] Client (%v) creation, ok", plugin.config.GetDeploymentType())
+	logging.Debugf("[Fuzzer] Client (%v) creation, ok", plugin.config.GetDeploymentType())
 
-	logging.Logf("[Fuzzer] Start():: <--")
+	logging.Debugf("[Fuzzer] Start():: <--")
 
 	return &plugin, nil
 }

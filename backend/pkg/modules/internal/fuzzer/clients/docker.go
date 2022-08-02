@@ -24,7 +24,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
+	dockerClient "github.com/docker/docker/client"
 
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/config"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
@@ -33,7 +33,6 @@ import (
 const (
 	ContainerAutoremove  = true
 	ContainerNetworkMode = "host"
-	ContainerNameDefault = "fuzzer"
 )
 
 type DockerClient struct {
@@ -49,12 +48,12 @@ func (c *DockerClient) TriggerFuzzingJob(apiID int64, endpoint string, securityI
 	logging.Logf("[Fuzzer][DockerClient] TriggerFuzzingJob(%v, %v, %v, %v): -->", apiID, endpoint, securityItem, timeBudget)
 
 	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	cli, err := dockerClient.NewClientWithOpts(dockerClient.FromEnv, dockerClient.WithAPIVersionNegotiation())
 	if err != nil {
 		return fmt.Errorf("unable to create new docker client: %w", err)
 	}
 
-	containerName := ContainerNameDefault // TODO must be unique. For demo only
+	containerName := fuzzerContainerName // TODO must be unique. For demo only
 
 	// Define environment for container
 	inputEnv := []string{
@@ -123,11 +122,11 @@ func (c *DockerClient) TriggerFuzzingJob(apiID int64, endpoint string, securityI
 func (c *DockerClient) StopFuzzingJob(apiID int64, complete bool) error {
 	logging.Logf("[Fuzzer][DockerClient] StopFuzzingJob(%v): -->", apiID)
 	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	cli, err := dockerClient.NewClientWithOpts(dockerClient.FromEnv, dockerClient.WithAPIVersionNegotiation())
 	if err != nil {
 		return fmt.Errorf("unable to create new docker client: %w", err)
 	}
-	containerName := ContainerNameDefault // TODO must be unique. For demo only
+	containerName := fuzzerContainerName // TODO must be unique. For demo only
 
 	if err := cli.ContainerStop(ctx, containerName, nil); err != nil {
 		logging.Logf("[Fuzzer][DockerClient] StopFuzzingJob(%v): can't stop container %s (already stopped?): %v", apiID, containerName, err)
@@ -151,7 +150,7 @@ func NewDockerClient(config *config.Config) (Client, error) {
 		imageName:         config.GetImageName(),
 		showDockerLog:     config.GetShowDockerLogFlag(),
 		platformType:      config.GetPlatformType(),
-		platformHost:      config.GetPlatformHostFromFuzzer(),
+		platformHost:      config.GetPlatformHost(),
 		subFuzzer:         config.GetSubFuzzerList(),
 		tokenInjectorPath: config.GetRestlerTokenInjectorPath(),
 	}

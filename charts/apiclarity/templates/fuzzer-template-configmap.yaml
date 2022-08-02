@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "apiclarity.name" . }}-fuzzer-template
+  namespace: '{{ .Release.Namespace }}'
+  labels:
+    {{ include "apiclarity.labels" . }}
+data:
+  config: |-
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      namespace: '{{ .Release.Namespace }}'
+      labels:
+{{- toYaml (index .Values "apiclarity" "labels") | nindent 8 }}
+    spec:
+      backoffLimit: 0
+      ttlSecondsAfterFinished: 300
+      template:
+        metadata:
+          labels:
+{{- toYaml (index .Values "apiclarity" "labels") | nindent 12 }}
+        spec:
+          restartPolicy: Never
+          volumes:
+          - name: tmp-volume
+            emptyDir: {}
+          securityContext:
+            capabilities:
+              drop:
+              - all
+            runAsNonRoot: true
+            runAsGroup: 1001
+            runAsUser: 1001
+            privileged: false
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          containers:
+          - name: fuzzer
+            image: "{{ .Values.APIClarityRuntimeFuzzing.docker.image }}"
+            imagePullPolicy: Always
+            volumeMounts:
+              - mountPath: /tmp
+                name: tmp-volume
+            env:
+            - name: PLATFORM_TYPE
+              value: "API_CLARITY"
+            - name: PLATFORM_HOST
+              value: http://{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:8080/api
+            - name: FUZZER
+              value: "{{ .Values.APIClarityRuntimeFuzzing.methods }}"
+            - name: REQUEST_SCOPE
+              value: "{{ .Values.APIClarityRuntimeFuzzing.requestScope }}"
+            - name: RESTLER_ROOT_PATH
+              value: "{{ .Values.APIClarityRuntimeFuzzing.restlerRootPath }}"
+            - name: RESTLER_TOKEN_INJECTOR_PATH
+              value: "{{ .Values.APIClarityRuntimeFuzzing.restlerTokenInjPath }}"
+            - name: DEBUG
+              value: "{{ .Values.APIClarityRuntimeFuzzing.debug }}"
+            resources:
+{{- toYaml (index .Values "APIClarityRuntimeFuzzing" "resources") | nindent 14 }}

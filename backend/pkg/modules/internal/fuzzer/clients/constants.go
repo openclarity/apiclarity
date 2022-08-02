@@ -13,30 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package logging
+package clients
 
-import (
-	log "github.com/sirupsen/logrus"
+const (
+	fuzzerContainerName = "scn-dast"
+	jobNamePrefix       = "scn-fuzzer-"
+
+	uriEnvVar               = "URI"
+	apiIDEnvVar             = "API_ID"
+	authEnvVar              = "SERVICE_AUTH"
+	restlerTimeBudgetEnvVar = "RESTLER_TIME_BUDGET"
 )
-
-// Logf logs message either via defined user logger or via system one if no user logger is defined.
-
-func Debugf(f string, args ...interface{}) {
-	log.Debugf(f, args...)
-}
-
-func Logf(f string, args ...interface{}) {
-	log.Infof(f, args...)
-}
-
-func Warningf(f string, args ...interface{}) {
-	log.Warningf(f, args...)
-}
-
-func Errorf(f string, args ...interface{}) {
-	log.Errorf(f, args...)
-}
-
-func InitLogger() {
-	// Use this function to init a logger if don't use the root one
-}

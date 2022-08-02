@@ -30,29 +30,29 @@ type Client interface {
 
 //nolint: ireturn,nolintlint
 func NewClient(moduleConfig *config.Config, accessor core.BackendAccessor) (Client, error) {
-	if moduleConfig.GetDeploymentType() == config.DeploymentTypeKubernetes {
-		client, err := NewKubernetesClient(moduleConfig, accessor)
-		if err != nil {
-			logging.Logf("[Fuzzer] Error, can't create Kubernetes client, err=(%v)", err)
-			return nil, err
-		}
-		logging.Logf("[Fuzzer] Docker client creation, ok")
-		return client, nil
-	} else if moduleConfig.GetDeploymentType() == config.DeploymentTypeDocker {
+	if moduleConfig.GetDeploymentType() == config.DeploymentTypeDocker {
 		client, err := NewDockerClient(moduleConfig)
 		if err != nil {
-			logging.Logf("[Fuzzer] Error, can't create Docker client, err=(%v)", err)
+			logging.Errorf("[Fuzzer] Error, can't create Docker client, err=(%v)", err)
 			return nil, err
 		}
-		logging.Logf("[Fuzzer] Docker client creation, ok")
+		logging.Debugf("[Fuzzer] Docker client creation, ok")
 		return client, nil
 	} else if moduleConfig.GetDeploymentType() == config.DeploymentTypeFake {
 		client, err := NewFakeClient(moduleConfig)
 		if err != nil {
-			logging.Logf("[Fuzzer] Error, can't create Fake client, err=(%v)", err)
+			logging.Errorf("[Fuzzer] Error, can't create Fake client, err=(%v)", err)
 			return nil, err
 		}
-		logging.Logf("[Fuzzer] Docker Fake creation, ok")
+		logging.Debugf("[Fuzzer] Fake client creation, ok")
+		return client, nil
+	} else if moduleConfig.GetDeploymentType() == config.DeploymentTypeConfigMap {
+		client, err := NewConfigMapClient(moduleConfig, accessor)
+		if err != nil {
+			logging.Errorf("[Fuzzer] Error, can't create ConfigMap client, err=(%v)", err)
+			return nil, err
+		}
+		logging.Debugf("[Fuzzer] ConfigMap client creation, ok")
 		return client, nil
 	}
 

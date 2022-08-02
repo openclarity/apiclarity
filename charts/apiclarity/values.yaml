@@ -58,15 +58,11 @@ apiclarity:
     # Root cert ConfigMap (rootCACertConfigMapName) cert field name
     rootCertFileName: "ca.crt"
 
-  modules:
-    fuzzer:
-      docker:
-        image: gcr.io/eticloud/k8sec/scn-dast:22e6ed54e0816942c82334a4ce2addc2333cd395
-
   # Defines env variables for apiclarity pod
   env:
     plugins:
       ## ENV_1: example123
+      FUZZER_DEPLOYMENT_TYPE: "configmap"
 
   ## Docker Image values.
   docker:
@@ -231,4 +227,34 @@ trafficSource:
     deploymentNamespace: ""
 
 # End of APIClarity Traffic Source Values
+#######################################################################################
+
+#######################################################################################
+## APIClarity Runtime Fuzzing Values
+
+APIClarityRuntimeFuzzing:
+
+  docker:
+    # Fuzzer docker image to load
+    image: gcr.io/eticloud/k8sec/scn-dast:22e6ed54e0816942c82334a4ce2addc2333cd395
+  # Fuzzing methods (scn-fuzzer, restler, crud). It is a comma separated list.
+  methods: "scn-fuzzer,restler,crud"
+  # Internal use only, do not change
+  requestScope: "global/internalservices/portshift_request"
+  # Internal use only, do not change
+  restlerRootPath: "/tmp"
+  # Internal use only, do not change
+  restlerTokenInjPath: "/app/"
+  debug: false
+
+  ## Resource limits for Fuzzer deployment
+  resources:
+    requests:
+      memory: "200Mi"
+      cpu: "100m"
+    limits:
+      memory: "1000Mi"
+      cpu: "200m"
+
+# End of APIClarity Runtime Fuzzing Values
 #######################################################################################
