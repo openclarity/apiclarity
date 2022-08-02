@@ -1,12 +1,13 @@
 import React, { useMemo, useCallback, useEffect, useState } from 'react';
 import classnames from 'classnames';
-import { isEmpty, isEqual, pickBy, isNull } from 'lodash';
-import { useTable, usePagination, useSortBy, useResizeColumns, useFlexLayout, useRowSelect } from 'react-table';
+import { isEmpty, isEqual, pickBy, isNull, isUndefined } from 'lodash';
+import { useTable, usePagination, useSortBy, useResizeColumns, useFlexLayout, useRowSelect, useExpanded } from 'react-table';
 import Icon, { ICON_NAMES } from 'components/Icon';
 import IconWithTitle from 'components/IconWithTitle';
 import Loader from 'components/Loader';
 import Checkbox from 'components/Checkbox';
 import NoResultsDisplay from 'components/NoResultsDisplay';
+import Arrow from 'components/Arrow';
 import { useFetch, usePrevious } from 'hooks';
 import Pagination from './Pagination';
 import ColumnsSelectPanel from './ColumnsSelectPanel';
@@ -19,7 +20,10 @@ export {
 }
 
 const SELECTOR_COLUMN_ID = "SELECTOR";
+const EXPANDER_COLUMN_ID = "EXPANDER";
+
 const SELECTOR_WIDTH = 40;
+const EXPANDER_WIDTH = 40;
 
 const RowSelectCheckbox = React.memo(
     ({checked, indeterminate, onChange}) => (
@@ -42,7 +46,7 @@ const ColumnPanelSelect = ({toggleColumns}) => {
 const Table = props => {
     const {columns, defaultSortBy: defaultSortByItems, onLineClick, paginationItemsName, url, formatFetchedData, filters,
         hideColumnControl=true, noResultsTitle="API", refreshTimestamp, withPagination=true, data: externalData, withMultiSelect=false, onRowSelect,
-           markedRowIds=[]} = props;
+           markedRowIds=[], innerRowComponent: InnerRowComponent} = props;
 
     const defaultSortBy = useMemo(() => defaultSortByItems || [], [defaultSortByItems]);
     const defaultColumn = React.useMemo(() => ({
@@ -92,6 +96,7 @@ const Table = props => {
         useResizeColumns,
         useFlexLayout,
         useSortBy,
+        useExpanded,
         usePagination,
         useRowSelect,
         hooks => {
@@ -106,7 +111,7 @@ const Table = props => {
 
             hooks.visibleColumns.push(columns => {
                 const updatedColumns = columns;
-                
+
                 if (withMultiSelect) {
                     updatedColumns.unshift({
                         Header: ({getToggleAllRowsSelectedProps}) => (
@@ -124,9 +129,31 @@ const Table = props => {
                         maxWidth: SELECTOR_WIDTH
                     });
                 }
+                if (!!InnerRowComponent) {
+                    updatedColumns.unshift({
+                        Header: () => null, // No header
+                        id: EXPANDER_COLUMN_ID,
+                        Cell: ({ row }) => {
+                            const { onClick } = row.getToggleRowExpandedProps();
+
+                            return (
+                                <Arrow
+                                    name={row.isExpanded ? "top" : "bottom"}
+                                    className="row-expand-icon"
+                                    onClick={onClick}
+                                    small
+                                />
+                            );
+                        },
+                        disableResizing: true,
+                        minWidth: EXPANDER_WIDTH,
+                        width: EXPANDER_WIDTH,
+                        maxWidth: EXPANDER_WIDTH
+                    });
+                }
 
                 return updatedColumns;
-            })
+            });
         }
     );
 
@@ -161,7 +188,7 @@ const Table = props => {
         if (loading) {
             return;
         }
-        
+
         fetchData({queryParams: getQueryParams()});
     }, [fetchData, getQueryParams, loading])
 
@@ -203,6 +230,8 @@ const Table = props => {
         return header.Header;
     }) : []).filter(item => !isNull(item));
 
+    const resultsTotalText = isUndefined(total) ? '' : `Showing ${total} entries`;
+
     return (
         <div className="table-wrapper">
             {!hideColumnControl &&
@@ -215,7 +244,7 @@ const Table = props => {
                     columnsIconClassName={"table-columns-class"}
                 />
                 }
-            {!withPagination ? <div className="no-pagination-results-total">{`Showing ${total} entries`}</div> :
+            {!withPagination ? <div className="no-pagination-results-total">{resultsTotalText}</div> :
                 <Pagination
                     canPreviousPage={canPreviousPage}
                     nextPage={nextPage}
@@ -270,10 +299,10 @@ const Table = props => {
                     {
                         page.map((row) => {
                             prepareRow(row);
-                    
+
                             return (
                                 <React.Fragment key={row.id}>
-                                    <div className={classnames("table-tr", {clickable: !!onLineClick}, {marked: markedRowIds.includes(row.id)})} {...row.getRowProps()}>
+                                    <div className={classnames("table-tr", {clickable: !!onLineClick}, {marked: markedRowIds.includes(row.id)}, {expanded: row.isExpanded})} {...row.getRowProps()}>
                                         {
                                             row.cells.map(cell => {
                                                 const {className} = cell.column;
@@ -281,9 +310,9 @@ const Table = props => {
                                                     "table-td",
                                                     {[className]: className}
                                                 );
-                        
+
                                                 const isTextValue = !!cell.column.accessor;
-                                                
+
                                                 return (
                                                     <div
                                                         className={cellClassName}
@@ -298,13 +327,18 @@ const Table = props => {
                                             })
                                         }
                                     </div>
+                                    {row.isExpanded && !!InnerRowComponent &&
+                                        <div className="table-tr inner-row">
+                                            <div className="table-td"><InnerRowComponent data={row.original} /></div>
+                                        </div>
+                                    }
                                 </React.Fragment>
                             )
                         })
                     }
                 </div>
             </div>
-            
+
         </div>
     )
 }
@@ -312,9 +346,9 @@ const Table = props => {
 export default React.memo(Table, (prevProps, nextProps) => {
     const {filters: prevFilters, refreshTimestamp: prevRefreshTimestamp, data: prevData, markedRowIds: prevMarkedRowIds} = prevProps;
     const {filters, refreshTimestamp, data, markedRowIds} = nextProps;
-    
+
     const shouldRefresh = !isEqual(prevFilters, filters) || prevRefreshTimestamp !== refreshTimestamp || !isEqual(prevData, data) ||
         !isEqual(prevMarkedRowIds, markedRowIds);
-    
+
     return !shouldRefresh;
 });

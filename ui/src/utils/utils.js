@@ -11,5 +11,6 @@ export const SYSTEM_RISKS = {
     UNKNOWN: {value: "UNKNOWN", label: "Unknown"},
     NO_RISK: {value: "NO_RISK", label: "No known risk"},
     APPROVED: {value: "APPROVED", label: "Approved"},
-    NEUTRAL: {value: "NEUTRAL", label: "Neutral"}
-}
+    NEUTRAL: {value: "NEUTRAL", label: "Neutral"},
+    INFO: {value: "INFO", label: "Info"}
+};
