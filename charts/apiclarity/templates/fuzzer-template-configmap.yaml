@@ -12,14 +12,14 @@ data:
     metadata:
       namespace: '{{ .Release.Namespace }}'
       labels:
-{{- toYaml (index .Values "APIClarityRuntimeFuzzing" "labels") | nindent 8 }}
+{{- toYaml .Values.APIClarityRuntimeFuzzing.labels | nindent 8 }}
     spec:
       backoffLimit: 0
       ttlSecondsAfterFinished: 300
       template:
         metadata:
           labels:
-{{- toYaml (index .Values "APIClarityRuntimeFuzzing" "labels") | nindent 12 }}
+{{- toYaml .Values.APIClarityRuntimeFuzzing.labels | nindent 12 }}
         spec:
           restartPolicy: Never
           volumes:
@@ -56,4 +56,4 @@ data:
             - name: DEBUG
               value: "{{ .Values.APIClarityRuntimeFuzzing.debug }}"
             resources:
-{{- toYaml (index .Values "APIClarityRuntimeFuzzing" "resources") | nindent 14 }}
+{{- toYaml .Values.APIClarityRuntimeFuzzing.resources | nindent 14 }}
