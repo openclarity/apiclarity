@@ -12,14 +12,14 @@ data:
     metadata:
       namespace: '{{ .Release.Namespace }}'
       labels:
-{{- toYaml (index .Values "apiclarity" "labels") | nindent 8 }}
+{{- toYaml .Values.APIClarityRuntimeFuzzing.labels | nindent 8 }}
     spec:
       backoffLimit: 0
       ttlSecondsAfterFinished: 300
       template:
         metadata:
           labels:
-{{- toYaml (index .Values "apiclarity" "labels") | nindent 12 }}
+{{- toYaml .Values.APIClarityRuntimeFuzzing.labels | nindent 12 }}
         spec:
           restartPolicy: Never
           volumes:
@@ -49,8 +49,6 @@ data:
               value: http://{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:8080/api
             - name: FUZZER
               value: "{{ .Values.APIClarityRuntimeFuzzing.methods }}"
-            - name: REQUEST_SCOPE
-              value: "{{ .Values.APIClarityRuntimeFuzzing.requestScope }}"
             - name: RESTLER_ROOT_PATH
               value: "{{ .Values.APIClarityRuntimeFuzzing.restlerRootPath }}"
             - name: RESTLER_TOKEN_INJECTOR_PATH
@@ -58,4 +56,4 @@ data:
             - name: DEBUG
               value: "{{ .Values.APIClarityRuntimeFuzzing.debug }}"
             resources:
-{{- toYaml (index .Values "APIClarityRuntimeFuzzing" "resources") | nindent 14 }}
+{{- toYaml .Values.APIClarityRuntimeFuzzing.resources | nindent 14 }}
