@@ -409,7 +409,7 @@ func fromCoreAPIAnnotation(coreAnn *core.Annotation) (anns []utils.TraceAnalyzer
 			anns = append(anns, a)
 		}
 	}
-	return
+	return anns, nil
 }
 
 func fromCoreAPIAnnotations(coreAnns []*core.Annotation) (anns []utils.TraceAnalyzerAPIAnnotation) {
