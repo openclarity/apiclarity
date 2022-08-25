@@ -21,6 +21,7 @@ import (
 	"github.com/openclarity/apiclarity/api3/global"
 	"github.com/openclarity/apiclarity/api3/notifications"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
+	log "github.com/sirupsen/logrus"
 )
 
 type BFLANotifier interface {
@@ -54,6 +55,13 @@ func (n *Notifier) NotifyAuthzModel(ctx context.Context, apiID uint, notificatio
 		SpecType:   global.SpecType(ToRestapiSpecType(notification.SpecType)),
 	}); err != nil {
 		return err //nolint:wrapcheck
+	}
+	if log.GetLevel() == log.DebugLevel {
+		jntf, err := ntf.MarshalJSON()
+		if err == nil {
+			log.Debugf("Auth model notification: %s", jntf)
+
+		}
 	}
 	return n.accessor.Notify(ctx, n.moduleName, apiID, ntf) //nolint:wrapcheck
 }

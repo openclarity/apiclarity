@@ -44,14 +44,14 @@ func ParseSpecInfo(apiInfo *database.APIInfo) ([]*models.SpecTag, error) {
 	return nil, nil
 }
 
-func ResolvePath(tags []*models.SpecTag, event *database.APIEvent) (urlpath string) {
+func ResolvePath(tags []*models.SpecTag, event *database.APIEvent) (string, error) {
 	if event.ProvidedPathID != "" {
-		return resolvePathFromTags(tags, event.ProvidedPathID)
+		return resolvePathFromTags(tags, event.ProvidedPathID), nil
 	}
 	if event.ReconstructedPathID != "" {
-		return resolvePathFromTags(tags, event.ReconstructedPathID)
+		return resolvePathFromTags(tags, event.ReconstructedPathID), nil
 	}
-	return event.Path
+	return "", fmt.Errorf("Event %v cannot resolve to a spec path", event.ID)
 }
 
 func resolvePathFromTags(tags []*models.SpecTag, pathID string) string {

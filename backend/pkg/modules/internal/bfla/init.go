@@ -325,11 +325,15 @@ func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID in
 	if err != nil {
 		log.Warnf("tags for apiID=%d not found", event.APIInfoID)
 	}
-	resolvedPath := bfladetector.ResolvePath(tags, event)
-	if obj, err := h.bflaDetector.FindSourceObj(resolvedPath, string(event.Method), src.Uid, event.APIInfoID); err != nil {
-		log.Error(err)
-	} else if !obj.Authorized {
-		e.BflaStatus = bfladetector.ResolveBFLAStatusInt(int(event.StatusCode))
+	resolvedPath, err := bfladetector.ResolvePath(tags, event)
+	if err != nil {
+		log.Warnf("%v", err)
+	} else {
+		if obj, err := h.bflaDetector.FindSourceObj(resolvedPath, string(event.Method), src.Uid, event.APIInfoID); err != nil {
+			log.Error(err)
+		} else if !obj.Authorized {
+			e.BflaStatus = bfladetector.ResolveBFLAStatusInt(int(event.StatusCode))
+		}
 	}
 	common.HTTPResponse(w, http.StatusOK, e)
 }
@@ -659,18 +663,22 @@ func (h httpHandler) PutEventIdOperation(w http.ResponseWriter, r *http.Request,
 		if err != nil {
 			log.Warnf("tags for apiID=%d not found", apiEvent.APIInfoID)
 		}
-		resolvedPath := bfladetector.ResolvePath(tags, apiEvent)
-		switch operation {
-		case restapi.Approve:
-			h.bflaDetector.ApproveTrace(resolvedPath, string(apiEvent.Method), src, apiEvent.APIInfoID, nil)
-		case restapi.Deny:
-			h.bflaDetector.DenyTrace(resolvedPath, string(apiEvent.Method), src, apiEvent.APIInfoID, nil)
-		case restapi.ApproveUser:
-			h.bflaDetector.ApproveTrace(resolvedPath, string(apiEvent.Method), src, apiEvent.APIInfoID, user)
-		case restapi.DenyUser:
-			h.bflaDetector.DenyTrace(resolvedPath, string(apiEvent.Method), src, apiEvent.APIInfoID, user)
+		resolvedPath, err := bfladetector.ResolvePath(tags, apiEvent)
+		if err != nil {
+			log.Warnf("%v", err)
+		} else {
+			switch operation {
+			case restapi.Approve:
+				h.bflaDetector.ApproveTrace(resolvedPath, string(apiEvent.Method), src, apiEvent.APIInfoID, nil)
+			case restapi.Deny:
+				h.bflaDetector.DenyTrace(resolvedPath, string(apiEvent.Method), src, apiEvent.APIInfoID, nil)
+			case restapi.ApproveUser:
+				h.bflaDetector.ApproveTrace(resolvedPath, string(apiEvent.Method), src, apiEvent.APIInfoID, user)
+			case restapi.DenyUser:
+				h.bflaDetector.DenyTrace(resolvedPath, string(apiEvent.Method), src, apiEvent.APIInfoID, user)
+			}
+			log.Infof("%s operation applied successfully on trace=%d", operation, eventID)
 		}
-		log.Infof("%s operation applied successfully on trace=%d", operation, eventID)
 		common.HTTPResponse(w, http.StatusOK, &oapicommon.ApiResponse{Message: fmt.Sprintf("Reqested %s operation on api event", operation)})
 	}
 }

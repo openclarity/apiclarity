@@ -625,9 +625,9 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	if err != nil {
 		return fmt.Errorf("unable to parse spec info: %w", err)
 	}
-	resolvedPath := ResolvePath(tags, trace.APIEvent)
-	if resolvedPath == "" {
-		return fmt.Errorf("unable to resolve path for event %d", trace.APIEvent.ID)
+	resolvedPath, err := ResolvePath(tags, trace.APIEvent)
+	if err != nil {
+		return fmt.Errorf("unable to process trace: %w", err)
 	}
 
 	specType := SpecTypeFromAPIInfo(apiInfo)
