@@ -241,6 +241,12 @@ func (a APIAnnotationSamePassword) Redacted() utils.TraceAnalyzerAPIAnnotation {
 }
 
 func (a *APIAnnotationSamePassword) ToAPIFinding() oapicommon.APIFinding {
+	var additionalInfo *map[string]interface{}
+	if len(a.APIs) > 0 {
+		additionalInfo = &map[string]interface{}{
+			"apis": a.APIs,
+		}
+	}
 	return oapicommon.APIFinding{
 		Source: utils.ModuleName,
 
@@ -253,6 +259,6 @@ func (a *APIAnnotationSamePassword) ToAPIFinding() oapicommon.APIFinding {
 
 		Severity: oapicommon.MEDIUM,
 
-		AdditionalInfo: nil,
+		AdditionalInfo: additionalInfo,
 	}
 }
