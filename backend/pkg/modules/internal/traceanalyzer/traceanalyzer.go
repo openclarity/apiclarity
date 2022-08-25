@@ -254,13 +254,23 @@ func (p *traceAnalyzer) EventNotify(ctx context.Context, e *core.Event) {
 		// - only store the new ones in the database
 		// - send notification will ALL API findings
 		if len(updatedFindings) > 0 {
-			coreAPIAnnotations := p.toCoreAPIAnnotations(updatedFindings, false)
-			if err := p.accessor.StoreAPIInfoAnnotations(ctx, utils.ModuleName, event.APIInfoID, coreAPIAnnotations...); err != nil {
-				log.Error(err)
-			}
 			allAPIFindings := p.aggregator.GetAPIFindings(uint64(event.APIInfoID))
 			err := p.sendAPIFindingsNotification(ctx, event.APIInfoID, allAPIFindings)
 			if err != nil {
+				log.Error(err)
+			}
+			// For each finding type that were updated, take all findings of
+			// that type
+			findingsToStore := []utils.TraceAnalyzerAPIAnnotation{}
+			for _, uFinding := range updatedFindings {
+				for _, finding := range allAPIFindings {
+					if finding.Name() == uFinding.Name() {
+						findingsToStore = append(findingsToStore, finding)
+					}
+				}
+			}
+			coreAPIAnnotations := p.toCoreAPIAnnotations(findingsToStore, false)
+			if err := p.accessor.StoreAPIInfoAnnotations(ctx, utils.ModuleName, event.APIInfoID, coreAPIAnnotations...); err != nil {
 				log.Error(err)
 			}
 		}
@@ -409,7 +419,8 @@ func fromCoreAPIAnnotation(coreAnn *core.Annotation) (anns []utils.TraceAnalyzer
 			anns = append(anns, a)
 		}
 	}
-	return
+
+	return anns, nil
 }
 
 func fromCoreAPIAnnotations(coreAnns []*core.Annotation) (anns []utils.TraceAnalyzerAPIAnnotation) {
