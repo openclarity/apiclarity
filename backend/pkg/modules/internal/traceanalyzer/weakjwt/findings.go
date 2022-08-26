@@ -22,6 +22,7 @@ import (
 
 	oapicommon "github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
+	common_utils "github.com/openclarity/apiclarity/backend/pkg/utils"
 )
 
 const (
@@ -548,21 +549,33 @@ func (a *AnnotationSensitiveContent) ToFinding() utils.Finding {
 
 type APIAnnotationSensitiveContent struct {
 	utils.BaseTraceAnalyzerAPIAnnotation
+	SensitiveWordsInHeaders map[string]bool `json:"sensitive_words_in_headers"`
+	SensitiveWordsInClaims  map[string]bool `json:"sensitive_words_in_claims"`
 }
 
 func NewAPIAnnotationSensitiveContent(path, method string) *APIAnnotationSensitiveContent {
 	return &APIAnnotationSensitiveContent{
 		BaseTraceAnalyzerAPIAnnotation: utils.BaseTraceAnalyzerAPIAnnotation{SpecPath: path, SpecMethod: method},
+		SensitiveWordsInHeaders:        map[string]bool{},
+		SensitiveWordsInClaims:         map[string]bool{},
 	}
 }
 func (a *APIAnnotationSensitiveContent) Name() string { return JWTSensitiveContent }
 func (a *APIAnnotationSensitiveContent) Aggregate(ann utils.TraceAnalyzerAnnotation) (updated bool) {
-	_, valid := ann.(*AnnotationSensitiveContent)
+	eventAnn, valid := ann.(*AnnotationSensitiveContent)
 	if !valid {
 		panic("invalid type")
 	}
 
-	return false
+	claimSize, headerSize := len(a.SensitiveWordsInClaims), len(a.SensitiveWordsInHeaders)
+	for _, claimWord := range eventAnn.SensitiveWordsInClaims {
+		a.SensitiveWordsInClaims[claimWord] = true
+	}
+	for _, headerWord := range eventAnn.SensitiveWordsInHeaders {
+		a.SensitiveWordsInHeaders[headerWord] = true
+	}
+
+	return claimSize != len(a.SensitiveWordsInClaims) || headerSize != len(a.SensitiveWordsInHeaders)
 }
 
 func (a APIAnnotationSensitiveContent) Severity() string { return utils.SeverityHigh }
@@ -573,6 +586,10 @@ func (a APIAnnotationSensitiveContent) Redacted() utils.TraceAnalyzerAPIAnnotati
 }
 
 func (a *APIAnnotationSensitiveContent) ToAPIFinding() oapicommon.APIFinding {
+	additionalInfo := &map[string]interface{}{
+		"sensitive_jwt_claims":  common_utils.MapToSlice(a.SensitiveWordsInClaims),
+		"sensitive_jwt_headers": common_utils.MapToSlice(a.SensitiveWordsInHeaders),
+	}
 	jsonPointer := a.SpecLocation()
 	return oapicommon.APIFinding{
 		Source: utils.ModuleName,
@@ -586,6 +603,6 @@ func (a *APIAnnotationSensitiveContent) ToAPIFinding() oapicommon.APIFinding {
 
 		Severity: oapicommon.HIGH,
 
-		AdditionalInfo: nil,
+		AdditionalInfo: additionalInfo,
 	}
 }
