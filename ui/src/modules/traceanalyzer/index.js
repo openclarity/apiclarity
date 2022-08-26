@@ -3,10 +3,9 @@ import { MODULE_TYPES } from '../MODULE_TYPES.js';
 
 import { useFetch, FETCH_METHODS, usePrevious } from 'hooks';
 import Loader from 'components/Loader';
-import Table from 'components/Table';
 import Button from 'components/Button';
-import RiskTag from 'components/RiskTag';
 import DownloadJsonButton from 'components/DownloadJsonButton';
+import FindingsTable from 'components/FindingsTable';
 
 import './traceAnalyzer.scss';
 
@@ -62,21 +61,9 @@ const TraceAnalyzerAPIDetails = props => {
     const {inventoryId} = props;
     const annsUrl = `modules/traceanalyzer/apiFindings/${inventoryId}`;
     const [{data}, fetchData] = useFetch(annsUrl);
-
-    const columns = [
-        { Header: 'Finding',     id: "name",        accessor: "name" },
-        { Header: 'Description', id: "description", accessor: "description" },
-        {
-            Header: 'Severity',
-            Cell: ({row}) => {
-                const {severity} = row.original
-                return (<RiskTag risk={severity}/>);
-            }
-        }
-    ];
-
     const [{loading: deleting}, deleteFinding] = useFetch(annsUrl, {loadOnMount: false});
     const previousDeleting = usePrevious(deleting);
+
     useEffect(() => {
         if (previousDeleting && !deleting) {
             fetchData();
@@ -90,18 +77,9 @@ const TraceAnalyzerAPIDetails = props => {
 
     return (
         <div className="trace-analysis-wrapper">
-            <div className="review-actions-wrapper">
-                <Button onClick={() => resetAPIFindings()}>Reset Findings</Button>
-                <DownloadJsonButton title="Download finding's JSON" fileName="findings-data" data={data} />
-            </div>
-            <Table
-                noResultsTitle={"this API"}
-                columns={columns}
-                withPagination={false}
-                data={data}
-            />
+            <FindingsTable actionRow={<Button onClick={() => resetAPIFindings()}>Reset Findings</Button>} data={data} />
         </div>
-    )
+    );
 };
 
 const pluginEventDetails = {
