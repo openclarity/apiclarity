@@ -46,6 +46,12 @@ func NewAPIsFindingsRepo(accessor core.BackendAccessor) *APIsFindingsRepo {
 }
 
 func (r *APIsFindingsRepo) Aggregate(apiID uint64, path, method string, anns ...utils.TraceAnalyzerAnnotation) (updatedFindings []utils.TraceAnalyzerAPIAnnotation) {
+	// If we don't know the specPath (certainly because there is no provided not
+	// reconstructed spec), then make the method an empty string so we group all
+	// the unknown path regarless of the method.
+	if path == "" {
+		method = ""
+	}
 	for _, ann := range anns {
 		ann, updated := r.aggregate(apiID, path, method, ann)
 		if updated {
@@ -80,7 +86,7 @@ func (r *APIsFindingsRepo) aggregate(apiID uint64, path, method string, ann util
 		r.apis[apiID] = findings
 	}
 
-	// Check if we already have an entry for this (path, annotation name) pair
+	// Check if we already have an entry for this (path, method, annotation name) pair
 	key := findingKey{path, method, ann.Name()}
 	apiAnn, found := findings.paths[key]
 	if !found {

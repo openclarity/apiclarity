@@ -108,7 +108,7 @@ func (a *APIAnnotationRegexpMatching) ToAPIFinding() oapicommon.APIFinding {
 
 		Type:        a.Name(),
 		Name:        "Matching regular expression",
-		Description: "This event matches sensitive information",
+		Description: "This operation matches sensitive information",
 
 		ProvidedSpecLocation:      &jsonPointer,
 		ReconstructedSpecLocation: &jsonPointer,
