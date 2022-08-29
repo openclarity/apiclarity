@@ -321,13 +321,13 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 	var providedPathID string
 	var reconstructedPathID string
 	if b.speculator.HasProvidedSpec(specKey) {
-		providedPathID, err = b.speculator.GetPathID(telemetry, _spec.SpecSourceProvided)
+		providedPathID, err = b.speculator.GetPathID(specKey, telemetry.Request.Path, _spec.SpecSourceProvided)
 		if err != nil {
 			log.Errorf("Failed to get path id of provided spec: %v", err)
 		}
 	}
 	if b.speculator.HasApprovedSpec(specKey) {
-		reconstructedPathID, err = b.speculator.GetPathID(telemetry, _spec.SpecSourceReconstructed)
+		reconstructedPathID, err = b.speculator.GetPathID(specKey, telemetry.Request.Path, _spec.SpecSourceReconstructed)
 		if err != nil {
 			log.Errorf("Failed to get path id of reconstructed spec: %v", err)
 		}
