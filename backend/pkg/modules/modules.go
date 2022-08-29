@@ -31,7 +31,10 @@ import (
 
 	// Enables the fuzzer module.
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer"
+
+	// Enables the spec differ module.
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/spec_differ"
+
 	// Enables the traceanalyzer module.
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer"
 	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
