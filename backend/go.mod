@@ -24,7 +24,7 @@ require (
 	github.com/openclarity/apiclarity/api v0.0.0
 	github.com/openclarity/apiclarity/api3 v0.0.0
 	github.com/openclarity/apiclarity/plugins/api v0.0.0
-	github.com/openclarity/speculator v0.1.1
+	github.com/openclarity/speculator v0.1.2-0.20220829083620-bb4f440dd013
 	github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220725090837-53a6c9777dd6
 	github.com/petar-dambovaliev/aho-corasick v0.0.0-20211021192214-5ab2d9280aa9
 	github.com/rs/cors v1.8.2 // indirect

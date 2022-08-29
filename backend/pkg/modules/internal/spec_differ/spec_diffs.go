@@ -117,7 +117,7 @@ func (s *specDiffer) EventNotify(ctx context.Context, event *core.Event) {
 	providedDiffType := models.DiffTypeNODIFF
 	if speculatorAccessor.HasProvidedSpec(specKey) {
 		// calculate diffs base on the event
-		providedDiff, err = speculatorAccessor.DiffTelemetry(speculatorTelemetry, _spec.DiffSourceProvided)
+		providedDiff, err = speculatorAccessor.DiffTelemetry(speculatorTelemetry, _spec.SpecSourceProvided)
 		if err != nil {
 			log.Errorf("Failed to diff telemetry against provided spec: %v", err)
 			return
@@ -131,7 +131,7 @@ func (s *specDiffer) EventNotify(ctx context.Context, event *core.Event) {
 	}
 	if speculatorAccessor.HasApprovedSpec(specKey) {
 		// calculate diffs base on the event
-		reconstructedDiff, err = speculatorAccessor.DiffTelemetry(speculatorTelemetry, _spec.DiffSourceReconstructed)
+		reconstructedDiff, err = speculatorAccessor.DiffTelemetry(speculatorTelemetry, _spec.SpecSourceReconstructed)
 		if err != nil {
 			log.Errorf("Failed to diff telemetry against approved spec: %v", err)
 			return
@@ -237,7 +237,6 @@ func setAPIEventReconstructedDiff(apiEvent *database.APIEvent, reconstructedDiff
 		apiEvent.OldReconstructedSpec = string(original)
 		apiEvent.NewReconstructedSpec = string(modified)
 	}
-	apiEvent.ReconstructedPathID = reconstructedDiff.PathID
 	return nil
 }
 
@@ -252,7 +251,6 @@ func setAPIEventProvidedDiff(apiEvent *database.APIEvent, providedDiff *_spec.AP
 		apiEvent.OldProvidedSpec = string(original)
 		apiEvent.NewProvidedSpec = string(modified)
 	}
-	apiEvent.ProvidedPathID = providedDiff.PathID
 	return nil
 }
 
