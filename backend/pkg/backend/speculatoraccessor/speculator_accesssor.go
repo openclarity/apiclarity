@@ -21,7 +21,7 @@ import (
 )
 
 type SpeculatorAccessor interface {
-	DiffTelemetry(telemetry *_spec.Telemetry, diffSource _spec.DiffSource) (*_spec.APIDiff, error)
+	DiffTelemetry(telemetry *_spec.Telemetry, diffSource _spec.SpecSource) (*_spec.APIDiff, error)
 	HasApprovedSpec(specKey _speculator.SpecKey) bool
 	HasProvidedSpec(specKey _speculator.SpecKey) bool
 	GetProvidedSpecVersion(specKey _speculator.SpecKey) _spec.OASVersion
@@ -36,7 +36,7 @@ type Impl struct {
 	speculator *_speculator.Speculator
 }
 
-func (s *Impl) DiffTelemetry(telemetry *_spec.Telemetry, diffSource _spec.DiffSource) (*_spec.APIDiff, error) {
+func (s *Impl) DiffTelemetry(telemetry *_spec.Telemetry, diffSource _spec.SpecSource) (*_spec.APIDiff, error) {
 	//nolint: wrapcheck
 	return s.speculator.DiffTelemetry(telemetry, diffSource)
 }

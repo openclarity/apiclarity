@@ -279,6 +279,7 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 	if err != nil {
 		return fmt.Errorf("failed to get source info: %v", err)
 	}
+	specKey := _speculator.GetSpecKey(telemetry.Request.Host, destInfo.Port)
 
 	// Initialize API info
 	apiInfo := _database.APIInfo{
@@ -309,12 +310,28 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 		log.Infof("API Info in DB: %+v", apiInfo)
 
 		// Handle trace telemetry by Speculator
-		specKey := _speculator.GetSpecKey(telemetry.Request.Host, destInfo.Port)
 		if !b.speculator.HasApprovedSpec(specKey) {
 			err := b.speculator.LearnTelemetry(telemetry)
 			if err != nil {
 				return fmt.Errorf("failed to learn telemetry: %v", err)
 			}
+		}
+	}
+
+	path, query := _spec.GetPathAndQuery(telemetry.Request.Path)
+
+	var providedPathID string
+	var reconstructedPathID string
+	if b.speculator.HasProvidedSpec(specKey) {
+		providedPathID, err = b.speculator.GetPathID(specKey, path, _spec.SpecSourceProvided)
+		if err != nil {
+			return fmt.Errorf("failed to get path id of provided spec: %v", err)
+		}
+	}
+	if b.speculator.HasApprovedSpec(specKey) {
+		reconstructedPathID, err = b.speculator.GetPathID(specKey, path, _spec.SpecSourceReconstructed)
+		if err != nil {
+			return fmt.Errorf("failed to get path id of reconstructed spec: %v", err)
 		}
 	}
 
@@ -324,22 +341,22 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 		return fmt.Errorf("failed to convert status code: %v", err)
 	}
 
-	path, query := _spec.GetPathAndQuery(telemetry.Request.Path)
-
 	event := &_database.APIEvent{
-		APIInfoID:       apiInfo.ID,
-		Time:            strfmt.DateTime(time.Now().UTC()),
-		Method:          models.HTTPMethod(telemetry.Request.Method),
-		RequestTime:     strfmt.DateTime(time.UnixMilli(trace.Request.Common.Time).UTC()),
-		Path:            path,
-		Query:           query,
-		StatusCode:      int64(statusCode),
-		SourceIP:        srcInfo.IP,
-		DestinationIP:   destInfo.IP,
-		DestinationPort: int64(destPort),
-		HostSpecName:    telemetry.Request.Host,
-		IsNonAPI:        isNonAPI,
-		EventType:       apiInfo.Type,
+		APIInfoID:           apiInfo.ID,
+		Time:                strfmt.DateTime(time.Now().UTC()),
+		Method:              models.HTTPMethod(telemetry.Request.Method),
+		RequestTime:         strfmt.DateTime(time.UnixMilli(trace.Request.Common.Time).UTC()),
+		Path:                path,
+		Query:               query,
+		StatusCode:          int64(statusCode),
+		SourceIP:            srcInfo.IP,
+		DestinationIP:       destInfo.IP,
+		DestinationPort:     int64(destPort),
+		HostSpecName:        telemetry.Request.Host,
+		IsNonAPI:            isNonAPI,
+		EventType:           apiInfo.Type,
+		ProvidedPathID:      providedPathID,
+		ReconstructedPathID: reconstructedPathID,
 	}
 
 	b.dbHandler.APIEventsTable().CreateAPIEvent(event)
