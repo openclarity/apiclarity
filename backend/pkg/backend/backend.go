@@ -318,18 +318,20 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 		}
 	}
 
+	path, query := _spec.GetPathAndQuery(telemetry.Request.Path)
+
 	var providedPathID string
 	var reconstructedPathID string
 	if b.speculator.HasProvidedSpec(specKey) {
-		providedPathID, err = b.speculator.GetPathID(specKey, telemetry.Request.Path, _spec.SpecSourceProvided)
+		providedPathID, err = b.speculator.GetPathID(specKey, path, _spec.SpecSourceProvided)
 		if err != nil {
-			log.Errorf("Failed to get path id of provided spec: %v", err)
+			return fmt.Errorf("failed to get path id of provided spec: %v", err)
 		}
 	}
 	if b.speculator.HasApprovedSpec(specKey) {
-		reconstructedPathID, err = b.speculator.GetPathID(specKey, telemetry.Request.Path, _spec.SpecSourceReconstructed)
+		reconstructedPathID, err = b.speculator.GetPathID(specKey, path, _spec.SpecSourceReconstructed)
 		if err != nil {
-			log.Errorf("Failed to get path id of reconstructed spec: %v", err)
+			return fmt.Errorf("failed to get path id of reconstructed spec: %v", err)
 		}
 	}
 
@@ -338,8 +340,6 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 	if err != nil {
 		return fmt.Errorf("failed to convert status code: %v", err)
 	}
-
-	path, query := _spec.GetPathAndQuery(telemetry.Request.Path)
 
 	event := &_database.APIEvent{
 		APIInfoID:           apiInfo.ID,
