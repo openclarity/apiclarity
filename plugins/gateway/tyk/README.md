@@ -1,14 +1,15 @@
 ## APIClarity Tyk gateway plugin
 
 ### Prerequisite
+
 * Make sure that Tyk v3.2.2 is running in your K8s cluster.
 
 ### Installation using a pre-built image
 
-1. Choose one of the following installation techniques 
+1. Choose one of the following installation techniques
 
    1. Script installation
-      * Run the following script to add the plugin to your Tyk deployment. 
+      * Run the following script to add the plugin to your Tyk deployment.
       * The script will add an init container with the plugin image and will mount the plugin into the plugin to /plugins/tyk-plugin.so. 
       * Please set TYK_PROXY_CONTAINER_NAME, TYK_GATEWAY_DEPLOYMENT_NAME and TYK_GATEWAY_DEPLOYMENT_NAMESPACE accordingly:
 
@@ -26,8 +27,7 @@
       ```shell
       helm upgrade --values values.yaml --create-namespace apiclarity apiclarity/apiclarity -n apiclarity --install
       ```
-      * A post install job will execute the installation script in your cluster 
-
+      * A post install job will execute the installation script in your cluster
 
 2. Update your Tyk API definition with the plugin configuration:
 ```shell
@@ -55,6 +55,7 @@ curl -s -H "x-tyk-authorization: $TYK_ADMIN_KEY" http://$TYK_ADMIN_ADDRESS/tyk/a
 }'
 
 ```
+
 4. Hot reload Tyk:
 ```shell
 curl -s -H "x-tyk-authorization: $TYK_ADMIN_KEY" http://$TYK_ADMIN_ADDRESS/tyk/reload
@@ -70,6 +71,7 @@ This is due to limitation of how the go plugin is being build.
 Currently, the plugin is compatible only for Tyk gateway version v3.2.2
 
 If you would like to build the plugin for other versions, you need to add the appropriate go.mod dependencies, and then run (from [plugins directory](https://github.com/openclarity/apiclarity/tree/master/plugins)):
+
 ```shell
 export TYK_VERSION=<your version>
 make docker-tyk
@@ -79,8 +81,9 @@ Then, push the built image and change the image name in [deploy/patch-deployment
 Then, run the [./deploy/deploy.sh](https://github.com/openclarity/apiclarity/blob/master/plugins/gateway/tyk/deploy/deploy.sh) script.
 
 ### Preserving Client IP Address
+
 Tyk is usually deployed behind a Load Balancer (using a Kubernetes Service of type LoadBalancer).
 This can result in a loss of actual Client IP address, as Tyk will get the IP address of the Load Balancer
-as the Client IP address. 
+as the Client IP address.
 
 [This](https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip) guide lays out different methods of solving this problem.
