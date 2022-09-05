@@ -56,7 +56,7 @@ func (n *Notifier) NotifyAuthzModel(ctx context.Context, apiID uint, notificatio
 	}); err != nil {
 		return err //nolint:wrapcheck
 	}
-	if log.GetLevel() == log.DebugLevel {
+	if log.IsLevelEnabled(log.DebugLevel) {
 		jntf, err := ntf.MarshalJSON()
 		if err == nil {
 			log.Debugf("Auth model notification: %s", jntf)
