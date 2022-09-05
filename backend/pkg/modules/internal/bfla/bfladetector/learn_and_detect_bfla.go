@@ -504,7 +504,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if err != nil {
 			return fmt.Errorf("unable to get authz model state: %w", err)
 		}
-		authzModel, err := l.validateAuthzModel(ctx, cmd.authzModel, cmd.apiID)
+		authzModel, err := l.validateAuthzModel(ctx, cmd.authzModel, pv.Get().(AuthorizationModel), cmd.apiID)
 		if err != nil {
 			return fmt.Errorf("invalid authorization model provided: %w", err)
 		}
@@ -522,38 +522,60 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 	return nil
 }
 
-func (l *learnAndDetectBFLA) validateAuthzModel(ctx context.Context, m AuthorizationModel, apiID uint) (AuthorizationModel, error) {
-	jmodel, err := json.Marshal(m)
+func (l *learnAndDetectBFLA) validateAuthzModel(ctx context.Context, newModel AuthorizationModel, oldModel AuthorizationModel, apiID uint) (AuthorizationModel, error) {
+	jmodel, err := json.Marshal(newModel)
 	if err != nil {
 		log.Errorf("unable to marshal auth model %v", err)
 	}
 	log.Debugf("updated auth model:%s\n", jmodel)
 	apiInfo, err := l.bflaBackendAccessor.GetAPIInfo(ctx, apiID)
 	if err != nil {
-		return m, fmt.Errorf("unable to get api info: %w", err)
+		return oldModel, fmt.Errorf("unable to get api info: %w", err)
 	}
 	tags, err := ParseSpecInfo(apiInfo)
 	if err != nil {
-		return m, fmt.Errorf("unable to parse spec info: %w", err)
+		return oldModel, fmt.Errorf("unable to parse spec info: %w", err)
 	}
 	specType := SpecTypeFromAPIInfo(apiInfo)
 	if specType == SpecTypeNone {
-		return m, fmt.Errorf("spec not present cannot process authorization model; apiID=%d", apiID)
+		return oldModel, fmt.Errorf("spec not present cannot process authorization model; apiID=%d", apiID)
 	}
-	for _, op := range m.Operations {
+
+	audienceMap := extractAudienceMap(oldModel)
+
+	for _, op := range newModel.Operations {
 		if op.Path == "" || op.Method == "" {
-			return m, fmt.Errorf("invalid auth model operation: %v. apiID=%d", op, apiID)
+			return oldModel, fmt.Errorf("invalid auth model operation: %v. apiID=%d", op, apiID)
 		}
 		op.Tags = resolveTagsForPathAndMethod(tags, op.Path, op.Method)
 
 		for audIdx, aud := range op.Audience {
 			if !aud.External {
 				if aud.K8sObject == nil ||
-					aud.K8sObject.Name == "" ||
-					aud.K8sObject.Uid == "" ||
-					aud.K8sObject.ApiVersion == "" ||
-					aud.K8sObject.Kind == "" {
-					return m, fmt.Errorf("invalid auth model audience for operation %v: [%d] %v . apiID = %d", op, audIdx, aud, apiID)
+					aud.K8sObject.Name == "" {
+					return oldModel, fmt.Errorf("invalid auth model audience for operation %v: [%d] %v . apiID = %d", op, audIdx, aud, apiID)
+				}
+				if aud.K8sObject.ApiVersion == "" || aud.K8sObject.Kind == "" || aud.K8sObject.Uid == "" {
+
+					nsMap, ok := audienceMap[aud.K8sObject.Name]
+					if !ok {
+						return oldModel, fmt.Errorf("unable to find the audience entry for %v, %v, name = %s, namespace = %s: name not found", op.Path, op.Method, aud.K8sObject.Name, aud.K8sObject.Namespace)
+					}
+					foundAud, ok := nsMap[aud.K8sObject.Namespace]
+					if !ok {
+						if aud.K8sObject.Namespace == "" && len(nsMap) == 1 {
+							for _, foundAud = range nsMap {
+								break
+							}
+						} else {
+							return oldModel, fmt.Errorf("unable to find the audience entry for %v, %v, name = %s, namespace = %s: namespace not found", op.Path, op.Method, aud.K8sObject.Name, aud.K8sObject.Namespace)
+						}
+					}
+
+					aud.K8sObject.ApiVersion = foundAud.K8sObject.ApiVersion
+					aud.K8sObject.Kind = foundAud.K8sObject.Kind
+					aud.K8sObject.Uid = foundAud.K8sObject.Uid
+
 				}
 			}
 			if aud.Authorized {
@@ -565,7 +587,25 @@ func (l *learnAndDetectBFLA) validateAuthzModel(ctx context.Context, m Authoriza
 			}
 		}
 	}
-	return m, nil
+	return newModel, nil
+}
+
+func extractAudienceMap(m AuthorizationModel) map[string]map[string]*SourceObject {
+	audMap := map[string]map[string]*SourceObject{}
+
+	for _, op := range m.Operations {
+		for _, aud := range op.Audience {
+			nsMap, ok := audMap[aud.K8sObject.Name]
+			if !ok {
+				nsMap = map[string]*SourceObject{}
+				audMap[aud.K8sObject.Name] = nsMap
+			}
+			if _, ok := nsMap[aud.K8sObject.Namespace]; !ok {
+				nsMap[aud.K8sObject.Namespace] = aud
+			}
+		}
+	}
+	return audMap
 }
 
 func GetSpecOperation(spc *spec.Swagger, method models.HTTPMethod, resolvedPath string) *spec.Operation {
