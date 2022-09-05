@@ -496,6 +496,8 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		l.logError(l.notifyAuthzModel(ctx, cmd.apiID))
 
 	case *ProvideAuthzModelCommand:
+		log.Debugf("Received an authorization model update for api %v", cmd.apiID)
+		logDebugAuthModel(cmd.authzModel)
 		_, _, err = l.checkBFLAState(cmd.apiID, BFLALearnt, BFLADetecting)
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Provide Authz Model': %w", err)
@@ -504,10 +506,13 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if err != nil {
 			return fmt.Errorf("unable to get authz model state: %w", err)
 		}
-		authzModel, err := l.validateAuthzModel(ctx, cmd.authzModel, pv.Get().(AuthorizationModel), cmd.apiID)
+
+		authzModel, err := l.mergeAuthzModel(ctx, cmd.authzModel, pv.Get().(AuthorizationModel), cmd.apiID)
 		if err != nil {
 			return fmt.Errorf("invalid authorization model provided: %w", err)
 		}
+		log.Debugf("Authoriation model succesfullty updated for api %v", cmd.apiID)
+		logDebugAuthModel(authzModel)
 		pv.Set(authzModel)
 	}
 	if err != nil {
@@ -522,12 +527,19 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 	return nil
 }
 
-func (l *learnAndDetectBFLA) validateAuthzModel(ctx context.Context, newModel AuthorizationModel, oldModel AuthorizationModel, apiID uint) (AuthorizationModel, error) {
-	jmodel, err := json.Marshal(newModel)
+func logDebugAuthModel(m AuthorizationModel) {
+	if !log.IsLevelEnabled(log.DebugLevel) {
+		return
+	}
+
+	jmodel, err := json.Marshal(m)
 	if err != nil {
 		log.Errorf("unable to marshal auth model %v", err)
 	}
-	log.Debugf("updated auth model:%s\n", jmodel)
+	log.Debugf("%s", jmodel)
+}
+
+func (l *learnAndDetectBFLA) mergeAuthzModel(ctx context.Context, newModel AuthorizationModel, oldModel AuthorizationModel, apiID uint) (AuthorizationModel, error) {
 	apiInfo, err := l.bflaBackendAccessor.GetAPIInfo(ctx, apiID)
 	if err != nil {
 		return oldModel, fmt.Errorf("unable to get api info: %w", err)

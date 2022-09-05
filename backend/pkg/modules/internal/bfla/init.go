@@ -400,11 +400,6 @@ func (h httpHandler) GetAuthorizationModelApiID(w http.ResponseWriter, r *http.R
 }
 
 func FromRestapiAuthorizationModel(am *restapi.AuthorizationModel) bfladetector.AuthorizationModel {
-	jmod, err := json.Marshal(am)
-	if err != nil {
-		log.Errorf("Unable to marshal authmodel %v", am)
-	}
-	log.Debugf("****** Auth model %v: %s", am, jmod)
 	res := bfladetector.AuthorizationModel{}
 	for _, o := range am.Operations {
 		resOp := &bfladetector.Operation{Method: o.Method, Path: o.Path}
