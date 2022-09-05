@@ -25,16 +25,6 @@ data:
           volumes:
           - name: tmp-volume
             emptyDir: {}
-          securityContext:
-            capabilities:
-              drop:
-              - all
-            runAsNonRoot: true
-            runAsGroup: 1001
-            runAsUser: 1001
-            privileged: false
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
           containers:
           - name: fuzzer
             image: "{{ .Values.APIClarityRuntimeFuzzing.docker.image }}"
@@ -55,5 +45,15 @@ data:
               value: "{{ .Values.APIClarityRuntimeFuzzing.restlerTokenInjPath }}"
             - name: DEBUG
               value: "{{ .Values.APIClarityRuntimeFuzzing.debug }}"
+            securityContext:
+              capabilities:
+                drop:
+                - all
+              runAsNonRoot: true
+              runAsGroup: 1001
+              runAsUser: 1001
+              privileged: false
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
             resources:
 {{- toYaml .Values.APIClarityRuntimeFuzzing.resources | nindent 14 }}
