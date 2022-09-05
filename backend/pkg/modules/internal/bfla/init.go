@@ -327,10 +327,10 @@ func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID in
 	}
 	resolvedPath, err := bfladetector.ResolvePath(tags, event)
 	if err != nil {
-		log.Warnf("%v", err)
+		log.Warnf("path not found in the spec: %v", err)
 	} else {
 		if obj, err := h.bflaDetector.FindSourceObj(resolvedPath, string(event.Method), src.Uid, event.APIInfoID); err != nil {
-			log.Error(err)
+			log.Error("unable to map the source onto an existing entity in the auth model", err)
 		} else if !obj.Authorized {
 			e.BflaStatus = bfladetector.ResolveBFLAStatusInt(int(event.StatusCode))
 		}
@@ -665,7 +665,7 @@ func (h httpHandler) PutEventIdOperation(w http.ResponseWriter, r *http.Request,
 		}
 		resolvedPath, err := bfladetector.ResolvePath(tags, apiEvent)
 		if err != nil {
-			log.Warnf("%v", err)
+			log.Warnf("path not found in the spec: %v", err)
 		} else {
 			switch operation {
 			case restapi.Approve:
