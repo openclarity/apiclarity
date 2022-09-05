@@ -327,10 +327,10 @@ func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID in
 	}
 	resolvedPath, err := bfladetector.ResolvePath(tags, event)
 	if err != nil {
-		log.Warnf("%v", err)
+		log.Warnf("path not found in the spec: %v", err)
 	} else {
 		if obj, err := h.bflaDetector.FindSourceObj(resolvedPath, string(event.Method), src.Uid, event.APIInfoID); err != nil {
-			log.Error(err)
+			log.Error("unable to map the source onto an existing entity in the auth model", err)
 		} else if !obj.Authorized {
 			e.BflaStatus = bfladetector.ResolveBFLAStatusInt(int(event.StatusCode))
 		}
@@ -400,6 +400,11 @@ func (h httpHandler) GetAuthorizationModelApiID(w http.ResponseWriter, r *http.R
 }
 
 func FromRestapiAuthorizationModel(am *restapi.AuthorizationModel) bfladetector.AuthorizationModel {
+	jmod, err := json.Marshal(am)
+	if err != nil {
+		log.Error("Unable to marshal authmodel %v", am)
+	}
+	log.Debug("****** Auth model %v: %s", am, jmod)
 	res := bfladetector.AuthorizationModel{}
 	for _, o := range am.Operations {
 		resOp := &bfladetector.Operation{Method: o.Method, Path: o.Path}
@@ -665,7 +670,7 @@ func (h httpHandler) PutEventIdOperation(w http.ResponseWriter, r *http.Request,
 		}
 		resolvedPath, err := bfladetector.ResolvePath(tags, apiEvent)
 		if err != nil {
-			log.Warnf("%v", err)
+			log.Warnf("path not found in the spec: %v", err)
 		} else {
 			switch operation {
 			case restapi.Approve:
