@@ -531,7 +531,7 @@ func logDebugAuthModel(m AuthorizationModel) {
 	log.Debugf("%s", jmodel)
 }
 
-func (l *learnAndDetectBFLA) mergeAuthzModel(ctx context.Context, newModel AuthorizationModel, oldModel AuthorizationModel, apiID uint) (AuthorizationModel, error) {
+func (l *learnAndDetectBFLA) mergeAuthzModel(newModel AuthorizationModel, oldModel AuthorizationModel, apiID uint) (AuthorizationModel, error) {
 	for _, oldOp := range oldModel.Operations {
 		_, newOperation := newModel.Operations.Find(func(o *Operation) bool {
 			return oldOp.Path == o.Path &&
@@ -573,27 +573,8 @@ func (l *learnAndDetectBFLA) mergeAuthzModel(ctx context.Context, newModel Autho
 				oldAud.WarningStatus = restapi.SUSPICIOUSMEDIUM
 			}
 		}
-
 	}
 	return oldModel, nil
-}
-
-func extractAudienceMap(m AuthorizationModel) map[string]map[string]*SourceObject {
-	audMap := map[string]map[string]*SourceObject{}
-
-	for _, op := range m.Operations {
-		for _, aud := range op.Audience {
-			nsMap, ok := audMap[aud.K8sObject.Name]
-			if !ok {
-				nsMap = map[string]*SourceObject{}
-				audMap[aud.K8sObject.Name] = nsMap
-			}
-			if _, ok := nsMap[aud.K8sObject.Namespace]; !ok {
-				nsMap[aud.K8sObject.Namespace] = aud
-			}
-		}
-	}
-	return audMap
 }
 
 func GetSpecOperation(spc *spec.Swagger, method models.HTTPMethod, resolvedPath string) *spec.Operation {
@@ -918,13 +899,13 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, pa
 			op.Audience = append(op.Audience, sa)
 			authzModelEntry.Set(authzModel)
 			return nil
-		} else {
-			log.Debugf("Adding details to audience %s", clientRef.Name)
-			audience.K8sObject.Namespace = clientRef.Namespace
-			audience.K8sObject.Uid = clientRef.Uid
-			audience.K8sObject.Kind = clientRef.Kind
-			audience.K8sObject.ApiVersion = clientRef.ApiVersion
 		}
+
+		log.Debugf("Adding details to audience %s", clientRef.Name)
+		audience.K8sObject.Namespace = clientRef.Namespace
+		audience.K8sObject.Uid = clientRef.Uid
+		audience.K8sObject.Kind = clientRef.Kind
+		audience.K8sObject.ApiVersion = clientRef.ApiVersion
 	}
 
 	if user != nil {
