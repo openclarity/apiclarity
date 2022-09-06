@@ -532,67 +532,50 @@ func logDebugAuthModel(m AuthorizationModel) {
 }
 
 func (l *learnAndDetectBFLA) mergeAuthzModel(ctx context.Context, newModel AuthorizationModel, oldModel AuthorizationModel, apiID uint) (AuthorizationModel, error) {
-	apiInfo, err := l.bflaBackendAccessor.GetAPIInfo(ctx, apiID)
-	if err != nil {
-		return oldModel, fmt.Errorf("unable to get api info: %w", err)
-	}
-	tags, err := ParseSpecInfo(apiInfo)
-	if err != nil {
-		return oldModel, fmt.Errorf("unable to parse spec info: %w", err)
-	}
-	specType := SpecTypeFromAPIInfo(apiInfo)
-	if specType == SpecTypeNone {
-		return oldModel, fmt.Errorf("spec not present cannot process authorization model; apiID=%d", apiID)
-	}
-
-	audienceMap := extractAudienceMap(oldModel)
-
-	for _, op := range newModel.Operations {
-		if op.Path == "" || op.Method == "" {
-			return oldModel, fmt.Errorf("invalid auth model operation: %v. apiID=%d", op, apiID)
+	for _, oldOp := range oldModel.Operations {
+		_, newOperation := newModel.Operations.Find(func(o *Operation) bool {
+			return oldOp.Path == o.Path &&
+				oldOp.Method == o.Method
+		})
+		if newOperation == nil {
+			log.Debugf("Operation %s %s not present in model update, leaving it not modified", oldOp.Path, oldOp.Method)
+			continue
 		}
-		op.Tags = resolveTagsForPathAndMethod(tags, op.Path, op.Method)
 
-		for audIdx, aud := range op.Audience {
-			if !aud.External {
-				if aud.K8sObject == nil ||
-					aud.K8sObject.Name == "" {
-					return oldModel, fmt.Errorf("invalid auth model audience for operation %v: [%d] %v . apiID = %d", op, audIdx, aud, apiID)
-				}
-				if aud.K8sObject.ApiVersion == "" || aud.K8sObject.Kind == "" || aud.K8sObject.Uid == "" {
-					nsMap, ok := audienceMap[aud.K8sObject.Name]
-					if !ok {
-						log.Warnf("unable to find the audience entry for %v, %v, name = %s, namespace = %s: name not found, adding a new incomplete one", op.Path, op.Method, aud.K8sObject.Name, aud.K8sObject.Namespace)
-					} else {
-						foundAud, ok := nsMap[aud.K8sObject.Namespace]
-						if !ok {
-							if aud.K8sObject.Namespace == "" && len(nsMap) == 1 {
-								for _, foundAud = range nsMap {
-									break
-								}
-							} else {
-								return oldModel, fmt.Errorf("unable to find the audience entry for %v, %v, name = %s, namespace = %s: namespace not found", op.Path, op.Method, aud.K8sObject.Name, aud.K8sObject.Namespace)
-							}
-						}
-
-						aud.K8sObject.ApiVersion = foundAud.K8sObject.ApiVersion
-						aud.K8sObject.Kind = foundAud.K8sObject.Kind
-						aud.K8sObject.Uid = foundAud.K8sObject.Uid
-						aud.LastTime = foundAud.LastTime
-						aud.StatusCode = foundAud.StatusCode
+		for _, newAud := range newOperation.Audience {
+			var oldAud *SourceObject
+			if newAud.External || newAud.K8sObject.Uid != "" {
+				_, oldAud := oldOp.Audience.Find(func(sa *SourceObject) bool {
+					if newAud.External {
+						return sa.External
 					}
+					return sa.K8sObject.Uid == newAud.K8sObject.Uid
+				})
+				if oldAud == nil {
+					log.Debugf("Operations %s %s adds a non existing audience external=%v uid=%v. Ignoring it", oldOp.Path, oldOp.Method, newAud.External, newAud.K8sObject.Uid)
+					continue
+				}
+			} else {
+				_, oldAud = oldOp.Audience.Find(func(sa *SourceObject) bool {
+					return sa.K8sObject.Name == newAud.K8sObject.Name && (newAud.K8sObject.Namespace == "" || newAud.K8sObject.Namespace == sa.K8sObject.Namespace)
+				})
+				if oldAud == nil {
+					oldAud = newAud
+					oldOp.Audience = append(oldOp.Audience, newAud)
 				}
 			}
-			if aud.Authorized {
-				aud.WarningStatus = restapi.LEGITIMATE
-			} else if aud.StatusCode < 200 || aud.StatusCode > 299 {
-				aud.WarningStatus = restapi.SUSPICIOUSHIGH
+			oldAud.Authorized = newAud.Authorized
+			if oldAud.Authorized {
+				oldAud.WarningStatus = restapi.LEGITIMATE
+			} else if oldAud.StatusCode < 200 || oldAud.StatusCode > 299 {
+				oldAud.WarningStatus = restapi.SUSPICIOUSHIGH
 			} else {
-				aud.WarningStatus = restapi.SUSPICIOUSMEDIUM
+				oldAud.WarningStatus = restapi.SUSPICIOUSMEDIUM
 			}
 		}
+
 	}
-	return newModel, nil
+	return oldModel, nil
 }
 
 func extractAudienceMap(m AuthorizationModel) map[string]map[string]*SourceObject {
