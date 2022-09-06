@@ -563,22 +563,22 @@ func (l *learnAndDetectBFLA) mergeAuthzModel(ctx context.Context, newModel Autho
 					nsMap, ok := audienceMap[aud.K8sObject.Name]
 					if !ok {
 						log.Warnf("unable to find the audience entry for %v, %v, name = %s, namespace = %s: name not found, adding a new incomplete one", op.Path, op.Method, aud.K8sObject.Name, aud.K8sObject.Namespace)
-						continue
-					}
-					foundAud, ok := nsMap[aud.K8sObject.Namespace]
-					if !ok {
-						if aud.K8sObject.Namespace == "" && len(nsMap) == 1 {
-							for _, foundAud = range nsMap {
-								break
+					} else {
+						foundAud, ok := nsMap[aud.K8sObject.Namespace]
+						if !ok {
+							if aud.K8sObject.Namespace == "" && len(nsMap) == 1 {
+								for _, foundAud = range nsMap {
+									break
+								}
+							} else {
+								return oldModel, fmt.Errorf("unable to find the audience entry for %v, %v, name = %s, namespace = %s: namespace not found", op.Path, op.Method, aud.K8sObject.Name, aud.K8sObject.Namespace)
 							}
-						} else {
-							return oldModel, fmt.Errorf("unable to find the audience entry for %v, %v, name = %s, namespace = %s: namespace not found", op.Path, op.Method, aud.K8sObject.Name, aud.K8sObject.Namespace)
 						}
-					}
 
-					aud.K8sObject.ApiVersion = foundAud.K8sObject.ApiVersion
-					aud.K8sObject.Kind = foundAud.K8sObject.Kind
-					aud.K8sObject.Uid = foundAud.K8sObject.Uid
+						aud.K8sObject.ApiVersion = foundAud.K8sObject.ApiVersion
+						aud.K8sObject.Kind = foundAud.K8sObject.Kind
+						aud.K8sObject.Uid = foundAud.K8sObject.Uid
+					}
 				}
 			}
 			if aud.Authorized {
