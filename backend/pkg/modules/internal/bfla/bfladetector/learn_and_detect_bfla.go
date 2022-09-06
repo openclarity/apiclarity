@@ -578,6 +578,8 @@ func (l *learnAndDetectBFLA) mergeAuthzModel(ctx context.Context, newModel Autho
 						aud.K8sObject.ApiVersion = foundAud.K8sObject.ApiVersion
 						aud.K8sObject.Kind = foundAud.K8sObject.Kind
 						aud.K8sObject.Uid = foundAud.K8sObject.Uid
+						aud.LastTime = foundAud.LastTime
+						aud.StatusCode = foundAud.StatusCode
 					}
 				}
 			}
