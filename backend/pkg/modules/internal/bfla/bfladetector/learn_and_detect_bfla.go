@@ -499,7 +499,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 			return fmt.Errorf("unable to get authz model state: %w", err)
 		}
 
-		authzModel, err := l.mergeAuthzModel(ctx, cmd.authzModel, pv.Get().(AuthorizationModel), cmd.apiID)
+		authzModel, err := l.mergeAuthzModel(cmd.authzModel, pv.Get().(AuthorizationModel), cmd.apiID)
 		if err != nil {
 			return fmt.Errorf("invalid authorization model provided: %w", err)
 		}
