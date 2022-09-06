@@ -568,7 +568,6 @@ func (l *learnAndDetectBFLA) mergeAuthzModel(ctx context.Context, newModel Autho
 					return oldModel, fmt.Errorf("invalid auth model audience for operation %v: [%d] %v . apiID = %d", op, audIdx, aud, apiID)
 				}
 				if aud.K8sObject.ApiVersion == "" || aud.K8sObject.Kind == "" || aud.K8sObject.Uid == "" {
-
 					nsMap, ok := audienceMap[aud.K8sObject.Name]
 					if !ok {
 						return oldModel, fmt.Errorf("unable to find the audience entry for %v, %v, name = %s, namespace = %s: name not found", op.Path, op.Method, aud.K8sObject.Name, aud.K8sObject.Namespace)
@@ -587,7 +586,6 @@ func (l *learnAndDetectBFLA) mergeAuthzModel(ctx context.Context, newModel Autho
 					aud.K8sObject.ApiVersion = foundAud.K8sObject.ApiVersion
 					aud.K8sObject.Kind = foundAud.K8sObject.Kind
 					aud.K8sObject.Uid = foundAud.K8sObject.Uid
-
 				}
 			}
 			if aud.Authorized {

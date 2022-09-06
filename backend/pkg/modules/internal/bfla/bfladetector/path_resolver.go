@@ -51,7 +51,7 @@ func ResolvePath(tags []*models.SpecTag, event *database.APIEvent) (string, erro
 	if event.ReconstructedPathID != "" {
 		return resolvePathFromTags(tags, event.ReconstructedPathID), nil
 	}
-	return "", fmt.Errorf("Event %v cannot resolve to a spec path", event.ID)
+	return "", fmt.Errorf("event %v cannot resolve to a spec path", event.ID)
 }
 
 func resolvePathFromTags(tags []*models.SpecTag, pathID string) string {

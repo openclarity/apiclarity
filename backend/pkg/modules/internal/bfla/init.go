@@ -330,7 +330,7 @@ func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID in
 		log.Warnf("path not found in the spec: %v", err)
 	} else {
 		if obj, err := h.bflaDetector.FindSourceObj(resolvedPath, string(event.Method), src.Uid, event.APIInfoID); err != nil {
-			log.Error("unable to map the source onto an existing entity in the auth model", err)
+			log.Errorf("unable to map the source onto an existing entity in the auth model: %v", err)
 		} else if !obj.Authorized {
 			e.BflaStatus = bfladetector.ResolveBFLAStatusInt(int(event.StatusCode))
 		}
