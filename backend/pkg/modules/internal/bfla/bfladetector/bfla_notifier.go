@@ -18,11 +18,11 @@ package bfladetector
 import (
 	"context"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/openclarity/apiclarity/api3/global"
 	"github.com/openclarity/apiclarity/api3/notifications"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
-
-	log "github.com/sirupsen/logrus"
 )
 
 type BFLANotifier interface {
