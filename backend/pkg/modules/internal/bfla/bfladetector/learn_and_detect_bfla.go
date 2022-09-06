@@ -914,13 +914,32 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, pa
 		return sa.K8sObject.Uid == clientRef.Uid
 	})
 	if audience == nil {
-		sa := &SourceObject{External: external, K8sObject: clientRef, Authorized: authorize, WarningStatus: restapi.LEGITIMATE}
-		if user != nil {
-			sa.EndUsers = append(sa.EndUsers, user)
+		log.Debugf("Looking for name match %s", clientRef.Name)
+		audienceIndex, audience = op.Audience.Find(func(sa *SourceObject) bool {
+			if external {
+				return sa.External
+			}
+			if sa.External {
+				return external
+			}
+			return sa.K8sObject.Uid == "" && sa.K8sObject.Name == clientRef.Name && (sa.K8sObject.Namespace == "" || sa.K8sObject.Namespace == clientRef.Namespace)
+		})
+
+		if audience == nil {
+			sa := &SourceObject{External: external, K8sObject: clientRef, Authorized: authorize, WarningStatus: restapi.LEGITIMATE}
+			if user != nil {
+				sa.EndUsers = append(sa.EndUsers, user)
+			}
+			op.Audience = append(op.Audience, sa)
+			authzModelEntry.Set(authzModel)
+			return nil
+		} else {
+			log.Debugf("Adding details to audience %s", clientRef.Name)
+			audience.K8sObject.Namespace = clientRef.Namespace
+			audience.K8sObject.Uid = clientRef.Uid
+			audience.K8sObject.Kind = clientRef.Kind
+			audience.K8sObject.ApiVersion = clientRef.ApiVersion
 		}
-		op.Audience = append(op.Audience, sa)
-		authzModelEntry.Set(authzModel)
-		return nil
 	}
 
 	if user != nil {
@@ -1004,18 +1023,9 @@ func (l *learnAndDetectBFLA) findSourceObj(path, method string, clientRef *k8str
 		}
 		return sa.K8sObject.Uid == clientRef.Uid
 	})
+
 	if obj == nil {
-		audIndex, obj = op.Audience.Find(func(sa *SourceObject) bool {
-			return sa.K8sObject.Uid == "" && sa.K8sObject.Name == clientRef.Name && (sa.K8sObject.Namespace == "" || sa.K8sObject.Namespace == clientRef.Name)
-		})
-		if obj == nil {
-			return nil, nil, fmt.Errorf("audience not found: %w", err)
-		} else {
-			obj.K8sObject.Uid = clientRef.Uid
-			obj.K8sObject.Namespace = clientRef.Namespace
-			obj.K8sObject.Kind = clientRef.Kind
-			obj.K8sObject.ApiVersion = clientRef.ApiVersion
-		}
+		return nil, nil, fmt.Errorf("audience not found: %w", err)
 	}
 
 	return obj, func(v *SourceObject) {
