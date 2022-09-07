@@ -140,7 +140,7 @@ type BFLADetector interface {
 
 	IsLearning(apiID uint) bool
 	GetState(apiID uint) (BFLAStateEnum, error)
-	FindSourceObj(path, method, clientUID string, apiID uint) (*SourceObject, error)
+	FindSourceObj(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint) (*SourceObject, error)
 
 	ApproveTrace(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser)
 	DenyTrace(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser)
@@ -363,11 +363,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Mark Legitimate': %w", err)
 		}
-		clientUID := ""
-		if cmd.clientRef != nil {
-			clientUID = cmd.clientRef.Uid
-		}
-		aud, setAud, err := l.findSourceObj(cmd.path, cmd.method, clientUID, cmd.apiID)
+		aud, setAud, err := l.findSourceObj(cmd.path, cmd.method, cmd.clientRef, cmd.apiID)
 		if err != nil {
 			return fmt.Errorf("unable to find source obj: %w", err)
 		}
@@ -392,11 +388,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Mark Illegitimate': %w", err)
 		}
-		clientUID := ""
-		if cmd.clientRef != nil {
-			clientUID = cmd.clientRef.Uid
-		}
-		aud, setAud, err := l.findSourceObj(cmd.path, cmd.method, clientUID, cmd.apiID)
+		aud, setAud, err := l.findSourceObj(cmd.path, cmd.method, cmd.clientRef, cmd.apiID)
 		if err != nil {
 			return fmt.Errorf("unable to find source obj: %w", err)
 		}
@@ -496,6 +488,8 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		l.logError(l.notifyAuthzModel(ctx, cmd.apiID))
 
 	case *ProvideAuthzModelCommand:
+		log.Debugf("Received an authorization model update for api %v", cmd.apiID)
+		logDebugAuthModel(cmd.authzModel)
 		_, _, err = l.checkBFLAState(cmd.apiID, BFLALearnt, BFLADetecting)
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Provide Authz Model': %w", err)
@@ -504,10 +498,10 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if err != nil {
 			return fmt.Errorf("unable to get authz model state: %w", err)
 		}
-		authzModel, err := l.validateAuthzModel(ctx, cmd.authzModel, cmd.apiID)
-		if err != nil {
-			return fmt.Errorf("invalid authorization model provided: %w", err)
-		}
+
+		authzModel := l.mergeAuthzModel(cmd.authzModel, pv.Get().(AuthorizationModel))
+		log.Debugf("Authoriation model succesfullty updated for api %v", cmd.apiID)
+		logDebugAuthModel(authzModel)
 		pv.Set(authzModel)
 	}
 	if err != nil {
@@ -522,50 +516,62 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 	return nil
 }
 
-func (l *learnAndDetectBFLA) validateAuthzModel(ctx context.Context, m AuthorizationModel, apiID uint) (AuthorizationModel, error) {
+func logDebugAuthModel(m AuthorizationModel) {
+	if !log.IsLevelEnabled(log.DebugLevel) {
+		return
+	}
+
 	jmodel, err := json.Marshal(m)
 	if err != nil {
 		log.Errorf("unable to marshal auth model %v", err)
 	}
-	log.Debugf("updated auth model:%s\n", jmodel)
-	apiInfo, err := l.bflaBackendAccessor.GetAPIInfo(ctx, apiID)
-	if err != nil {
-		return m, fmt.Errorf("unable to get api info: %w", err)
-	}
-	tags, err := ParseSpecInfo(apiInfo)
-	if err != nil {
-		return m, fmt.Errorf("unable to parse spec info: %w", err)
-	}
-	specType := SpecTypeFromAPIInfo(apiInfo)
-	if specType == SpecTypeNone {
-		return m, fmt.Errorf("spec not present cannot process authorization model; apiID=%d", apiID)
-	}
-	for _, op := range m.Operations {
-		if op.Path == "" || op.Method == "" {
-			return m, fmt.Errorf("invalid auth model operation: %v. apiID=%d", op, apiID)
-		}
-		op.Tags = resolveTagsForPathAndMethod(tags, op.Path, op.Method)
+	log.Debugf("%s", jmodel)
+}
 
-		for audIdx, aud := range op.Audience {
-			if !aud.External {
-				if aud.K8sObject == nil ||
-					aud.K8sObject.Name == "" ||
-					aud.K8sObject.Uid == "" ||
-					aud.K8sObject.ApiVersion == "" ||
-					aud.K8sObject.Kind == "" {
-					return m, fmt.Errorf("invalid auth model audience for operation %v: [%d] %v . apiID = %d", op, audIdx, aud, apiID)
+func (l *learnAndDetectBFLA) mergeAuthzModel(newModel AuthorizationModel, oldModel AuthorizationModel) AuthorizationModel {
+	for _, oldOp := range oldModel.Operations {
+		_, newOperation := newModel.Operations.Find(func(o *Operation) bool {
+			return oldOp.Path == o.Path &&
+				oldOp.Method == o.Method
+		})
+		if newOperation == nil {
+			log.Warnf("Operation %s %s not present in model update, leaving it not modified", oldOp.Path, oldOp.Method)
+			continue
+		}
+
+		for _, newAud := range newOperation.Audience {
+			var oldAud *SourceObject
+			if newAud.External || newAud.K8sObject.Uid != "" {
+				_, oldAud := oldOp.Audience.Find(func(sa *SourceObject) bool {
+					if newAud.External {
+						return sa.External
+					}
+					return sa.K8sObject.Uid == newAud.K8sObject.Uid
+				})
+				if oldAud == nil {
+					log.Warnf("Operations %s %s adds a non existing audience external=%v uid=%v. Ignoring it", oldOp.Path, oldOp.Method, newAud.External, newAud.K8sObject.Uid)
+					continue
+				}
+			} else {
+				_, oldAud = oldOp.Audience.Find(func(sa *SourceObject) bool {
+					return sa.K8sObject.Name == newAud.K8sObject.Name && (newAud.K8sObject.Namespace == "" || newAud.K8sObject.Namespace == sa.K8sObject.Namespace)
+				})
+				if oldAud == nil {
+					oldAud = newAud
+					oldOp.Audience = append(oldOp.Audience, newAud)
 				}
 			}
-			if aud.Authorized {
-				aud.WarningStatus = restapi.LEGITIMATE
-			} else if aud.StatusCode < 200 || aud.StatusCode > 299 {
-				aud.WarningStatus = restapi.SUSPICIOUSHIGH
+			oldAud.Authorized = newAud.Authorized
+			if oldAud.Authorized {
+				oldAud.WarningStatus = restapi.LEGITIMATE
+			} else if oldAud.StatusCode < 200 || oldAud.StatusCode > 299 {
+				oldAud.WarningStatus = restapi.SUSPICIOUSHIGH
 			} else {
-				aud.WarningStatus = restapi.SUSPICIOUSMEDIUM
+				oldAud.WarningStatus = restapi.SUSPICIOUSMEDIUM
 			}
 		}
 	}
-	return m, nil
+	return oldModel
 }
 
 func GetSpecOperation(spc *spec.Swagger, method models.HTTPMethod, resolvedPath string) *spec.Operation {
@@ -625,9 +631,9 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	if err != nil {
 		return fmt.Errorf("unable to parse spec info: %w", err)
 	}
-	resolvedPath := ResolvePath(tags, trace.APIEvent)
-	if resolvedPath == "" {
-		return fmt.Errorf("unable to resolve path for event %d", trace.APIEvent.ID)
+	resolvedPath, err := ResolvePath(tags, trace.APIEvent)
+	if err != nil {
+		return fmt.Errorf("unable to process trace: %w", err)
 	}
 
 	specType := SpecTypeFromAPIInfo(apiInfo)
@@ -647,10 +653,6 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	}
 	if err != nil {
 		return fmt.Errorf("unable to handle traces in the current state: %w", err)
-	}
-	var srcUID string
-	if trace.K8SSource != nil {
-		srcUID = trace.K8SSource.Uid
 	}
 
 	switch state.State {
@@ -692,7 +694,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			stateValue.Set(state)
 		}
 
-		aud, setAud, err := l.findSourceObj(resolvedPath, string(trace.APIEvent.Method), srcUID, trace.APIEvent.APIInfoID)
+		aud, setAud, err := l.findSourceObj(resolvedPath, string(trace.APIEvent.Method), trace.K8SSource, trace.APIEvent.APIInfoID)
 		if err != nil {
 			return fmt.Errorf("unable to find source obj: %w", err)
 		}
@@ -706,7 +708,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			trace.K8SSource, trace.APIEvent.APIInfoID, trace.DetectedUser, false, false); err != nil {
 			return err
 		}
-		aud, setAud, err := l.findSourceObj(resolvedPath, string(trace.APIEvent.Method), srcUID, trace.APIEvent.APIInfoID)
+		aud, setAud, err := l.findSourceObj(resolvedPath, string(trace.APIEvent.Method), trace.K8SSource, trace.APIEvent.APIInfoID)
 		if err != nil {
 			return fmt.Errorf("unable to find source obj: %w", err)
 		}
@@ -875,13 +877,32 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, pa
 		return sa.K8sObject.Uid == clientRef.Uid
 	})
 	if audience == nil {
-		sa := &SourceObject{External: external, K8sObject: clientRef, Authorized: authorize, WarningStatus: restapi.LEGITIMATE}
-		if user != nil {
-			sa.EndUsers = append(sa.EndUsers, user)
+		log.Debugf("Looking for name match %s", clientRef.Name)
+		audienceIndex, audience = op.Audience.Find(func(sa *SourceObject) bool {
+			if external {
+				return sa.External
+			}
+			if sa.External {
+				return external
+			}
+			return sa.K8sObject.Uid == "" && sa.K8sObject.Name == clientRef.Name && (sa.K8sObject.Namespace == "" || sa.K8sObject.Namespace == clientRef.Namespace)
+		})
+
+		if audience == nil {
+			sa := &SourceObject{External: external, K8sObject: clientRef, Authorized: authorize, WarningStatus: restapi.LEGITIMATE}
+			if user != nil {
+				sa.EndUsers = append(sa.EndUsers, user)
+			}
+			op.Audience = append(op.Audience, sa)
+			authzModelEntry.Set(authzModel)
+			return nil
 		}
-		op.Audience = append(op.Audience, sa)
-		authzModelEntry.Set(authzModel)
-		return nil
+
+		log.Debugf("Adding details to audience %s", clientRef.Name)
+		audience.K8sObject.Namespace = clientRef.Namespace
+		audience.K8sObject.Uid = clientRef.Uid
+		audience.K8sObject.Kind = clientRef.Kind
+		audience.K8sObject.ApiVersion = clientRef.ApiVersion
 	}
 
 	if user != nil {
@@ -938,15 +959,15 @@ func (l *learnAndDetectBFLA) getState(apiID uint) (BFLAState, error) {
 	return state, nil
 }
 
-func (l *learnAndDetectBFLA) FindSourceObj(path, method, clientUID string, apiID uint) (*SourceObject, error) {
+func (l *learnAndDetectBFLA) FindSourceObj(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint) (*SourceObject, error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	aud, _, err := l.findSourceObj(path, method, clientUID, apiID)
+	aud, _, err := l.findSourceObj(path, method, clientRef, apiID)
 	return aud, err
 }
 
-func (l *learnAndDetectBFLA) findSourceObj(path, method, clientUID string, apiID uint) (obj *SourceObject, setFn func(v *SourceObject), err error) {
-	external := clientUID == ""
+func (l *learnAndDetectBFLA) findSourceObj(path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint) (obj *SourceObject, setFn func(v *SourceObject), err error) {
+	external := clientRef == nil
 	authzModelEntry, err := l.authzModelsMap.Get(apiID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("authz model load error: %w", err)
@@ -963,8 +984,9 @@ func (l *learnAndDetectBFLA) findSourceObj(path, method, clientUID string, apiID
 		if external {
 			return sa.External
 		}
-		return sa.K8sObject.Uid == clientUID
+		return sa.K8sObject.Uid == clientRef.Uid
 	})
+
 	if obj == nil {
 		return nil, nil, fmt.Errorf("audience not found: %w", err)
 	}

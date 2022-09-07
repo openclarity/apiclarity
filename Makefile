@@ -117,6 +117,7 @@ lint: bin/golangci-lint ## Run linter
 	cd plugins/gateway/tyk/v3.2.2 && ../../../../bin/golangci-lint run
 	cd plugins/taper && ../../bin/golangci-lint run
 
+
 .PHONY: fix
 fix: bin/golangci-lint ## Fix lint violations
 	cd backend && ../bin/golangci-lint run --fix
