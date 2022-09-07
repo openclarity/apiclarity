@@ -499,10 +499,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 			return fmt.Errorf("unable to get authz model state: %w", err)
 		}
 
-		authzModel, err := l.mergeAuthzModel(cmd.authzModel, pv.Get().(AuthorizationModel))
-		if err != nil {
-			return fmt.Errorf("invalid authorization model provided: %w", err)
-		}
+		authzModel := l.mergeAuthzModel(cmd.authzModel, pv.Get().(AuthorizationModel))
 		log.Debugf("Authoriation model succesfullty updated for api %v", cmd.apiID)
 		logDebugAuthModel(authzModel)
 		pv.Set(authzModel)
@@ -531,14 +528,14 @@ func logDebugAuthModel(m AuthorizationModel) {
 	log.Debugf("%s", jmodel)
 }
 
-func (l *learnAndDetectBFLA) mergeAuthzModel(newModel AuthorizationModel, oldModel AuthorizationModel) (AuthorizationModel, error) {
+func (l *learnAndDetectBFLA) mergeAuthzModel(newModel AuthorizationModel, oldModel AuthorizationModel) AuthorizationModel {
 	for _, oldOp := range oldModel.Operations {
 		_, newOperation := newModel.Operations.Find(func(o *Operation) bool {
 			return oldOp.Path == o.Path &&
 				oldOp.Method == o.Method
 		})
 		if newOperation == nil {
-			log.Debugf("Operation %s %s not present in model update, leaving it not modified", oldOp.Path, oldOp.Method)
+			log.Warnf("Operation %s %s not present in model update, leaving it not modified", oldOp.Path, oldOp.Method)
 			continue
 		}
 
@@ -552,7 +549,7 @@ func (l *learnAndDetectBFLA) mergeAuthzModel(newModel AuthorizationModel, oldMod
 					return sa.K8sObject.Uid == newAud.K8sObject.Uid
 				})
 				if oldAud == nil {
-					log.Debugf("Operations %s %s adds a non existing audience external=%v uid=%v. Ignoring it", oldOp.Path, oldOp.Method, newAud.External, newAud.K8sObject.Uid)
+					log.Warnf("Operations %s %s adds a non existing audience external=%v uid=%v. Ignoring it", oldOp.Path, oldOp.Method, newAud.External, newAud.K8sObject.Uid)
 					continue
 				}
 			} else {
@@ -574,7 +571,7 @@ func (l *learnAndDetectBFLA) mergeAuthzModel(newModel AuthorizationModel, oldMod
 			}
 		}
 	}
-	return oldModel, nil
+	return oldModel
 }
 
 func GetSpecOperation(spc *spec.Swagger, method models.HTTPMethod, resolvedPath string) *spec.Operation {
