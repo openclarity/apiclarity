@@ -499,7 +499,7 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 			return fmt.Errorf("unable to get authz model state: %w", err)
 		}
 
-		authzModel, err := l.mergeAuthzModel(cmd.authzModel, pv.Get().(AuthorizationModel), cmd.apiID)
+		authzModel, err := l.mergeAuthzModel(cmd.authzModel, pv.Get().(AuthorizationModel))
 		if err != nil {
 			return fmt.Errorf("invalid authorization model provided: %w", err)
 		}
@@ -531,7 +531,7 @@ func logDebugAuthModel(m AuthorizationModel) {
 	log.Debugf("%s", jmodel)
 }
 
-func (l *learnAndDetectBFLA) mergeAuthzModel(newModel AuthorizationModel, oldModel AuthorizationModel, apiID uint) (AuthorizationModel, error) {
+func (l *learnAndDetectBFLA) mergeAuthzModel(newModel AuthorizationModel, oldModel AuthorizationModel) (AuthorizationModel, error) {
 	for _, oldOp := range oldModel.Operations {
 		_, newOperation := newModel.Operations.Find(func(o *Operation) bool {
 			return oldOp.Path == o.Path &&
