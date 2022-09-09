@@ -9,3 +9,4 @@ site/*
 .vscode/*
 backend/.vscode/*
 .DS_Store
+data.txt

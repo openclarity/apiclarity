@@ -25,6 +25,11 @@ data:
           volumes:
           - name: tmp-volume
             emptyDir: {}
+          {{- if .Values.apiclarity.tls.enabled }}
+          - name: root-ca
+            configMap:
+              name: {{ .Values.apiclarity.tls.rootCACertConfigMapName }}
+          {{- end }}
           containers:
           - name: fuzzer
             image: "{{ .Values.APIClarityRuntimeFuzzing.docker.image }}"
@@ -32,11 +37,21 @@ data:
             volumeMounts:
               - mountPath: /tmp
                 name: tmp-volume
+              {{- if .Values.apiclarity.tls.enabled }}
+              - name: root-ca
+                mountPath: /etc/root-ca
+                readOnly: true
+              {{- end }}
             env:
             - name: PLATFORM_TYPE
               value: "API_CLARITY"
+            {{- if .Values.apiclarity.tls.enabled }}
+            - name: PLATFORM_HOST
+              value: https://{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:8443/api
+            {{- else }}
             - name: PLATFORM_HOST
               value: http://{{ include "apiclarity.name" . }}.{{ .Release.Namespace }}:8080/api
+            {{- end }}
             - name: FUZZER
               value: "{{ .Values.APIClarityRuntimeFuzzing.methods }}"
             - name: RESTLER_ROOT_PATH
