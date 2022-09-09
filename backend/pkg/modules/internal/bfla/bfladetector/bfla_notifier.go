@@ -71,6 +71,12 @@ func (n *Notifier) NotifyFindings(ctx context.Context, apiID uint, notification 
 	if err := ntf.FromApiFindingsNotification(notification); err != nil {
 		return err //nolint:wrapcheck
 	}
+	if log.IsLevelEnabled(log.DebugLevel) {
+		jntf, err := ntf.MarshalJSON()
+		if err == nil {
+			log.Debugf("Finding notification: %s", jntf)
+		}
+	}
 	return n.accessor.Notify(ctx, n.moduleName, apiID, ntf) //nolint:wrapcheck
 }
 

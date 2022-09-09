@@ -712,6 +712,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		if err != nil {
 			return fmt.Errorf("unable to find source obj: %w", err)
 		}
+		log.Debugf("Detected audience is: %v, external=%v, authorized=%v", aud.K8sObject.Name, aud.External, aud.Authorized)
 		findingsUpdated := false
 		if !aud.Authorized {
 			// updates the auth model but this time as unauthorized
@@ -725,7 +726,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 				severity = core.AlertWarn
 				finding = APIFindingBFLASuspiciousCallHigh(specType, resolvedPath, trace.APIEvent.Method)
 			}
-
+			log.Debugf("BFLA finding created: %s %s %s", finding.Name, finding.Description, resolvedPath)
 			findingsUpdated, err = l.findingsRegistry.Add(apiID, finding)
 			if err != nil {
 				log.Warnf("unable to add findings: %s", err)
@@ -733,7 +734,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			if err := l.eventAlerter.SetEventAlert(ctx, l.modName, trace.APIEvent.ID, severity); err != nil {
 				log.Warnf("unable to set alert annotation: %s", err)
 			}
-
+			log.Debugf("finding Updated=%v", findingsUpdated)
 			// l.logError(l.notifyAuthzModel(ctx, trace.APIEvent.APIInfoID))
 			aud.WarningStatus = ResolveBFLAStatusInt(int(trace.APIEvent.StatusCode))
 		}
