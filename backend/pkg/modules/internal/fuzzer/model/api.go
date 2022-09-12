@@ -32,6 +32,7 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/restapi"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/tools"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/utils"
 )
 
 var typeToNameMap = map[string]string{
@@ -126,12 +127,13 @@ func ConvertRawFindingToAPIFinding(finding restapi.RawFindings) *common.APIFindi
 		}
 	}
 	result := common.APIFinding{
-		Type:           *finding.Type,
-		Name:           typeToNameMap[*finding.Type],
-		Source:         *finding.Namespace,
-		Description:    *finding.Description,
-		Severity:       convertSeverity(*finding.Request.Severity),
-		AdditionalInfo: &additionalInfo,
+		Type:                 *finding.Type,
+		Name:                 typeToNameMap[*finding.Type],
+		Source:               *finding.Namespace,
+		Description:          *finding.Description,
+		Severity:             convertSeverity(*finding.Request.Severity),
+		AdditionalInfo:       &additionalInfo,
+		ProvidedSpecLocation: nil,
 	}
 	return &result
 }
@@ -350,6 +352,11 @@ func updateRequestCounter(shortReport *restapi.ShortTestReport, path string, ver
 	return fmt.Errorf("can't find operation(%v %v) in spec to update requests counter", verb, path)
 }
 
+func getLocation(path string, method string) *string {
+	s := utils.JSONPointer("paths", path, strings.ToLower(method))
+	return &s
+}
+
 func AddFindingOnShortReport(shortReport *restapi.ShortTestReport, path string, verb string, finding restapi.RawFindings) error {
 	if *shortReport.Tags == nil {
 		// No tags, then no operations on which to add findings
@@ -363,6 +370,7 @@ func AddFindingOnShortReport(shortReport *restapi.ShortTestReport, path string, 
 			if *ops.Operation.Path == path && *ops.Operation.Method == common.HttpMethod(verb) {
 				// Add the finding
 				commonFinding := ConvertRawFindingToAPIFinding(finding)
+				commonFinding.ProvidedSpecLocation = getLocation(path, verb)
 				*ops.Findings = append(*ops.Findings, *commonFinding)
 				// Update higestSeverity for operation
 				if ops.HighestSeverity == nil || tools.IsGreaterSeverity(commonFinding.Severity, *ops.HighestSeverity) {
@@ -635,11 +643,13 @@ func (api *API) GetLastAPIFindings() *[]common.APIFinding {
 					additionalInfo := map[string]interface{}{
 						"Description": finding.AdditionalInfo,
 					}
+					verb := (*finding.Location)[3]
+					path := (*finding.Location)[2]
 					APIFinding := common.APIFinding{
 						AdditionalInfo:            &additionalInfo,
 						Description:               findingDescription,
 						Name:                      findingName,
-						ProvidedSpecLocation:      new(string),
+						ProvidedSpecLocation:      getLocation(path, verb),
 						ReconstructedSpecLocation: new(string),
 						Severity:                  convertSeverity(risk),
 						Source:                    *finding.Namespace,
