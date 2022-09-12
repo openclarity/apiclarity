@@ -877,7 +877,7 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, pa
 		}
 		return sa.K8sObject.Uid == clientRef.Uid
 	})
-	if audience == nil {
+	if audience == nil && !external {
 		log.Debugf("Looking for name match %s", clientRef.Name)
 		audienceIndex, audience = op.Audience.Find(func(sa *SourceObject) bool {
 			if external {
