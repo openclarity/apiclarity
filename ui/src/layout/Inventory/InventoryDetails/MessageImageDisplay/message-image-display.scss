@@ -1,0 +1,23 @@
+@import 'utils/scss_variables.module.scss';
+
+.message-image-display-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    flex-grow: 1;
+    padding: 60px 30px 30px 30px;
+
+    .message-image-display-message {
+        font-size: 18px;
+        color: $color-main;
+    }
+    .message-image-display-sub-message {
+        font-size: 12px;
+        color: $color-main;
+    }
+    img {
+        width: 300px;
+        margin-top: 60px;
+    }
+}

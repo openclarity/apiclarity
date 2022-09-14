@@ -3,6 +3,13 @@ import ReactTooltip from 'react-tooltip';
 
 import './tooltip.scss';
 
+export const TOOLTIP_PLACEMENTS = {
+    TOP: "top",
+    BOTTOM: "bottom",
+    RIGHT: "right",
+    LEFT: "left"
+}
+
 const Tooltip = ({id, text}) => (
     <ReactTooltip
         id={id}
@@ -16,5 +23,11 @@ const Tooltip = ({id, text}) => (
     </ReactTooltip>
 )
 
-export default Tooltip;
+export const TooltipWrapper = ({id, text, placement, center, children}) => (
+    <React.Fragment>
+        <div data-tip data-for={id} style={{display: "inline-block"}}>{children}</div>
+        <Tooltip id={id} text={text} placement={placement} center={center} />
+    </React.Fragment>
+)
 
+export default Tooltip;

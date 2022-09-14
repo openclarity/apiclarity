@@ -1,0 +1,70 @@
+@import 'utils/scss_variables.module.scss';
+
+.violations-filter-wrapper {
+    .selector-wrapper {
+        display: flex;
+        align-items: center;
+
+        .vulnerabilities-ignore-toggle {
+            margin: 0;
+        }
+        .ps-dropdown {
+            .dropdown-menu {
+                min-width: 120px;
+                padding: 0;
+                border-radius: 2px;
+                box-shadow: 0 0 17px 0 rgba(55, 72, 95, 0.12);
+        
+                &:focus {
+                    outline: none;
+                }
+                .multiselect-content-container {
+                    padding: 10px;
+                    
+                    .multiselect-item-container {
+                        margin-left: 10px;
+                    }
+                }
+            }
+            .select-indicator {
+                display: flex;
+                align-items: center;
+                margin-left: 7px;
+
+                .open-menu-icon {
+                    color: $color-main;
+                }
+                .indicator-container {
+                    display: flex;
+                    
+                    .indicator-item {
+                        width: 6px;
+                        height: 6px;
+                        background-color: $color-main;
+                        border-radius: 5px;
+                        border: 1px solid $color-main;
+        
+                        &:not(:last-child) {
+                            margin-right: 5px;
+                        }
+                        &.allow {
+                            background-color: $color-success;
+                            border-color: $color-success;
+                        }
+                        &.detect {
+                            background-color: $color-warning;
+                            border-color: $color-warning;
+                        }
+                        &.block {
+                            background-color: $color-error;
+                            border-color: $color-error;
+                        }
+                        &:not(.selected) {
+                            background-color: transparent;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

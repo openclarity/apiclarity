@@ -1,0 +1,26 @@
+@import 'utils/scss_variables.module.scss';
+
+.display-section-wrapper {
+    .section-title-wrapper {
+        margin: 20px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+
+        &.with-padding {
+            padding: 20px 0;
+        }
+        &.with-close-toggle .section-title {
+            color: $color-main;
+        }
+        &:not(.hide-underline) {
+            border-bottom: 1px solid $color-grey-light;
+        }
+        .section-title {
+            font-weight: 700;
+            font-size: 12px;
+        }
+    }
+
+}

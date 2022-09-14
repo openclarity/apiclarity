@@ -1,0 +1,72 @@
+@import 'utils/scss_variables.module.scss';
+
+.ps-field-wrapper.ps-multiselect-field-wrapper {
+    .selector-wrapper {
+        position: relative;
+
+        .multi-select__control {
+            border-color: $color-grey-light;
+            border-radius: 2px;
+
+            &.multi-select__control--is-disabled {
+                background-color: $color-grey-off-white;
+                border: 1px solid $color-grey-light;
+        
+                .multi-select__placeholder,
+                .multi-select__indicators {
+                    display: none;
+                }
+                .multi-select__multi-value {
+                    background-color: $color-grey;
+                }
+            }
+            &.multi-select__control--is-focused {
+                box-shadow: 0px 0px 5px rgba(2, 188, 234, 0.5);
+            }    
+            .multi-select__value-container.multi-select__value-container--has-value {
+                .multi-select__input-container {
+                    height: 28px;
+                }
+
+                &:active,
+                &:hover,
+                &:focus-within {
+                    > :not(.multi-select__multi-value) {
+                        display: block;
+                    }
+                }
+                > :not(.multi-select__multi-value) {
+                    display: none;
+                }
+            }
+            .multi-select__multi-value,
+            .multi-select__multi-value:focus,
+            .multi-select__multi-value__label:focus,
+            .multi-select__multi-value__remove:focus {
+                outline: none;
+            }
+            .multi-select__multi-value {
+                background-color: $color-main;
+                color: $color-white;
+                border-radius: 50px;
+    
+                .multi-select__multi-value__label {
+                    color: $color-white;
+                    padding-left: 10px;
+                }
+                .multi-select__multi-value__remove {
+                    border-radius: 50px;
+                    cursor: pointer;
+                    opacity: 0.4;
+    
+                    &:hover {
+                        background-color: $color-main;
+                        color: $color-white;
+                        opacity: 1;
+                    }
+                }
+            }
+        }
+    }
+    
+}
