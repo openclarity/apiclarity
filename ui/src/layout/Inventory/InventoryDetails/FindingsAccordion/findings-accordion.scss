@@ -1,0 +1,77 @@
+@import 'utils/scss_variables.module.scss';
+
+.findings-details-accordion {
+    .finding-details-wrapper {
+        padding: 20px 0;
+
+        .finding-details-table {
+            width: 100%;
+
+            thead {
+                font-weight: bold;
+                font-size: 9px;
+                text-transform: uppercase;
+                color: $color-main;
+                border-bottom: 1px solid $color-main;
+
+                th {
+                    padding: 10px;
+                }
+            }
+            tbody {
+                font-size: 11px;
+
+                td {
+                    border: 1px solid $color-grey-light;
+                    border-top: none;
+                    padding: 10px;
+                }
+            }
+        }
+        .findings-actions-wrapper {
+            margin: 10px 0;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+    }
+    .spec-path-finding-details-wrapper {
+        border: 1px solid $color-grey-lighter;
+        border-top: none;
+
+        .spec-finding-content-item {
+            .data-item-title {
+                color: $color-main;
+                border-bottom: 1px solid $color-main;
+                padding: 10px 15px;
+            }
+            .data-item-content {
+                padding: 10px 15px;
+            }
+        }
+    }
+    .risk-finding-accordion {
+        margin: 0 20px;
+
+        pre {
+            padding: 20px 0;
+            margin-bottom: 0;
+        }
+
+        .cutom-accordion-title {
+            font-style: normal;
+            font-weight: 700;
+            font-size: 0.8rem;
+            line-height: 1rem;
+
+            color: $color-main;
+        }
+    }
+    .risk-level-accordion {
+        font-weight: bold;
+
+        .risk-finding-accordion {
+            font-weight: normal;
+        }
+    }
+}

@@ -1,0 +1,32 @@
+@import 'utils/scss_variables.module.scss';
+
+.additiona-info-container {
+    .affected-enpoints-container {
+        color: $color-grey-dark;
+        flex-wrap: wrap;
+        font-style: normal;
+        font-weight: 350;
+        font-size: 15px;
+        line-height: 13px;
+        display: flex;
+        margin-block: 1rem;
+
+        .affected-enpoints-items-container {
+            display: flex;
+            flex-wrap: wrap;
+            .affected-enpoints-item {
+                margin-block: 0.2rem;
+            }
+        }
+    }
+
+    .additional-info-key-style {
+        color: $color-grey-dark;
+        font-weight: bold;
+        margin-right: 0.5rem;
+    }
+
+    .icon-container {
+        padding: 0;
+    }
+}

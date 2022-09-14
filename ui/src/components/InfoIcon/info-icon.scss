@@ -1,0 +1,31 @@
+@import 'utils/scss_variables.module.scss';
+
+$info-icon-wrap-size: 14px;
+$info-icon-size: 12px;
+$info-icon-margin: 5px;
+
+.round-icon-container.info-icon-container {
+    width: $info-icon-wrap-size;
+    height: $info-icon-wrap-size;
+    min-width: $info-icon-wrap-size;
+    min-height: $info-icon-wrap-size;
+    background-color: $color-grey-light;
+
+    &.info-icon-non-tooltip {
+        margin-left: $info-icon-margin;
+    }
+    .icon {
+        width: $info-icon-size;
+        height: $info-icon-size;
+        min-width: $info-icon-size;
+        min-height: $info-icon-size;
+        top: calc(50% - #{$info-icon-size} / 2);
+        left: calc(50% - #{$info-icon-size} / 2);
+        color: $color-grey-black;
+    }
+}
+.info-icon-tooltip-wrapper {
+    width: $info-icon-wrap-size;
+    height: $info-icon-wrap-size;
+    margin-left: $info-icon-margin;
+}

@@ -1,0 +1,145 @@
+@import 'utils/scss_variables.module.scss';
+
+.ps-form,
+.wizard-content { //used by the Wizard component as well
+    .main-error-message {
+        color: $color-error;
+        font-size: 10px;
+        margin-bottom: 10px;
+    }
+    .ps-field-wrapper {
+        margin-bottom: 30px;
+    }
+    .ps-field-label-wrapper {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+
+        .form-label {
+            font-size: 10px;
+            font-weight: bold;
+            color: $color-grey-black;
+            margin-bottom: 0;
+        }
+    }
+    .ps-field-description {
+        color: $color-grey-black;
+        font-size: 10px;
+        margin-bottom: 5px;
+    }
+    .ps-field-error {
+        font-size: 10px;
+        color: $color-error;
+        margin-top: 5px;
+    }
+    .form-submit-button {
+        margin-top: 20px;
+    }
+    .form-cancel-button {
+        margin-right: 20px;
+    }
+
+    $form-alert-icon-wrap-size: 18px;
+    $form-alert-icon-size: 16px;
+    .form-field-alert-wrapper {
+        display: flex;
+        align-items: center;
+        margin-top: -15px;
+        margin-bottom: 20px;
+        
+        .round-icon-container {
+            width: $form-alert-icon-wrap-size;
+            height: $form-alert-icon-wrap-size;
+            min-width: $form-alert-icon-wrap-size;
+            min-height: $form-alert-icon-wrap-size;
+            background-color: $color-main;
+
+            .icon {
+                width: $form-alert-icon-size;
+                height: $form-alert-icon-size;
+                min-width: $form-alert-icon-size;
+                min-height: $form-alert-icon-size;
+                top: calc(50% - #{$form-alert-icon-size} / 2);
+                left: calc(50% - #{$form-alert-icon-size} / 2);
+            }
+        }
+        .alert-text {
+            font-size: 9px;
+            color: $color-main;
+            margin-left: 5px;
+        }
+    }
+
+    .form-inner-field-wrapper {
+        margin-bottom: 30px;
+        margin-top: -25px;
+
+        &.is-second-layer {
+            .form-inner-field-header {
+                padding-top: 10px;
+            }
+            .form-inner-field-content {
+                background-color: $color-blue;
+            }
+        }
+        .form-inner-field-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: $color-main;
+            font-weight: bold;
+            font-size: 10px;
+            border-bottom: 1px solid $color-grey-light;
+            padding-bottom: 5px;
+            cursor: pointer;
+        }
+        .form-inner-field-content {
+            background-color: $color-blue-light;
+            padding: 20px;
+            padding-bottom: 1px;
+
+            .ps-field-wrapper {
+                margin-bottom: 15px;
+            }
+        }
+    }
+    .form-message-container {
+        display: flex;
+        align-items: center;
+        background-color: $color-grey-off-white;
+        border-radius: 50px;
+        padding-top: 20px;
+
+        &.secondary .icon {
+            color: $color-warning;
+        }
+        &.error .icon {
+            color: $color-error;
+        }
+        .icon {
+            color: $color-main;
+            margin-right: 5px;
+        }
+        .message {
+            font-size: 10px;
+            color: $color-grey-black;
+            font-weight: 600;
+        }
+    }
+    .form-insturctions-title-container {
+        display: flex;
+        align-items: center;
+        margin: 20px 0;
+
+        .title-bullet {
+            width: 4px;
+            height: 4px;
+            background-color: $color-grey-black;
+            border-radius: 50px;
+            margin-right: 10px;
+        }
+        .title {
+            font-size: 11px;
+        }
+    }
+}
