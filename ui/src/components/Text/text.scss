@@ -1,0 +1,15 @@
+.scn-text-wrapper {
+    &.with-top-margin,
+    &.with-bottom-margin {
+        display: inline-block;
+    }
+    &.with-top-margin {
+        margin-top: 30px;
+    }
+    &.with-bottom-margin {
+        margin-bottom: 40px;
+    }
+    &.clickable {
+        cursor: pointer;
+    }
+}

@@ -1,0 +1,50 @@
+@import 'utils/scss_variables.module.scss';
+
+$select-padding: 20px;
+
+.breadcrumbs-select-panes-wrapper {
+    display: flex;
+    min-height: 485px;
+
+    .select-pane {
+        width: 33%;
+        flex-shrink: 0;
+        border-right: 1px solid $color-grey-light;
+
+        .select-breadcrumbs {
+            font-size: 11px;
+            line-height: 16px;
+            display: flex;
+            padding: $select-padding;
+            padding-bottom: 0;
+
+            .breadcrumb-wrapper {
+                display: flex;
+                align-items: center;
+
+                .arrow-icon {
+                    color: $color-main;
+                }
+                .breadcrumb-title.clickable {
+                    text-decoration: underline;
+                    color: $color-main;
+                    cursor: pointer;
+                }
+            }
+        }
+        .select-pane-title {
+            font-size: 12px;
+            font-weight: 700;
+            padding: $select-padding;
+        }
+        .select-pane-custom-title {
+            padding-left: $select-padding;
+            padding-bottom: $select-padding;
+        }
+    }
+    .display-pane {
+        flex-grow: 1;
+        padding: 30px;
+        padding-top: 0;
+    }
+}

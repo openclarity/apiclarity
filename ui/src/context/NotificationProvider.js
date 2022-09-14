@@ -1,4 +1,5 @@
 import { create } from './utils';
+import { NOTIFICATION_TYPES } from 'components/Notification';
 
 const initialState = {
     message: null,
@@ -14,7 +15,7 @@ const reducer = (state, action) => {
     switch (action.type) {
         case NOTIFICATION_ACTIONS.SHOW_NOTIFICATION: {
             const {type, message} = action.payload;
-            
+
             return {
                 ...state,
                 message,
@@ -46,5 +47,6 @@ export {
     useNotificationState,
     useNotificationDispatch,
     showNotification,
-    removeNotification
+    removeNotification,
+    NOTIFICATION_TYPES
 };

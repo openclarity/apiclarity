@@ -1,0 +1,36 @@
+@import 'utils/scss_variables.module.scss';
+
+$icon-size: 16px;
+
+.key-value-list-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+
+    .key-value-item-wrapper {
+        flex-grow: 1;
+        flex-basis: 0;
+        flex-shrink: 0;
+        font-size: 10px;
+            font-weight: 700;
+
+        .key-wrapper {
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        .value-container {
+            display: flex;
+            align-items: center;
+
+            .value-wrapper {
+                color: $color-grey-dark;
+            }
+            .value-icon {
+                width: $icon-size;
+                height: $icon-size;
+                min-width: $icon-size;
+                min-height: $icon-size;
+                margin-left: 5px;
+            }
+        }
+    }
+}
