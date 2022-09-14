@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"sort"
 
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/analytics_core/restapi"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
@@ -23,6 +24,7 @@ type analyticsCore struct {
 	info                *core.ModuleInfo
 	numWorkers          int
 	proccFuncRegistered map[string][]AnalyticsModuleProccFunc
+	customTopics        []string
 }
 
 func (p *analyticsCore) Info() core.ModuleInfo {
@@ -37,10 +39,14 @@ func (p *analyticsCore) handlerFunction(topic string, paritionId int, msgChannel
 		message := <-msgChannel
 		topicProccFunctions, okTopic := p.proccFuncRegistered[topic]
 		if okTopic {
+			annotations := make([]interface{}, 0, 100)
 			for _, proccFunction := range topicProccFunctions {
-
-				proccFunction.HandlerFunc(nil, message)
+				dataFrames := &ProcFuncDataFrames{
+					dataFrames: nil,
+				}
+				proccFunction.HandlerFunc(dataFrames, message, annotations)
 			}
+
 		}
 	}
 
@@ -48,11 +54,13 @@ func (p *analyticsCore) handlerFunction(topic string, paritionId int, msgChannel
 
 func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Module, err error) {
 	p := &analyticsCore{
-		httpHandler: nil,
-		msgBroker:   nil,
-		accessor:    accessor,
-		info:        &core.ModuleInfo{Name: "analytics_core", Description: "analytics_core"},
-		numWorkers:  1,
+		httpHandler:         nil,
+		msgBroker:           nil,
+		accessor:            accessor,
+		info:                &core.ModuleInfo{Name: "analytics_core", Description: "analytics_core"},
+		numWorkers:          1,
+		proccFuncRegistered: map[string][]AnalyticsModuleProccFunc{},
+		customTopics:        make([]string, 0, 100),
 	}
 	handler := &httpHandler{
 		accessor: accessor,
@@ -71,8 +79,12 @@ func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Modul
 		go p.handlerFunction("trace", i, object_channel)
 		entity_channel := p.msgBroker.AddSubscriptionShard("entity", i)
 		go p.handlerFunction("trace", i, entity_channel)
-	}
+		for _, customTopic := range p.customTopics {
+			custom_topic_channel := p.msgBroker.AddSubscriptionShard(customTopic, i)
+			go p.handlerFunction(customTopic, i, custom_topic_channel)
+		}
 
+	}
 	return p, nil
 }
 
@@ -81,20 +93,66 @@ type ProcFuncDataFrames struct {
 }
 
 type AnalyticsModuleProccFunc interface {
-	HandlerFunc(dataFrames *ProcFuncDataFrames, message interface{})
+	GetPriority() int
+	HandlerFunc(dataFrames *ProcFuncDataFrames, message interface{}, annotations []interface{})
+}
+
+func orderHandlerFuncsByPriority(proccFunctions []AnalyticsModuleProccFunc) []AnalyticsModuleProccFunc {
+	sort.Slice(proccFunctions, func(i, j int) bool {
+		return proccFunctions[i].GetPriority() < proccFunctions[j].GetPriority()
+	})
+	return proccFunctions
 }
 
 func (p *analyticsCore) RegisterAnalyticsModuleHandler(topic string, proccFunc AnalyticsModuleProccFunc) {
-	topicProccFunctions, okTopic := p.proccFuncRegistered[topic]
+	_, okTopic := p.proccFuncRegistered[topic]
 	if !okTopic {
 		p.proccFuncRegistered[topic] = make([]AnalyticsModuleProccFunc, 0, 100)
-		topicProccFunctions = p.proccFuncRegistered[topic]
 	}
-	topicProccFunctions = append(topicProccFunctions, proccFunc)
+
+	p.proccFuncRegistered[topic] = append(p.proccFuncRegistered[topic], proccFunc)
+	p.proccFuncRegistered[topic] = orderHandlerFuncsByPriority(p.proccFuncRegistered[topic])
 }
 
 type httpHandler struct {
 	accessor core.BackendAccessor
+}
+
+func (p *analyticsCore) InitCustomTopic(customTopic string) {
+	for i := 0; i < p.numWorkers; i++ {
+		custom_topic_channel := p.msgBroker.AddSubscriptionShard(customTopic, i)
+		go p.handlerFunction(customTopic, i, custom_topic_channel)
+	}
+}
+
+// It supports only increase from 1 that is default
+// returns number of workers
+func (p *analyticsCore) AddWorkers(numNewWorkers int) int {
+	if numNewWorkers <= 0 {
+		return 0
+	}
+	for i := p.numWorkers; i < (p.numWorkers + numNewWorkers); i++ {
+		trace_channel := p.msgBroker.AddSubscriptionShard("trace", i)
+		go p.handlerFunction("trace", i, trace_channel)
+		api_channel := p.msgBroker.AddSubscriptionShard("api", i)
+		go p.handlerFunction("trace", i, api_channel)
+		api_endpoint_channel := p.msgBroker.AddSubscriptionShard("api_endpoint", i)
+		go p.handlerFunction("trace", i, api_endpoint_channel)
+		object_channel := p.msgBroker.AddSubscriptionShard("object", i)
+		go p.handlerFunction("trace", i, object_channel)
+		entity_channel := p.msgBroker.AddSubscriptionShard("entity", i)
+		go p.handlerFunction("trace", i, entity_channel)
+		for _, customTopic := range p.customTopics {
+			custom_topic_channel := p.msgBroker.AddSubscriptionShard(customTopic, i)
+			go p.handlerFunction(customTopic, i, custom_topic_channel)
+		}
+	}
+	p.numWorkers += numNewWorkers
+	return numNewWorkers
+}
+
+func (p *analyticsCore) PublishMessage(topicName string, partitionKey int64, message interface{}) (err bool) {
+	return p.msgBroker.PublishByPartitionKey(topicName, partitionKey, message)
 }
 
 func (p *analyticsCore) EventNotify(ctx context.Context, event *core.Event) {
