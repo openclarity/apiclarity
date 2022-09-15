@@ -281,6 +281,8 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 		return fmt.Errorf("failed to get source info: %v", err)
 	}
 
+	specKey := _speculator.GetSpecKey(telemetry.Request.Host, destInfo.Port)
+
 	// Initialize API info
 	apiInfo := _database.APIInfo{
 		Name: telemetry.Request.Host,
@@ -310,16 +312,15 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 		log.Infof("API Info in DB: %+v", apiInfo)
 
 		// Handle trace telemetry by Speculator
-		specKey := _speculator.GetSpecKey(telemetry.Request.Host, destInfo.Port)
 		if b.speculator.HasProvidedSpec(specKey) {
-			providedDiff, err = b.speculator.DiffTelemetry(telemetry, _spec.DiffSourceProvided)
+			providedDiff, err = b.speculator.DiffTelemetry(telemetry, _spec.SpecSourceProvided)
 			if err != nil {
 				return fmt.Errorf("failed to diff telemetry against provided spec: %v", err)
 			}
 			providedSpecVersion = b.speculator.GetProvidedSpecVersion(specKey)
 		}
 		if b.speculator.HasApprovedSpec(specKey) {
-			reconstructedDiff, err = b.speculator.DiffTelemetry(telemetry, _spec.DiffSourceReconstructed)
+			reconstructedDiff, err = b.speculator.DiffTelemetry(telemetry, _spec.SpecSourceReconstructed)
 			if err != nil {
 				return fmt.Errorf("failed to diff telemetry against approved spec: %v", err)
 			}
@@ -332,28 +333,45 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 		}
 	}
 
+	path, query := _spec.GetPathAndQuery(telemetry.Request.Path)
+
+	var providedPathID string
+	var reconstructedPathID string
+	if b.speculator.HasProvidedSpec(specKey) {
+		providedPathID, err = b.speculator.GetPathID(specKey, path, _spec.SpecSourceProvided)
+		if err != nil {
+			return fmt.Errorf("failed to get path id of provided spec: %v", err)
+		}
+	}
+	if b.speculator.HasApprovedSpec(specKey) {
+		reconstructedPathID, err = b.speculator.GetPathID(specKey, path, _spec.SpecSourceReconstructed)
+		if err != nil {
+			return fmt.Errorf("failed to get path id of reconstructed spec: %v", err)
+		}
+	}
+
 	// Update API event in DB
 	statusCode, err := strconv.Atoi(telemetry.Response.StatusCode)
 	if err != nil {
 		return fmt.Errorf("failed to convert status code: %v", err)
 	}
 
-	path, query := _spec.GetPathAndQuery(telemetry.Request.Path)
-
 	event := &_database.APIEvent{
-		APIInfoID:       apiInfo.ID,
-		Time:            strfmt.DateTime(time.Now().UTC()),
-		Method:          models.HTTPMethod(telemetry.Request.Method),
-		RequestTime:     strfmt.DateTime(time.UnixMilli(trace.Request.Common.Time).UTC()),
-		Path:            path,
-		Query:           query,
-		StatusCode:      int64(statusCode),
-		SourceIP:        srcInfo.IP,
-		DestinationIP:   destInfo.IP,
-		DestinationPort: int64(destPort),
-		HostSpecName:    telemetry.Request.Host,
-		IsNonAPI:        isNonAPI,
-		EventType:       apiInfo.Type,
+		APIInfoID:           apiInfo.ID,
+		Time:                strfmt.DateTime(time.Now().UTC()),
+		Method:              models.HTTPMethod(telemetry.Request.Method),
+		RequestTime:         strfmt.DateTime(time.UnixMilli(trace.Request.Common.Time).UTC()),
+		Path:                path,
+		Query:               query,
+		StatusCode:          int64(statusCode),
+		SourceIP:            srcInfo.IP,
+		DestinationIP:       destInfo.IP,
+		DestinationPort:     int64(destPort),
+		HostSpecName:        telemetry.Request.Host,
+		IsNonAPI:            isNonAPI,
+		EventType:           apiInfo.Type,
+		ProvidedPathID:      providedPathID,
+		ReconstructedPathID: reconstructedPathID,
 	}
 
 	reconstructedDiffType := models.DiffTypeNODIFF
@@ -369,7 +387,6 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 			event.OldReconstructedSpec = string(original)
 			event.NewReconstructedSpec = string(modified)
 		}
-		event.ReconstructedPathID = reconstructedDiff.PathID
 		reconstructedDiffType = convertAPIDiffType(reconstructedDiff.Type)
 	}
 
@@ -386,7 +403,6 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 			event.OldProvidedSpec = string(original)
 			event.NewProvidedSpec = string(modified)
 		}
-		event.ProvidedPathID = providedDiff.PathID
 		providedDiffType = convertAPIDiffType(providedDiff.Type)
 	}
 
