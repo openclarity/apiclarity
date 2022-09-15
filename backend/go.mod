@@ -16,7 +16,7 @@ require (
 	github.com/hbollon/go-edlib v1.6.0
 	github.com/openclarity/apiclarity/api v0.0.0
 	github.com/openclarity/apiclarity/plugins/api v0.0.0
-	github.com/openclarity/speculator v0.1.1
+	github.com/openclarity/speculator v0.2.0
 	github.com/openclarity/trace-sampling-manager/manager v0.0.0-20220503091058-2730f5ebad2c
 	github.com/petar-dambovaliev/aho-corasick v0.0.0-20211021192214-5ab2d9280aa9
 	github.com/satori/go.uuid v1.2.0
