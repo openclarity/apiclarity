@@ -1,0 +1,35 @@
+dist:
+  name: otelcol-dev
+  description: "Basic OTel Collector distribution example including APIClarity exporter"
+  otelcol_version: "0.52.0"
+
+exporters:
+  - gomod: "github.com/openclarity/apiclarity/plugins/otel-collector/apiclarityexporter v0.0.0"
+  - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/jaegerexporter v0.52.0"
+  - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusexporter v0.52.0"
+  - import: go.opentelemetry.io/collector/exporter/otlpexporter
+    gomod: go.opentelemetry.io/collector v0.52.0
+  - import: go.opentelemetry.io/collector/exporter/loggingexporter
+    gomod: go.opentelemetry.io/collector v0.52.0
+
+replaces:
+  - github.com/openclarity/apiclarity/plugins/otel-collector/apiclarityexporter v0.0.0 => ./apiclarityexporter
+  - github.com/openclarity/apiclarity/plugins/api v0.0.0 => ./../api
+
+extensions:
+  - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/extension/healthcheckextension v0.52.0"
+  - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/extension/pprofextension v0.52.0"
+  - import: go.opentelemetry.io/collector/extension/zpagesextension
+    gomod: go.opentelemetry.io/collector v0.52.0
+
+receivers:
+  - import: go.opentelemetry.io/collector/receiver/otlpreceiver
+    gomod: go.opentelemetry.io/collector v0.52.0
+  - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/zipkinreceiver v0.52.0"
+  - gomod: "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/jaegerreceiver v0.52.0"
+
+processors:
+  - import: go.opentelemetry.io/collector/processor/batchprocessor
+    gomod: go.opentelemetry.io/collector v0.52.0
+  - import: go.opentelemetry.io/collector/processor/memorylimiterprocessor
+    gomod: go.opentelemetry.io/collector v0.52.0

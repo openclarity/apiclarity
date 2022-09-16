@@ -1,0 +1,15 @@
+receivers:
+  nop:
+
+processors:
+  nop:
+
+exporters:
+  apiclarity:
+
+service:
+  pipelines:
+    traces:
+      receivers: [nop]
+      processors: [nop]
+      exporters: [apiclarity]
