@@ -1,9 +1,7 @@
 package pubsub
 
-import "math"
-
 type topicSubscriptions struct {
-	paritions     map[int]chan interface{}
+	paritions     map[int]chan MessageForBroker
 	numPartitions int
 }
 
@@ -12,16 +10,29 @@ type Handler struct {
 	subscriptions     map[string]*topicSubscriptions
 }
 
+type MessageForBroker interface {
+	GetPartitionKey() int64
+}
+
 func NewHandler() (_ *Handler) {
 	h := &Handler{useKafkaInterface: false, subscriptions: make(map[string]*topicSubscriptions)}
 	return h
 }
 
-func (h *Handler) AddSubscriptionShard(topicName string, partitionId int) (_ chan interface{}) {
-	i := make(chan interface{}, 1000)
+func (h *Handler) GetNumPartitionts(topicName string) int {
+	subTopic, ok := h.subscriptions[topicName]
+	if !ok {
+		return 0
+	}
+
+	return subTopic.numPartitions
+}
+
+func (h *Handler) AddSubscriptionShard(topicName string, partitionId int) (_ chan MessageForBroker) {
+	i := make(chan MessageForBroker, 1000)
 	_, ok := h.subscriptions[topicName]
 	if !ok {
-		h.subscriptions[topicName] = &topicSubscriptions{paritions: make(map[int]chan interface{})}
+		h.subscriptions[topicName] = &topicSubscriptions{paritions: make(map[int]chan MessageForBroker), numPartitions: 0}
 	}
 	topicPartitions := h.subscriptions[topicName]
 
@@ -29,25 +40,25 @@ func (h *Handler) AddSubscriptionShard(topicName string, partitionId int) (_ cha
 	if !ok {
 		topicPartitions.paritions[partitionId] = i
 	}
-	topicPartitions.numPartitions = int(math.Max(float64(topicPartitions.numPartitions), float64(partitionId)) + 1)
+	topicPartitions.numPartitions++
 
 	return i
 }
 
-func (h *Handler) PublishByPartitionKey(topicName string, partitionKey int64, message interface{}) (err bool) {
+func (h *Handler) PublishByPartitionKey(topicName string, message MessageForBroker) (err bool) {
 	_, ok := h.subscriptions[topicName]
 	if !ok {
 		return true
 	}
 	topicPartitions := h.subscriptions[topicName]
 
-	partitionId := int(partitionKey % int64(topicPartitions.numPartitions))
+	partitionId := int(message.GetPartitionKey() % int64(topicPartitions.numPartitions))
 
 	return h.Publish(topicName, partitionId, message)
 
 }
 
-func (h *Handler) Publish(topicName string, partitionId int, message interface{}) (err bool) {
+func (h *Handler) Publish(topicName string, partitionId int, message MessageForBroker) (err bool) {
 	_, ok := h.subscriptions[topicName]
 	if !ok {
 		return true

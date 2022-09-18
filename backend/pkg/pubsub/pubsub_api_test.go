@@ -6,11 +6,19 @@ import (
 	"time"
 )
 
-func handlerFunc(t *testing.T, topicName string, shardId int, inChannel chan interface{}, outChannel chan string) {
+type stringMessageForBroker struct {
+	s string
+}
+
+func (p stringMessageForBroker) GetPartitionKey() int64 {
+	return int64(0)
+}
+
+func handlerFunc(t *testing.T, topicName string, shardId int, inChannel chan MessageForBroker, outChannel chan string) {
 	message := <-inChannel
 	switch m := message.(type) {
-	case string:
-		outChannel <- m + "_" + topicName + "_" + strconv.Itoa(shardId)
+	case stringMessageForBroker:
+		outChannel <- m.s + "_" + topicName + "_" + strconv.Itoa(shardId)
 	default:
 		t.Errorf("Wrong message type")
 	}
@@ -30,9 +38,9 @@ func TestPubSubAPI(t *testing.T) {
 	go handlerFunc(t, "def", 0, channelDef2, outChannel)
 	go handlerFunc(t, "def", 1, channelDef3, outChannel)
 
-	channelAbc0 <- "test"
-	handler.Publish("abc", 0, "test")
-	time.Sleep(3)
+	//channelAbc0 <- stringMessageForBroker{ s: "test" }
+	handler.Publish("abc", 0, stringMessageForBroker{s: "test"})
+	time.Sleep(3 * time.Second)
 
 	val, ok := <-outChannel
 	if !ok {
