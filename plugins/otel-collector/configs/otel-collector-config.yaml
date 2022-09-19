@@ -1,0 +1,59 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+  zipkin:
+  jaeger:
+    protocols:
+      thrift_http:
+processors:
+  batch:
+  memory_limiter:
+    # 80% of maximum memory up to 2G
+    limit_mib: 1500
+    # 25% of limit up to 2G
+    spike_limit_mib: 512
+    check_interval: 5s
+extensions:
+  health_check:
+  pprof:
+    endpoint: :1888
+  zpages:
+    endpoint: :55679
+exporters:
+  #otlp:
+  #  endpoint: "http://someotlp.target.com:4317" # Replace with a real endpoint.
+  #  tls:
+  #    insecure: true
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    const_labels:
+      otelCollector: otelCollector1
+  #otlp:
+  #  endpoint: "tempo:4318"
+  #  tls:
+  #    insecure: true
+  otlp:
+    endpoint: "jaeger:4317"
+    tls:
+      insecure: true
+  logging:
+    logLevel: debug
+  apiclarity:
+    endpoint: "apiclarity"
+service:
+  extensions: [pprof, zpages, health_check]
+  pipelines:
+    traces:
+      receivers: [otlp,zipkin,jaeger]
+      processors: [memory_limiter, batch]
+      exporters: [otlp,apiclarity]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus]
+  telemetry:
+      metrics:
+        level: detailed
+        address: 0.0.0.0:8888

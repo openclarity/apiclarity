@@ -73,4 +73,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/openclarity/apiclarity/plugins/api v0.0.0 => ./../api
+replace github.com/openclarity/apiclarity/plugins/api v0.0.0 => github.com/openclarity/apiclarity/plugins/api v0.0.0-20220915093602-8a11adcdb9e1
