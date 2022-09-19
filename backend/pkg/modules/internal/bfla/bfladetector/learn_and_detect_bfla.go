@@ -616,7 +616,7 @@ func Contains(items []string, val string) bool {
 	return false
 }
 
-//nolint: gocyclo
+// nolint: gocyclo
 func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTrace) (err error) {
 	defer runtimeRecover()
 	defer l.statePersister.AckSubmit(trace.APIEvent.ID)
@@ -985,7 +985,7 @@ func (l *learnAndDetectBFLA) findSourceObj(path, method string, clientRef *k8str
 		if external {
 			return sa.External
 		}
-		return sa.K8sObject.Uid == clientRef.Uid
+		return sa.K8sObject != nil && sa.K8sObject.Uid == clientRef.Uid
 	})
 
 	if obj == nil {
