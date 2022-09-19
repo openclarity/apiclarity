@@ -38,9 +38,6 @@ import (
 	// Enables the traceanalyzer module.
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer"
 	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
-
-	// Enables analytics core module
-	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/analytics_core"
 )
 
 type (
