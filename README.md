@@ -189,6 +189,10 @@ Pull requests and bug reports are welcome.
 For larger changes please create an Issue in GitHub first to discuss your
 proposed changes and possible implications.
 
+## Contributors
+
+https://panoptica.app
+
 ## License
 
 [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0)
