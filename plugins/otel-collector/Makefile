@@ -1,5 +1,8 @@
 
-COMPONENTS = exporter
+COMPONENTS = apiclarityexporter
+DOCKER_REGISTRY ?= ghcr.io/openclarity
+VERSION ?= $(shell git rev-parse HEAD)
+DOCKER_TAG ?= ${VERSION}
 
 .PHONY: default
 default: lint
@@ -9,12 +12,18 @@ default: lint
 
 .PHONY: lint
 lint: ../../bin/golangci-lint ## Run linter
-	for component in $(COMPONENTS) ; do ( cd pkg/$$component ; ../../../../bin/golangci-lint run ; ) ; done
+	for component in $(COMPONENTS) ; do ( cd $$component ; ../../../bin/golangci-lint run ; ) ; done
 
 .PHONY: test
 test: ## Run Unit Tests
-	for component in $(COMPONENTS) ; do ( cd pkg/$$component ; go test ; ) ; done
+	for component in $(COMPONENTS) ; do ( cd $$component ; go test ; ) ; done
 
-./otelcol-dev: ./otelcol-builder.yaml
+.PHONY: otelcol
+otelcol: ./otelcol-build/otelcol
+./otelcol-build/otelcol: ./otelcol-build/otelcol-builder.yaml
 	ocb version
-	ocb --config ./otelcol-builder.yaml --output-path ./otelcol-build
+	ocb --config ./otelcol-build/otelcol-builder.yaml --output-path ./otelcol-build
+
+.PHONY: docker-apiclarityexporter
+docker-apiclarityexporter: Dockerfile
+	@DOCKER_BUILDKIT=1 docker build -t ${DOCKER_REGISTRY}/otel-apiclarityexporter:${DOCKER_TAG} .
