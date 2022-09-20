@@ -12,27 +12,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package analytics_core
+package analyticscore
 
 import (
 	"fmt"
 	"github.com/openclarity/apiclarity/backend/pkg/pubsub"
-	"strconv"
 	"testing"
 	"time"
 )
 
 var counterProc int = 0
-
-func handlerFunc(t *testing.T, topicName string, shardId int, inChannel chan interface{}, outChannel chan string) {
-	message := <-inChannel
-	switch m := message.(type) {
-	case string:
-		outChannel <- m + "_" + topicName + "_" + strconv.Itoa(shardId)
-	default:
-		t.Errorf("Wrong message type")
-	}
-}
 
 type traceAnalyzerTest struct {
 	t *testing.T
@@ -48,16 +37,16 @@ func (p messageForBrokerTest) GetPartitionKey() int64 {
 func (p traceAnalyzerTest) GetPriority() int {
 	return 10
 }
-func (p traceAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionId int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (new_annotations []interface{}) {
+func (p traceAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (new_annotations []interface{}) {
 	err := handler.PublishMessage(EntityTopicName, message)
 	if err != nil {
 		p.t.Errorf("Failed to publish by entity")
 	}
 	if topicName != TraceTopicName {
-		p.t.Errorf("Wromg topic " + string(topicName) + " instead of " + string(TraceTopicName))
+		p.t.Errorf("Wrong topic " + string(topicName) + " instead of " + string(TraceTopicName))
 	}
-	if partitionId != 1 {
-		p.t.Errorf("Trace procc is sent to a wrong worker " + fmt.Sprint(partitionId) + " " + fmt.Sprint(message.GetPartitionKey()) + " " + fmt.Sprint(handler.msgBroker.GetNumPartitions(TraceTopicName)))
+	if partitionID != 1 {
+		p.t.Errorf("Trace procc is sent to a wrong worker " + fmt.Sprint(partitionID) + " " + fmt.Sprint(message.GetPartitionKey()) + " " + fmt.Sprint(handler.msgBroker.GetNumPartitions(TraceTopicName)))
 	}
 
 	counterProc++
@@ -77,7 +66,7 @@ func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncD
 		p.t.Errorf("Improper order of proccFunction calls " + fmt.Sprint(len(annotations)))
 	}
 	if topicName != EntityTopicName {
-		p.t.Errorf("Wromg topic " + string(topicName) + " instead of " + string(EntityTopicName))
+		p.t.Errorf("Wrong topic " + string(topicName) + " instead of " + string(EntityTopicName))
 	}
 
 	if partitionId != 1 {
@@ -89,7 +78,7 @@ func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncD
 }
 
 func TestAnalyticsCore(t *testing.T) {
-	module, _ := newModule(nil, nil)
+	module, _ := newModuleRaw()
 	var module_analytics *AnalyticsCore = nil
 	switch m := module.(type) {
 	case *AnalyticsCore:
@@ -126,7 +115,10 @@ func TestAnalyticsCore(t *testing.T) {
 	}
 	module_analytics.RegisterAnalyticsModuleHandler(EntityTopicName, entityAnalyzer2)
 	msg := messageForBrokerTest{}
-	module_analytics.PublishMessage(TraceTopicName, msg)
+	err := module_analytics.PublishMessage(TraceTopicName, msg)
+	if err != nil {
+		t.Error("Failed to publish message")
+	}
 	time.Sleep(3 * time.Second)
 
 	if counterProc != 5 {

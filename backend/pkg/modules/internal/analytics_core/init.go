@@ -12,7 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package analytics_core
+package analyticscore
 
 import (
 	"context"
@@ -26,12 +26,14 @@ import (
 )
 
 const (
-	moduleVersion        = "0.0.0"
-	TraceTopicName       = "trace"
-	ApiTopicName         = "api"
-	ApiEndpointTopicName = "api_endpoint"
-	ObjectTopicName      = "object"
-	EntityTopicName      = "entity"
+	TraceTopicName          = "trace"
+	APITopicName            = "api"
+	APIEndpointTopicName    = "api_endpoint"
+	ObjectTopicName         = "object"
+	EntityTopicName         = "entity"
+	annotationArrayCapacity = 100
+	maxNumTopics            = 100
+	maxNumProccFuncPerTopic = 100
 )
 
 type TopicType string
@@ -52,7 +54,7 @@ type ProcFuncDataFrames struct {
 
 type AnalyticsModuleProccFunc interface {
 	GetPriority() int
-	ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionId int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (new_annotations []interface{})
+	ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (new_annotations []interface{})
 }
 
 func (p *AnalyticsCore) Info() core.ModuleInfo {
@@ -62,17 +64,17 @@ func (p *AnalyticsCore) Info() core.ModuleInfo {
 func (p *AnalyticsCore) Name() string              { return "analytics_core" }
 func (p *AnalyticsCore) HTTPHandler() http.Handler { return p.httpHandler }
 
-func (p *AnalyticsCore) handlerFunction(topic TopicType, paritionId int, msgChannel chan pubsub.MessageForBroker) {
+func (p *AnalyticsCore) handlerFunction(topic TopicType, partitionID int, msgChannel chan pubsub.MessageForBroker) {
 	for {
 		message := <-msgChannel
 		topicProccFunctions, okTopic := p.proccFuncRegistered[topic]
 		if okTopic && len(topicProccFunctions) > 0 {
-			annotations := make([]interface{}, 0, 100)
+			annotations := make([]interface{}, 0, annotationArrayCapacity)
 			for _, proccFunction := range topicProccFunctions {
 				dataFrames := &ProcFuncDataFrames{
 					dataFrames: nil,
 				}
-				annotations = proccFunction.ProccFunc(topic, dataFrames, paritionId, message, annotations, p)
+				annotations = proccFunction.ProccFunc(topic, dataFrames, partitionID, message, annotations, p)
 			}
 
 		}
@@ -80,15 +82,15 @@ func (p *AnalyticsCore) handlerFunction(topic TopicType, paritionId int, msgChan
 
 }
 
-func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Module, err error) {
+func newModuleRaw() (_ core.Module, err error) {
 	p := &AnalyticsCore{
 		httpHandler:         nil,
 		msgBroker:           nil,
-		accessor:            accessor,
+		accessor:            nil,
 		info:                &core.ModuleInfo{Name: "analytics_core", Description: "analytics_core"},
 		numWorkers:          1,
 		proccFuncRegistered: map[TopicType][]AnalyticsModuleProccFunc{},
-		topics:              make([]TopicType, 0, 100),
+		topics:              make([]TopicType, 0, maxNumTopics),
 	}
 	/* We do not need to expose API at this point
 	handler := &httpHandler{
@@ -99,8 +101,35 @@ func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Modul
 	p.msgBroker = pubsub.NewHandler()
 
 	p.InitTopic(TraceTopicName)
-	p.InitTopic(ApiTopicName)
-	p.InitTopic(ApiEndpointTopicName)
+	p.InitTopic(APITopicName)
+	p.InitTopic(APIEndpointTopicName)
+	p.InitTopic(ObjectTopicName)
+	p.InitTopic(EntityTopicName)
+
+	return p, nil
+}
+
+func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Module, err error) {
+	p := &AnalyticsCore{
+		httpHandler:         nil,
+		msgBroker:           nil,
+		accessor:            accessor,
+		info:                &core.ModuleInfo{Name: "analytics_core", Description: "analytics_core"},
+		numWorkers:          1,
+		proccFuncRegistered: map[TopicType][]AnalyticsModuleProccFunc{},
+		topics:              make([]TopicType, 0, maxNumTopics),
+	}
+	/* We do not need to expose API at this point
+	handler := &httpHandler{
+		accessor: accessor,
+	}
+	p.httpHandler = restapi.HandlerWithOptions(handler, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + "analytics_core"})
+	*/
+	p.msgBroker = pubsub.NewHandler()
+
+	p.InitTopic(TraceTopicName)
+	p.InitTopic(APITopicName)
+	p.InitTopic(APIEndpointTopicName)
 	p.InitTopic(ObjectTopicName)
 	p.InitTopic(EntityTopicName)
 
@@ -117,7 +146,7 @@ func orderHandlerFuncsByPriority(proccFunctions []AnalyticsModuleProccFunc) []An
 func (p *AnalyticsCore) RegisterAnalyticsModuleHandler(topic TopicType, proccFunc AnalyticsModuleProccFunc) {
 	_, okTopic := p.proccFuncRegistered[topic]
 	if !okTopic {
-		p.proccFuncRegistered[topic] = make([]AnalyticsModuleProccFunc, 0, 100)
+		p.proccFuncRegistered[topic] = make([]AnalyticsModuleProccFunc, 0, maxNumProccFuncPerTopic)
 	}
 
 	p.proccFuncRegistered[topic] = append(p.proccFuncRegistered[topic], proccFunc)
@@ -129,13 +158,13 @@ type httpHandler struct {
 	accessor core.BackendAccessor
 }
 */
-// WARNING: This function shall be executed only during initialization step. Running this function
-// when the message broker is in use may generate synchronization problem due to lack of lock on topics map
-// this is done on purpose to avoid unneccessary lock overhead
+// WARNING: This function shall be executed only during initialization step. Running this function.
+// when the message broker is in use may generate synchronization problem due to lack of lock on topics map.
+// this is done on purpose to avoid unneccessary lock overhead.
 func (p *AnalyticsCore) InitTopic(topicName TopicType) {
 	for i := 0; i < p.numWorkers; i++ {
-		topic_channel, _ := p.msgBroker.AddSubscriptionShard(string(topicName))
-		go p.handlerFunction(topicName, i, topic_channel)
+		topicChannel, _ := p.msgBroker.AddSubscriptionShard(string(topicName))
+		go p.handlerFunction(topicName, i, topicChannel)
 	}
 	p.topics = append(p.topics, topicName)
 }
@@ -159,8 +188,12 @@ func (p *AnalyticsCore) AddWorkers(numNewWorkers int) int {
 	return numNewWorkers
 }
 
-func (p *AnalyticsCore) PublishMessage(topicName TopicType, message pubsub.MessageForBroker) (err error) {
-	return p.msgBroker.PublishByPartitionKey(string(topicName), message)
+func (p *AnalyticsCore) PublishMessage(topicName TopicType, message pubsub.MessageForBroker) (_ error) {
+	err := p.msgBroker.PublishByPartitionKey(string(topicName), message)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (p *AnalyticsCore) EventNotify(ctx context.Context, event *core.Event) {
@@ -172,7 +205,9 @@ func (p *AnalyticsCore) EventNotify(ctx context.Context, event *core.Event) {
 func (p *AnalyticsCore) eventNotify(ctx context.Context, event *core.Event) (err error) {
 	log.Debugf("[Analytics-Core] received a new event for API(%v) Event(%v) ", event.APIEvent.APIInfoID, event.APIEvent.ID)
 	log.Errorf("[Analytics-Core] received a new event for API(%v) Event(%v) ", event.APIEvent.APIInfoID, event.APIEvent.ID)
-
+	if ctx == nil {
+		log.Errorf("[Analytics-Core] No context")
+	}
 	return nil
 }
 
