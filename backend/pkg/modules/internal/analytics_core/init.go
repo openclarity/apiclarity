@@ -55,7 +55,7 @@ type ProcFuncDataFrames struct {
 
 type AnalyticsModuleProccFunc interface {
 	GetPriority() int
-	ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (new_annotations []interface{})
+	ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{})
 }
 
 func (p *AnalyticsCore) Info() core.ModuleInfo {
@@ -109,7 +109,6 @@ func newModuleRaw() (_ core.Module, err error) {
 	return p, nil
 }
 
-//nolint:unparam
 func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Module, err error) {
 	p := &AnalyticsCore{
 		httpHandler:         nil,

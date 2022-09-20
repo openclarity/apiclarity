@@ -61,7 +61,7 @@ type entityAnalyzerTest struct {
 func (p entityAnalyzerTest) GetPriority() int {
 	return p.priorityValue
 }
-func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionId int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
+func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
 	if len(annotations) != p.priorityValue {
 		p.t.Errorf("Improper order of proccFunction calls " + fmt.Sprint(len(annotations)))
 	}
@@ -69,8 +69,8 @@ func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncD
 		p.t.Errorf("Wrong topic " + string(topicName) + " instead of " + string(EntityTopicName))
 	}
 
-	if partitionId != 1 {
-		p.t.Errorf("Entity procc is sent to a wrong worker " + fmt.Sprint(partitionId))
+	if partitionID != 1 {
+		p.t.Errorf("Entity procc is sent to a wrong worker " + fmt.Sprint(partitionID))
 	}
 
 	counterProc++
@@ -80,11 +80,12 @@ func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncD
 func TestAnalyticsCore(t *testing.T) {
 	counterProc = 0
 	module, _ := newModuleRaw()
-	var moduleAnalytics *AnalyticsCore = nil
+	var moduleAnalytics *AnalyticsCore
 	switch m := module.(type) {
 	case *AnalyticsCore:
 		moduleAnalytics = m
 	default:
+		moduleAnalytics = nil
 		t.Errorf("Failed to initialize analytics core")
 	}
 

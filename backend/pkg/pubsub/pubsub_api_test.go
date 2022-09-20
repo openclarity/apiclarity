@@ -29,6 +29,7 @@ func (p stringMessageForBroker) GetPartitionKey() int64 {
 }
 
 func handlerFunc(t *testing.T, topicName string, shardID int, inChannel chan MessageForBroker, outChannel chan string) {
+	t.Helper()
 	message := <-inChannel
 	switch m := message.(type) {
 	case stringMessageForBroker:
