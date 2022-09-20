@@ -21,7 +21,7 @@ import (
 	"time"
 )
 
-var counterProc int = 0
+var counterProc int
 
 type traceAnalyzerTest struct {
 	t *testing.T
@@ -37,7 +37,7 @@ func (p messageForBrokerTest) GetPartitionKey() int64 {
 func (p traceAnalyzerTest) GetPriority() int {
 	return 10
 }
-func (p traceAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (new_annotations []interface{}) {
+func (p traceAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
 	err := handler.PublishMessage(EntityTopicName, message)
 	if err != nil {
 		p.t.Errorf("Failed to publish by entity")
@@ -61,7 +61,7 @@ type entityAnalyzerTest struct {
 func (p entityAnalyzerTest) GetPriority() int {
 	return p.priorityValue
 }
-func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionId int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (new_annotations []interface{}) {
+func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionId int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
 	if len(annotations) != p.priorityValue {
 		p.t.Errorf("Improper order of proccFunction calls " + fmt.Sprint(len(annotations)))
 	}
@@ -78,44 +78,45 @@ func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncD
 }
 
 func TestAnalyticsCore(t *testing.T) {
+	counterProc = 0
 	module, _ := newModuleRaw()
-	var module_analytics *AnalyticsCore = nil
+	var moduleAnalytics *AnalyticsCore = nil
 	switch m := module.(type) {
 	case *AnalyticsCore:
-		module_analytics = m
+		moduleAnalytics = m
 	default:
 		t.Errorf("Failed to initialize analytics core")
 	}
 
-	module_analytics.AddWorkers(2)
+	moduleAnalytics.AddWorkers(2)
 	traceAnalyzer := traceAnalyzerTest{
 		t: t,
 	}
-	module_analytics.RegisterAnalyticsModuleHandler(TraceTopicName, traceAnalyzer)
+	moduleAnalytics.RegisterAnalyticsModuleHandler(TraceTopicName, traceAnalyzer)
 
 	entityAnalyzer4 := entityAnalyzerTest{
 		priorityValue: 3,
 		t:             t,
 	}
-	module_analytics.RegisterAnalyticsModuleHandler(EntityTopicName, entityAnalyzer4)
+	moduleAnalytics.RegisterAnalyticsModuleHandler(EntityTopicName, entityAnalyzer4)
 
 	entityAnalyzer3 := entityAnalyzerTest{
 		priorityValue: 2,
 		t:             t,
 	}
-	module_analytics.RegisterAnalyticsModuleHandler(EntityTopicName, entityAnalyzer3)
+	moduleAnalytics.RegisterAnalyticsModuleHandler(EntityTopicName, entityAnalyzer3)
 	entityAnalyzer1 := entityAnalyzerTest{
 		priorityValue: 0,
 		t:             t,
 	}
-	module_analytics.RegisterAnalyticsModuleHandler(EntityTopicName, entityAnalyzer1)
+	moduleAnalytics.RegisterAnalyticsModuleHandler(EntityTopicName, entityAnalyzer1)
 	entityAnalyzer2 := entityAnalyzerTest{
 		priorityValue: 1,
 		t:             t,
 	}
-	module_analytics.RegisterAnalyticsModuleHandler(EntityTopicName, entityAnalyzer2)
+	moduleAnalytics.RegisterAnalyticsModuleHandler(EntityTopicName, entityAnalyzer2)
 	msg := messageForBrokerTest{}
-	err := module_analytics.PublishMessage(TraceTopicName, msg)
+	err := moduleAnalytics.PublishMessage(TraceTopicName, msg)
 	if err != nil {
 		t.Error("Failed to publish message")
 	}

@@ -16,6 +16,7 @@ package analyticscore
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"sort"
 
@@ -76,12 +77,11 @@ func (p *AnalyticsCore) handlerFunction(topic TopicType, partitionID int, msgCha
 				}
 				annotations = proccFunction.ProccFunc(topic, dataFrames, partitionID, message, annotations, p)
 			}
-
 		}
 	}
-
 }
 
+//nolint:unparam
 func newModuleRaw() (_ core.Module, err error) {
 	p := &AnalyticsCore{
 		httpHandler:         nil,
@@ -109,6 +109,7 @@ func newModuleRaw() (_ core.Module, err error) {
 	return p, nil
 }
 
+//nolint:unparam
 func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Module, err error) {
 	p := &AnalyticsCore{
 		httpHandler:         nil,
@@ -160,7 +161,7 @@ type httpHandler struct {
 */
 // WARNING: This function shall be executed only during initialization step. Running this function.
 // when the message broker is in use may generate synchronization problem due to lack of lock on topics map.
-// this is done on purpose to avoid unneccessary lock overhead.
+// this is done on purpose to avoid unnecessary lock overhead.
 func (p *AnalyticsCore) InitTopic(topicName TopicType) {
 	for i := 0; i < p.numWorkers; i++ {
 		topicChannel, _ := p.msgBroker.AddSubscriptionShard(string(topicName))
@@ -173,7 +174,7 @@ func (p *AnalyticsCore) InitTopic(topicName TopicType) {
 // returns number of workers
 // WARNING: This function shall be executed only during initialization step. Running this function
 // when the message broker is in use may generate synchronization problem due to lack of lock on topics map
-// this is done on purpose to avoid unneccessary lock overhead
+// this is done on purpose to avoid unnecessary lock overhead.
 func (p *AnalyticsCore) AddWorkers(numNewWorkers int) int {
 	if numNewWorkers <= 0 {
 		return 0
@@ -191,7 +192,7 @@ func (p *AnalyticsCore) AddWorkers(numNewWorkers int) int {
 func (p *AnalyticsCore) PublishMessage(topicName TopicType, message pubsub.MessageForBroker) (_ error) {
 	err := p.msgBroker.PublishByPartitionKey(string(topicName), message)
 	if err != nil {
-		return err
+		return fmt.Errorf("[Analytics-Core] failed to publish message %s", err)
 	}
 	return nil
 }
@@ -202,6 +203,7 @@ func (p *AnalyticsCore) EventNotify(ctx context.Context, event *core.Event) {
 	}
 }
 
+//nolint:unparam
 func (p *AnalyticsCore) eventNotify(ctx context.Context, event *core.Event) (err error) {
 	log.Debugf("[Analytics-Core] received a new event for API(%v) Event(%v) ", event.APIEvent.APIInfoID, event.APIEvent.ID)
 	log.Errorf("[Analytics-Core] received a new event for API(%v) Event(%v) ", event.APIEvent.APIInfoID, event.APIEvent.ID)

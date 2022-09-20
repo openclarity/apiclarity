@@ -53,7 +53,10 @@ func TestPubSubAPI(t *testing.T) {
 	go handlerFunc(t, "def", 1, channelDef3, outChannel)
 
 	//channelAbc0 <- stringMessageForBroker{ s: "test" }
-	handler.Publish("abc", 0, stringMessageForBroker{s: "test"})
+	err := handler.Publish("abc", 0, stringMessageForBroker{s: "test"})
+	if err != nil {
+		t.Errorf("failed to publish message")
+	}
 	time.Sleep(3 * time.Second)
 
 	val, ok := <-outChannel

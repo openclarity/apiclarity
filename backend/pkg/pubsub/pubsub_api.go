@@ -50,9 +50,8 @@ func (h *Handler) GetNumPartitions(topicName string) int {
 
 // WARNING: This function shall be executed only during initialization step. Running this function.
 // when the message broker is in use may generate synchronization problem due to lack of lock on topics map.
-// this is done on purpose to avoid unneccessary lock overhead.
+// this is done on purpose to avoid unnecessary lock overhead.
 func (h *Handler) AddSubscriptionShard(topicName string) (_ chan MessageForBroker, partitionID int) {
-
 	_, ok := h.subscriptions[topicName]
 	if !ok {
 		h.subscriptions[topicName] = &topicSubscriptions{partitions: make(map[int]chan MessageForBroker), numPartitions: 0}
