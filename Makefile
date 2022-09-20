@@ -50,7 +50,7 @@ backend_test: ## Build Backend test
 api3-verify: 
 	@(echo "Checking if api3 code was generated")
 	@(cd api3; ./generate.sh --verify) 
-	
+
 .PHONY: api3
 api3: 
 	@(cd api3; ./generate.sh) 
