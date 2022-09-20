@@ -14,8 +14,10 @@
 // limitations under the License.
 package pubsub
 
+import "fmt"
+
 type topicSubscriptions struct {
-	paritions     map[int]chan MessageForBroker
+	partitions    map[int]chan MessageForBroker
 	numPartitions int
 }
 
@@ -33,7 +35,7 @@ func NewHandler() (_ *Handler) {
 	return h
 }
 
-func (h *Handler) GetNumPartitionts(topicName string) int {
+func (h *Handler) GetNumPartitions(topicName string) int {
 	subTopic, ok := h.subscriptions[topicName]
 	if !ok {
 		return 0
@@ -42,29 +44,34 @@ func (h *Handler) GetNumPartitionts(topicName string) int {
 	return subTopic.numPartitions
 }
 
-func (h *Handler) AddSubscriptionShard(topicName string, partitionId int) (_ chan MessageForBroker) {
-	i := make(chan MessageForBroker, 1000)
+// WARNING: This function shall be executed only during initialization step. Running this function
+// when the message broker is in use may generate synchronization problem due to lack of lock on topics map
+// this is done on purpose to avoid unneccessary lock overhead
+func (h *Handler) AddSubscriptionShard(topicName string) (_ chan MessageForBroker, partitionId int) {
+
 	_, ok := h.subscriptions[topicName]
 	if !ok {
-		h.subscriptions[topicName] = &topicSubscriptions{paritions: make(map[int]chan MessageForBroker), numPartitions: 0}
+		h.subscriptions[topicName] = &topicSubscriptions{partitions: make(map[int]chan MessageForBroker), numPartitions: 0}
 	}
 	topicPartitions := h.subscriptions[topicName]
 
-	_, ok = topicPartitions.paritions[partitionId]
-	if !ok {
-		topicPartitions.paritions[partitionId] = i
-	}
-	topicPartitions.numPartitions++
+	partitionId = topicPartitions.numPartitions
 
-	return i
+	_, ok = topicPartitions.partitions[partitionId]
+	if !ok {
+		i := make(chan MessageForBroker, 1000)
+		topicPartitions.partitions[partitionId] = i
+		topicPartitions.numPartitions++
+		return i, partitionId
+	}
+	return nil, partitionId
 }
 
-func (h *Handler) PublishByPartitionKey(topicName string, message MessageForBroker) (err bool) {
-	_, ok := h.subscriptions[topicName]
+func (h *Handler) PublishByPartitionKey(topicName string, message MessageForBroker) (err error) {
+	topicPartitions, ok := h.subscriptions[topicName]
 	if !ok {
-		return true
+		return fmt.Errorf("no topic '%s' exists for topic", topicName)
 	}
-	topicPartitions := h.subscriptions[topicName]
 
 	partitionId := int(message.GetPartitionKey() % int64(topicPartitions.numPartitions))
 
@@ -72,17 +79,16 @@ func (h *Handler) PublishByPartitionKey(topicName string, message MessageForBrok
 
 }
 
-func (h *Handler) Publish(topicName string, partitionId int, message MessageForBroker) (err bool) {
-	_, ok := h.subscriptions[topicName]
+func (h *Handler) Publish(topicName string, partitionId int, message MessageForBroker) (err error) {
+	topicPartitions, ok := h.subscriptions[topicName]
 	if !ok {
-		return true
+		return fmt.Errorf("no topic '%s' exists for topic", topicName)
 	}
-	topicPartitions := h.subscriptions[topicName]
 
-	i, okShards := topicPartitions.paritions[partitionId]
+	i, okShards := topicPartitions.partitions[partitionId]
 	if !okShards {
-		return true
+		return fmt.Errorf("no partition '%d' exists for topic '%s'", partitionId, topicName)
 	}
 	i <- message
-	return false
+	return nil
 }

@@ -66,7 +66,7 @@ func (p *AnalyticsCore) handlerFunction(topic TopicType, paritionId int, msgChan
 	for {
 		message := <-msgChannel
 		topicProccFunctions, okTopic := p.proccFuncRegistered[topic]
-		if okTopic {
+		if okTopic && len(topicProccFunctions) > 0 {
 			annotations := make([]interface{}, 0, 100)
 			for _, proccFunction := range topicProccFunctions {
 				dataFrames := &ProcFuncDataFrames{
@@ -129,10 +129,12 @@ type httpHandler struct {
 	accessor core.BackendAccessor
 }
 */
-
+// WARNING: This function shall be executed only during initialization step. Running this function
+// when the message broker is in use may generate synchronization problem due to lack of lock on topics map
+// this is done on purpose to avoid unneccessary lock overhead
 func (p *AnalyticsCore) InitTopic(topicName TopicType) {
 	for i := 0; i < p.numWorkers; i++ {
-		topic_channel := p.msgBroker.AddSubscriptionShard(string(topicName), i)
+		topic_channel, _ := p.msgBroker.AddSubscriptionShard(string(topicName))
 		go p.handlerFunction(topicName, i, topic_channel)
 	}
 	p.topics = append(p.topics, topicName)
@@ -140,21 +142,24 @@ func (p *AnalyticsCore) InitTopic(topicName TopicType) {
 
 // It supports only increase from 1 that is default
 // returns number of workers
+// WARNING: This function shall be executed only during initialization step. Running this function
+// when the message broker is in use may generate synchronization problem due to lack of lock on topics map
+// this is done on purpose to avoid unneccessary lock overhead
 func (p *AnalyticsCore) AddWorkers(numNewWorkers int) int {
 	if numNewWorkers <= 0 {
 		return 0
 	}
 	for i := p.numWorkers; i < (p.numWorkers + numNewWorkers); i++ {
 		for _, topicName := range p.topics {
-			topic_channel := p.msgBroker.AddSubscriptionShard(string(topicName), i)
-			go p.handlerFunction(topicName, i, topic_channel)
+			topicChannel, _ := p.msgBroker.AddSubscriptionShard(string(topicName))
+			go p.handlerFunction(topicName, i, topicChannel)
 		}
 	}
 	p.numWorkers += numNewWorkers
 	return numNewWorkers
 }
 
-func (p *AnalyticsCore) PublishMessage(topicName TopicType, message pubsub.MessageForBroker) (err bool) {
+func (p *AnalyticsCore) PublishMessage(topicName TopicType, message pubsub.MessageForBroker) (err error) {
 	return p.msgBroker.PublishByPartitionKey(string(topicName), message)
 }
 

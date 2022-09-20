@@ -40,10 +40,10 @@ func handlerFunc(t *testing.T, topicName string, shardId int, inChannel chan Mes
 
 func TestPubSubAPI(t *testing.T) {
 	handler := NewHandler()
-	channelAbc0 := handler.AddSubscriptionShard("abc", 0)
-	channelAbc1 := handler.AddSubscriptionShard("abc", 1)
-	channelDef2 := handler.AddSubscriptionShard("def", 0)
-	channelDef3 := handler.AddSubscriptionShard("def", 1)
+	channelAbc0, _ := handler.AddSubscriptionShard("abc")
+	channelAbc1, _ := handler.AddSubscriptionShard("abc")
+	channelDef2, _ := handler.AddSubscriptionShard("def")
+	channelDef3, _ := handler.AddSubscriptionShard("def")
 
 	outChannel := make(chan string)
 
