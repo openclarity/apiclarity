@@ -41,26 +41,39 @@ var (
 	resourceAttributes1  = map[string]interface{}{"resource-attr": "resource-attr-val-1"}
 	spanEventAttributes  = map[string]interface{}{"span-event-attr": "span-event-attr-val"}
 	spanLinkAttributes   = map[string]interface{}{"span-link-attr": "span-link-attr-val"}
-	spanClientAttributes = map[string]interface{}{
-		"span.kind":        "client",
-		"http.method":      "PUT",
-		"http.flavor":      "1.1",
-		"http.url":         "https://api.thecorporation.com:8443/treasure/chest/100",
-		"net.peer.ip":      "192.0.2.5",
-		"http.status_code": 200,
+	spanClientAttributes = []map[string]interface{}{
+		{
+			"span.kind":        "client",
+			"http.method":      "PUT",
+			"http.flavor":      "1.1",
+			"http.url":         "https://api.thecorporation.com:8443/treasure/chest/100",
+			"net.peer.ip":      "192.0.2.5",
+			"http.status_code": 200,
+		},
 	}
-	spanServerAttributes = map[string]interface{}{
-		"span.kind":        "server",
-		"http.scheme":      "http",
-		"http.method":      "GET",
-		"http.target":      "/treasure/chest/100",
-		"http.host":        "api.thecorporation.com",
-		"http.route":       "/treasure/chest/:treasure_id",
-		"http.server_name": "sr234.eu-west.aws.com",
-		"http.client_ip":   "34.23.65.32",
-		"net.host.port":    80,
-		"net.peer.ip":      "192.0.25.4",
-		"http.status_code": 200,
+	spanServerAttributes = []map[string]interface{}{
+		{
+			// minimum attributes
+			"span.kind":      "server",
+			"http.method":    "GET",
+			"http.url":       "/catalogue/808a2de1-1aaa-4c25-a9b9-6612e8f29a38",
+			"http.route":     "/catalogue/:id",
+			"http.client_ip": "34.23.65.32",
+		},
+		{
+			// complete attributes
+			"span.kind":        "server",
+			"http.scheme":      "http",
+			"http.method":      "GET",
+			"http.target":      "/treasure/chest/100",
+			"http.host":        "api.thecorporation.com",
+			"http.route":       "/treasure/chest/:treasure_id",
+			"http.server_name": "sr234.eu-west.aws.com",
+			"http.client_ip":   "34.23.65.32",
+			"net.host.port":    80,
+			"net.peer.ip":      "192.0.25.4",
+			"http.status_code": 200,
+		},
 	}
 )
 
@@ -123,20 +136,17 @@ func generateTracesOneSpan() ptrace.Traces {
 }
 
 // Function from "github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal/testdata"
-func GenerateTracesClientSpan() ptrace.Traces {
+func GenerateTracesOneSpan(kind ptrace.SpanKind) ptrace.Traces {
 	td := generateTracesOneSpan()
 	rs0ils0 := td.ResourceSpans().At(0).ScopeSpans().At(0)
 	span := rs0ils0.Spans().At(0)
-	fillSpanOne(span, ptrace.SpanKindClient)
-	fillSpanAttributes(span, spanClientAttributes)
+	fillSpanOne(span, kind)
 	return td
 }
 
-func GenerateTracesServerSpan() ptrace.Traces {
-	td := generateTracesOneSpan()
+func TracesOneSpanAddAttributes(td ptrace.Traces, attrs map[string]interface{}) ptrace.Traces {
 	rs0ils0 := td.ResourceSpans().At(0).ScopeSpans().At(0)
 	span := rs0ils0.Spans().At(0)
-	fillSpanOne(span, ptrace.SpanKindServer)
-	fillSpanAttributes(span, spanServerAttributes)
+	fillSpanAttributes(span, attrs)
 	return td
 }
