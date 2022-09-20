@@ -50,14 +50,14 @@ func (p traceAnalyzerTest) GetPriority() int {
 }
 func (p traceAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionId int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (new_annotations []interface{}) {
 	err := handler.PublishMessage(EntityTopicName, message)
-	if err {
+	if err != nil {
 		p.t.Errorf("Failed to publish by entity")
 	}
 	if topicName != TraceTopicName {
 		p.t.Errorf("Wromg topic " + string(topicName) + " instead of " + string(TraceTopicName))
 	}
 	if partitionId != 1 {
-		p.t.Errorf("Trace procc is sent to a wrong worker " + fmt.Sprint(partitionId) + " " + fmt.Sprint(message.GetPartitionKey()) + " " + fmt.Sprint(handler.msgBroker.GetNumPartitionts(TraceTopicName)))
+		p.t.Errorf("Trace procc is sent to a wrong worker " + fmt.Sprint(partitionId) + " " + fmt.Sprint(message.GetPartitionKey()) + " " + fmt.Sprint(handler.msgBroker.GetNumPartitions(TraceTopicName)))
 	}
 
 	counterProc++
