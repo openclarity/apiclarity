@@ -28,11 +28,11 @@ func (p stringMessageForBroker) GetPartitionKey() int64 {
 	return int64(0)
 }
 
-func handlerFunc(t *testing.T, topicName string, shardId int, inChannel chan MessageForBroker, outChannel chan string) {
+func handlerFunc(t *testing.T, topicName string, shardID int, inChannel chan MessageForBroker, outChannel chan string) {
 	message := <-inChannel
 	switch m := message.(type) {
 	case stringMessageForBroker:
-		outChannel <- m.s + "_" + topicName + "_" + strconv.Itoa(shardId)
+		outChannel <- m.s + "_" + topicName + "_" + strconv.Itoa(shardID)
 	default:
 		t.Errorf("Wrong message type")
 	}
