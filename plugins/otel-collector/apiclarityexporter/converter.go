@@ -25,11 +25,13 @@ import (
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.9.0"
 )
 
 const (
-	missingAttrValue string = "<missing>"
+	missingAttrValue     string = "<missing>"
+	DefaultSourceAddress string = "client:5280"
+	DefaultStatusCode    string = "200"
 )
 
 func wrapAttributeError(logger *zap.Logger, msg, attrKey, attrValue string, err error) error {
@@ -41,7 +43,33 @@ func wrapAttributeError(logger *zap.Logger, msg, attrKey, attrValue string, err 
 	return fmt.Errorf("%s, attribute: %s, value: %s, error: %w", msg, attrKey, attrValue, err)
 }
 
-func setTelemetryClientSpan(actel *apiclientmodels.Telemetry, attrs pcommon.Map, logger *zap.Logger) error {
+func parseResourceServerAttrs(actel *apiclientmodels.Telemetry, resource pcommon.Resource) bool {
+	ok := true
+	resAttrs := resource.Attributes()
+	if ipAddr, ok := resAttrs.Get("ip"); ok {
+		actel.DestinationAddress = ipAddr.AsString()
+		if servicePort, ok := resAttrs.Get("port"); ok {
+			actel.DestinationAddress = actel.DestinationAddress + ":" + servicePort.AsString()
+		}
+	} else if serviceIP, ok := resAttrs.Get(string("ipv4")); ok {
+		actel.DestinationAddress = serviceIP.AsString()
+		if servicePort, ok := resAttrs.Get("port"); ok {
+			actel.DestinationAddress = actel.DestinationAddress + ":" + servicePort.AsString()
+		}
+	} else if hostName, ok := resAttrs.Get(string(semconv.HostNameKey)); ok {
+		actel.DestinationAddress = hostName.AsString()
+		if servicePort, ok := resAttrs.Get("port"); ok {
+			actel.DestinationAddress = actel.DestinationAddress + ":" + servicePort.AsString()
+		}
+	} else if serviceName, ok := resAttrs.Get(string(semconv.ServiceNameKey)); ok {
+		actel.DestinationAddress = serviceName.AsString()
+	} else {
+		ok = false
+	}
+	return ok
+}
+
+func setTelemetryClientSpan(actel *apiclientmodels.Telemetry, resource pcommon.Resource, attrs pcommon.Map, logger *zap.Logger) error {
 	//Set destination/server address
 	if peerName, ok := attrs.Get(string(semconv.NetPeerNameKey)); ok {
 		actel.DestinationAddress = peerName.AsString()
@@ -54,10 +82,11 @@ func setTelemetryClientSpan(actel *apiclientmodels.Telemetry, attrs pcommon.Map,
 			actel.DestinationAddress = actel.DestinationAddress + ":" + portAttr.AsString()
 		}
 	} else if actel.Request.Host != "" {
+		//Assume this is from URL or Host header...
 		actel.DestinationAddress = actel.Request.Host
-	} else {
+	} else if ok := parseResourceServerAttrs(actel, resource); !ok {
 		//Either HTTPURLKey, HTTPHostKey, NetPeerNameKey or NetPeerIPKey should be defined
-		return wrapAttributeError(logger, "missing attribute", string(semconv.HTTPURLKey), missingAttrValue, nil)
+		return wrapAttributeError(logger, "missing attribute", string(semconv.NetPeerIPKey), missingAttrValue, nil)
 	}
 
 	//Set source/client address
@@ -73,7 +102,7 @@ func setTelemetryClientSpan(actel *apiclientmodels.Telemetry, attrs pcommon.Map,
 	return nil
 }
 
-func setTelemetryServerSpan(actel *apiclientmodels.Telemetry, attrs pcommon.Map, logger *zap.Logger) error {
+func setTelemetryServerSpan(actel *apiclientmodels.Telemetry, resource pcommon.Resource, attrs pcommon.Map, logger *zap.Logger) error {
 	//Set destination/server address
 	if serverNameAttr, ok := attrs.Get(string(semconv.HTTPServerNameKey)); ok {
 		actel.DestinationAddress = serverNameAttr.AsString()
@@ -85,9 +114,15 @@ func setTelemetryServerSpan(actel *apiclientmodels.Telemetry, attrs pcommon.Map,
 		if portAttr, portOk := attrs.Get(string(semconv.NetHostPortKey)); portOk {
 			actel.DestinationAddress = actel.DestinationAddress + ":" + portAttr.AsString()
 		}
+	} else if hostIPAttr, ok := attrs.Get(string(semconv.NetHostIPKey)); ok {
+		actel.DestinationAddress = hostIPAttr.AsString()
+		if portAttr, portOk := attrs.Get(string(semconv.NetHostPortKey)); portOk {
+			actel.DestinationAddress = actel.DestinationAddress + ":" + portAttr.AsString()
+		}
 	} else if actel.Request.Host != "" {
+		//Assume this is from URL or Host header...
 		actel.DestinationAddress = actel.Request.Host
-	} else {
+	} else if ok := parseResourceServerAttrs(actel, resource); !ok {
 		//Either HTTPURLKey, HTTPHostKey, HTTPServerNameKey or NetHostNameKey should be defined
 		return wrapAttributeError(logger, "missing attribute", string(semconv.HTTPServerNameKey), missingAttrValue, nil)
 	}
@@ -108,7 +143,7 @@ func setTelemetryServerSpan(actel *apiclientmodels.Telemetry, attrs pcommon.Map,
 }
 
 // Process a single span into APIClarity telemetry
-func (e *exporter) processOTelSpan(_ pcommon.Resource, _ pcommon.InstrumentationScope, span ptrace.Span) (*apiclientmodels.Telemetry, error) {
+func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.InstrumentationScope, span ptrace.Span) (*apiclientmodels.Telemetry, error) {
 	/*
 		res.Attributes().Range(func(k string, v pcommon.Value) bool {
 			e.logger.Debug("Checking resource attributes",
@@ -118,6 +153,12 @@ func (e *exporter) processOTelSpan(_ pcommon.Resource, _ pcommon.Instrumentation
 			return true
 		})
 	*/
+	e.logger.Info("Converting span",
+		zap.String("kind", span.Kind().String()),
+		zap.String("name", span.Name()),
+		zap.String("traceid", span.TraceID().HexString()),
+		zap.Int("attributes.length", span.Attributes().Len()),
+	)
 
 	span.Attributes().Range(func(k string, v pcommon.Value) bool {
 		e.logger.Debug("Checking span attributes",
@@ -179,19 +220,76 @@ func (e *exporter) processOTelSpan(_ pcommon.Resource, _ pcommon.Instrumentation
 		return nil, wrapAttributeError(e.logger, "missing attribute", string(semconv.HTTPTargetKey), missingAttrValue, nil)
 	}
 	//Do not override URL with Host header, but check for use later
-	if hostAttr, hostOk := attrs.Get(string(semconv.HTTPHostKey)); hostOk && !urlOk {
+	if hostAttr, hostOk := attrs.Get(string(semconv.HTTPHostKey)); hostOk && actel.Request.Host == "" {
 		actel.Request.Host = hostAttr.AsString() // host is Host Header. Is this correct?
 	}
 
 	var err error
-	switch span.Kind().String() {
-	case ptrace.SpanKindClient.String():
-		err = setTelemetryClientSpan(actel, attrs, e.logger)
-	case ptrace.SpanKindServer.String():
-		err = setTelemetryServerSpan(actel, attrs, e.logger)
+	switch span.Kind() {
+	case ptrace.SpanKindClient:
+		err = setTelemetryClientSpan(actel, resource, attrs, e.logger)
+	case ptrace.SpanKindServer:
+		err = setTelemetryServerSpan(actel, resource, attrs, e.logger)
+	default:
+		e.logger.Debug("ignoring span because it is not client or server",
+			zap.String("kind", span.Kind().String()),
+			zap.String("name", span.Name()),
+			zap.String("traceid", span.TraceID().HexString()),
+		)
 	}
 	if err != nil {
+		span.Attributes().Range(func(k string, v pcommon.Value) bool {
+			e.logger.Warn("Failing span attribute",
+				zap.String("key", k),
+				zap.String("value", v.AsString()),
+			)
+			return true
+		})
 		return nil, err
+	}
+
+	//Speculator requires address to have a port?
+	if !strings.Contains(actel.DestinationAddress, ":") {
+		if actel.Scheme == "http" {
+			actel.DestinationAddress = actel.DestinationAddress + ":80"
+		} else if actel.Scheme == "https" {
+			actel.DestinationAddress = actel.DestinationAddress + ":443"
+		} else {
+			e.logger.Warn("Cannot infer destination port, using default 80",
+				zap.String("kind", span.Kind().String()),
+				zap.String("name", span.Name()),
+				zap.String("traceid", span.TraceID().HexString()),
+			)
+			actel.DestinationAddress = actel.DestinationAddress + ":80"
+		}
+	}
+	if actel.SourceAddress == "" {
+		e.logger.Warn("Cannot infer source address, using default",
+			zap.String("kind", span.Kind().String()),
+			zap.String("name", span.Name()),
+			zap.String("traceid", span.TraceID().HexString()),
+			zap.String("address", DefaultSourceAddress),
+		)
+		actel.SourceAddress = DefaultSourceAddress
+	} else if !strings.Contains(actel.SourceAddress, ":") {
+		_, defaultPort, _ := strings.Cut(DefaultSourceAddress, ":")
+		e.logger.Warn("Cannot infer source port, using default",
+			zap.String("kind", span.Kind().String()),
+			zap.String("name", span.Name()),
+			zap.String("traceid", span.TraceID().HexString()),
+			zap.String("port", defaultPort),
+		)
+		actel.SourceAddress = actel.SourceAddress + ":" + defaultPort
+	}
+	//APIClarity requires a host?
+	if actel.Request.Host == "" {
+		e.logger.Warn("Cannot find host, using destination",
+			zap.String("kind", span.Kind().String()),
+			zap.String("name", span.Name()),
+			zap.String("traceid", span.TraceID().HexString()),
+			zap.String("destination", actel.DestinationAddress),
+		)
+		actel.Request.Host = actel.DestinationAddress
 	}
 
 	// Fill in missing data where available.
@@ -200,14 +298,24 @@ func (e *exporter) processOTelSpan(_ pcommon.Resource, _ pcommon.Instrumentation
 	}
 	if statusCode, ok := attrs.Get(string(semconv.HTTPStatusCodeKey)); ok {
 		actel.Response.StatusCode = statusCode.AsString()
+	} else {
+		e.logger.Warn("Cannot find status code, using default",
+			zap.String("kind", span.Kind().String()),
+			zap.String("name", span.Name()),
+			zap.String("traceid", span.TraceID().HexString()),
+			zap.String(string(semconv.HTTPStatusCodeKey), DefaultStatusCode),
+		)
+		actel.Response.StatusCode = DefaultStatusCode
 	}
 	if flavor, ok := attrs.Get(string(semconv.HTTPFlavorKey)); ok {
 		actel.Request.Common.Version = flavor.AsString()
 		actel.Response.Common.Version = flavor.AsString()
 	}
+	if route, ok := attrs.Get(string(semconv.HTTPRouteKey)); ok {
+		actel.Request.Path = route.AsString()
+	}
 
 	attrs.Range(func(k string, v pcommon.Value) bool {
-		fmt.Printf("Processing attribute \"%s\": \"%s\"\n", k, v.AsString())
 		e.logger.Debug("Converting span attributes",
 			zap.String("key", k),
 			zap.String("value", v.AsString()),

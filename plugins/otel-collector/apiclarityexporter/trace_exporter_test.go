@@ -72,20 +72,25 @@ func TestTraceInvalidUrl(t *testing.T) {
 }
 
 func TestTraceRoundTrip(t *testing.T) {
-	tests := []struct {
+	type rttInfo struct {
 		name   string
 		traces ptrace.Traces
-	}{
-		{
-			name:   "client_span",
-			traces: GenerateTracesClientSpan(),
-		},
-		{
-			name:   "server_span",
-			traces: GenerateTracesServerSpan(),
-		},
 	}
-
+	tests := []rttInfo{}
+	for i, attrs := range spanClientAttributes {
+		td := GenerateTracesOneSpan(ptrace.SpanKindClient)
+		tests = append(tests, rttInfo{
+			name:   fmt.Sprintf("client_span_%d", i),
+			traces: TracesOneSpanAddAttributes(td, attrs),
+		})
+	}
+	for i, attrs := range spanServerAttributes {
+		td := GenerateTracesOneSpan(ptrace.SpanKindServer)
+		tests = append(tests, rttInfo{
+			name:   fmt.Sprintf("server_span_%d", i),
+			traces: TracesOneSpanAddAttributes(td, attrs),
+		})
+	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			url := startTracesReceiver(t)

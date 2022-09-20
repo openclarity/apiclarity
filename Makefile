@@ -29,7 +29,7 @@ help: ## This help.
 ui: ## Build UI
 	@(echo "Building UI ..." )
 	@(cd ui; npm i ; npm run build; )
-	@ls -l ui/build  
+	@ls -l ui/build
 
 .PHONY: backend
 backend: ## Build Backend
@@ -81,17 +81,17 @@ test: ## Run Unit Tests
 	cd plugins/gateway/kong && go test ./...
 	cd plugins/gateway/tyk/v3.2.2 && go test ./...
 	cd plugins/taper && go test ./...
-	cd plugins/otel-collector/exporter && go test ./...
+	$(MAKE) -C plugins/otel-collector test
 
 .PHONY: clean
 clean: clean-ui clean-backend ## Clean all build artifacts
 
 .PHONY: clean-ui
-clean-ui: 
+clean-ui:
 	@(rm -rf ui/build ; echo "UI cleanup done" )
 
 .PHONY: clean-backend
-clean-backend: 
+clean-backend:
 	@(rm -rf bin ; echo "Backend cleanup done" )
 
 bin/golangci-lint: bin/golangci-lint-${GOLANGCI_VERSION}
@@ -107,7 +107,7 @@ lint: bin/golangci-lint ## Run linter
 	cd plugins/gateway/kong && ../../../bin/golangci-lint run
 	cd plugins/gateway/tyk/v3.2.2 && ../../../../bin/golangci-lint run
 	cd plugins/taper && ../../bin/golangci-lint run
-	cd plugins/otel-collector/exporter && ../../../bin/golangci-lint run
+	$(MAKE) -C plugins/otel-collector lint
 
 .PHONY: fix
 fix: bin/golangci-lint ## Fix lint violations
@@ -115,7 +115,7 @@ fix: bin/golangci-lint ## Fix lint violations
 	cd plugins/gateway/kong && ../../../bin/golangci-lint run --fix
 	cd plugins/gateway/tyk/v3.2.2 && ../../../../bin/golangci-lint run --fix
 	cd plugins/taper && ../../bin/golangci-lint run --fix
-	cd plugins/otel-collector/exporter && ../../../bin/golangci-lint run --fix
+	$(MAKE) -C plugins/otel-collector fix
 
 bin/licensei: bin/licensei-${LICENSEI_VERSION}
 	@ln -sf licensei-${LICENSEI_VERSION} bin/licensei

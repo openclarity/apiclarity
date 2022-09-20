@@ -5,7 +5,7 @@ DOCKER_TAG ?= ${VERSION}
 TYK_VERSION ?= v3.2.2
 
 .PHONY: docker
-docker: docker-kong docker-tyk docker-taper
+docker: docker-kong docker-tyk docker-taper docker-otelcollector
 
 .PHONY: docker-kong
 docker-kong:
@@ -26,6 +26,10 @@ docker-tyk:
 	go mod edit -replace github.com/openclarity/apiclarity/plugins/api@v0.0.0=./../../../api && \
 	go mod edit -replace github.com/openclarity/apiclarity/plugins/common@v0.0.0=./../../../common && \
 	 cd -)
+
+.PHONY: docker-otelcollector
+docker-otelcollector:
+	@(cd otel-collector && $(MAKE) docker)
 
 .PHONY: push-docker
 push-docker: push-docker-kong push-docker-tyk push-docker-taper
