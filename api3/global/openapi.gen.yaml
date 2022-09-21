@@ -1524,33 +1524,6 @@ paths:
           description: Success
       summary: Get the list of APIClarity features and for each feature the list of
         API hosts (in the form 'host:port') the feature requires to get trace for
-  /modules/bfla/api/findings/{apiID}:
-    get:
-      description: Asks APIClarity for all findings of BFLA modules of a specific
-        API.
-      operationId: bflaGetAPIFindingsForAPI
-      parameters:
-      - description: The path parameter for apiID type
-        in: path
-        name: apiID
-        required: true
-        schema:
-          $ref: ../common/openapi.yaml#/components/schemas/ApiID
-      - $ref: ../common/openapi.yaml#/components/parameters/Sensitive
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: ../common/openapi.yaml#/components/schemas/APIFindings
-          description: An API Bundle
-        default:
-          content:
-            application/json:
-              schema:
-                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
-          description: Error response
-      summary: Get Findings for an API
   /modules/bfla/apiFindings/{apiID}:
     get:
       description: Asks for findings of an APIClarity module, and API. Implemented
@@ -1577,6 +1550,8 @@ paths:
                 $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
           description: Error response
       summary: Get findings for an API and module
+      tags:
+      - bfla
   /modules/bfla/authorizationModel/{apiID}:
     get:
       parameters:

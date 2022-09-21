@@ -616,7 +616,7 @@ func Contains(items []string, val string) bool {
 	return false
 }
 
-//nolint: gocyclo
+// nolint: gocyclo
 func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTrace) (err error) {
 	defer runtimeRecover()
 	defer l.statePersister.AckSubmit(trace.APIEvent.ID)
@@ -712,6 +712,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		if err != nil {
 			return fmt.Errorf("unable to find source obj: %w", err)
 		}
+		log.Debugf("Detected audience is: %v, external=%v, authorized=%v", aud.K8sObject.Name, aud.External, aud.Authorized)
 		findingsUpdated := false
 		if !aud.Authorized {
 			// updates the auth model but this time as unauthorized
@@ -725,7 +726,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 				severity = core.AlertWarn
 				finding = APIFindingBFLASuspiciousCallHigh(specType, resolvedPath, trace.APIEvent.Method)
 			}
-
+			log.Debugf("BFLA finding created: %s %s %s", finding.Name, finding.Description, resolvedPath)
 			findingsUpdated, err = l.findingsRegistry.Add(apiID, finding)
 			if err != nil {
 				log.Warnf("unable to add findings: %s", err)
@@ -733,7 +734,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			if err := l.eventAlerter.SetEventAlert(ctx, l.modName, trace.APIEvent.ID, severity); err != nil {
 				log.Warnf("unable to set alert annotation: %s", err)
 			}
-
+			log.Debugf("finding Updated=%v", findingsUpdated)
 			// l.logError(l.notifyAuthzModel(ctx, trace.APIEvent.APIInfoID))
 			aud.WarningStatus = ResolveBFLAStatusInt(int(trace.APIEvent.StatusCode))
 		}
@@ -876,7 +877,7 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, pa
 		}
 		return sa.K8sObject.Uid == clientRef.Uid
 	})
-	if audience == nil {
+	if audience == nil && !external {
 		log.Debugf("Looking for name match %s", clientRef.Name)
 		audienceIndex, audience = op.Audience.Find(func(sa *SourceObject) bool {
 			if external {
@@ -984,7 +985,7 @@ func (l *learnAndDetectBFLA) findSourceObj(path, method string, clientRef *k8str
 		if external {
 			return sa.External
 		}
-		return sa.K8sObject.Uid == clientRef.Uid
+		return sa.K8sObject != nil && sa.K8sObject.Uid == clientRef.Uid
 	})
 
 	if obj == nil {

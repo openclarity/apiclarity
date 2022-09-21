@@ -259,15 +259,6 @@ type httpHandler struct {
 	findingsRegistry bfladetector.FindingsRegistry
 }
 
-func (h httpHandler) GetAPIFindingsForAPI(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.GetAPIFindingsForAPIParams) {
-	findings, err := h.findingsRegistry.GetAll(uint(apiID))
-	if err != nil {
-		common.HTTPResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
-		return
-	}
-	common.HTTPResponse(w, http.StatusOK, findings)
-}
-
 func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID int) {
 	uEventID := uint32(eventID)
 	events, err := h.accessor.GetAPIEvents(r.Context(), database.GetAPIEventsQuery{EventID: &uEventID})
@@ -689,6 +680,15 @@ func (h httpHandler) GetVersion(w http.ResponseWriter, r *http.Request) {
 
 // nolint:stylecheck,revive
 func (h httpHandler) GetApiFindings(w http.ResponseWriter, r *http.Request, apiID oapicommon.ApiID, params restapi.GetApiFindingsParams) {
+	findings, err := h.findingsRegistry.GetAll(uint(apiID))
+	if err != nil {
+		common.HTTPResponse(w, http.StatusBadRequest, &oapicommon.ApiResponse{Message: err.Error()})
+		return
+	}
+	result := oapicommon.APIFindings{
+		Items: &findings,
+	}
+	common.HTTPResponse(w, http.StatusOK, result)
 }
 
 //nolint:gochecknoinits
