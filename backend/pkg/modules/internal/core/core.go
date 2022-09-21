@@ -135,7 +135,9 @@ func (c *Core) EventNotify(ctx context.Context, event *Event) {
 func (c *Core) HTTPHandler() http.Handler {
 	handler := http.NewServeMux()
 	for moduleName, m := range c.Modules {
-		handler.Handle(BaseHTTPPath+"/"+moduleName+"/", m.HTTPHandler())
+		if m.HTTPHandler() != nil {
+			handler.Handle(BaseHTTPPath+"/"+moduleName+"/", m.HTTPHandler())
+		}
 	}
 
 	return handler
