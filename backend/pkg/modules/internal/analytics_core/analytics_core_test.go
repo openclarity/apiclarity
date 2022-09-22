@@ -15,11 +15,15 @@
 package analyticscore
 
 import (
+	"context"
 	"fmt"
-	"github.com/openclarity/apiclarity/backend/pkg/pubsub"
 	"testing"
 	"time"
+
+	"github.com/openclarity/apiclarity/backend/pkg/pubsub"
 )
+
+const fixedPartition = 1
 
 var counterProc int
 
@@ -31,13 +35,21 @@ type messageForBrokerTest struct {
 }
 
 func (p messageForBrokerTest) GetPartitionKey() int64 {
-	return int64(1)
+	return int64(fixedPartition)
 }
 
 func (p traceAnalyzerTest) GetPriority() int {
 	return 10
 }
 func (p traceAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
+	counter := int64(0)
+	result, found := dataFrames.dataFrames[partitionID].Get("counter")
+	if found {
+		counter = result.(int64)
+	}
+	counter += 1
+	dataFrames.dataFrames[partitionID].Set("counter", counter, 10*time.Minute)
+
 	err := handler.PublishMessage(EntityTopicName, message)
 	if err != nil {
 		p.t.Errorf("Failed to publish by entity")
@@ -45,7 +57,7 @@ func (p traceAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncDa
 	if topicName != TraceTopicName {
 		p.t.Errorf("Wrong topic " + string(topicName) + " instead of " + string(TraceTopicName))
 	}
-	if partitionID != 1 {
+	if partitionID != fixedPartition {
 		p.t.Errorf("Trace procc is sent to a wrong worker " + fmt.Sprint(partitionID) + " " + fmt.Sprint(message.GetPartitionKey()) + " " + fmt.Sprint(handler.msgBroker.GetNumPartitions(TraceTopicName)))
 	}
 
@@ -69,7 +81,7 @@ func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncD
 		p.t.Errorf("Wrong topic " + string(topicName) + " instead of " + string(EntityTopicName))
 	}
 
-	if partitionID != 1 {
+	if partitionID != fixedPartition {
 		p.t.Errorf("Entity procc is sent to a wrong worker " + fmt.Sprint(partitionID))
 	}
 
@@ -79,7 +91,7 @@ func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncD
 
 func TestAnalyticsCore(t *testing.T) {
 	counterProc = 0
-	module, _ := newModuleRaw()
+	module, _ := newModule(context.TODO(), nil)
 	var moduleAnalytics *AnalyticsCore
 	switch m := module.(type) {
 	case *AnalyticsCore:
@@ -121,10 +133,24 @@ func TestAnalyticsCore(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to publish message")
 	}
+	err = moduleAnalytics.PublishMessage(TraceTopicName, msg)
+	if err != nil {
+		t.Error("Failed to publish message")
+	}
 	time.Sleep(3 * time.Second)
 
-	if counterProc != 5 {
+	if counterProc != 10 {
 		t.Error("Didn't pass all the procc functions")
 	}
 
+	// During this test, the same partition is always used
+	selectedDataFrame := moduleAnalytics.dataFramesRegistered[traceAnalyzer].dataFrames[fixedPartition]
+	result, found := selectedDataFrame.Get("counter")
+	if !found {
+		t.Errorf("Unable to find counter entry in dataframe[%d]", fixedPartition)
+	}
+	counter := result.(int64)
+	if counter != 2 {
+		t.Errorf("Counter has wrong value. Got %d, expected %d", counter, 2)
+	}
 }

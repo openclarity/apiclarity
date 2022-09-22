@@ -5,7 +5,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,10 +20,14 @@ import (
 	"net/http"
 	"sort"
 
+	log "github.com/sirupsen/logrus"
+
+	"github.com/openclarity/apiclarity/backend/pkg/dataframe"
+	// cache "github.com/openclarity/apiclarity/backend/pkg/dataframe/ristretto"
+	// cache "github.com/openclarity/apiclarity/backend/pkg/dataframe/gcache"
+	cache "github.com/openclarity/apiclarity/backend/pkg/dataframe/gocache"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/pubsub"
-
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -40,17 +44,19 @@ const (
 type TopicType string
 
 type AnalyticsCore struct {
-	httpHandler         http.Handler
-	msgBroker           *pubsub.Handler
-	accessor            core.BackendAccessor
-	info                *core.ModuleInfo
-	numWorkers          int
-	proccFuncRegistered map[TopicType][]AnalyticsModuleProccFunc
-	topics              []TopicType
+	httpHandler          http.Handler
+	msgBroker            *pubsub.Handler
+	accessor             core.BackendAccessor
+	info                 *core.ModuleInfo
+	numWorkers           int
+	proccFuncRegistered  map[TopicType][]*AnalyticsModuleProccFunc
+	dataFramesRegistered map[AnalyticsModuleProccFunc]*ProcFuncDataFrames // Each registered function have a correponding Dataframes
+	topics               []TopicType
 }
 
+
 type ProcFuncDataFrames struct {
-	dataFrames map[int]*interface{}
+	dataFrames map[int]dataframe.DataFrame
 }
 
 type AnalyticsModuleProccFunc interface {
@@ -72,52 +78,24 @@ func (p *AnalyticsCore) handlerFunction(topic TopicType, partitionID int, msgCha
 		if okTopic && len(topicProccFunctions) > 0 {
 			annotations := make([]interface{}, 0, annotationArrayCapacity)
 			for _, proccFunction := range topicProccFunctions {
-				dataFrames := &ProcFuncDataFrames{
-					dataFrames: nil,
-				}
-				annotations = proccFunction.ProccFunc(topic, dataFrames, partitionID, message, annotations, p)
+				dfs := p.dataFramesRegistered[*proccFunction] // Get the Dataframes corresponding to this proccfunction
+				annotations = (*proccFunction).ProccFunc(topic, dfs, partitionID, message, annotations, p)
 			}
 		}
 	}
 }
 
 //nolint:unparam
-func newModuleRaw() (_ core.Module, err error) {
-	p := &AnalyticsCore{
-		httpHandler:         nil,
-		msgBroker:           nil,
-		accessor:            nil,
-		info:                &core.ModuleInfo{Name: "analytics_core", Description: "analytics_core"},
-		numWorkers:          1,
-		proccFuncRegistered: map[TopicType][]AnalyticsModuleProccFunc{},
-		topics:              make([]TopicType, 0, maxNumTopics),
-	}
-	/* We do not need to expose API at this point
-	handler := &httpHandler{
-		accessor: accessor,
-	}
-	p.httpHandler = restapi.HandlerWithOptions(handler, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + "analytics_core"})
-	*/
-	p.msgBroker = pubsub.NewHandler()
-
-	p.InitTopic(TraceTopicName)
-	p.InitTopic(APITopicName)
-	p.InitTopic(APIEndpointTopicName)
-	p.InitTopic(ObjectTopicName)
-	p.InitTopic(EntityTopicName)
-
-	return p, nil
-}
-
 func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Module, err error) {
 	p := &AnalyticsCore{
-		httpHandler:         nil,
-		msgBroker:           nil,
-		accessor:            accessor,
-		info:                &core.ModuleInfo{Name: "analytics_core", Description: "analytics_core"},
-		numWorkers:          1,
-		proccFuncRegistered: map[TopicType][]AnalyticsModuleProccFunc{},
-		topics:              make([]TopicType, 0, maxNumTopics),
+		httpHandler:          nil,
+		msgBroker:            nil,
+		accessor:             accessor,
+		info:                 &core.ModuleInfo{Name: "analytics_core", Description: "analytics_core"},
+		numWorkers:           1,
+		proccFuncRegistered:  map[TopicType][]*AnalyticsModuleProccFunc{},
+		dataFramesRegistered: map[AnalyticsModuleProccFunc]*ProcFuncDataFrames{},
+		topics:               make([]TopicType, 0, maxNumTopics),
 	}
 	/* We do not need to expose API at this point
 	handler := &httpHandler{
@@ -136,9 +114,9 @@ func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Modul
 	return p, nil
 }
 
-func orderHandlerFuncsByPriority(proccFunctions []AnalyticsModuleProccFunc) []AnalyticsModuleProccFunc {
+func orderHandlerFuncsByPriority(proccFunctions []*AnalyticsModuleProccFunc) []*AnalyticsModuleProccFunc {
 	sort.Slice(proccFunctions, func(i, j int) bool {
-		return proccFunctions[i].GetPriority() < proccFunctions[j].GetPriority()
+		return (*proccFunctions[i]).GetPriority() < (*proccFunctions[j]).GetPriority()
 	})
 	return proccFunctions
 }
@@ -146,11 +124,23 @@ func orderHandlerFuncsByPriority(proccFunctions []AnalyticsModuleProccFunc) []An
 func (p *AnalyticsCore) RegisterAnalyticsModuleHandler(topic TopicType, proccFunc AnalyticsModuleProccFunc) {
 	_, okTopic := p.proccFuncRegistered[topic]
 	if !okTopic {
-		p.proccFuncRegistered[topic] = make([]AnalyticsModuleProccFunc, 0, maxNumProccFuncPerTopic)
+		p.proccFuncRegistered[topic] = make([]*AnalyticsModuleProccFunc, 0, maxNumProccFuncPerTopic)
 	}
 
-	p.proccFuncRegistered[topic] = append(p.proccFuncRegistered[topic], proccFunc)
+	p.proccFuncRegistered[topic] = append(p.proccFuncRegistered[topic], &proccFunc)
 	p.proccFuncRegistered[topic] = orderHandlerFuncsByPriority(p.proccFuncRegistered[topic])
+
+	// Adds dataframes for this new registered function
+	p.dataFramesRegistered[proccFunc] = &ProcFuncDataFrames{dataFrames: map[int]dataframe.DataFrame{}}
+	for i := 0; i < p.numWorkers; i++ {
+		df, err := cache.NewDataFrame()
+		if err != nil {
+			log.Fatalf("Unable to create dataframe for topic %s and function %s", topic, proccFunc)
+			// TODO: we must return an error
+			return
+		}
+		p.dataFramesRegistered[proccFunc].dataFrames[i] = df
+	}
 }
 
 /*
