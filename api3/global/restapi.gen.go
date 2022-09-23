@@ -1259,6 +1259,9 @@ type ClientInterface interface {
 	// FuzzerGetReport request
 	FuzzerGetReport(ctx context.Context, apiID externalRef0.ApiID, timestamp int64, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// FuzzerGetShortReportByTimestamp request
+	FuzzerGetShortReportByTimestamp(ctx context.Context, apiID externalRef0.ApiID, timestamp int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// FuzzergetState request
 	FuzzergetState(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1852,6 +1855,18 @@ func (c *Client) FuzzerStopTest(ctx context.Context, apiID externalRef0.ApiID, r
 
 func (c *Client) FuzzerGetReport(ctx context.Context, apiID externalRef0.ApiID, timestamp int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewFuzzerGetReportRequest(c.Server, apiID, timestamp)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) FuzzerGetShortReportByTimestamp(ctx context.Context, apiID externalRef0.ApiID, timestamp int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFuzzerGetShortReportByTimestampRequest(c.Server, apiID, timestamp)
 	if err != nil {
 		return nil, err
 	}
@@ -4827,6 +4842,47 @@ func NewFuzzerGetReportRequest(server string, apiID externalRef0.ApiID, timestam
 	return req, nil
 }
 
+// NewFuzzerGetShortReportByTimestampRequest generates requests for FuzzerGetShortReportByTimestamp
+func NewFuzzerGetShortReportByTimestampRequest(server string, apiID externalRef0.ApiID, timestamp int64) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "timestamp", runtime.ParamLocationPath, timestamp)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/modules/fuzzer/report/%s/%s/short", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewFuzzergetStateRequest generates requests for FuzzergetState
 func NewFuzzergetStateRequest(server string) (*http.Request, error) {
 	var err error
@@ -5452,6 +5508,9 @@ type ClientWithResponsesInterface interface {
 
 	// FuzzerGetReport request
 	FuzzerGetReportWithResponse(ctx context.Context, apiID externalRef0.ApiID, timestamp int64, reqEditors ...RequestEditorFn) (*FuzzerGetReportResponse, error)
+
+	// FuzzerGetShortReportByTimestamp request
+	FuzzerGetShortReportByTimestampWithResponse(ctx context.Context, apiID externalRef0.ApiID, timestamp int64, reqEditors ...RequestEditorFn) (*FuzzerGetShortReportByTimestampResponse, error)
 
 	// FuzzergetState request
 	FuzzergetStateWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*FuzzergetStateResponse, error)
@@ -6473,6 +6532,28 @@ func (r FuzzerGetReportResponse) StatusCode() int {
 	return 0
 }
 
+type FuzzerGetShortReportByTimestampResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ShortTestReport
+}
+
+// Status returns HTTPResponse.Status
+func (r FuzzerGetShortReportByTimestampResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r FuzzerGetShortReportByTimestampResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type FuzzergetStateResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7157,6 +7238,15 @@ func (c *ClientWithResponses) FuzzerGetReportWithResponse(ctx context.Context, a
 		return nil, err
 	}
 	return ParseFuzzerGetReportResponse(rsp)
+}
+
+// FuzzerGetShortReportByTimestampWithResponse request returning *FuzzerGetShortReportByTimestampResponse
+func (c *ClientWithResponses) FuzzerGetShortReportByTimestampWithResponse(ctx context.Context, apiID externalRef0.ApiID, timestamp int64, reqEditors ...RequestEditorFn) (*FuzzerGetShortReportByTimestampResponse, error) {
+	rsp, err := c.FuzzerGetShortReportByTimestamp(ctx, apiID, timestamp, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFuzzerGetShortReportByTimestampResponse(rsp)
 }
 
 // FuzzergetStateWithResponse request returning *FuzzergetStateResponse
@@ -8694,6 +8784,32 @@ func ParseFuzzerGetReportResponse(rsp *http.Response) (*FuzzerGetReportResponse,
 	return response, nil
 }
 
+// ParseFuzzerGetShortReportByTimestampResponse parses an HTTP response from a FuzzerGetShortReportByTimestampWithResponse call
+func ParseFuzzerGetShortReportByTimestampResponse(rsp *http.Response) (*FuzzerGetShortReportByTimestampResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &FuzzerGetShortReportByTimestampResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ShortTestReport
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseFuzzergetStateResponse parses an HTTP response from a FuzzergetStateWithResponse call
 func ParseFuzzergetStateResponse(rsp *http.Response) (*FuzzergetStateResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
@@ -9159,10 +9275,13 @@ type ServerInterface interface {
 	// Retreive a report for an API
 	// (GET /modules/fuzzer/report/{apiID}/{timestamp})
 	FuzzerGetReport(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, timestamp int64)
+	// Retrieve a report for an API for a specific test
+	// (GET /modules/fuzzer/report/{apiID}/{timestamp}/short)
+	FuzzerGetShortReportByTimestamp(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, timestamp int64)
 	// Get the current running state of this module
 	// (GET /modules/fuzzer/state)
 	FuzzergetState(w http.ResponseWriter, r *http.Request)
-	// Retreive the list of tests for an API
+	// Retreieve the list of tests for an API
 	// (GET /modules/fuzzer/tests/{apiID})
 	FuzzerGetTests(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 	// Retreive last update status for an API under fuzzing
@@ -11294,6 +11413,41 @@ func (siw *ServerInterfaceWrapper) FuzzerGetReport(w http.ResponseWriter, r *htt
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// FuzzerGetShortReportByTimestamp operation middleware
+func (siw *ServerInterfaceWrapper) FuzzerGetShortReportByTimestamp(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "timestamp" -------------
+	var timestamp int64
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "timestamp", runtime.ParamLocationPath, chi.URLParam(r, "timestamp"), &timestamp)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "timestamp", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.FuzzerGetShortReportByTimestamp(w, r, apiID, timestamp)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 // FuzzergetState operation middleware
 func (siw *ServerInterfaceWrapper) FuzzergetState(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -11852,6 +12006,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/modules/fuzzer/report/{apiID}/{timestamp}", wrapper.FuzzerGetReport)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/modules/fuzzer/report/{apiID}/{timestamp}/short", wrapper.FuzzerGetShortReportByTimestamp)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/modules/fuzzer/state", wrapper.FuzzergetState)
 	})
 	r.Group(func(r chi.Router) {
@@ -11994,15 +12151,16 @@ var swaggerSpec = []string{
 	"8Zr3OpanRWpdoXUagpzOz69JUXKHV8hUpr73t142pTMME8JQQmAIbFml9Vym1XeT4i5wdP52x/74OX+b",
 	"7vVzs37F5MjLh+fl/MhFRSv78LJorZ51eZVJcPkLYPur/lY7kXoMrYuYPCuLqjca38MAzNW7z0dZ/bGy",
 	"qs6lakQ1isEfV5CsUPgnAEGSEqIfsHUR3Sh+OZJbkKp3lrUeBeAnEgBXvnQRCOl7ZSLxPXvV0SGuA/X7",
-	"cWY0J0CE4TWWG2bMKDBfEq9x2F6Is+Y/6eU3C5Dmkh3Kf9e+mXn9gy2i8WZhezDJHsux8ECnCE75jK4a",
-	"rU0p4noJE4kveQKRPbC/SpNEVA1XUiDGMynEf2wM2WwQ06d8PxTZpSf4LAgfqrUUwS4urSa024AGTJtC",
-	"C4K43UK5ockXpuz/8R6zLSeMZIk/Ne/QXneoYamE5mlS1YTmTuKVxgFkSBpWdyqLt0FlV/20uEHmlAQo",
-	"AWv5lGY9ja+MqX+kbNW96VlF/Rze67BhFjW0478bAmrI8QLY2+7Zqhp+gsuu+lB5FtEqmfe/S2yicFsd",
-	"J1dnt1gUrSflLYK453PJzHTt92TS/ubsDz19LCCLxmh1E+D1GiXdIioj0ccg1ZsKynSZAxVWkf89poT9",
-	"hJkA5WBAhfguTNW69e/IUlF85KhXwVE20hcZSuSaQwLDhxd2Br00ATvWeTgeRe/xKLqV6dsStQvMKfKx",
-	"XxJ7OoVJZRb5T0FeWSAZwDAUVLVQuom8qJRRqh/ca1BtnJ8EicFAjQKMAcrFhJHKtW3WX5XEVhcuUZD2",
-	"DL251OsM4Iqh/RUetvNAS1pv9tlWuKyMf2K+oGmnfCev26A3xbTRVSqQVp5r8l9036PX9Ar88Fp2cGO4",
-	"Vo/86ewWxUdue2U+ehOz8dYoudPETZPQOxUFrL3H68f/CwAA//93mcPhq9UAAA==",
+	"cWY0J0CE4TWWG2bMKDBfEq9x2F6Is+Y/6eU3C5Dmkh3Kf9e+mXn9gy2i8WZhezDJHsux8ECnCE49/53Q",
+	"bdOuYP9cKPxpiY73D+aT+UeufDaudNjTtLElRjVMUapnpBDlzqrl4+TqwUJKETehmEgkysOy2yiV4fdV",
+	"miSiwL1S2GI8k2z8x8bo4gYxfSD9Q/VC6bVICxGGai1FsItLqzmFaEADpk1RMEHwbqcOockrJi/88R6z",
+	"LSeMZJM/NQcTXndUbKkE6QkGALXguZN8pXEAGZJOoDuZxTu2sqt+Bt+gc0oClIC1fPa1nshXxtQ/Urjq",
+	"3p+t4n4O73WIO4tw2y1wNwTUkOMF8Ld9F6bqTQouu+pD5VlEq2Tef0SjicJtNcdcN2bFAn49KW8RxD2f",
+	"oWe2a7+n6Pb3kX/oSXkBWdyRuAnweo2SbtG/kehjkOpNBWW6JIcKAcr/HtMXf8KslXLgqkJ8F6ZqDVN1",
+	"ZKkoPnLUq+AoG+mLDCXuRUACw4cXli+xNAE71iQ5pk3sMW2ilenbLhUUmFPcHXhJ7OkU0pc3Hn4K8spi",
+	"3gCGoYzTVCndRF5Uyn7Wj0M2qDbOT4LEYKBGAcYA5UARUnnhzfqrkoTtwiUK0p4BOZfasgFcMbS/Itl2",
+	"HmhJQc8+24rslfFPzNde7ZTv5HUb9KaYNrpKBdLKM3j+i+579JpegR9eyw5uDNfqkT+d3aL4yG2vzEdv",
+	"YjbeGiV3mrhpEnqnoti693j9+H8BAAD//9Y1cLZX2AAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

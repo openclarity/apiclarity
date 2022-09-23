@@ -260,7 +260,7 @@ paths:
   /tests/{apiID}:
     get:
       operationId: GetTests
-      summary: Retreive the list of tests for an API
+      summary: Retreieve the list of tests for an API
       description: Retreive the list of tests for an API (without report)
       tags:
         - local-fuzzer
@@ -304,6 +304,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TestWithReport'
+          description: List of tests
+
+  /report/{apiID}/{timestamp}/short:
+    get:
+      operationId: GetShortReportByTimestamp
+      summary: Retrieve a report for an API for a specific test
+      description: Retreive a report for an API identified by its timestamp
+      tags:
+        - local-fuzzer
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+        - name: timestamp
+          in: path
+          description: Timestamp of the start of the test
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShortTestReport'
           description: List of tests
 
   /annotatedspec/{apiID}:
