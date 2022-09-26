@@ -46,16 +46,16 @@ func ParseSpecInfo(apiInfo *database.APIInfo) ([]*models.SpecTag, error) {
 
 func ResolvePath(tags []*models.SpecTag, event *database.APIEvent) (path string, tagNames []string, err error) {
 	if event.ProvidedPathID != "" {
-		path, tagNames, err = resolvePathFromPathIdAndMethod(tags, event.ProvidedPathID, string(event.Method))
+		path, tagNames, err = resolvePathFromPathIDAndMethod(tags, event.ProvidedPathID, string(event.Method))
 	} else if event.ReconstructedPathID != "" {
-		path, tagNames, err = resolvePathFromPathIdAndMethod(tags, event.ReconstructedPathID, string(event.Method))
+		path, tagNames, err = resolvePathFromPathIDAndMethod(tags, event.ReconstructedPathID, string(event.Method))
 	} else {
 		err = fmt.Errorf("event %v cannot resolve to a spec path", event.ID)
 	}
 	return path, tagNames, err
 }
 
-func resolvePathFromPathIdAndMethod(tags []*models.SpecTag, pathID string, method string) (path string, tagNames []string, err error) {
+func resolvePathFromPathIDAndMethod(tags []*models.SpecTag, pathID string, method string) (path string, tagNames []string, err error) {
 	for _, tag := range tags {
 		for _, methodAndPath := range tag.MethodAndPathList {
 			if pathID == string(methodAndPath.PathID) && string(methodAndPath.Method) == method {
