@@ -228,7 +228,6 @@ func (api *API) GetTestShortReportByTimestamp(timestamp int64) (*restapi.ShortTe
 		}
 	}
 	return nil, fmt.Errorf("no existing test for api(%v) with timestamp=%v", api.ID, timestamp)
-
 }
 
 func (api *API) getTestShortReport(testItem *TestItem) (*restapi.ShortTestReport, error) {
@@ -335,7 +334,6 @@ func (api *API) getTestShortReport(testItem *TestItem) (*restapi.ShortTestReport
 	}
 
 	return &shortReport, nil
-
 }
 
 func (api *API) GetLastShortStatus() (*restapi.ShortTestReport, error) {
