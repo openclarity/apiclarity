@@ -316,7 +316,7 @@ func (h httpHandler) GetEvent(w http.ResponseWriter, r *http.Request, eventID in
 	if err != nil {
 		log.Warnf("tags for apiID=%d not found", event.APIInfoID)
 	}
-	resolvedPath, err := bfladetector.ResolvePath(tags, event)
+	resolvedPath, _, err := bfladetector.ResolvePath(tags, event)
 	if err != nil {
 		log.Warnf("path not found in the spec: %v", err)
 	} else {
@@ -654,7 +654,7 @@ func (h httpHandler) PutEventIdOperation(w http.ResponseWriter, r *http.Request,
 		if err != nil {
 			log.Warnf("tags for apiID=%d not found", apiEvent.APIInfoID)
 		}
-		resolvedPath, err := bfladetector.ResolvePath(tags, apiEvent)
+		resolvedPath, _, err := bfladetector.ResolvePath(tags, apiEvent)
 		if err != nil {
 			log.Warnf("path not found in the spec: %v", err)
 		} else {

@@ -44,28 +44,33 @@ func ParseSpecInfo(apiInfo *database.APIInfo) ([]*models.SpecTag, error) {
 	return nil, nil
 }
 
-func ResolvePath(tags []*models.SpecTag, event *database.APIEvent) (string, error) {
+func ResolvePath(tags []*models.SpecTag, event *database.APIEvent) (path string, tagNames []string, err error) {
 	if event.ProvidedPathID != "" {
-		return resolvePathFromTags(tags, event.ProvidedPathID), nil
+		path, tagNames, err = resolvePathFromPathIdAndMethod(tags, event.ProvidedPathID, string(event.Method))
+	} else if event.ReconstructedPathID != "" {
+		path, tagNames, err = resolvePathFromPathIdAndMethod(tags, event.ReconstructedPathID, string(event.Method))
+	} else {
+		err = fmt.Errorf("event %v cannot resolve to a spec path", event.ID)
 	}
-	if event.ReconstructedPathID != "" {
-		return resolvePathFromTags(tags, event.ReconstructedPathID), nil
-	}
-	return "", fmt.Errorf("event %v cannot resolve to a spec path", event.ID)
+	return path, tagNames, err
 }
 
-func resolvePathFromTags(tags []*models.SpecTag, pathID string) string {
+func resolvePathFromPathIdAndMethod(tags []*models.SpecTag, pathID string, method string) (path string, tagNames []string, err error) {
 	for _, tag := range tags {
 		for _, methodAndPath := range tag.MethodAndPathList {
-			if pathID == string(methodAndPath.PathID) {
-				return methodAndPath.Path
+			if pathID == string(methodAndPath.PathID) && string(methodAndPath.Method) == method {
+				path = methodAndPath.Path
+				tagNames = append(tagNames, tag.Name)
 			}
 		}
 	}
-	return ""
+	if path == "" {
+		err = fmt.Errorf("unable to resolve pathId %v  / method %v", pathID, method)
+	}
+	return path, tagNames, err
 }
 
-func resolveTagsForPathAndMethod(tags []*models.SpecTag, path, method string) (tagNames []string) {
+func resolveTagsFromPathAndMethod(tags []*models.SpecTag, path, method string) (tagNames []string, err error) {
 	for _, tag := range tags {
 		for _, methodAndPath := range tag.MethodAndPathList {
 			if path == methodAndPath.Path && string(methodAndPath.Method) == method {
@@ -73,5 +78,9 @@ func resolveTagsForPathAndMethod(tags []*models.SpecTag, path, method string) (t
 			}
 		}
 	}
-	return tagNames
+	if len(tagNames) == 0 {
+		err = fmt.Errorf("unable to resolve path %v / method %v", path, method)
+	}
+
+	return tagNames, err
 }
