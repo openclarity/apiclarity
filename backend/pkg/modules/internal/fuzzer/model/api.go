@@ -221,112 +221,129 @@ func (api *API) GetShortStatusOnError(msg string) (*restapi.ShortTestReport, err
 	return nil, fmt.Errorf("no existing tests for api(%v)", api.ID)
 }
 
+func (api *API) GetTestShortReportByTimestamp(timestamp int64) (*restapi.ShortTestReport, error) {
+	for _, testItem := range api.TestsList {
+		if *testItem.Test.Starttime == timestamp {
+			return api.getTestShortReport(testItem)
+		}
+	}
+	return nil, fmt.Errorf("no existing test for api(%v) with timestamp=%v", api.ID, timestamp)
+}
+
+func (api *API) getTestShortReport(testItem *TestItem) (*restapi.ShortTestReport, error) {
+	test := testItem.Test
+	report := test.Report
+
+	// Create the shortreport structure to fill
+	shortReport := restapi.ShortTestReport{
+		Starttime:     *test.Starttime,
+		Status:        report.Status,
+		StatusMessage: test.ErrorMessage,
+		Tags:          &[]restapi.FuzzingReportTag{},
+	}
+
+	// Get current spec informations
+	var specInfo *models.SpecInfo
+	logging.Debugf("[Fuzzer] API(%v).GetLastShortStatus(): specInfo Provided(len=%v), Reconstructed(len=%v)", api.ID, len(testItem.SpecsInfo.ProvidedSpec), len(testItem.SpecsInfo.ReconstructedSpec))
+	if testItem.SpecsInfo.ProvidedSpec != "" {
+		specInfo = testItem.SpecsInfo.ProvidedSpecInfo
+	} else if testItem.SpecsInfo.ReconstructedSpec != "" {
+		specInfo = testItem.SpecsInfo.ReconstructedSpecInfo
+	} else {
+		return nil, fmt.Errorf("no spec information")
+	}
+
+	// Prepare on the shortreport structure the list of tags/operations from the spec content
+	if specInfo.Tags != nil {
+		for _, tag := range specInfo.Tags {
+			logging.Debugf("[Fuzzer] API(%v).GetLastShortStatus(): ... tag (%v)", api.ID, tag.Name)
+			fuzzingReportTag := restapi.FuzzingReportTag{
+				Name:            tag.Name,
+				Operations:      []restapi.FuzzingReportOperation{},
+				HighestSeverity: nil,
+			}
+			for _, op := range tag.MethodAndPathList {
+				logging.Debugf("[Fuzzer] API(%v).GetLastShortStatus(): ... ... method %v %v", api.ID, op.Method, op.Path)
+				fuzzingReportTag.Operations = append(fuzzingReportTag.Operations, restapi.FuzzingReportOperation{
+					Operation: common.MethodAndPath{
+						Method: (*common.HttpMethod)(&op.Method),
+						Path:   &op.Path,
+					},
+					RequestsCount:   0,
+					Findings:        &[]common.APIFinding{},
+					HighestSeverity: nil,
+				})
+			}
+			*shortReport.Tags = append(*shortReport.Tags, fuzzingReportTag)
+		}
+	} else {
+		return nil, fmt.Errorf("invalid or no existing spec content")
+	}
+
+	// Then iterate on the regular report items and verse it on the shortdemo structure
+	for _, reportItem := range test.Report.Report {
+		if strings.HasPrefix(*reportItem.Name, ReportNameCRUDPrefix) {
+			// Come from the 'crud' fuzzer
+			// TODO
+		} else if strings.HasPrefix(*reportItem.Name, ReportNameSCNFuzzerPrefix) {
+			// Come from the 'scn-fuzzer' fuzzer
+			tokens := strings.Split(*reportItem.Name, ":")
+			if len(tokens) > 1 {
+				opPath := tokens[1]
+				for _, path := range *reportItem.Paths {
+					// Report this path in shortreport
+					err := updateRequestCounter(&shortReport, opPath, *path.Verb)
+					if err != nil {
+						// The error has been already logged, then simply skip the current request
+						continue
+					}
+				}
+			}
+		} else if strings.HasPrefix(*reportItem.Name, ReportNameRestlerPrefix) {
+			// The set of tests made automatically by Restler based on the specs
+			err := updateRequestCountersForRestler(&shortReport, reportItem, testItem.SpecsInfo.ProvidedSpec)
+			if err != nil {
+				// The error has been already logged, then simply skip the current report item
+				continue
+			}
+		}
+	}
+
+	// Then redo the same for findings (I know, it can be done on the loop above, but I prefer separate the job)
+	for _, reportItem := range test.Report.Report {
+		for _, finding := range *reportItem.Findings {
+			// finding.Location is something like &[OASv3Spec paths /user/logout get]
+			if len(*finding.Location) < MinLocationTokensNumber {
+				logging.Errorf("[Fuzzer] API(%v).GetLastShortStatus(): Found an invalid finding location (%v)", api.ID, finding.Location)
+				continue
+			}
+			verb := (*finding.Location)[3]
+			method := (*finding.Location)[2]
+			verb = strings.ToUpper(verb)
+			err := AddFindingOnShortReport(&shortReport, method, verb, finding)
+			if err != nil {
+				// Log an error, but we continue the process (not blocking)
+				logging.Errorf("[Fuzzer] API(%v).GetLastShortStatus(): can't add finding on report (%v, %v, %v), err=(%v)", api.ID, verb, method, finding, err)
+			}
+		}
+	}
+
+	// Remove Tags item if no tags are present
+	if shortReport.Tags != nil && len(*shortReport.Tags) == 0 {
+		shortReport.Tags = nil
+	}
+
+	return &shortReport, nil
+}
+
 func (api *API) GetLastShortStatus() (*restapi.ShortTestReport, error) {
 	if len(api.TestsList) > 0 {
 		index := len(api.TestsList) - 1
-		lastTest := api.TestsList[index].Test
-		lastReport := lastTest.Report
-
-		// Create the shortreport structure to fill
-		shortReport := restapi.ShortTestReport{
-			Starttime:     *lastTest.Starttime,
-			Status:        lastReport.Status,
-			StatusMessage: lastTest.ErrorMessage,
-			Tags:          &[]restapi.FuzzingReportTag{},
+		shortReport, err := api.getTestShortReport(api.TestsList[index])
+		if err != nil {
+			return nil, fmt.Errorf("unable to fetch short report from last test for api(%v): %v", api.ID, err)
 		}
-
-		// Get current spec informations
-		var specInfo *models.SpecInfo
-		logging.Debugf("[Fuzzer] API(%v).GetLastShortStatus(): specInfo Provided(len=%v), Reconstructed(len=%v)", api.ID, len(api.TestsList[index].SpecsInfo.ProvidedSpec), len(api.TestsList[index].SpecsInfo.ReconstructedSpec))
-		if api.TestsList[index].SpecsInfo.ProvidedSpec != "" {
-			specInfo = api.TestsList[index].SpecsInfo.ProvidedSpecInfo
-		} else if api.TestsList[index].SpecsInfo.ReconstructedSpec != "" {
-			specInfo = api.TestsList[index].SpecsInfo.ReconstructedSpecInfo
-		} else {
-			return nil, fmt.Errorf("no spec information")
-		}
-
-		// Prepare on the shortreport structure the list of tags/operations from the spec content
-		if specInfo.Tags != nil {
-			for _, tag := range specInfo.Tags {
-				logging.Debugf("[Fuzzer] API(%v).GetLastShortStatus(): ... tag (%v)", api.ID, tag.Name)
-				fuzzingReportTag := restapi.FuzzingReportTag{
-					Name:            tag.Name,
-					Operations:      []restapi.FuzzingReportOperation{},
-					HighestSeverity: nil,
-				}
-				for _, op := range tag.MethodAndPathList {
-					logging.Debugf("[Fuzzer] API(%v).GetLastShortStatus(): ... ... method %v %v", api.ID, op.Method, op.Path)
-					fuzzingReportTag.Operations = append(fuzzingReportTag.Operations, restapi.FuzzingReportOperation{
-						Operation: common.MethodAndPath{
-							Method: (*common.HttpMethod)(&op.Method),
-							Path:   &op.Path,
-						},
-						RequestsCount:   0,
-						Findings:        &[]common.APIFinding{},
-						HighestSeverity: nil,
-					})
-				}
-				*shortReport.Tags = append(*shortReport.Tags, fuzzingReportTag)
-			}
-		} else {
-			return nil, fmt.Errorf("invalid or no existing spec content")
-		}
-
-		// Then iterate on the regular report items and verse it on the shortdemo structure
-		for _, reportItem := range lastTest.Report.Report {
-			if strings.HasPrefix(*reportItem.Name, ReportNameCRUDPrefix) {
-				// Come from the 'crud' fuzzer
-				// TODO
-			} else if strings.HasPrefix(*reportItem.Name, ReportNameSCNFuzzerPrefix) {
-				// Come from the 'scn-fuzzer' fuzzer
-				tokens := strings.Split(*reportItem.Name, ":")
-				if len(tokens) > 1 {
-					opPath := tokens[1]
-					for _, path := range *reportItem.Paths {
-						// Report this path in shortreport
-						err := updateRequestCounter(&shortReport, opPath, *path.Verb)
-						if err != nil {
-							// The error has been already logged, then simply skip the current request
-							continue
-						}
-					}
-				}
-			} else if strings.HasPrefix(*reportItem.Name, ReportNameRestlerPrefix) {
-				// The set of tests made automatically by Restler based on the specs
-				err := updateRequestCountersForRestler(&shortReport, reportItem, api.TestsList[index].SpecsInfo.ProvidedSpec)
-				if err != nil {
-					// The error has been already logged, then simply skip the current report item
-					continue
-				}
-			}
-		}
-
-		// Then redo the same for findings (I know, it can be done on the loop above, but I prefer separate the job)
-		for _, reportItem := range lastTest.Report.Report {
-			for _, finding := range *reportItem.Findings {
-				// finding.Location is something like &[OASv3Spec paths /user/logout get]
-				if len(*finding.Location) < MinLocationTokensNumber {
-					logging.Errorf("[Fuzzer] API(%v).GetLastShortStatus(): Found an invalid finding location (%v)", api.ID, finding.Location)
-					continue
-				}
-				verb := (*finding.Location)[3]
-				method := (*finding.Location)[2]
-				verb = strings.ToUpper(verb)
-				err := AddFindingOnShortReport(&shortReport, method, verb, finding)
-				if err != nil {
-					// Log an error, but we continue the process (not blocking)
-					logging.Errorf("[Fuzzer] API(%v).GetLastShortStatus(): can't add finding on report (%v, %v, %v), err=(%v)", api.ID, verb, method, finding, err)
-				}
-			}
-		}
-
-		// Remove Tags item if no tags are present
-		if shortReport.Tags != nil && len(*shortReport.Tags) == 0 {
-			shortReport.Tags = nil
-		}
-
-		return &shortReport, nil
+		return shortReport, nil
 	}
 	return nil, fmt.Errorf("no existing tests for api(%v)", api.ID)
 }
