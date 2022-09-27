@@ -47,6 +47,7 @@ const (
 	TLSServerCertFilePath         = "TLS_SERVER_CERT_FILE_PATH"
 	TLSServerKeyFilePath          = "TLS_SERVER_KEY_FILE_PATH"
 	RootCertFilePath              = "ROOT_CERT_FILE_PATH"
+	AutoApproveTraceCountEnvVar   = "AUTO_APPROVE_TRACE_COUNT"
 
 	DBNameEnvVar     = "DB_NAME"
 	DBUserEnvVar     = "DB_USER"
@@ -80,7 +81,8 @@ type Config struct {
 	TLSServerKeyFilePath       string
 	RootCertFilePath           string
 
-	NotificationPrefix string
+	NotificationPrefix    string
+	AutoApproveTraceCount int
 
 	// trace sampling config
 	HTTPTraceSamplingManagerPort  int
@@ -126,6 +128,7 @@ func LoadConfig() (*Config, error) {
 
 	config.K8sLocal = viper.GetBool(K8sLocalEnvVar)
 	config.EnableTLS = viper.GetBool(EnableTLS)
+	config.AutoApproveTraceCount = viper.GetInt(AutoApproveTraceCountEnvVar)
 	config.DatabaseDriver = viper.GetString(DatabaseDriver)
 	config.DBPassword = viper.GetString(DBPasswordEnvVar)
 	config.DBUser = viper.GetString(DBUserEnvVar)

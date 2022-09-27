@@ -361,6 +361,18 @@ func (a *APIEventsTableHandler) CreateAPIEvent(event *APIEvent) {
 	}
 }
 
+func (a *APIEventsTableHandler) GetAPIEventsTotal(params operations.GetAPIEventsParams) (int64, error) {
+	var count int64
+
+	tx := a.setAPIEventsFilters(getAPIEventsParamsToFilters(params))
+
+	// get total count item with the current filters
+	if err := tx.Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 func (a *APIEventsTableHandler) GetAPIEventsAndTotal(params operations.GetAPIEventsParams) ([]APIEvent, int64, error) {
 	var apiEvents []APIEvent
 	var count int64

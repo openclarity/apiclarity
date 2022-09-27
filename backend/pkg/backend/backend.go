@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/go-openapi/strfmt"
+	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/kubernetes"
@@ -63,6 +64,7 @@ type Backend struct {
 	dbHandler           _database.Database
 	modulesManager      modules.ModulesManager
 	notifier            *_notifier.Notifier
+	config              *_config.Config
 }
 
 func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, dbHandler *_database.Handler, modulesManager modules.ModulesManager, notifier *_notifier.Notifier) *Backend {
@@ -74,6 +76,7 @@ func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculat
 		dbHandler:           dbHandler,
 		modulesManager:      modulesManager,
 		notifier:            notifier,
+		config:              config,
 	}
 }
 
@@ -319,6 +322,7 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 		apiInfo.Type = models.APITypeEXTERNAL
 	}
 
+	checkAutoApprove := false
 	isNonAPI := isNonAPI(telemetry)
 
 	// Don't link non APIs to an API in the inventory
@@ -342,6 +346,7 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 			if err != nil {
 				return fmt.Errorf("failed to learn telemetry: %v", err)
 			}
+			checkAutoApprove = true
 		}
 	}
 
@@ -390,6 +395,35 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 
 	b.modulesManager.EventNotify(ctx, &modules.Event{APIEvent: event, Telemetry: trace})
 
+	if checkAutoApprove {
+		if b.config.AutoApproveTraceCount > 0 {
+			specKey := _speculator.GetSpecKey(telemetry.Request.Host, destInfo.Port)
+			suggestedSpecReview, err := b.speculator.SuggestedReview(specKey)
+			if err != nil {
+				log.Errorf("Failed to create suggested review with spec key: %v. %v", specKey, err)
+				return err
+			}
+
+			if len(suggestedSpecReview.PathItemsReview) > 0 {
+				autoApprove := true
+				for _, reviewPathItem := range suggestedSpecReview.PathItemsReview {
+					if len(reviewPathItem.Paths) < b.config.AutoApproveTraceCount {
+						autoApprove = false
+					}
+				}
+				if autoApprove {
+					specVersion := "OASv2.0" //TODO: yeah, you figured it out already, right?
+					approvedReview := convertSuggestedToApprovedReview(suggestedSpecReview)
+					// apply approved review to the speculator
+					if err := rest.ApproveReview(b.speculator, b.dbHandler, specKey, specVersion, approvedReview); err != nil {
+						log.Error("Failed to apply the approved review. %v", err)
+						return err
+					}
+				}
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -399,6 +433,21 @@ func convertHeadersToMap(headers []*pluginsmodels.Header) map[string]string {
 		ret[header.Key] = header.Value
 	}
 	return ret
+}
+
+func convertSuggestedToApprovedReview(suggestedSpecReview *_spec.SuggestedSpecReview) *_spec.ApprovedSpecReview {
+	approvedSpecReview := &_spec.ApprovedSpecReview{
+		PathToPathItem: suggestedSpecReview.PathToPathItem,
+	}
+	for _, reviewPathItem := range suggestedSpecReview.PathItemsReview {
+		approvedSpecReviewPathItem := &_spec.ApprovedSpecReviewPathItem{
+			ReviewPathItem: reviewPathItem.ReviewPathItem,
+			PathUUID:       uuid.NewV4().String(),
+		}
+		log.Infof("Approving path item: %+v", approvedSpecReviewPathItem)
+		approvedSpecReview.PathItemsReview = append(approvedSpecReview.PathItemsReview, approvedSpecReviewPathItem)
+	}
+	return approvedSpecReview
 }
 
 // getHostname will return only hostname without scheme and port
