@@ -49,7 +49,7 @@ type AnalyticsCore struct {
 	accessor             core.BackendAccessor
 	info                 *core.ModuleInfo
 	numWorkers           int
-	proccFuncRegistered  map[TopicType][]*AnalyticsModuleProccFunc
+	proccFuncRegistered  map[TopicType][]AnalyticsModuleProccFunc
 	dataFramesRegistered map[AnalyticsModuleProccFunc]*ProcFuncDataFrames // Each registered function have a correponding Dataframes
 	topics               []TopicType
 }
@@ -78,8 +78,8 @@ func (p *AnalyticsCore) handlerFunction(topic TopicType, partitionID int, msgCha
 		if okTopic && len(topicProccFunctions) > 0 {
 			annotations := make([]interface{}, 0, annotationArrayCapacity)
 			for _, proccFunction := range topicProccFunctions {
-				dfs := p.dataFramesRegistered[*proccFunction] // Get the Dataframes corresponding to this proccfunction
-				annotations = (*proccFunction).ProccFunc(topic, dfs, partitionID, message, annotations, p)
+				dfs := p.dataFramesRegistered[proccFunction] // Get the Dataframes corresponding to this proccfunction
+				annotations = proccFunction.ProccFunc(topic, dfs, partitionID, message, annotations, p)
 			}
 		}
 	}
@@ -93,7 +93,7 @@ func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Modul
 		accessor:             accessor,
 		info:                 &core.ModuleInfo{Name: "analytics_core", Description: "analytics_core"},
 		numWorkers:           1,
-		proccFuncRegistered:  map[TopicType][]*AnalyticsModuleProccFunc{},
+		proccFuncRegistered:  map[TopicType][]AnalyticsModuleProccFunc{},
 		dataFramesRegistered: map[AnalyticsModuleProccFunc]*ProcFuncDataFrames{},
 		topics:               make([]TopicType, 0, maxNumTopics),
 	}
@@ -114,9 +114,9 @@ func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Modul
 	return p, nil
 }
 
-func orderHandlerFuncsByPriority(proccFunctions []*AnalyticsModuleProccFunc) []*AnalyticsModuleProccFunc {
+func orderHandlerFuncsByPriority(proccFunctions []AnalyticsModuleProccFunc) []AnalyticsModuleProccFunc {
 	sort.Slice(proccFunctions, func(i, j int) bool {
-		return (*proccFunctions[i]).GetPriority() < (*proccFunctions[j]).GetPriority()
+		return proccFunctions[i].GetPriority() < proccFunctions[j].GetPriority()
 	})
 	return proccFunctions
 }
@@ -124,10 +124,10 @@ func orderHandlerFuncsByPriority(proccFunctions []*AnalyticsModuleProccFunc) []*
 func (p *AnalyticsCore) RegisterAnalyticsModuleHandler(topic TopicType, proccFunc AnalyticsModuleProccFunc) {
 	_, okTopic := p.proccFuncRegistered[topic]
 	if !okTopic {
-		p.proccFuncRegistered[topic] = make([]*AnalyticsModuleProccFunc, 0, maxNumProccFuncPerTopic)
+		p.proccFuncRegistered[topic] = make([]AnalyticsModuleProccFunc, 0, maxNumProccFuncPerTopic)
 	}
 
-	p.proccFuncRegistered[topic] = append(p.proccFuncRegistered[topic], &proccFunc)
+	p.proccFuncRegistered[topic] = append(p.proccFuncRegistered[topic], proccFunc)
 	p.proccFuncRegistered[topic] = orderHandlerFuncsByPriority(p.proccFuncRegistered[topic])
 
 	// Adds dataframes for this new registered function
