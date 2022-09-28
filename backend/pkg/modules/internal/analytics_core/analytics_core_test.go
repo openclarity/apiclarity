@@ -20,6 +20,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/openclarity/apiclarity/backend/pkg/dataframe"
 	"github.com/openclarity/apiclarity/backend/pkg/pubsub"
 )
 
@@ -41,9 +42,13 @@ func (p traceAnalyzerTest) GetPriority() int {
 	return 10
 }
 
-func (p traceAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
+func (p traceAnalyzerTest) ProccFunc(topicName TopicType, dataFramesRegistry DataFramesRegistry, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
+	dataframe1, found := dataFramesRegistry.Get("dataframe1")
+	if !found {
+		p.t.Fatalf("dataframe 'dataframe1' does not exist")
+	}
 	counter := int64(0)
-	result, found := dataFrames.dataFrames[partitionID].Get("counter")
+	result, found := dataframe1[partitionID].Get("counter")
 	if found {
 		var ok bool
 		counter, ok = result.(int64)
@@ -52,7 +57,7 @@ func (p traceAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncDa
 		}
 	}
 	counter++
-	dataFrames.dataFrames[partitionID].Set("counter", counter)
+	dataframe1[partitionID].Set("counter", counter)
 
 	err := handler.PublishMessage(EntityTopicName, message)
 	if err != nil {
@@ -78,7 +83,11 @@ func (p entityAnalyzerTest) GetPriority() int {
 	return p.priorityValue
 }
 
-func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
+func (p entityAnalyzerTest) GetDataFrames() map[DataFrameID]map[int]dataframe.DataFrame {
+	return nil
+}
+
+func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataFramesRegistry DataFramesRegistry, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
 	if len(annotations) != p.priorityValue {
 		p.t.Errorf("Improper order of proccFunction calls " + fmt.Sprint(len(annotations)))
 	}
@@ -107,6 +116,13 @@ func TestAnalyticsCore(t *testing.T) {
 	}
 
 	moduleAnalytics.AddWorkers(2)
+
+	for _, dfName := range []DataFrameID{"dataframe1", "dataframe2", "dataframe3"} {
+		if err := moduleAnalytics.dataFramesRegistry.NewDataFrame(dfName, moduleAnalytics.numWorkers); err != nil {
+			t.Fatalf("Unable to create dataframe %s: %v", dfName, err)
+		}
+	}
+
 	traceAnalyzer := traceAnalyzerTest{
 		t: t,
 	}
@@ -149,18 +165,21 @@ func TestAnalyticsCore(t *testing.T) {
 	}
 
 	// During this test, the same partition is always used
-	selectedDataFrame := moduleAnalytics.dataFramesRegistered[traceAnalyzer].dataFrames[fixedPartition]
-	result, found := selectedDataFrame.Get("counter")
-	if !found {
-		t.Errorf("Unable to find counter entry in dataframe[%d]", fixedPartition)
-	}
+	if selectedDataFrame, found := moduleAnalytics.dataFramesRegistry.Get("dataframe1"); !found {
+		t.Errorf("Unable to get dataframe '%s", "dataframe1")
+	} else {
+		result, found := selectedDataFrame[fixedPartition].Get("counter")
+		if !found {
+			t.Errorf("Unable to find counter entry in dataframe[%d]", fixedPartition)
+		}
 
-	var ok bool
-	counter, ok := result.(int64)
-	if !ok {
-		t.Fatalf("Counter is not of type int64")
-	}
-	if counter != 2 {
-		t.Errorf("Counter has wrong value. Got %d, expected %d", counter, 2)
+		var ok bool
+		counter, ok := result.(int64)
+		if !ok {
+			t.Fatalf("Counter is not of type int64")
+		}
+		if counter != 2 {
+			t.Errorf("Counter has wrong value. Got %d, expected %d", counter, 2)
+		}
 	}
 }

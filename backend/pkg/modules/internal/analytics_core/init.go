@@ -45,25 +45,52 @@ const (
 )
 
 type TopicType string
+type DataFrameID string
+type DataFrame map[int]dataframe.DataFrame
 
 type AnalyticsCore struct {
-	httpHandler          http.Handler
-	msgBroker            *pubsub.Handler
-	accessor             core.BackendAccessor
-	info                 *core.ModuleInfo
-	numWorkers           int
-	proccFuncRegistered  map[TopicType][]AnalyticsModuleProccFunc
-	dataFramesRegistered map[AnalyticsModuleProccFunc]*ProcFuncDataFrames // Each registered function have a corresponding Dataframes
-	topics               []TopicType
+	httpHandler         http.Handler
+	msgBroker           *pubsub.Handler
+	accessor            core.BackendAccessor
+	info                *core.ModuleInfo
+	numWorkers          int
+	proccFuncRegistered map[TopicType][]AnalyticsModuleProccFunc
+	dataFramesRegistry  DataFramesRegistry
+	topics              []TopicType
 }
 
-type ProcFuncDataFrames struct {
-	dataFrames map[int]dataframe.DataFrame
+type DataFramesRegistry struct {
+	dataFrames map[DataFrameID]DataFrame
+}
+
+func NewDataFramesRegistry(numWorkers int) DataFramesRegistry {
+	return DataFramesRegistry{
+		dataFrames: map[DataFrameID]DataFrame{},
+	}
+}
+
+func (dfr DataFramesRegistry) NewDataFrame(name DataFrameID, shards int) error {
+	dfr.dataFrames[name] = make(map[int]dataframe.DataFrame)
+	for i := 0; i < shards; i++ {
+		df := cache.DataFrame{}
+		err := df.Init(defaultDataFrameTTL)
+		if err != nil {
+			return fmt.Errorf("unable to create shard %d of dataframe %s", i, name)
+		}
+		dfr.dataFrames[name][i] = &df
+	}
+
+	return nil
+}
+
+func (dfr DataFramesRegistry) Get(name DataFrameID) (DataFrame, bool) {
+	df, found := dfr.dataFrames[name]
+	return df, found
 }
 
 type AnalyticsModuleProccFunc interface {
 	GetPriority() int
-	ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{})
+	ProccFunc(topicName TopicType, dataFramesRegistry DataFramesRegistry, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{})
 }
 
 func (p *AnalyticsCore) Info() core.ModuleInfo {
@@ -80,8 +107,7 @@ func (p *AnalyticsCore) handlerFunction(topic TopicType, partitionID int, msgCha
 		if okTopic && len(topicProccFunctions) > 0 {
 			annotations := make([]interface{}, 0, annotationArrayCapacity)
 			for _, proccFunction := range topicProccFunctions {
-				dfs := p.dataFramesRegistered[proccFunction] // Get the Dataframes corresponding to this proccfunction
-				annotations = proccFunction.ProccFunc(topic, dfs, partitionID, message, annotations, p)
+				annotations = proccFunction.ProccFunc(topic, p.dataFramesRegistry, partitionID, message, annotations, p)
 			}
 		}
 	}
@@ -90,14 +116,14 @@ func (p *AnalyticsCore) handlerFunction(topic TopicType, partitionID int, msgCha
 //nolint:unparam
 func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Module, err error) {
 	p := &AnalyticsCore{
-		httpHandler:          nil,
-		msgBroker:            nil,
-		accessor:             accessor,
-		info:                 &core.ModuleInfo{Name: "analytics_core", Description: "analytics_core"},
-		numWorkers:           1,
-		proccFuncRegistered:  map[TopicType][]AnalyticsModuleProccFunc{},
-		dataFramesRegistered: map[AnalyticsModuleProccFunc]*ProcFuncDataFrames{},
-		topics:               make([]TopicType, 0, maxNumTopics),
+		httpHandler:         nil,
+		msgBroker:           nil,
+		accessor:            accessor,
+		info:                &core.ModuleInfo{Name: "analytics_core", Description: "analytics_core"},
+		numWorkers:          1,
+		proccFuncRegistered: map[TopicType][]AnalyticsModuleProccFunc{},
+		dataFramesRegistry:  NewDataFramesRegistry(1),
+		topics:              make([]TopicType, 0, maxNumTopics),
 	}
 	/* We do not need to expose API at this point
 	handler := &httpHandler{
@@ -131,19 +157,6 @@ func (p *AnalyticsCore) RegisterAnalyticsModuleHandler(topic TopicType, proccFun
 
 	p.proccFuncRegistered[topic] = append(p.proccFuncRegistered[topic], proccFunc)
 	p.proccFuncRegistered[topic] = orderHandlerFuncsByPriority(p.proccFuncRegistered[topic])
-
-	// Adds dataframes for this new registered function
-	p.dataFramesRegistered[proccFunc] = &ProcFuncDataFrames{dataFrames: map[int]dataframe.DataFrame{}}
-	for i := 0; i < p.numWorkers; i++ {
-		df := cache.DataFrame{}
-		err := df.Init(defaultDataFrameTTL)
-		if err != nil {
-			log.Fatalf("Unable to create dataframe for topic %s and function %s", topic, proccFunc)
-			// TODO: we must return an error
-			return
-		}
-		p.dataFramesRegistered[proccFunc].dataFrames[i] = &df
-	}
 }
 
 /*
