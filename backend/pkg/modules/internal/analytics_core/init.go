@@ -53,7 +53,7 @@ type AnalyticsCore struct {
 	info                 *core.ModuleInfo
 	numWorkers           int
 	proccFuncRegistered  map[TopicType][]AnalyticsModuleProccFunc
-	dataFramesRegistered map[AnalyticsModuleProccFunc]*ProcFuncDataFrames // Each registered function have a correponding Dataframes
+	dataFramesRegistered map[AnalyticsModuleProccFunc]*ProcFuncDataFrames // Each registered function have a corresponding Dataframes
 	topics               []TopicType
 }
 

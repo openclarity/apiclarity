@@ -21,12 +21,14 @@ import (
 	cache "github.com/patrickmn/go-cache"
 )
 
+const defaultCleanupInterval = 5 * time.Minute
+
 type DataFrame struct {
 	backend *cache.Cache
 }
 
 func (df *DataFrame) Init(ttl time.Duration) error {
-	df.backend = cache.New(ttl, 5*time.Minute)
+	df.backend = cache.New(ttl, defaultCleanupInterval)
 
 	return nil
 }

@@ -37,7 +37,9 @@ func (df *DataFrame) Init(ttl time.Duration) error {
 }
 
 func (df *DataFrame) Set(key string, value interface{}) bool {
-	df.backend.SetWithExpire(key, value, df.ttl)
+	if err := df.backend.SetWithExpire(key, value, df.ttl); err != nil {
+		return false
+	}
 
 	return true
 }

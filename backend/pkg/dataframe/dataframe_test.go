@@ -22,25 +22,27 @@ import (
 	"time"
 
 	"github.com/openclarity/apiclarity/backend/pkg/dataframe/gcache"
-	"github.com/openclarity/apiclarity/backend/pkg/dataframe/ristretto"
 	"github.com/openclarity/apiclarity/backend/pkg/dataframe/gocache"
+	"github.com/openclarity/apiclarity/backend/pkg/dataframe/ristretto"
 )
 
-func UnknownKey(t *testing.T, df DataFrame) {
-	_, found := df.Get("unknown")
-	if found {
+func unknownKey(t *testing.T, df DataFrame) {
+	t.Helper()
+	if _, found := df.Get("unknown"); found {
 		t.Fatalf("Key 'unknown' shouldn't be present")
 	}
 }
 
-func Set(t *testing.T, df DataFrame) {
+func set(t *testing.T, df DataFrame) {
+	t.Helper()
 	isSet := df.Set("key1", "value1")
 	if !isSet {
 		t.Fatalf("Error while setting value")
 	}
 }
 
-func SetGet(t *testing.T, df DataFrame) {
+func setGet(t *testing.T, df DataFrame) {
+	t.Helper()
 	df.Set("key1", "value1")
 	time.Sleep(1000 * time.Millisecond) // Let time for the admission policy
 	result, found := df.Get("key1")
@@ -52,7 +54,8 @@ func SetGet(t *testing.T, df DataFrame) {
 	}
 }
 
-func Del(t *testing.T, df DataFrame) {
+func del(t *testing.T, df DataFrame) {
+	t.Helper()
 	df.Set("key1", "value1")
 	df.Set("key2", "value2")
 	time.Sleep(1 * time.Millisecond)
@@ -73,10 +76,10 @@ func TestBackends(t *testing.T) {
 			t.Fatalf("Unable to initialize backend %s", reflect.TypeOf(b))
 		}
 		t.Run(fmt.Sprintf("Backend %s", reflect.TypeOf(b)), func(t *testing.T) {
-			UnknownKey(t, b)
-			Set(t, b)
-			SetGet(t, b)
-			Del(t, b)
+			unknownKey(t, b)
+			set(t, b)
+			setGet(t, b)
+			del(t, b)
 		})
 	}
 }

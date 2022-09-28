@@ -36,7 +36,7 @@ func (df *DataFrame) Init(ttl time.Duration) error {
 	}
 	backend, err := ristretto.NewCache(config)
 	if err != nil {
-		return fmt.Errorf("Unable to initialize dataframe: %v", err)
+		return fmt.Errorf("unable to initialize dataframe: %v", err)
 	}
 	df.backend = backend
 

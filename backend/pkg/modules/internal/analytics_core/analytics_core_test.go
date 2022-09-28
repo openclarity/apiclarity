@@ -31,8 +31,7 @@ type traceAnalyzerTest struct {
 	t *testing.T
 }
 
-type messageForBrokerTest struct {
-}
+type messageForBrokerTest struct{}
 
 func (p messageForBrokerTest) GetPartitionKey() int64 {
 	return int64(fixedPartition)
@@ -41,13 +40,18 @@ func (p messageForBrokerTest) GetPartitionKey() int64 {
 func (p traceAnalyzerTest) GetPriority() int {
 	return 10
 }
+
 func (p traceAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
 	counter := int64(0)
 	result, found := dataFrames.dataFrames[partitionID].Get("counter")
 	if found {
-		counter = result.(int64)
+		var ok bool
+		counter, ok = result.(int64)
+		if !ok {
+			p.t.Fatalf("Counter is not of type int64")
+		}
 	}
-	counter += 1
+	counter++
 	dataFrames.dataFrames[partitionID].Set("counter", counter)
 
 	err := handler.PublishMessage(EntityTopicName, message)
@@ -73,6 +77,7 @@ type entityAnalyzerTest struct {
 func (p entityAnalyzerTest) GetPriority() int {
 	return p.priorityValue
 }
+
 func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
 	if len(annotations) != p.priorityValue {
 		p.t.Errorf("Improper order of proccFunction calls " + fmt.Sprint(len(annotations)))
@@ -149,7 +154,12 @@ func TestAnalyticsCore(t *testing.T) {
 	if !found {
 		t.Errorf("Unable to find counter entry in dataframe[%d]", fixedPartition)
 	}
-	counter := result.(int64)
+
+	var ok bool
+	counter, ok := result.(int64)
+	if !ok {
+		t.Fatalf("Counter is not of type int64")
+	}
 	if counter != 2 {
 		t.Errorf("Counter has wrong value. Got %d, expected %d", counter, 2)
 	}
