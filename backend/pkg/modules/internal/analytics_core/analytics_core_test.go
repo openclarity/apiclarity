@@ -48,7 +48,7 @@ func (p traceAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncDa
 		counter = result.(int64)
 	}
 	counter += 1
-	dataFrames.dataFrames[partitionID].Set("counter", counter, 10*time.Minute)
+	dataFrames.dataFrames[partitionID].Set("counter", counter)
 
 	err := handler.PublishMessage(EntityTopicName, message)
 	if err != nil {

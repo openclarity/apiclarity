@@ -22,21 +22,13 @@ import (
 	"github.com/dgraph-io/ristretto"
 )
 
-type DataFrameRistretto struct {
+type DataFrame struct {
 	backend *ristretto.Cache
+	ttl     time.Duration
 }
 
-func NewDataFrame() (*DataFrameRistretto, error) {
-	df := DataFrameRistretto{}
-	err := df.Init()
-	if err != nil {
-		return nil, err
-	}
-
-	return &df, nil
-}
-
-func (df *DataFrameRistretto) Init() error {
+func (df *DataFrame) Init(ttl time.Duration) error {
+	df.ttl = ttl
 	config := &ristretto.Config{
 		NumCounters: 1e7,     // number of keys to track frequency of (10M).
 		MaxCost:     1 << 30, // maximum cost of cache (1GB).
@@ -51,15 +43,15 @@ func (df *DataFrameRistretto) Init() error {
 	return nil
 }
 
-func (df *DataFrameRistretto) Set(key string, value interface{}, ttl time.Duration) bool {
+func (df *DataFrame) Set(key string, value interface{}) bool {
 	cost := int64(0)
-	return df.backend.SetWithTTL(key, value, cost, ttl)
+	return df.backend.SetWithTTL(key, value, cost, df.ttl)
 }
 
-func (df *DataFrameRistretto) Get(key string) (interface{}, bool) {
+func (df *DataFrame) Get(key string) (interface{}, bool) {
 	return df.backend.Get(key)
 }
 
-func (df *DataFrameRistretto) Del(key string) {
+func (df *DataFrame) Del(key string) {
 	df.backend.Del(key)
 }

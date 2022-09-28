@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -40,6 +41,7 @@ const (
 	annotationArrayCapacity = 100
 	maxNumTopics            = 100
 	maxNumProccFuncPerTopic = 100
+	defaultDataFrameTTL     = 10 * time.Minute
 )
 
 type TopicType string
@@ -54,7 +56,6 @@ type AnalyticsCore struct {
 	dataFramesRegistered map[AnalyticsModuleProccFunc]*ProcFuncDataFrames // Each registered function have a correponding Dataframes
 	topics               []TopicType
 }
-
 
 type ProcFuncDataFrames struct {
 	dataFrames map[int]dataframe.DataFrame
@@ -134,13 +135,14 @@ func (p *AnalyticsCore) RegisterAnalyticsModuleHandler(topic TopicType, proccFun
 	// Adds dataframes for this new registered function
 	p.dataFramesRegistered[proccFunc] = &ProcFuncDataFrames{dataFrames: map[int]dataframe.DataFrame{}}
 	for i := 0; i < p.numWorkers; i++ {
-		df, err := cache.NewDataFrame()
+		df := cache.DataFrame{}
+		err := df.Init(defaultDataFrameTTL)
 		if err != nil {
 			log.Fatalf("Unable to create dataframe for topic %s and function %s", topic, proccFunc)
 			// TODO: we must return an error
 			return
 		}
-		p.dataFramesRegistered[proccFunc].dataFrames[i] = df
+		p.dataFramesRegistered[proccFunc].dataFrames[i] = &df
 	}
 }
 

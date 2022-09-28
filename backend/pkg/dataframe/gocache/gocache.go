@@ -21,36 +21,26 @@ import (
 	cache "github.com/patrickmn/go-cache"
 )
 
-type DataFrameGoCache struct {
+type DataFrame struct {
 	backend *cache.Cache
 }
 
-func NewDataFrame() (*DataFrameGoCache, error) {
-	df := DataFrameGoCache{}
-	err := df.Init()
-	if err != nil {
-		return nil, err
-	}
-
-	return &df, nil
-}
-
-func (df *DataFrameGoCache) Init() error {
-	df.backend = cache.New(5*time.Minute, 10*time.Minute)
+func (df *DataFrame) Init(ttl time.Duration) error {
+	df.backend = cache.New(ttl, 5*time.Minute)
 
 	return nil
 }
 
-func (df *DataFrameGoCache) Set(key string, value interface{}, ttl time.Duration) bool {
-	df.backend.Set(key, value, ttl)
+func (df *DataFrame) Set(key string, value interface{}) bool {
+	df.backend.Set(key, value, 0)
 
 	return true
 }
 
-func (df *DataFrameGoCache) Get(key string) (interface{}, bool) {
+func (df *DataFrame) Get(key string) (interface{}, bool) {
 	return df.backend.Get(key)
 }
 
-func (df *DataFrameGoCache) Del(key string) {
+func (df *DataFrame) Del(key string) {
 	df.backend.Delete(key)
 }

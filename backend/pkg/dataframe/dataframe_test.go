@@ -34,15 +34,15 @@ func UnknownKey(t *testing.T, df DataFrame) {
 }
 
 func Set(t *testing.T, df DataFrame) {
-	isSet := df.Set("key1", "value1", 0)
+	isSet := df.Set("key1", "value1")
 	if !isSet {
 		t.Fatalf("Error while setting value")
 	}
 }
 
 func SetGet(t *testing.T, df DataFrame) {
-	df.Set("key1", "value1", 10 * time.Minute)
-	time.Sleep(1 * time.Millisecond) // Let time for the admission policy
+	df.Set("key1", "value1")
+	time.Sleep(1000 * time.Millisecond) // Let time for the admission policy
 	result, found := df.Get("key1")
 	if !found {
 		t.Fatalf("Key 'key1' was not found")
@@ -53,8 +53,8 @@ func SetGet(t *testing.T, df DataFrame) {
 }
 
 func Del(t *testing.T, df DataFrame) {
-	df.Set("key1", "value1", 10 * time.Minute)
-	df.Set("key2", "value2", 10 * time.Minute)
+	df.Set("key1", "value1")
+	df.Set("key2", "value2")
 	time.Sleep(1 * time.Millisecond)
 	df.Del("key1")
 	_, found := df.Get("key1")
@@ -68,20 +68,10 @@ func Del(t *testing.T, df DataFrame) {
 }
 
 func TestBackends(t *testing.T) {
-	ristrettoCache, err := ristretto.NewDataFrame()
-	if err != nil {
-		t.Fatalf("Unable to initialize ristretto cache backend")
-	}
-	gcacheCache, err := gcache.NewDataFrame()
-	if err != nil {
-		t.Fatalf("Unable to initialize gcache cache backend")
-	}
-	gocacheCache, err := gocache.NewDataFrame()
-	if err != nil {
-		t.Fatalf("Unable to initialize gocache cache backend")
-	}
-
-	for _, b := range []DataFrame{ristrettoCache, gcacheCache, gocacheCache} {
+	for _, b := range []DataFrame{&ristretto.DataFrame{}, &gocache.DataFrame{}, &gcache.DataFrame{}} {
+		if err := b.Init(5 * time.Minute); err != nil {
+			t.Fatalf("Unable to initialize backend %s", reflect.TypeOf(b))
+		}
 		t.Run(fmt.Sprintf("Backend %s", reflect.TypeOf(b)), func(t *testing.T) {
 			UnknownKey(t, b)
 			Set(t, b)

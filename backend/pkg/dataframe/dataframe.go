@@ -20,8 +20,8 @@ import (
 )
 
 type DataFrame interface {
-	Init() error
-	Set(key string, value interface{}, ttl time.Duration) bool
+	Init(ttl time.Duration) error
+	Set(key string, value interface{}) bool
 	Get(key string) (interface{}, bool)
 	Del(key string)
 }

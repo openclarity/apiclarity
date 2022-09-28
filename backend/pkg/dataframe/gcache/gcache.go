@@ -21,21 +21,13 @@ import (
 	"github.com/bluele/gcache"
 )
 
-type DataFrameGCache struct {
+type DataFrame struct {
 	backend gcache.Cache
+	ttl     time.Duration
 }
 
-func NewDataFrame() (*DataFrameGCache, error) {
-	df := DataFrameGCache{}
-	err := df.Init()
-	if err != nil {
-		return nil, err
-	}
-
-	return &df, nil
-}
-
-func (df *DataFrameGCache) Init() error {
+func (df *DataFrame) Init(ttl time.Duration) error {
+	df.ttl = ttl
 	backend := gcache.New(20).
 		LRU().
 		Build()
@@ -44,17 +36,13 @@ func (df *DataFrameGCache) Init() error {
 	return nil
 }
 
-func (df *DataFrameGCache) Set(key string, value interface{}, ttl time.Duration) bool {
-	if ttl == 0 {
-		df.backend.Set(key, value)
-	} else {
-		df.backend.SetWithExpire(key, value, time.Second*10)
-	}
+func (df *DataFrame) Set(key string, value interface{}) bool {
+	df.backend.SetWithExpire(key, value, df.ttl)
 
 	return true
 }
 
-func (df *DataFrameGCache) Get(key string) (interface{}, bool) {
+func (df *DataFrame) Get(key string) (interface{}, bool) {
 	result, err := df.backend.Get(key)
 	if err != nil {
 		return nil, false
@@ -63,6 +51,6 @@ func (df *DataFrameGCache) Get(key string) (interface{}, bool) {
 	return result, true
 }
 
-func (df *DataFrameGCache) Del(key string) {
+func (df *DataFrame) Del(key string) {
 	df.backend.Remove(key)
 }
