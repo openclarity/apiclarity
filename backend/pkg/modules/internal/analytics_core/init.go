@@ -41,7 +41,6 @@ const (
 	annotationArrayCapacity = 100
 	maxNumTopics            = 100
 	maxNumProccFuncPerTopic = 100
-	defaultDataFrameTTL     = 10 * time.Minute
 )
 
 type (
@@ -65,17 +64,17 @@ type DataFramesRegistry struct {
 	dataFrames map[DataFrameID]DataFrame
 }
 
-func NewDataFramesRegistry(numWorkers int) DataFramesRegistry {
+func NewDataFramesRegistry() DataFramesRegistry {
 	return DataFramesRegistry{
 		dataFrames: map[DataFrameID]DataFrame{},
 	}
 }
 
-func (dfr DataFramesRegistry) NewDataFrame(name DataFrameID, shards int) error {
+func (dfr DataFramesRegistry) NewDataFrame(name DataFrameID, shards int, ttl time.Duration, maxEntries int64) error {
 	dfr.dataFrames[name] = make(map[int]dataframe.DataFrame)
 	for i := 0; i < shards; i++ {
 		df := cache.DataFrame{}
-		err := df.Init(defaultDataFrameTTL)
+		err := df.Init(ttl)
 		if err != nil {
 			return fmt.Errorf("unable to create shard %d of dataframe %s", i, name)
 		}
@@ -124,7 +123,7 @@ func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Modul
 		info:                &core.ModuleInfo{Name: "analytics_core", Description: "analytics_core"},
 		numWorkers:          1,
 		proccFuncRegistered: map[TopicType][]AnalyticsModuleProccFunc{},
-		dataFramesRegistry:  NewDataFramesRegistry(1),
+		dataFramesRegistry:  NewDataFramesRegistry(),
 		topics:              make([]TopicType, 0, maxNumTopics),
 	}
 	/* We do not need to expose API at this point

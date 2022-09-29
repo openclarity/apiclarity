@@ -24,7 +24,11 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/pubsub"
 )
 
-const fixedPartition = 1
+const (
+	fixedPartition      = 1
+	defaultDataFrameTTL = 10 * time.Minute
+	defaultMaxEntries   = 1000
+)
 
 var counterProc int
 
@@ -118,7 +122,7 @@ func TestAnalyticsCore(t *testing.T) {
 	moduleAnalytics.AddWorkers(2)
 
 	for _, dfName := range []DataFrameID{"dataframe1", "dataframe2", "dataframe3"} {
-		if err := moduleAnalytics.dataFramesRegistry.NewDataFrame(dfName, moduleAnalytics.numWorkers); err != nil {
+		if err := moduleAnalytics.dataFramesRegistry.NewDataFrame(dfName, moduleAnalytics.numWorkers, defaultDataFrameTTL, defaultMaxEntries); err != nil {
 			t.Fatalf("Unable to create dataframe %s: %v", dfName, err)
 		}
 	}
