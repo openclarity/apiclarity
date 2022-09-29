@@ -396,7 +396,7 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 	b.modulesManager.EventNotify(ctx, &modules.Event{APIEvent: event, Telemetry: trace})
 
 	if checkAutoApprove {
-		if b.config.AutoApproveTraceCount > 0 {
+		if b.config != nil && b.config.AutoApproveTraceCount > 0 {
 			specKey := _speculator.GetSpecKey(telemetry.Request.Host, destInfo.Port)
 			suggestedSpecReview, err := b.speculator.SuggestedReview(specKey)
 			if err != nil {
@@ -416,7 +416,7 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 					approvedReview := convertSuggestedToApprovedReview(suggestedSpecReview)
 					// apply approved review to the speculator
 					if err := rest.ApproveReview(b.speculator, b.dbHandler, specKey, specVersion, approvedReview); err != nil {
-						log.Error("Failed to apply the approved review. %v", err)
+						log.Errorf("Failed to apply the approved review. %v", err)
 						return err
 					}
 				}
