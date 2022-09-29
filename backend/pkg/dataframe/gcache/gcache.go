@@ -21,6 +21,8 @@ import (
 	"github.com/bluele/gcache"
 )
 
+const maxEntries = 200 // 0 means no automatic eviction
+
 type DataFrame struct {
 	backend gcache.Cache
 	ttl     time.Duration
@@ -28,7 +30,7 @@ type DataFrame struct {
 
 func (df *DataFrame) Init(ttl time.Duration) error {
 	df.ttl = ttl
-	backend := gcache.New(20).
+	backend := gcache.New(maxEntries).
 		LRU().
 		Build()
 	df.backend = backend

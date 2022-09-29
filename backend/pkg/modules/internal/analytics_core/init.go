@@ -44,9 +44,11 @@ const (
 	defaultDataFrameTTL     = 10 * time.Minute
 )
 
-type TopicType string
-type DataFrameID string
-type DataFrame map[int]dataframe.DataFrame
+type (
+	TopicType   string
+	DataFrameID string
+	DataFrame   map[int]dataframe.DataFrame
+)
 
 type AnalyticsCore struct {
 	httpHandler         http.Handler
