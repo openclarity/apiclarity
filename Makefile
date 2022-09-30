@@ -11,6 +11,7 @@ DOCKER_REGISTRY ?= ghcr.io/openclarity
 VERSION ?= $(shell git rev-parse HEAD)
 DOCKER_IMAGE ?= $(DOCKER_REGISTRY)/$(BINARY_NAME)
 DOCKER_TAG ?= ${VERSION}
+TARGET_PLATFORM ?= linux/amd64
 
 # Dependency versions
 GOLANGCI_VERSION = 1.42.0
@@ -77,6 +78,17 @@ push-docker-backend: docker-backend ## Build and Push Docker image
 	@echo "Publishing backend Docker image ..."
 	docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
 
+.PHONY: push-docker-backend-x
+push-docker-backend-x:  ## Build and Push Docker image
+	@echo "Cross building and pushing backend Docker image ..."
+    @(cd backend)
+	docker buildx build --build-arg VERSION=${VERSION} \
+			--platform=${TARGET_PLATFORM} \
+			--build-arg BUILD_TIMESTAMP=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") \
+			--build-arg COMMIT_HASH=$(shell git rev-parse HEAD) \
+			--push \
+			-t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+
 .PHONY: docker-plugins
 docker-plugins: ## Build plugins Docker image
 	$(MAKE) docker -C plugins
@@ -84,6 +96,10 @@ docker-plugins: ## Build plugins Docker image
 .PHONY: push-docker-plugins
 push-docker-plugins: ## Build and Push plugins Docker image
 	$(MAKE) push-docker -C plugins
+
+.PHONY: push-docker-plugins-x
+push-docker-plugin-xs: ## Cross Build and Push plugins Docker image
+	$(MAKE) push-docker-x -C plugins
 
 .PHONY: test
 test: ## Run Unit Tests

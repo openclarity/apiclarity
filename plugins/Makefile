@@ -3,6 +3,7 @@ DOCKER_REGISTRY ?= ghcr.io/openclarity
 VERSION ?= $(shell git rev-parse HEAD)
 DOCKER_TAG ?= ${VERSION}
 TYK_VERSION ?= v3.2.2
+TARGET_PLATFORM ?= linux/amd64
 
 .PHONY: docker
 docker: docker-kong docker-tyk docker-taper
@@ -44,3 +45,26 @@ push-docker-tyk: docker-tyk
 push-docker-taper: docker-taper
 	@echo "Publishing passive taper Docker image ..."
 	docker push ${DOCKER_REGISTRY}/passive-taper:${DOCKER_TAG}
+
+.PHONY: push-docker-x
+push-docker: push-docker-kong-x push-docker-tyk-x push-docker-taper-x
+
+.PHONY: push-docker-kong-x
+docker-kong:
+	@DOCKER_BUILDKIT=1 docker buildx build --platform=${TARGET_PLATFORM} --push -t ${DOCKER_REGISTRY}/kong-plugin:${DOCKER_TAG} --file Dockerfile.kong .
+
+.PHONY: push-docker-taper-x
+docker-taper:
+	@DOCKER_BUILDKIT=1 docker buildx build --platform=${TARGET_PLATFORM} --push --build-arg VERSION=${VERSION} -t ${DOCKER_REGISTRY}/passive-taper:${DOCKER_TAG} --file Dockerfile.taper .
+
+.PHONY: push-docker-tyk-x
+docker-tyk:
+	@(cd gateway/tyk/${TYK_VERSION} && \
+	go mod edit -replace github.com/openclarity/apiclarity/plugins/api@v0.0.0=./../api && \
+	go mod edit -replace github.com/openclarity/apiclarity/plugins/common@v0.0.0=./../common && \
+	 cd -)
+	@DOCKER_BUILDKIT=1 docker buildx build --platform=${TARGET_PLATFORM} --push -t ${DOCKER_REGISTRY}/tyk-plugin-${TYK_VERSION}:${DOCKER_TAG} --file Dockerfile.tyk.${TYK_VERSION} .
+	@(cd gateway/tyk/${TYK_VERSION} && \
+	go mod edit -replace github.com/openclarity/apiclarity/plugins/api@v0.0.0=./../../../api && \
+	go mod edit -replace github.com/openclarity/apiclarity/plugins/common@v0.0.0=./../../../common && \
+	 cd -)
