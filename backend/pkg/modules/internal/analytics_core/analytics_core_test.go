@@ -46,13 +46,13 @@ func (p traceAnalyzerTest) GetPriority() int {
 	return 10
 }
 
-func (p traceAnalyzerTest) ProccFunc(topicName TopicType, dataFramesRegistry DataFramesRegistry, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
-	dataframe1, found := dataFramesRegistry.Get("dataframe1")
+func (p traceAnalyzerTest) ProccFunc(topicName TopicType, dataframes map[DataFrameID]dataframe.DataFrame, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
+	dataframe1, found := dataframes["dataframe1"]
 	if !found {
 		p.t.Fatalf("dataframe 'dataframe1' does not exist")
 	}
 	counter := int64(0)
-	result, found := dataframe1[partitionID].Get("counter")
+	result, found := dataframe1.Get("counter")
 	if found {
 		var ok bool
 		counter, ok = result.(int64)
@@ -61,7 +61,7 @@ func (p traceAnalyzerTest) ProccFunc(topicName TopicType, dataFramesRegistry Dat
 		}
 	}
 	counter++
-	dataframe1[partitionID].Set("counter", counter)
+	dataframe1.Set("counter", counter)
 
 	err := handler.PublishMessage(EntityTopicName, message)
 	if err != nil {
@@ -91,7 +91,7 @@ func (p entityAnalyzerTest) GetDataFrames() map[DataFrameID]map[int]dataframe.Da
 	return nil
 }
 
-func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataFramesRegistry DataFramesRegistry, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
+func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataframes map[DataFrameID]dataframe.DataFrame, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
 	if len(annotations) != p.priorityValue {
 		p.t.Errorf("Improper order of proccFunction calls " + fmt.Sprint(len(annotations)))
 	}
@@ -130,6 +130,7 @@ func TestAnalyticsCore(t *testing.T) {
 	traceAnalyzer := traceAnalyzerTest{
 		t: t,
 	}
+	moduleAnalytics.RegisterDataFrameForFunc(traceAnalyzer, "dataframe1")
 	moduleAnalytics.RegisterAnalyticsModuleHandler(TraceTopicName, traceAnalyzer)
 
 	entityAnalyzer4 := entityAnalyzerTest{
