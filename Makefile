@@ -67,7 +67,6 @@ docker:	docker-backend docker-plugins
 .PHONY: docker-backend
 docker-backend: ## Build Docker image
 	@(echo "Building backend docker image ..." )
-	@(cd backend)
 	docker build --build-arg VERSION=${VERSION} \
 		--build-arg BUILD_TIMESTAMP=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") \
 		--build-arg COMMIT_HASH=$(shell git rev-parse HEAD) \
@@ -81,7 +80,6 @@ push-docker-backend: docker-backend ## Build and Push Docker image
 .PHONY: push-docker-backend-x
 push-docker-backend-x:  ## Build and Push Docker image
 	@(echo "Building backend docker image ..." )
-	@(cd backend)
 	docker buildx build --build-arg VERSION=${VERSION} \
 			--platform=${TARGET_PLATFORM} \
 			--build-arg BUILD_TIMESTAMP=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") \
@@ -98,7 +96,7 @@ push-docker-plugins: ## Build and Push plugins Docker image
 	$(MAKE) push-docker -C plugins
 
 .PHONY: push-docker-plugins-x
-push-docker-plugin-xs: ## Cross Build and Push plugins Docker image
+push-docker-plugin-x: ## Cross Build and Push plugins Docker image
 	$(MAKE) push-docker-x -C plugins
 
 .PHONY: test
