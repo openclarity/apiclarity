@@ -47,7 +47,7 @@ push-docker-taper: docker-taper
 	docker push ${DOCKER_REGISTRY}/passive-taper:${DOCKER_TAG}
 
 .PHONY: push-docker-x
-push-docker: push-docker-kong-x push-docker-tyk-x push-docker-taper-x
+push-docker-x: push-docker-kong-x push-docker-tyk-x push-docker-taper-x
 
 .PHONY: push-docker-kong-x
 docker-kong:
