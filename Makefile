@@ -80,8 +80,8 @@ push-docker-backend: docker-backend ## Build and Push Docker image
 
 .PHONY: push-docker-backend-x
 push-docker-backend-x:  ## Build and Push Docker image
-	@echo "Cross building and pushing backend Docker image ..."
-    @(cd backend)
+	@(echo "Building backend docker image ..." )
+	@(cd backend)
 	docker buildx build --build-arg VERSION=${VERSION} \
 			--platform=${TARGET_PLATFORM} \
 			--build-arg BUILD_TIMESTAMP=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") \
