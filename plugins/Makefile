@@ -50,15 +50,15 @@ push-docker-taper: docker-taper
 push-docker-x: push-docker-kong-x push-docker-tyk-x push-docker-taper-x
 
 .PHONY: push-docker-kong-x
-docker-kong:
+push-docker-kong-x:
 	@DOCKER_BUILDKIT=1 docker buildx build --platform=${TARGET_PLATFORM} --push -t ${DOCKER_REGISTRY}/kong-plugin:${DOCKER_TAG} --file Dockerfile.kong .
 
 .PHONY: push-docker-taper-x
-docker-taper:
+push-docker-taper-x:
 	@DOCKER_BUILDKIT=1 docker buildx build --platform=${TARGET_PLATFORM} --push --build-arg VERSION=${VERSION} -t ${DOCKER_REGISTRY}/passive-taper:${DOCKER_TAG} --file Dockerfile.taper .
 
 .PHONY: push-docker-tyk-x
-docker-tyk:
+push-docker-tyk-x:
 	@(cd gateway/tyk/${TYK_VERSION} && \
 	go mod edit -replace github.com/openclarity/apiclarity/plugins/api@v0.0.0=./../api && \
 	go mod edit -replace github.com/openclarity/apiclarity/plugins/common@v0.0.0=./../common && \
