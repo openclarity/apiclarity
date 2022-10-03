@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import Modal from 'components/Modal';
+import Modal from 'components/SideDrawer';
 import ModalConfirmation from 'components/ModalConfirmation';
 
 export default class FormModal extends Component {

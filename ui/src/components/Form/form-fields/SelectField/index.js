@@ -26,19 +26,19 @@ const getMissingValueItemKeys = (valueKey, items) => {
 const SelectField = (props) => {
     const {items: fieldItems, label, className, placeholder, creatable=false, clearable=true, disabled, tooltipText, loading, small=false} = props;
     const [field, meta, helpers] = useField(props);
-    const {name, value} = field; 
+    const {name, value} = field;
     const {setValue} = helpers;
 
     let formattedItems = fieldItems || [];
     formattedItems = creatable && value !== "" ? getMissingValueItemKeys(value, formattedItems) : formattedItems;
     const formattedItemsJson = JSON.stringify(formattedItems);
-    
+
     const [items, setItems] = useState(formattedItems);
 
     useEffect(() => {
         setItems(JSON.parse(formattedItemsJson));
     }, [formattedItemsJson]);
-    
+
     return (
         <div className={classnames("ps-field-wrapper", "ps-select-field-wrapper", {[className]: className})}>
             {!isEmpty(label) && <FieldLabel tooltipId={name} tooltipText={tooltipText}>{label}</FieldLabel>}
@@ -49,10 +49,14 @@ const SelectField = (props) => {
                     clearable={clearable}
                     items={items}
                     onChange={selectedValue => {
+
+                        // some components pass the selected value as an object.
+                        selectedValue = selectedValue.value || selectedValue;
+
                         if (creatable) {
                             setItems(getMissingValueItemKeys(selectedValue, items));
                         }
-                        
+
                         setValue(selectedValue);
                     }}
                     creatable={creatable}
