@@ -1,6 +1,6 @@
 import React from 'react';
 import classnames from 'classnames';
-import Modal from 'components/Modal';
+import Modal from 'components/SideDrawer';
 // import Text, { TEXT_TYPES } from 'components/Text';
 import Button from 'components/Button';
 

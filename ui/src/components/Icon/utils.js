@@ -1,4 +1,5 @@
 export const ICON_NAMES = {
+    ADD: "add",
     COLUMNS: "columns",
     DASHBOARD: "dashboard",
     INVENTORY: "inventory",
