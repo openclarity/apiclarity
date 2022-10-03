@@ -1,0 +1,77 @@
+@import 'utils/scss_variables.module.scss';
+
+$default-width: 450px;
+
+$large-width-padding: 50px;
+$large-height-padding: 20px;
+$large-modal-height: calc(100vh - 2 * #{$main-content-padding} - 2 * #{$large-height-padding});
+
+.modal-outer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(48, 53, 59, 0.8);
+    z-index: calc(#{$top-layer-z-index} - 1);
+
+    .modal-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 44%;
+        height: 100%;
+        min-width: 705px;
+        background-color: $color-grey-off-white;
+        z-index: $top-layer-z-index;
+        padding: 20px 40px;
+        overflow-y: auto;
+
+        .close-button {
+            z-index: $top-layer-z-index;
+        }
+
+        .modal-details-section {
+            .modal-details-section-title {
+                padding: 10px 0;
+                margin-bottom: 10px;
+                border-bottom: 1px solid $color-grey-light;
+                font-weight: bold;
+                font-size: 12px;
+            }
+        }
+        .modal-title-data-item {
+            font-weight: bold;
+            font-size: 9px;
+
+            .modal-title-data-item-title {
+                text-transform: uppercase;
+                margin-bottom: 5px;
+            }
+            .modal-title-data-item-data {
+                color: $color-grey-dark;
+            }
+        }
+    }
+
+    &.center .modal-container {
+        position: absolute;
+        top: 15%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: $default-width;
+        min-width: $default-width;
+        max-height: 250px;
+    }
+    &.center-large .modal-container {
+        position: absolute;
+        width: calc(100% - 2 * #{$large-width-padding});
+        min-width: $default-width;
+        height: $large-modal-height;
+        max-height: $large-modal-height;
+        top: $large-height-padding;
+        left: $large-width-padding;
+        right: $large-width-padding
+
+    }
+}
