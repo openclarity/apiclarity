@@ -1,0 +1,19 @@
+@import 'utils/scss_variables.module.scss';
+
+.fuzzing-disabled-message-wrapper {
+    .fuzzing-disabled-message {
+        width: 320px;
+        text-align: center;
+
+        .fuzzing-disabled-message-content {
+            font-weight: 400;
+            font-size: 11px;
+            line-height: 16px;
+            color: $color-grey-black;
+            margin-top: 20px;
+        }
+    }
+    img {
+        width: 202px;
+    }
+}
