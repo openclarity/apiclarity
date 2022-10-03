@@ -4,6 +4,10 @@ import { ICON_NAMES } from './utils';
 const IconTemplates = () => (
     <svg style={{display: "none"}} version="1.1" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
         <defs>
+            <symbol id={ICON_NAMES.ADD} viewBox="0 0 22 22">
+                <path d="M12,10h4c0.6,0,1,0.4,1,1s-0.4,1-1,1h-4v4c0,0.6-0.4,1-1,1s-1-0.4-1-1v-4H6c-0.6,0-1-0.4-1-1
+                    s0.4-1,1-1h4V6c0-0.6,0.4-1,1-1s1,0.4,1,1V10z"/>
+            </symbol>
             <symbol id={ICON_NAMES.DASHBOARD} viewBox="0 0 22 22">
                 <path d="M2,3.73076923 C2,2.79292617 2.73628859,2 3.6875,2 L18.3125,2 C19.2637114,2 20,2.79292617 20,3.73076923 L20,18.2692308 C20,19.2070738
                     19.2637114,20 18.3125,20 L3.6875,20 C2.73628859,20 2,19.2070738 2,18.2692308 L2,3.73076923 Z M4,4 L4,18 L18,18 L18,4 L4,4 Z M12.0162027,10.7233095
