@@ -35,6 +35,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/openclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/api/server/restapi/operations"
 	"github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
 	_config "github.com/openclarity/apiclarity/backend/pkg/config"
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
@@ -273,6 +274,9 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 	var err error
 
 	log.Debugf("Handling telemetry: %+v", trace)
+	if b.config != nil && b.config.AutoApproveTraceCount > 0 {
+		log.Debugf("Auto-approving specs with at least %d traces per path", b.config.AutoApproveTraceCount)
+	}
 
 	// TODO: Selective tracing for spec diffs and spec reconstruction
 
@@ -403,17 +407,60 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 				log.Errorf("Failed to create suggested review with spec key: %v. %v", specKey, err)
 				return err
 			}
+			log.Debugf("Checking auto-approve of %d spec items with at least %d traces per path",
+				len(suggestedSpecReview.PathItemsReview), b.config.AutoApproveTraceCount)
 
 			if len(suggestedSpecReview.PathItemsReview) > 0 {
 				autoApprove := true
 				for _, reviewPathItem := range suggestedSpecReview.PathItemsReview {
-					if len(reviewPathItem.Paths) < b.config.AutoApproveTraceCount {
+					var count int64 = 0
+					if len(reviewPathItem.Paths) > 1 {
+						//If suspected params, check number of example paths generating it
+						count = int64(len(reviewPathItem.Paths))
+					} else {
+						//Nonsense
+						var pathIs string
+						for path := range reviewPathItem.Paths {
+							pathIs = path
+							break
+						}
+
+						//TODO: check if the parameterized path is the same as the found paths or no suspected params?
+						//If we have only ever seen the same path, count number of events
+						var sortDir = string("ASC")
+						params := operations.GetAPIEventsParams{
+							DestinationIPIs:   []string{destInfo.IP},
+							DestinationPortIs: []string{destInfo.Port},
+							MethodIs:          []string{telemetry.Request.Method},
+							PathIs:            []string{pathIs},
+							Page:              int64(0),
+							PageSize:          int64(100),
+							SortDir:           &sortDir,
+							SortKey:           "path",
+							StartTime:         strfmt.NewDateTime(),
+							EndTime:           strfmt.NewDateTime(),
+						}
+						_, count, err = b.dbHandler.APIEventsTable().GetAPIEventsAndTotal(params)
+						log.Debugf("Found %d api events for path %s (parameterized %s) in spec %s while checking auto-approve",
+							count, pathIs, reviewPathItem.ParameterizedPath, string(specKey))
+						if err != nil {
+							log.Errorf("Not auto-approving spec %s because we cannot get events for path %s: %v",
+								string(specKey), reviewPathItem.ParameterizedPath, err)
+							autoApprove = false
+							break
+						}
+					}
+					if count < int64(b.config.AutoApproveTraceCount) {
+						log.Errorf("Not auto-approving spec %v because path %s has %d traces",
+							specKey, reviewPathItem.ParameterizedPath, count)
 						autoApprove = false
+						break
 					}
 				}
 				if autoApprove {
 					specVersion := "OASv2.0" //TODO: yeah, you figured it out already, right?
 					approvedReview := convertSuggestedToApprovedReview(suggestedSpecReview)
+					log.Debugf("Auto-approving spec %v", specKey)
 					// apply approved review to the speculator
 					if err := rest.ApproveReview(b.speculator, b.dbHandler, specKey, specVersion, approvedReview); err != nil {
 						log.Errorf("Failed to apply the approved review. %v", err)
