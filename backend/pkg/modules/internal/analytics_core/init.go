@@ -44,9 +44,10 @@ const (
 )
 
 type (
-	TopicType   string
-	DataFrameID string
-	DataFrame   map[int]dataframe.DataFrame
+	TopicType                    string
+	DataFrameID                  string
+	AnalyticsModuleProccFuncName string
+	DataFrame                    map[int]dataframe.DataFrame
 )
 
 type AnalyticsCore struct {
@@ -56,7 +57,7 @@ type AnalyticsCore struct {
 	info                         *core.ModuleInfo
 	numWorkers                   int
 	proccFuncRegistered          map[TopicType][]AnalyticsModuleProccFunc
-	proccFuncDataframeRegistered map[AnalyticsModuleProccFunc]map[DataFrameID]bool
+	proccFuncDataframeRegistered map[AnalyticsModuleProccFuncName]map[DataFrameID]bool
 	dataFramesRegistry           DataFramesRegistry
 
 	topics []TopicType
@@ -93,6 +94,7 @@ func (dfr DataFramesRegistry) Get(name DataFrameID) (DataFrame, bool) {
 
 type AnalyticsModuleProccFunc interface {
 	GetPriority() int
+	GetName() AnalyticsModuleProccFuncName
 	ProccFunc(topicName TopicType, dataFrames map[DataFrameID]dataframe.DataFrame, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{})
 }
 
@@ -118,7 +120,7 @@ func (p *AnalyticsCore) handlerFunction(topic TopicType, partitionID int, msgCha
 }
 
 func (p *AnalyticsCore) getDataFramesShardsForFunc(function AnalyticsModuleProccFunc, partitionID int) map[DataFrameID]dataframe.DataFrame {
-	registeredDfs := p.proccFuncDataframeRegistered[function]
+	registeredDfs := p.proccFuncDataframeRegistered[function.GetName()]
 	dfShards := map[DataFrameID]dataframe.DataFrame{}
 	for rdf := range registeredDfs {
 		foundValue, found := p.dataFramesRegistry.Get(rdf)
@@ -140,7 +142,7 @@ func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Modul
 		info:                         &core.ModuleInfo{Name: "analytics_core", Description: "analytics_core"},
 		numWorkers:                   1,
 		proccFuncRegistered:          map[TopicType][]AnalyticsModuleProccFunc{},
-		proccFuncDataframeRegistered: map[AnalyticsModuleProccFunc]map[DataFrameID]bool{},
+		proccFuncDataframeRegistered: map[AnalyticsModuleProccFuncName]map[DataFrameID]bool{},
 		dataFramesRegistry:           NewDataFramesRegistry(),
 		topics:                       make([]TopicType, 0, maxNumTopics),
 	}
@@ -179,12 +181,12 @@ func (p *AnalyticsCore) RegisterAnalyticsModuleHandler(topic TopicType, proccFun
 }
 
 func (p *AnalyticsCore) RegisterDataFrameForFunc(proccFunc AnalyticsModuleProccFunc, dataframe DataFrameID) {
-	registeredDFs, found := p.proccFuncDataframeRegistered[proccFunc]
+	registeredDFs, found := p.proccFuncDataframeRegistered[proccFunc.GetName()]
 	if !found {
 		registeredDFs = map[DataFrameID]bool{}
 	}
 	registeredDFs[dataframe] = true
-	p.proccFuncDataframeRegistered[proccFunc] = registeredDFs
+	p.proccFuncDataframeRegistered[proccFunc.GetName()] = registeredDFs
 }
 
 /*

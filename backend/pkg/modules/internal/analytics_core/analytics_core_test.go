@@ -12,6 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package analyticscore
 
 import (
@@ -44,6 +45,10 @@ func (p messageForBrokerTest) GetPartitionKey() int64 {
 
 func (p traceAnalyzerTest) GetPriority() int {
 	return 10
+}
+
+func (p traceAnalyzerTest) GetName() AnalyticsModuleProccFuncName {
+	return "traceAnalyzerTest"
 }
 
 func (p traceAnalyzerTest) ProccFunc(topicName TopicType, dataframes map[DataFrameID]dataframe.DataFrame, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
@@ -87,8 +92,8 @@ func (p entityAnalyzerTest) GetPriority() int {
 	return p.priorityValue
 }
 
-func (p entityAnalyzerTest) GetDataFrames() map[DataFrameID]map[int]dataframe.DataFrame {
-	return nil
+func (p entityAnalyzerTest) GetName() AnalyticsModuleProccFuncName {
+	return "traceAnalyzerTest"
 }
 
 func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataframes map[DataFrameID]dataframe.DataFrame, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
