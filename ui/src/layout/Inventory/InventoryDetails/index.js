@@ -31,7 +31,7 @@ const InventoryDetails = ({type}) => {
             title: m.name,
             linkTo: `${url}${m.endpoint}`,
             to: `${path}${m.endpoint}`,
-            component: () => <m.component  {...{...data.items[0], inventoryId, type}}/>
+            component: () => <m.component  {...{...data.items[0], inventoryId, type, outerHistory: url}}/>
         };
     });
 
