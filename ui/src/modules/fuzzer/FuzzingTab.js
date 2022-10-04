@@ -74,7 +74,6 @@ const convertTestResponse = async (apiId, data) => {
         t.tags = report.tags || [];
         t.tags = t.tags.map((t) => {
             t.methods = t.operations.map((op) => {
-                console.log(op);
                 return {
                     findings: {
                         elements: op.findings
