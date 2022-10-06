@@ -8,6 +8,7 @@ import FindingsTable from './FindingsTable';
 import TestsTable from './TestsTable';
 import TestOverview from './TestOverview';
 import { MODULE_TYPES } from '../MODULE_TYPES.js';
+import FuzzingTab from './FuzzingTab';
 
 import './tests.scss';
 
@@ -81,7 +82,8 @@ const FuzzerAPIDetails = props => {
 
 const pluginAPIDetails = {
     name: 'Testing',
-    component: FuzzerAPIDetails,
+    component: FuzzingTab,
+    // component: FuzzerAPIDetails,
     endpoint: '/fuzzer',
     type: MODULE_TYPES.INVENTORY_DETAILS
 }
