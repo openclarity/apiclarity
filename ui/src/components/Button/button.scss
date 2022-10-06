@@ -1,35 +1,70 @@
 @import 'utils/scss_variables.module.scss';
 
-.ag-button {
+$button-icon-size: 16px;
+
+.scn-button {
     border: none;
+    outline: none;
+    font-weight: bold;
     background-color: transparent;
-    height: 28px;
-
-    &.ag-button--primary {
-        font-size: 14px;
-        line-height: 16px;
+    box-sizing: border-box;
+    padding: 0;
+    height: 26px;
+    font-size: 12px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    
+    &:disabled {
+        cursor: not-allowed;
+    }
+    &.scn-button--primary {
+        background-color: $color-main;
+        color: $color-white;
         border-radius: 50px;
-        display: inline-block;
-        background-color: $color-main-light;
-        color: $color-grey-black;
-        padding: 0px 25px;
+        text-transform: uppercase;
+        padding: 0 20px;
 
+        &:hover:not(:disabled) {
+            background-color: $color-main-dark;
+        }
         &:disabled {
             background-color: $color-grey-light;
             color: $color-grey;
         }
     }
-    &.ag-button--secondary {
-        font-size: 12px;
-        line-height: 16px;
+    &.scn-button--secondary {
+        color: $color-main;
+        border: 1px solid $color-main;
+        border-radius: 50px;
+        text-transform: uppercase;
+        padding: 0 20px;
+
+        &:hover:not(:disabled) {
+            background-color: $color-blue-light;
+        }
+        &:disabled {
+            color: $color-grey;
+            border-color: $color-grey;
+        }
+    }
+    &.scn-button--tertiary {
         color: $color-main;
         text-decoration: underline;
-        padding: 0;
+
+        &:hover:not(:disabled) {
+            color: $color-main-dark;
+        }
+        &:disabled {
+            color: $color-grey;
+        }
     }
-    &.clickable:not(:disabled) {
-        cursor: pointer;
-    }
-    &:disabled {
-        cursor: not-allowed;
+    .button-icon {
+        width: $button-icon-size;
+        height: $button-icon-size;
+        min-width: $button-icon-size;
+        min-height: $button-icon-size;
+        margin-right: 5px;
     }
 }

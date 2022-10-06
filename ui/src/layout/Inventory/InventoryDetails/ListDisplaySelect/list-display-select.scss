@@ -1,0 +1,60 @@
+@import 'utils/scss_variables.module.scss';
+
+.list-display-select-wrapper {
+    display: flex;
+    // TODO change the height to 100 % somehow
+    height: 100%;
+
+    .list-display-select-left-pane {
+        width: 25%;
+        border-right: 1px solid $color-grey-light;
+
+        .list-display-select-title {
+            margin: 20px;
+
+            font-style: normal;
+            font-weight: 700;
+            font-size: 14px;
+            line-height: 14px;
+            letter-spacing: 0.36px;
+            color: $color-grey-black;
+        }
+    }
+
+    .list-display-select-right-pane {
+        width: 70%;
+    }
+}
+
+.list-display-item-container {
+    display: flex;
+    user-select: none;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid $color-grey-light;
+
+    padding-inline: 20px;
+    padding-block: 8px;
+
+    &.selected {
+        background-color: $color-blue;
+    }
+
+    .list-display-item-title {
+        font-style: normal;
+        font-weight: 700;
+        font-size: 11px;
+        line-height: 16px;
+        color: $color-main;
+    }
+
+    .list-display-item-icon {
+        .legitimate {
+            color: $color-success
+        }
+
+        .illegitimate {
+            color: $color-error
+        }
+    }
+}

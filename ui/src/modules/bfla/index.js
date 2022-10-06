@@ -1,19 +1,36 @@
-import React, {useState} from 'react';
-import {useFetch} from 'hooks';
+import React, { useState } from 'react';
+import { useFetch } from 'hooks';
 import Loader from 'components/Loader';
 import Button from 'components/Button';
 import TitleValueDisplay, { TitleValueDisplayRow } from 'components/TitleValueDisplay';
-import BflaStatusIcon, {BFLA_STATUS_TYPES_MAP} from './BflaStatusIcon';
-import BflaModal, {MODAL_ACTION_TYPE} from './BflaModal';
+import BflaStatusIcon, { BFLA_STATUS_TYPES_MAP } from './BflaStatusIcon';
+import BflaModal, { MODAL_ACTION_TYPE } from './BflaModal';
 import { MODULE_TYPES } from '../MODULE_TYPES.js';
 import bflaApiInventory from './BflaApiInventory';
+import NoSpecScreen from './NoSpecsScreen';
 
 import './bfla.scss';
 
+const BFLA_TAB_STATUS = {
+    NO_SPEC: "NO_SPEC",
+    DATA_COLLECTION: 'DATA_COLLECTION',
+    DATA_COLLECTED: 'DATA_COLLECTED',
+    ERROR: 'ERROR',
+    STOPPING_IN_PROGRESS: 'STOPPING_IN_PROGRESS',
+    IN_PROGRESS_DETECTION: "IN_PROGRESS_DETECTION",
+    IN_PROGRESS_LEARNING: "IN_PROGRESS_LEARNING",
+}
+
 const BflaPlugin = (props) => {
-    const {eventId} = props;
+    const { eventId } = props;
     const [{ loading, data: bflaData }, updateBflaEvent] = useFetch(`modules/bfla/event/${eventId}`);
     const [showBflaModal, setShowBflaModal] = useState();
+    const [bflaTabStatus, setBflaTabStatus] = useState();
+
+    const hasProvidedSpec = true;
+    const hasReconstructedSpec = true;
+
+    const hasSpec = hasReconstructedSpec || hasProvidedSpec;
 
     if (loading) {
         return <Loader />;
@@ -23,7 +40,7 @@ const BflaPlugin = (props) => {
         return <div>No BFLA data found</div>;
     }
 
-    const {bflaStatus, sourceK8sObject, destinationK8sObject, external} = bflaData;
+    const { bflaStatus, sourceK8sObject, destinationK8sObject, external } = bflaData;
     const sourceName = external ? 'EXTERNAL' : sourceK8sObject.name;
     const sourceKind = sourceK8sObject ? sourceK8sObject.kind : '';
     const destinationName = destinationK8sObject ? destinationK8sObject.name : '';
@@ -53,15 +70,15 @@ const BflaPlugin = (props) => {
                     eventId={eventId}
                     type={bflaStatus === BFLA_STATUS_TYPES_MAP.LEGITIMATE.value ? MODAL_ACTION_TYPE.DENY : MODAL_ACTION_TYPE.APPROVE}
                     onClose={() => setShowBflaModal(false)}
-                    onSuccess={() => updateBflaEvent()}/>
+                    onSuccess={() => updateBflaEvent()} />
             }
         </div>
     );
 };
 
-const BflaStatus = ({bflaStatus, sourceName}) => {
-    const {SUSPICIOUS_HIGH, SUSPICIOUS_MEDIUM, LEGITIMATE, LEARNING, NO_SPEC} = BFLA_STATUS_TYPES_MAP;
-    const {value} = BFLA_STATUS_TYPES_MAP[bflaStatus] || {};
+const BflaStatus = ({ bflaStatus, sourceName }) => {
+    const { SUSPICIOUS_HIGH, SUSPICIOUS_MEDIUM, LEGITIMATE, LEARNING, NO_SPEC } = BFLA_STATUS_TYPES_MAP;
+    const { value } = BFLA_STATUS_TYPES_MAP[bflaStatus] || {};
 
     let statusText;
     switch (value) {
@@ -83,30 +100,6 @@ const BflaStatus = ({bflaStatus, sourceName}) => {
         default:
             statusText = '';
     }
-
-    const isSuspicious = (value === SUSPICIOUS_HIGH.value || value === SUSPICIOUS_MEDIUM.value);
-
-    if (isSuspicious) {
-        return (
-            <TitleValueDisplay
-                className="bfla-status"
-                title={
-                    <div className="bfla-status-title">
-                        <span>Broken Function Level Authorization Alert:</span>
-                        <BflaStatusIcon bflaStatusType={bflaStatus} />
-                    </div>
-                }>
-                <div className="bfla-status-text">{statusText}</div>
-            </TitleValueDisplay>
-        );
-    }
-
-    return (
-        <div className="bfla-status bfla-status-title">
-            <div className="bfla-status-text">{statusText}</div>
-            {value !== NO_SPEC.value && <BflaStatusIcon bflaStatusType={bflaStatus} />}
-        </div>
-    );
 };
 
 const bfla = {
