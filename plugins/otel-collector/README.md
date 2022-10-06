@@ -13,7 +13,7 @@ endpoint for analysis.
 The following settings are required:
 
 - `endpoint` (no default): The target base URL to send data to (e.g.: https://example.com:4318).
-  The trace signal will be added to this base URL, i.e. "/api/telemetry" will be appended. 
+  The trace signal will be added to this base URL, i.e. "/api/telemetry" will be appended.
 
 The following settings can be optionally configured:
 
@@ -27,7 +27,7 @@ Example:
 ```yaml
 exporters:
   apiclarity:
-    endpoint: https://example.com:4318/api/telemetry
+    endpoint: https://example.com:4318/
 ```
 
 The full list of settings exposed for this exporter are documented [here](./config.go)
@@ -48,12 +48,16 @@ dist:
   output_path: ./otelcol-api
 
 exporters:
-  - gomod: "github.com/openclarity/apiclarity/plugins/otel-collector-exporter/exporter"
+  - gomod: "github.com/openclarity/apiclarity/plugins/otel-collector/apiclarityexporter v0.0.0"
   - gomod:
       "github.com/open-telemetry/opentelemetry-collector-contrib/exporter/jaegerexporter
       v0.53.0"
   - import: go.opentelemetry.io/collector/exporter/loggingexporter
     gomod: go.opentelemetry.io/collector v0.53.0
+
+replaces:
+  - github.com/openclarity/apiclarity/plugins/otel-collector/apiclarityexporter v0.0.0 => github.com/openclarity/apiclarity/plugins/otel-collector/apiclarityexporter v0.0.0-20220915093602-8a11adcdb9e1
+  - github.com/openclarity/apiclarity/plugins/api v0.0.0 => github.com/openclarity/apiclarity/plugins/api v0.0.0-20220915093602-8a11adcdb9e1
 
 receivers:
   - import: go.opentelemetry.io/collector/receiver/otlpreceiver
