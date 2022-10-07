@@ -110,6 +110,11 @@ func NewTest() *TestItem {
 			Vulnerabilities: &(restapi.Vulnerabilities{Total: new(int), Critical: new(int), High: new(int), Medium: new(int), Low: new(int)}),
 			LastReportTime:  &lastReportTime,
 			ErrorMessage:    new(string),
+			Report: &(restapi.FuzzingStatusAndReport{
+				Progress: 0,
+				Report:   map[string]restapi.FuzzingReportItem{},
+				Status:   restapi.INPROGRESS,
+			}),
 		},
 		SpecsInfo: &(tools.FuzzerSpecsInfo{}),
 	}
@@ -233,6 +238,11 @@ func (api *API) GetTestShortReportByTimestamp(timestamp int64) (*restapi.ShortTe
 func (api *API) getTestShortReport(testItem *TestItem) (*restapi.ShortTestReport, error) {
 	test := testItem.Test
 	report := test.Report
+
+	if report == nil {
+		// No available report yet
+		return nil, fmt.Errorf("no report yet")
+	}
 
 	// Create the shortreport structure to fill
 	shortReport := restapi.ShortTestReport{
