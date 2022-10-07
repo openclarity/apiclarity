@@ -27,6 +27,7 @@ import (
 
 func ParseSpecInfo(apiInfo *database.APIInfo) ([]*models.SpecTag, error) {
 	if apiInfo.ProvidedSpecInfo != "" {
+		log.Debugf("BFLA: Parsing provided spec for API %v: %v", apiInfo.ID, apiInfo.ProvidedSpecInfo)
 		info := &models.SpecInfo{}
 		if err := json.Unmarshal([]byte(apiInfo.ProvidedSpecInfo), info); err != nil {
 			return nil, fmt.Errorf("unable to unmarshal spec tags: %s", err)
@@ -34,6 +35,7 @@ func ParseSpecInfo(apiInfo *database.APIInfo) ([]*models.SpecTag, error) {
 		return info.Tags, nil
 	}
 	if apiInfo.ReconstructedSpecInfo != "" {
+		log.Debugf("BFLA: Parsing reconstructed spec for API %v: %v", apiInfo.ID, apiInfo.ReconstructedSpecInfo)
 		info := &models.SpecInfo{}
 		if err := json.Unmarshal([]byte(apiInfo.ReconstructedSpecInfo), info); err != nil {
 			log.Errorf("unable to unmarshal spec tags: %s", err)
@@ -41,10 +43,11 @@ func ParseSpecInfo(apiInfo *database.APIInfo) ([]*models.SpecTag, error) {
 		}
 		return info.Tags, nil
 	}
-	return nil, nil
+	return nil, fmt.Errorf("no reconstructed or provided spec available for API %v", apiInfo.ID)
 }
 
 func ResolvePath(tags []*models.SpecTag, event *database.APIEvent) (path string, tagNames []string, err error) {
+	log.Debugf("Resolving path for event %v: %v %v providedPathID=%v reconstructedPathID=%v", event.ID, event.Method, event.Path, event.ProvidedPathID, event.ReconstructedPathID)
 	if event.ProvidedPathID != "" {
 		path, tagNames, err = resolvePathFromPathIDAndMethod(tags, event.ProvidedPathID, string(event.Method))
 	} else if event.ReconstructedPathID != "" {
