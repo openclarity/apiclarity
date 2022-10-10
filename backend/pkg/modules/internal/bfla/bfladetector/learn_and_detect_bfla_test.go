@@ -73,7 +73,7 @@ func getAPIInfoWithTags(method string, path string) *database.APIInfo {
 	}
 
 	if method != "" && path != "" {
-		apiInfo.ProvidedSpecInfo = fmt.Sprintf(`{"tags":[{"methodAndPathList":[{"pathId":"test","path":%q}]}]}`, path)
+		apiInfo.ProvidedSpecInfo = fmt.Sprintf(`{"tags":[ {"name": "default-tag", "methodAndPathList":[{"pathId":"test","path":%q, "method": %q}]}]}`, path, method)
 		apiInfo.ProvidedSpec = fmt.Sprintf(`{"swagger": "2.0","info": {"title": "","version": ""},"paths": {%q: {%q: {"responses": {"200": {"description": ""}}}}}}`, path, method)
 	}
 	return &apiInfo
@@ -313,6 +313,7 @@ func Test_learnAndDetectBFLA_DenyTrace(t *testing.T) {
 				Operations: bfladetector.Operations{{
 					Method: "POST",
 					Path:   "/login",
+					Tags:   []string{"default-tag"},
 					Audience: bfladetector.Audience{{
 						K8sObject:     newClientRef("frontend"),
 						EndUsers:      bfladetector.EndUsers{{ID: "user2"}},
@@ -323,6 +324,7 @@ func Test_learnAndDetectBFLA_DenyTrace(t *testing.T) {
 				}, {
 					Method: "POST",
 					Path:   "/register",
+					Tags:   []string{"default-tag"},
 					Audience: bfladetector.Audience{{
 						K8sObject:     newClientRef("frontend"),
 						EndUsers:      bfladetector.EndUsers{{ID: "user2"}},
@@ -336,6 +338,7 @@ func Test_learnAndDetectBFLA_DenyTrace(t *testing.T) {
 				Operations: bfladetector.Operations{{
 					Method: "GET",
 					Path:   "/catalogue",
+					Tags:   []string{"default-tag"},
 					Audience: bfladetector.Audience{{
 						K8sObject:     newClientRef("frontend"),
 						EndUsers:      bfladetector.EndUsers{{ID: "user3"}},
@@ -346,6 +349,7 @@ func Test_learnAndDetectBFLA_DenyTrace(t *testing.T) {
 				}, {
 					Method: "GET",
 					Path:   "/cards",
+					Tags:   []string{"default-tag"},
 					Audience: bfladetector.Audience{{
 						K8sObject:     newClientRef("frontend"),
 						EndUsers:      bfladetector.EndUsers{{ID: "user3"}},
@@ -359,6 +363,7 @@ func Test_learnAndDetectBFLA_DenyTrace(t *testing.T) {
 				Operations: bfladetector.Operations{{
 					Method: "GET",
 					Path:   "/carts/{id}/items",
+					Tags:   []string{"default-tag"},
 					Audience: bfladetector.Audience{{
 						K8sObject:     newClientRef("frontend"),
 						EndUsers:      bfladetector.EndUsers{{ID: "user1"}, {ID: "user2"}},
@@ -369,6 +374,7 @@ func Test_learnAndDetectBFLA_DenyTrace(t *testing.T) {
 				}, {
 					Method: "POST",
 					Path:   "/carts/{id}/items",
+					Tags:   []string{"default-tag"},
 					Audience: bfladetector.Audience{{
 						K8sObject:     newClientRef("frontend"),
 						EndUsers:      bfladetector.EndUsers{{ID: "user1"}},
@@ -379,6 +385,7 @@ func Test_learnAndDetectBFLA_DenyTrace(t *testing.T) {
 				}, {
 					Method: "POST",
 					Path:   "/addresses",
+					Tags:   []string{"default-tag"},
 					Audience: bfladetector.Audience{{
 						K8sObject:     newClientRef("frontend"),
 						EndUsers:      bfladetector.EndUsers{{ID: "user3"}},
@@ -396,7 +403,7 @@ func Test_learnAndDetectBFLA_DenyTrace(t *testing.T) {
 			storedBFLAFindings := map[uint]common.APIFindings{}
 			backendAccessor := core.NewMockBackendAccessor(ctrl)
 			backendAccessor.EXPECT().GetAPIInfo(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, apiID uint) (*database.APIInfo, error) {
-				return getAPIInfoWithTags("get", "/carts/{id}/items"), nil
+				return getAPIInfoWithTags("POST", "/carts/{id}/items"), nil
 			}).AnyTimes()
 			backendAccessor.EXPECT().Notify(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 			detector := initBFLADetector(ctrl, backendAccessor, tt.authModels, storedBFLAStates, storedBFLAFindings)
@@ -425,6 +432,7 @@ func Test_learnAndDetectBFLA_ApproveTrace(t *testing.T) {
 				Operations: bfladetector.Operations{{
 					Method: "POST",
 					Path:   "/login",
+					Tags:   []string{"default-tag"},
 					Audience: bfladetector.Audience{{
 						K8sObject:     newClientRef("frontend"),
 						EndUsers:      bfladetector.EndUsers{{ID: "user2"}},
@@ -435,6 +443,7 @@ func Test_learnAndDetectBFLA_ApproveTrace(t *testing.T) {
 				}, {
 					Method: "POST",
 					Path:   "/register",
+					Tags:   []string{"default-tag"},
 					Audience: bfladetector.Audience{{
 						K8sObject:     newClientRef("frontend"),
 						EndUsers:      bfladetector.EndUsers{{ID: "user2"}},
@@ -448,6 +457,7 @@ func Test_learnAndDetectBFLA_ApproveTrace(t *testing.T) {
 				Operations: bfladetector.Operations{{
 					Method: "GET",
 					Path:   "/catalogue",
+					Tags:   []string{"default-tag"},
 					Audience: bfladetector.Audience{{
 						K8sObject:     newClientRef("frontend"),
 						EndUsers:      bfladetector.EndUsers{{ID: "user3"}},
@@ -458,6 +468,7 @@ func Test_learnAndDetectBFLA_ApproveTrace(t *testing.T) {
 				}, {
 					Method: "GET",
 					Path:   "/cards",
+					Tags:   []string{"default-tag"},
 					Audience: bfladetector.Audience{{
 						K8sObject:     newClientRef("frontend"),
 						EndUsers:      bfladetector.EndUsers{{ID: "user3"}},
@@ -471,6 +482,7 @@ func Test_learnAndDetectBFLA_ApproveTrace(t *testing.T) {
 				Operations: bfladetector.Operations{{
 					Method: "GET",
 					Path:   "/carts/{id}/items",
+					Tags:   []string{"default-tag"},
 					Audience: bfladetector.Audience{{
 						K8sObject:     newClientRef("frontend"),
 						EndUsers:      bfladetector.EndUsers{{ID: "user1"}, {ID: "user2"}},
@@ -481,6 +493,7 @@ func Test_learnAndDetectBFLA_ApproveTrace(t *testing.T) {
 				}, {
 					Method: "POST",
 					Path:   "/carts/{id}/items",
+					Tags:   []string{"default-tag"},
 					Audience: bfladetector.Audience{{
 						K8sObject:     newClientRef("frontend"),
 						EndUsers:      bfladetector.EndUsers{{ID: "user1"}},
@@ -491,6 +504,7 @@ func Test_learnAndDetectBFLA_ApproveTrace(t *testing.T) {
 				}, {
 					Method: "POST",
 					Path:   "/addresses",
+					Tags:   []string{"default-tag"},
 					Audience: bfladetector.Audience{{
 						K8sObject:     newClientRef("frontend"),
 						EndUsers:      bfladetector.EndUsers{{ID: "user3"}},
@@ -501,6 +515,7 @@ func Test_learnAndDetectBFLA_ApproveTrace(t *testing.T) {
 				}, {
 					Method: "POST",
 					Path:   "/carts/{id}/merge",
+					Tags:   []string{"default-tag"},
 					Audience: bfladetector.Audience{{
 						K8sObject:     newClientRef("frontend"),
 						EndUsers:      bfladetector.EndUsers{{ID: "user1", Source: bfladetector.DetectedUserSourceJWT}},
@@ -518,7 +533,7 @@ func Test_learnAndDetectBFLA_ApproveTrace(t *testing.T) {
 			storedBFLAFindings := map[uint]common.APIFindings{}
 			backendAccessor := core.NewMockBackendAccessor(ctrl)
 			backendAccessor.EXPECT().GetAPIInfo(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, apiID uint) (*database.APIInfo, error) {
-				return getAPIInfoWithTags("get", "/carts/{id}/items"), nil
+				return getAPIInfoWithTags("POST", "/carts/{id}/merge"), nil
 			}).AnyTimes()
 			backendAccessor.EXPECT().Notify(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 			detector := initBFLADetector(ctrl, backendAccessor, tt.authModels, storedBFLAStates, storedBFLAFindings)
@@ -544,6 +559,7 @@ func authModelsAfterLearning() map[uint]bfladetector.AuthorizationModel {
 			Operations: bfladetector.Operations{{
 				Method: "POST",
 				Path:   "/login",
+				Tags:   []string{"default-tag"},
 				Audience: bfladetector.Audience{{
 					K8sObject:     newClientRef("frontend"),
 					EndUsers:      bfladetector.EndUsers{{ID: "user2"}},
@@ -554,6 +570,7 @@ func authModelsAfterLearning() map[uint]bfladetector.AuthorizationModel {
 			}, {
 				Method: "POST",
 				Path:   "/register",
+				Tags:   []string{"default-tag"},
 				Audience: bfladetector.Audience{{
 					K8sObject:     newClientRef("frontend"),
 					EndUsers:      bfladetector.EndUsers{{ID: "user2"}},
@@ -567,6 +584,7 @@ func authModelsAfterLearning() map[uint]bfladetector.AuthorizationModel {
 			Operations: bfladetector.Operations{{
 				Method: "GET",
 				Path:   "/catalogue",
+				Tags:   []string{"default-tag"},
 				Audience: bfladetector.Audience{{
 					K8sObject:     newClientRef("frontend"),
 					EndUsers:      bfladetector.EndUsers{{ID: "user3"}},
@@ -577,6 +595,7 @@ func authModelsAfterLearning() map[uint]bfladetector.AuthorizationModel {
 			}, {
 				Method: "GET",
 				Path:   "/cards",
+				Tags:   []string{"default-tag"},
 				Audience: bfladetector.Audience{{
 					K8sObject:     newClientRef("frontend"),
 					EndUsers:      bfladetector.EndUsers{{ID: "user3"}},
@@ -590,6 +609,7 @@ func authModelsAfterLearning() map[uint]bfladetector.AuthorizationModel {
 			Operations: bfladetector.Operations{{
 				Method: "GET",
 				Path:   "/carts/{id}/items",
+				Tags:   []string{"default-tag"},
 				Audience: bfladetector.Audience{{
 					K8sObject:     newClientRef("frontend"),
 					EndUsers:      bfladetector.EndUsers{{ID: "user1"}, {ID: "user2"}},
@@ -600,6 +620,7 @@ func authModelsAfterLearning() map[uint]bfladetector.AuthorizationModel {
 			}, {
 				Method: "POST",
 				Path:   "/carts/{id}/items",
+				Tags:   []string{"default-tag"},
 				Audience: bfladetector.Audience{{
 					K8sObject:     newClientRef("frontend"),
 					EndUsers:      bfladetector.EndUsers{{ID: "user1"}},
@@ -610,6 +631,7 @@ func authModelsAfterLearning() map[uint]bfladetector.AuthorizationModel {
 			}, {
 				Method: "POST",
 				Path:   "/addresses",
+				Tags:   []string{"default-tag"},
 				Audience: bfladetector.Audience{{
 					K8sObject:     newClientRef("frontend"),
 					EndUsers:      bfladetector.EndUsers{{ID: "user3"}},

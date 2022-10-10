@@ -19,33 +19,6 @@ paths:
               schema:
                 $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ModuleVersion'
 
-  /api/findings/{apiID}:
-    get:
-      operationId: GetAPIFindingsForAPI
-      summary: 'Get Findings for an API'
-      description: 'Asks APIClarity for all findings of BFLA modules of a specific API.'
-      parameters:
-        - name: apiID
-          description: "The path parameter for apiID type"
-          in: path
-          required: true
-          schema:
-            $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID'
-        - $ref: '../../../../../../api3/common/openapi.yaml#/components/parameters/Sensitive'
-      responses:
-        '200':
-          description: 'An API Bundle'
-          content:
-            application/json:
-              schema:
-                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/APIFindings'
-        default:
-          description: 'Error response'
-          content:
-            'application/json':
-              schema:
-                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
-
   /authorizationModel/{apiID}:
     post:
       parameters:
@@ -375,6 +348,8 @@ paths:
                 $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
   /apiFindings/{apiID}:
     get:
+      tags:
+        - bfla
       operationId: GetApiFindings
       summary: 'Get findings for an API and module'
       description: 'Asks for findings of an APIClarity module, and API. Implemented by each module'

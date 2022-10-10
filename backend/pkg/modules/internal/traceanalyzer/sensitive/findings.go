@@ -48,7 +48,7 @@ func (a AnnotationRegexpMatching) Redacted() utils.TraceAnalyzerAnnotation {
 func (a *AnnotationRegexpMatching) ToFinding() utils.Finding {
 	matchingRules := []string{}
 	for _, r := range a.Matches {
-		matchingRules = append(matchingRules, r.Rule.ID)
+		matchingRules = append(matchingRules, r.Rule.Description)
 	}
 	return utils.Finding{
 		ShortDesc:    "Matching regular expression",
@@ -60,13 +60,13 @@ func (a *AnnotationRegexpMatching) ToFinding() utils.Finding {
 
 type APIAnnotationRegexpMatching struct {
 	utils.BaseTraceAnalyzerAPIAnnotation
-	MatchingRules map[string]bool `json:"matching_rules_id"`
+	MatchingRules map[string]string `json:"matching_rules_id"`
 }
 
 func NewAPIAnnotationRegexpMatching(path, method string) *APIAnnotationRegexpMatching {
 	return &APIAnnotationRegexpMatching{
 		BaseTraceAnalyzerAPIAnnotation: utils.BaseTraceAnalyzerAPIAnnotation{SpecPath: path, SpecMethod: method},
-		MatchingRules:                  make(map[string]bool),
+		MatchingRules:                  make(map[string]string),
 	}
 }
 func (a *APIAnnotationRegexpMatching) Name() string { return RegexpMatchingType }
@@ -78,7 +78,7 @@ func (a *APIAnnotationRegexpMatching) Aggregate(ann utils.TraceAnalyzerAnnotatio
 
 	initialSize := len(a.MatchingRules)
 	for _, r := range eventAnn.Matches {
-		a.MatchingRules[r.Rule.ID] = true
+		a.MatchingRules[r.Rule.ID] = r.Rule.Description
 	}
 
 	return initialSize != len(a.MatchingRules)
@@ -103,12 +103,16 @@ func (a *APIAnnotationRegexpMatching) ToAPIFinding() oapicommon.APIFinding {
 		}
 	}
 	jsonPointer := a.SpecLocation()
+	matchingDescs := []string{}
+	for _, desc := range a.MatchingRules {
+		matchingDescs = append(matchingDescs, desc)
+	}
 	return oapicommon.APIFinding{
 		Source: utils.ModuleName,
 
 		Type:        a.Name(),
 		Name:        "Matching regular expression",
-		Description: "This operation matches sensitive information",
+		Description: fmt.Sprintf("This operation matches sensitive information. The rules that are matching are %s", strings.Join(matchingDescs, ", ")),
 
 		ProvidedSpecLocation:      &jsonPointer,
 		ReconstructedSpecLocation: &jsonPointer,
