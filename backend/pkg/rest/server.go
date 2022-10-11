@@ -159,6 +159,10 @@ func CreateRESTServer(config *ServerConfig) (*Server, error) {
 		return s.GetFeatures(params)
 	})
 
+	api.PostControlNewDiscoveredAPIsHandler = operations.PostControlNewDiscoveredAPIsHandlerFunc(func(params operations.PostControlNewDiscoveredAPIsParams) middleware.Responder {
+		return s.PostControlNewDiscoveredAPIs(params)
+	})
+
 	server := restapi.NewServer(api)
 
 	server.ConfigureFlags()

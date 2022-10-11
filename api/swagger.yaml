@@ -800,6 +800,31 @@ paths:
         default:
           $ref: '#/responses/UnknownError'
 
+  /control/newDiscoveredAPIs:
+    post:
+      summary: 'List of new external services discovered by API gateways'
+      parameters:
+        - in: 'body'
+          name: 'body'
+          description: 'List of new discovered APIs by the external API Gateway'
+          required: true
+          schema:
+            type: 'object'
+            required:
+              - hosts
+            properties:
+              hosts:
+                type: 'array'
+                description: 'List of discovered APIs, format of hostname:port'
+                items:
+                  type: 'string'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/responses/Success'
+        default:
+          $ref: '#/responses/UnknownError'
 parameters:
   
   startTime:

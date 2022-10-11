@@ -697,6 +697,45 @@ func init() {
         }
       }
     },
+    "/control/newDiscoveredAPIs": {
+      "post": {
+        "summary": "List of new external services discovered by API gateways",
+        "parameters": [
+          {
+            "description": "List of new discovered APIs by the external API Gateway",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "hosts"
+              ],
+              "properties": {
+                "hosts": {
+                  "description": "List of discovered APIs, format of hostname:port",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/responses/Success"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
     "/dashboard/apiUsage": {
       "get": {
         "summary": "Get API usage",
@@ -2869,6 +2908,51 @@ func init() {
               "type": "array",
               "items": {
                 "$ref": "#/definitions/HitCount"
+              }
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/control/newDiscoveredAPIs": {
+      "post": {
+        "summary": "List of new external services discovered by API gateways",
+        "parameters": [
+          {
+            "description": "List of new discovered APIs by the external API Gateway",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "hosts"
+              ],
+              "properties": {
+                "hosts": {
+                  "description": "List of discovered APIs, format of hostname:port",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "description": "success message",
+              "schema": {
+                "$ref": "#/definitions/SuccessResponse"
               }
             }
           },
