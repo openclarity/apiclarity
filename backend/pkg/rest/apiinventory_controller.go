@@ -57,7 +57,7 @@ func (s *Server) PostAPIInventory(params operations.PostAPIInventoryParams) midd
 		Port:                 params.Body.Port,
 		DestinationNamespace: params.Body.DestinationNamespace,
 	}
-	if err := s.dbHandler.APIInventoryTable().FirstOrCreate(apiInfo); err != nil {
+	if _, err := s.dbHandler.APIInventoryTable().FirstOrCreate(apiInfo); err != nil {
 		log.Error(err)
 		return operations.NewPostAPIInventoryDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
 			Message: "Oops",

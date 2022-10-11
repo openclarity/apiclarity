@@ -74,7 +74,7 @@ type APIInventoryTable interface {
 	DeleteApprovedAPISpec(apiID uint32) error
 	GetAPIID(name, port string) (uint, error)
 	First(dest *APIInfo, conds ...interface{}) error
-	FirstOrCreate(apiInfo *APIInfo) error
+	FirstOrCreate(apiInfo *APIInfo) (created bool, err error)
 	CreateAPIInfo(event *APIInfo)
 }
 
@@ -173,6 +173,7 @@ func (a *APIInventoryTableHandler) First(dest *APIInfo, conds ...interface{}) er
 	return a.tx.First(dest, conds).Error
 }
 
-func (a *APIInventoryTableHandler) FirstOrCreate(apiInfo *APIInfo) error {
-	return a.tx.Where(*apiInfo).FirstOrCreate(apiInfo).Error
+func (a *APIInventoryTableHandler) FirstOrCreate(apiInfo *APIInfo) (created bool, err error) {
+	tx := a.tx.Where(*apiInfo).FirstOrCreate(apiInfo)
+	return tx.RowsAffected > 0, tx.Error
 }
