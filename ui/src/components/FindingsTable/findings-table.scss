@@ -4,6 +4,10 @@
     .findings-actions-wrapper {
         display: flex;
         justify-content: space-between;
+
+        :last-child {
+            margin-left: auto;
+        }
     }
 
     .table {
@@ -79,6 +83,7 @@
 
         pre {
             margin-top: unset;
+            white-space: pre-wrap
         }
     }
 
