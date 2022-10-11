@@ -12,6 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package analyticscore
 
 import (
@@ -19,11 +20,16 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
-
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
-	"github.com/openclarity/apiclarity/backend/pkg/pubsub"
+	"time"
 
 	log "github.com/sirupsen/logrus"
+
+	"github.com/openclarity/apiclarity/backend/pkg/dataframe"
+	// cache "github.com/openclarity/apiclarity/backend/pkg/dataframe/ristretto"
+	// cache "github.com/openclarity/apiclarity/backend/pkg/dataframe/gcache"
+	cache "github.com/openclarity/apiclarity/backend/pkg/dataframe/gocache"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
+	"github.com/openclarity/apiclarity/backend/pkg/pubsub"
 )
 
 const (
@@ -37,25 +43,59 @@ const (
 	maxNumProccFuncPerTopic = 100
 )
 
-type TopicType string
+type (
+	TopicType                    string
+	DataFrameID                  string
+	AnalyticsModuleProccFuncName string
+	DataFrame                    map[int]dataframe.DataFrame
+)
 
 type AnalyticsCore struct {
-	httpHandler         http.Handler
-	msgBroker           *pubsub.Handler
-	accessor            core.BackendAccessor
-	info                *core.ModuleInfo
-	numWorkers          int
-	proccFuncRegistered map[TopicType][]AnalyticsModuleProccFunc
-	topics              []TopicType
+	httpHandler                  http.Handler
+	msgBroker                    *pubsub.Handler
+	accessor                     core.BackendAccessor
+	info                         *core.ModuleInfo
+	numWorkers                   int
+	proccFuncRegistered          map[TopicType][]AnalyticsModuleProccFunc
+	proccFuncDataframeRegistered map[AnalyticsModuleProccFuncName]map[DataFrameID]bool
+	dataFramesRegistry           DataFramesRegistry
+
+	topics []TopicType
 }
 
-type ProcFuncDataFrames struct {
-	dataFrames map[int]*interface{}
+type DataFramesRegistry struct {
+	dataFrames map[DataFrameID]DataFrame
+}
+
+func NewDataFramesRegistry() DataFramesRegistry {
+	return DataFramesRegistry{
+		dataFrames: map[DataFrameID]DataFrame{},
+	}
+}
+
+func (dfr DataFramesRegistry) NewDataFrame(name DataFrameID, shards int, ttl time.Duration, maxEntries int64) error {
+	dfr.dataFrames[name] = make(map[int]dataframe.DataFrame)
+	for i := 0; i < shards; i++ {
+		df := cache.DataFrame{}
+		err := df.Init(ttl)
+		if err != nil {
+			return fmt.Errorf("unable to create shard %d of dataframe %s", i, name)
+		}
+		dfr.dataFrames[name][i] = &df
+	}
+
+	return nil
+}
+
+func (dfr DataFramesRegistry) Get(name DataFrameID) (DataFrame, bool) {
+	df, found := dfr.dataFrames[name]
+	return df, found
 }
 
 type AnalyticsModuleProccFunc interface {
 	GetPriority() int
-	ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{})
+	GetName() AnalyticsModuleProccFuncName
+	ProccFunc(topicName TopicType, dataFrames map[DataFrameID]dataframe.DataFrame, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{})
 }
 
 func (p *AnalyticsCore) Info() core.ModuleInfo {
@@ -72,52 +112,39 @@ func (p *AnalyticsCore) handlerFunction(topic TopicType, partitionID int, msgCha
 		if okTopic && len(topicProccFunctions) > 0 {
 			annotations := make([]interface{}, 0, annotationArrayCapacity)
 			for _, proccFunction := range topicProccFunctions {
-				dataFrames := &ProcFuncDataFrames{
-					dataFrames: nil,
-				}
-				annotations = proccFunction.ProccFunc(topic, dataFrames, partitionID, message, annotations, p)
+				dfShards := p.getDataFramesShardsForFunc(proccFunction, partitionID)
+				annotations = proccFunction.ProccFunc(topic, dfShards, partitionID, message, annotations, p)
 			}
 		}
 	}
 }
 
-//nolint:unparam
-func newModuleRaw() (_ core.Module, err error) {
-	p := &AnalyticsCore{
-		httpHandler:         nil,
-		msgBroker:           nil,
-		accessor:            nil,
-		info:                &core.ModuleInfo{Name: "analytics_core", Description: "analytics_core"},
-		numWorkers:          1,
-		proccFuncRegistered: map[TopicType][]AnalyticsModuleProccFunc{},
-		topics:              make([]TopicType, 0, maxNumTopics),
+func (p *AnalyticsCore) getDataFramesShardsForFunc(function AnalyticsModuleProccFunc, partitionID int) map[DataFrameID]dataframe.DataFrame {
+	registeredDfs := p.proccFuncDataframeRegistered[function.GetName()]
+	dfShards := map[DataFrameID]dataframe.DataFrame{}
+	for rdf := range registeredDfs {
+		foundValue, found := p.dataFramesRegistry.Get(rdf)
+		if !found {
+			return nil
+		}
+		dfShards[rdf] = foundValue[partitionID]
 	}
-	/* We do not need to expose API at this point
-	handler := &httpHandler{
-		accessor: accessor,
-	}
-	p.httpHandler = restapi.HandlerWithOptions(handler, restapi.ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + "analytics_core"})
-	*/
-	p.msgBroker = pubsub.NewHandler()
 
-	p.InitTopic(TraceTopicName)
-	p.InitTopic(APITopicName)
-	p.InitTopic(APIEndpointTopicName)
-	p.InitTopic(ObjectTopicName)
-	p.InitTopic(EntityTopicName)
-
-	return p, nil
+	return dfShards
 }
 
+//nolint:unparam
 func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Module, err error) {
 	p := &AnalyticsCore{
-		httpHandler:         nil,
-		msgBroker:           nil,
-		accessor:            accessor,
-		info:                &core.ModuleInfo{Name: "analytics_core", Description: "analytics_core"},
-		numWorkers:          1,
-		proccFuncRegistered: map[TopicType][]AnalyticsModuleProccFunc{},
-		topics:              make([]TopicType, 0, maxNumTopics),
+		httpHandler:                  nil,
+		msgBroker:                    nil,
+		accessor:                     accessor,
+		info:                         &core.ModuleInfo{Name: "analytics_core", Description: "analytics_core"},
+		numWorkers:                   1,
+		proccFuncRegistered:          map[TopicType][]AnalyticsModuleProccFunc{},
+		proccFuncDataframeRegistered: map[AnalyticsModuleProccFuncName]map[DataFrameID]bool{},
+		dataFramesRegistry:           NewDataFramesRegistry(),
+		topics:                       make([]TopicType, 0, maxNumTopics),
 	}
 	/* We do not need to expose API at this point
 	handler := &httpHandler{
@@ -151,6 +178,15 @@ func (p *AnalyticsCore) RegisterAnalyticsModuleHandler(topic TopicType, proccFun
 
 	p.proccFuncRegistered[topic] = append(p.proccFuncRegistered[topic], proccFunc)
 	p.proccFuncRegistered[topic] = orderHandlerFuncsByPriority(p.proccFuncRegistered[topic])
+}
+
+func (p *AnalyticsCore) RegisterDataFrameForFunc(proccFunc AnalyticsModuleProccFunc, dataframe DataFrameID) {
+	registeredDFs, found := p.proccFuncDataframeRegistered[proccFunc.GetName()]
+	if !found {
+		registeredDFs = map[DataFrameID]bool{}
+	}
+	registeredDFs[dataframe] = true
+	p.proccFuncDataframeRegistered[proccFunc.GetName()] = registeredDFs
 }
 
 /*

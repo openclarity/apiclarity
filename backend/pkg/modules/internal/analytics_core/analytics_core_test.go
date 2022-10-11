@@ -12,13 +12,23 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package analyticscore
 
 import (
+	"context"
 	"fmt"
-	"github.com/openclarity/apiclarity/backend/pkg/pubsub"
 	"testing"
 	"time"
+
+	"github.com/openclarity/apiclarity/backend/pkg/dataframe"
+	"github.com/openclarity/apiclarity/backend/pkg/pubsub"
+)
+
+const (
+	fixedPartition      = 1
+	defaultDataFrameTTL = 10 * time.Minute
+	defaultMaxEntries   = 1000
 )
 
 var counterProc int
@@ -27,17 +37,37 @@ type traceAnalyzerTest struct {
 	t *testing.T
 }
 
-type messageForBrokerTest struct {
-}
+type messageForBrokerTest struct{}
 
 func (p messageForBrokerTest) GetPartitionKey() int64 {
-	return int64(1)
+	return int64(fixedPartition)
 }
 
 func (p traceAnalyzerTest) GetPriority() int {
 	return 10
 }
-func (p traceAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
+
+func (p traceAnalyzerTest) GetName() AnalyticsModuleProccFuncName {
+	return "traceAnalyzerTest"
+}
+
+func (p traceAnalyzerTest) ProccFunc(topicName TopicType, dataframes map[DataFrameID]dataframe.DataFrame, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
+	dataframe1, found := dataframes["dataframe1"]
+	if !found {
+		p.t.Fatalf("dataframe 'dataframe1' does not exist")
+	}
+	counter := int64(0)
+	result, found := dataframe1.Get("counter")
+	if found {
+		var ok bool
+		counter, ok = result.(int64)
+		if !ok {
+			p.t.Fatalf("Counter is not of type int64")
+		}
+	}
+	counter++
+	dataframe1.Set("counter", counter)
+
 	err := handler.PublishMessage(EntityTopicName, message)
 	if err != nil {
 		p.t.Errorf("Failed to publish by entity")
@@ -45,7 +75,7 @@ func (p traceAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncDa
 	if topicName != TraceTopicName {
 		p.t.Errorf("Wrong topic " + string(topicName) + " instead of " + string(TraceTopicName))
 	}
-	if partitionID != 1 {
+	if partitionID != fixedPartition {
 		p.t.Errorf("Trace procc is sent to a wrong worker " + fmt.Sprint(partitionID) + " " + fmt.Sprint(message.GetPartitionKey()) + " " + fmt.Sprint(handler.msgBroker.GetNumPartitions(TraceTopicName)))
 	}
 
@@ -61,7 +91,12 @@ type entityAnalyzerTest struct {
 func (p entityAnalyzerTest) GetPriority() int {
 	return p.priorityValue
 }
-func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncDataFrames, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
+
+func (p entityAnalyzerTest) GetName() AnalyticsModuleProccFuncName {
+	return "traceAnalyzerTest"
+}
+
+func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataframes map[DataFrameID]dataframe.DataFrame, partitionID int, message pubsub.MessageForBroker, annotations []interface{}, handler *AnalyticsCore) (newAnnotations []interface{}) {
 	if len(annotations) != p.priorityValue {
 		p.t.Errorf("Improper order of proccFunction calls " + fmt.Sprint(len(annotations)))
 	}
@@ -69,7 +104,7 @@ func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncD
 		p.t.Errorf("Wrong topic " + string(topicName) + " instead of " + string(EntityTopicName))
 	}
 
-	if partitionID != 1 {
+	if partitionID != fixedPartition {
 		p.t.Errorf("Entity procc is sent to a wrong worker " + fmt.Sprint(partitionID))
 	}
 
@@ -79,7 +114,7 @@ func (p entityAnalyzerTest) ProccFunc(topicName TopicType, dataFrames *ProcFuncD
 
 func TestAnalyticsCore(t *testing.T) {
 	counterProc = 0
-	module, _ := newModuleRaw()
+	module, _ := newModule(context.TODO(), nil)
 	var moduleAnalytics *AnalyticsCore
 	switch m := module.(type) {
 	case *AnalyticsCore:
@@ -90,9 +125,17 @@ func TestAnalyticsCore(t *testing.T) {
 	}
 
 	moduleAnalytics.AddWorkers(2)
+
+	for _, dfName := range []DataFrameID{"dataframe1", "dataframe2", "dataframe3"} {
+		if err := moduleAnalytics.dataFramesRegistry.NewDataFrame(dfName, moduleAnalytics.numWorkers, defaultDataFrameTTL, defaultMaxEntries); err != nil {
+			t.Fatalf("Unable to create dataframe %s: %v", dfName, err)
+		}
+	}
+
 	traceAnalyzer := traceAnalyzerTest{
 		t: t,
 	}
+	moduleAnalytics.RegisterDataFrameForFunc(traceAnalyzer, "dataframe1")
 	moduleAnalytics.RegisterAnalyticsModuleHandler(TraceTopicName, traceAnalyzer)
 
 	entityAnalyzer4 := entityAnalyzerTest{
@@ -121,10 +164,32 @@ func TestAnalyticsCore(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to publish message")
 	}
+	err = moduleAnalytics.PublishMessage(TraceTopicName, msg)
+	if err != nil {
+		t.Error("Failed to publish message")
+	}
 	time.Sleep(3 * time.Second)
 
-	if counterProc != 5 {
+	if counterProc != 10 {
 		t.Error("Didn't pass all the procc functions")
 	}
 
+	// During this test, the same partition is always used
+	if selectedDataFrame, found := moduleAnalytics.dataFramesRegistry.Get("dataframe1"); !found {
+		t.Errorf("Unable to get dataframe '%s", "dataframe1")
+	} else {
+		result, found := selectedDataFrame[fixedPartition].Get("counter")
+		if !found {
+			t.Errorf("Unable to find counter entry in dataframe[%d]", fixedPartition)
+		}
+
+		var ok bool
+		counter, ok := result.(int64)
+		if !ok {
+			t.Fatalf("Counter is not of type int64")
+		}
+		if counter != 2 {
+			t.Errorf("Counter has wrong value. Got %d, expected %d", counter, 2)
+		}
+	}
 }

@@ -36,6 +36,7 @@ import (
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/spec_differ"
 
 	// Enables the traceanalyzer module.
+	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/analytics_core"
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer"
 	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
 )
