@@ -28,6 +28,10 @@ $large-modal-height: calc(100vh - 2 * #{$main-content-padding} - 2 * #{$large-he
         overflow-y: auto;
 
         .close-button {
+            position: absolute;
+            right: 20px;
+            width: 22px;
+            height: 22px;
             z-index: $top-layer-z-index;
         }
 

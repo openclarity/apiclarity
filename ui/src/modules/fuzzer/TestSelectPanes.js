@@ -9,6 +9,7 @@ import BreadcrumbSelectPanes, { SelectItemNotification } from 'components/Breadc
 import { TooltipWrapper } from 'components/Tooltip';
 // import { FUZZING_STATUS_ITEMS, UnfuzzableMessageDisplay } from 'layout/Apis/utils';
 import FindingsAccordion from 'layout/Inventory/InventoryDetails/FindingsAccordion';
+import FindingsTable from 'components/FindingsTable';
 import MethodWithRiskDisplay from 'components/MethodWithRiskDisplay';
 import { formatDate } from 'utils/utils';
 import { SYSTEM_RISKS } from 'utils/systemConsts';
@@ -45,7 +46,7 @@ const TestSelectPanes = ({catalogId, testElements, onNewTestClick, onScanComplet
                     title={title}
                     testDetails={testDetails}
                     catalogId={catalogId}
-                    severity={tags.severity || SYSTEM_RISKS.UNKNOWN.value}
+                    severity={tags.highestSeverity || SYSTEM_RISKS.UNKNOWN.value}
                     onScanComplete={onScanComplete}
                 />
             ),
@@ -107,7 +108,8 @@ const TestSelectPanes = ({catalogId, testElements, onNewTestClick, onScanComplet
                             ]}
                         />
                     </DisplaySection>
-                    <FindingsAccordion findingsDetails={findings} withOccurrencesCount={false} elementsKey="elements" />
+                    {/* <FindingsAccordion findingsDetails={findings} withOccurrencesCount={false} elementsKey="elements" /> */}
+                    <FindingsTable data={{items: findings.elements}} />
                 </div>
             )
         },

@@ -75,6 +75,7 @@ const FindingsTable = ({columns: userColumns=[], data={}, actionRow, url=''}) =>
                 defaultSortBy={[{ id: "name", desc: true }]}
                 innerRowComponent={FindingsInnerTable}
                 withPagination={false}
+                /* noResultsTitle={`findings for API '${inventoryName}'`} */
             />
         </div>
     );
