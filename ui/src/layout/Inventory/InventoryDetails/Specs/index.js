@@ -119,14 +119,14 @@ const ProvidedSpecDisplay = ({ specData, inventoryId, inventoryName, refreshData
     )
 }
 
-const ReconstructedSpecDisplay = ({specData, inventoryId, inventoryName, specType, onReset}) => {
+const ReconstructedSpecDisplay = ({ specData, inventoryId, inventoryName, specType, onReset }) => {
     const history = useHistory();
-    const {url} = useRouteMatch();
+    const { url } = useRouteMatch();
 
     if (!specData) {
         return (
             <NotSelected
-                title={<span><Button secondary onClick={() => history.push({ pathname: "/reviewer", query: { inventoryId, inventoryName, backUrl: url } })}>Review</Button> reconstructed spec</span>}
+                title={<span><Button tertiary onClick={() => history.push({ pathname: "/reviewer", query: { inventoryId, inventoryName, backUrl: url } })}>Review</Button> reconstructed spec</span>}
             />
         )
     }
@@ -135,7 +135,7 @@ const ReconstructedSpecDisplay = ({specData, inventoryId, inventoryName, specTyp
         <SpecDisplay
             inventoryName={inventoryName}
             tags={specData.tags || []}
-            notSelectedTitle={<span>Select a tag to see details,<br /><ViewInSwaggerLink inventoryId={inventoryId} specType="reconstructed" /> or <Button secondary onClick={onReset}>reset</Button></span>}
+            notSelectedTitle={<span>Select a tag to see details,<br /><ViewInSwaggerLink inventoryId={inventoryId} specType="reconstructed" /> or <Button tertiary onClick={onReset}>reset</Button></span>}
             specType={specType}
         />
     )

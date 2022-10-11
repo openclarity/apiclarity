@@ -5,7 +5,7 @@ import DisplaySection from 'components/DisplaySection';
 import Icon, { ICON_NAMES } from 'components/Icon';
 import Tooltip from 'components/Tooltip';
 import Button from 'components/Button';
-import Table from 'components/Table';
+import TableSimple from 'components/TableSimple';
 import { formatDate } from 'utils/utils';
 import COLORS from 'utils/scss_variables.module.scss'
 
@@ -95,64 +95,74 @@ const ClientViewBasicInfo = ({
     )
 }
 
-const ClientViewPrincipelsView = ({ principals }) => {
-
-    // TODO fix the table
-    const enhancedPrincipals = principals.map((data) => ({ ID: "sadsdasd", ...data }))
-    return (<></>)
+const ClientViewPrincipelsView = ({ end_users }) => {
+    return (
+        end_users ?
+            <TableSimple
+                headers={["Type", "Principal", "IP"]}
+                name="principals"
+                rows={end_users.map(({ source, id, ip_address }) =>
+                ([
+                    <div style={{ lineHeight: '60px' }}>{source}</div>,
+                    id,
+                    ip_address,
+                ]))}
+            /> :
+            <></>
+    )
 }
 
-export default function ClientView({ selectedData, isEditMode, handleEditLegitimacyStatus, handleMarkAs }) {
-    const { name, isLegitimate, principles, lastObserved, lastStatusCode, namespace } = selectedData;
+const ClientViewTitle = ({ name, namespace, authorized, handleMarkAsClick }) => (
+    <div style={{
+        display: 'flex'
+    }}>
+        <div style={{
+            display: 'flex',
+            width: '100%',
+            fontSize: '14px',
+            letterSpacing: "0.36px",
+        }}>
+            <div>
+                {name}
+            </div>
+            <div style={{
+                fontWeight: 'normal',
+                color: COLORS['color-grey-dark'],
+            }}>
+                &nbsp;| Namespace: {namespace}
+            </div>
+        </div>
+        <Button
+            tertiary
+            onClick={handleMarkAsClick}
+        >
+            Mark as {authorized ? 'Illegitimate' : 'Legitimate'}
+        </Button>
+    </div>
+)
 
-    const handleInputChange = (changeData) => {
-        handleEditLegitimacyStatus(selectedData, changeData.target.value === "false" ? false : true)
-    }
+export default function AudienceView({ handleMarkAs, selectedData, authorized, end_users, external, k8s_object, lastTime, statusCode, warningStatus }) {
+    const { namespace, name, uid } = k8s_object;
+
+    const handleMarkAsClick = () => handleMarkAs(selectedData[1].method, selectedData[1].path, uid)
 
     return (
         <div className='client-view-wrapper'>
             {
                 name && namespace &&
                 <DisplaySection title={
-                    <div style={{
-                        display: 'flex'
-                    }}>
-                        <div style={{
-                            display: 'flex',
-                            width: '100%',
-                            fontSize: '14px',
-                            letterSpacing: "0.36px",
-                        }}>
-                            <div>
-                                {name}
-                            </div>
-                            <div style={{
-                                fontWeight: 'normal',
-                                color: COLORS['color-grey-dark'],
-                            }}>
-                                &nbsp;| Namespace: {namespace}
-                            </div>
-                        </div>
-                        <Button
-                            tertiary
-                            onClick={() => handleMarkAs(isLegitimate)}
-                        >
-                                Mark as {isLegitimate ? 'Illegitimate' : 'Legitimate'}
-                        </Button>
-                    </div>
+                    <ClientViewTitle handleMarkAsClick={handleMarkAsClick} authorized={authorized} name={name} namespace={namespace} />
                 } >
                     <ClientViewBasicInfo
-                        isEditMode={isEditMode}
-                        lastObserved={lastObserved}
-                        lastStatusCode={lastStatusCode}
-                        isLegitimate={isLegitimate}
-                        handleInputChange={handleInputChange}
+                        lastObserved={lastTime}
+                        lastStatusCode={statusCode}
+                        isLegitimate={authorized}
                     />
                 </DisplaySection >
             }
             {
-                principles && !isEmpty(principles) && <DisplaySection title={"Principals"} >
-                    <ClientViewPrincipelsView principals={principles} />
+                end_users && !isEmpty(end_users) && <DisplaySection title={"Principals"} >
+                    <ClientViewPrincipelsView end_users={end_users} />
                 </DisplaySection>
             }
         </div>

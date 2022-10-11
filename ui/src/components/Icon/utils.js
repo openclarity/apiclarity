@@ -28,6 +28,6 @@ export const ICON_NAMES = {
     INFO: "info",
     SHIELD_CHECK: "shield-check",
     SHIELD_CROSS: "shield-cross",
-    ADD: "add",
     SMALL_ARROW_LEFT: "small-arrow-left",
+    ERROR: 'error',
 }

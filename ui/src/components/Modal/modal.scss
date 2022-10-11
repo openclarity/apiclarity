@@ -1,55 +1,77 @@
 @import 'utils/scss_variables.module.scss';
 
-$padding: 30px;
+$default-width: 450px;
 
-.modal-outer-wrapper {
+$large-width-padding: 50px;
+$large-height-padding: 20px;
+$large-modal-height: calc(100vh - 2 * #{$main-content-padding} - 2 * #{$large-height-padding});
+
+.modal-outer {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(white, 0.8);
+    background-color: rgba(48, 53, 59, 0.8);
+    z-index: calc(#{$top-layer-z-index} - 1);
 
-    .modal-inner-wrapper {
+    .modal-container {
         position: absolute;
-        top: 40%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 720px;
-        background: white;
-        box-shadow: -8px 12px 19px rgba(55, 72, 95, 0.13);
-        padding: $padding;
-        box-sizing: border-box;
+        top: 0;
+        left: 0;
+        width: 44%;
+        height: 100%;
+        min-width: 705px;
+        background-color: $color-grey-off-white;
+        z-index: $top-layer-z-index;
+        padding: 20px 40px;
+        overflow-y: auto;
 
         .close-button {
-            position: absolute;
-            top: $padding;
-            right: $padding;
+            z-index: $top-layer-z-index;
         }
-        .modal-title {
-            font-weight: 350;
-            font-size: 26px;
-            line-height: 30px;
-            font-weight: 200;
-            color: $color-main;
-        }
-        .modal-content {
-            margin-top: 30px;
-            font-size: 14px;
-            line-height: 18px;
-            color: $color-grey-black;
-        }
-        .modal-actions {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            position: absolute;
-            right: $padding;
-            bottom: $padding;
 
-            button:not(:last-child) {
-                margin-right: 10px;
+        .modal-details-section {
+            .modal-details-section-title {
+                padding: 10px 0;
+                margin-bottom: 10px;
+                border-bottom: 1px solid $color-grey-light;
+                font-weight: bold;
+                font-size: 12px;
             }
         }
+        .modal-title-data-item {
+            font-weight: bold;
+            font-size: 9px;
+
+            .modal-title-data-item-title {
+                text-transform: uppercase;
+                margin-bottom: 5px;
+            }
+            .modal-title-data-item-data {
+                color: $color-grey-dark;
+            }
+        }
+    }
+    
+    &.center .modal-container {
+        position: absolute;
+        top: 15%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: $default-width;
+        min-width: $default-width;
+        max-height: 250px;
+    }
+    &.center-large .modal-container {
+        position: absolute;     
+        width: calc(100% - 2 * #{$large-width-padding});
+        min-width: $default-width;
+        height: $large-modal-height;
+        max-height: $large-modal-height;
+        top: $large-height-padding;
+        left: $large-width-padding;
+        right: $large-width-padding
+        
     }
 }

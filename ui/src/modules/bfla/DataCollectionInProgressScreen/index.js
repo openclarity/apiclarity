@@ -3,14 +3,12 @@ import Button from 'components/Button'
 import MessageImageDisplay from 'layout/Inventory/InventoryDetails/MessageImageDisplay'
 import inProgressImage from 'images/in_progress.svg'
 
-export default function DataCollectionInProgress({ id, state }) {
-
-
+export default function DataCollectionInProgress({ isLearning, handleStop }) {
 
     return (
         <>
             <MessageImageDisplay
-                message={"BFLA model learning in progress..."}
+                message={`BFLA model ${isLearning ? 'learning' : 'detecting'} in progress...`}
                 image={inProgressImage}
             />
             <div style={{
@@ -18,8 +16,8 @@ export default function DataCollectionInProgress({ id, state }) {
                 justifyContent: 'center',
                 paddingBottom: '30px'
             }}>
-                <Button tertiary>
-                    Stop BFLA model learning
+                <Button tertiary onClick={handleStop}>
+                    Stop BFLA model {isLearning ? 'learning' : 'detecting'}
                 </Button>
             </div>
         </>

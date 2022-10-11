@@ -100,6 +100,8 @@ const BflaStatus = ({ bflaStatus, sourceName }) => {
         default:
             statusText = '';
     }
+
+    return <></>
 };
 
 const bfla = {
