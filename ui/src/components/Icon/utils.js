@@ -4,6 +4,7 @@ export const ICON_NAMES = {
     DASHBOARD: "dashboard",
     INVENTORY: "inventory",
     EVENTS: "events",
+    EXCLAMATION_MARK_ROUND: "exclamation-mark-round",
     X_MARK: "x-mark",
     CHECK_MARK: "check-mark",
     STROKE: "stroke",
