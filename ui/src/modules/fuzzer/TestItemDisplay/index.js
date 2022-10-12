@@ -14,7 +14,7 @@ import './test-item-display.scss';
 
 const InProgressDisplay = ({id, progress, doAbort, allowStop}) => (
     <div style={{display: "flex", alignItems: "center"}}>
-        {allowStop && <div style={{marginRight: "10px"}} onClick={() => console.log('click')}><Button secondary onClick={doAbort}>Stop test</Button></div>}
+        {allowStop && <div style={{marginRight: "10px"}}><Button secondary onClick={doAbort}>Stop test</Button></div>}
         <TooltipWrapper id={id} text={<span><b>Test in progress</b>{` ${progress}%`}</span>}><DotLoader /></TooltipWrapper>
     </div>
 )
@@ -61,7 +61,7 @@ const TestDisplay = ({id, title, severity, status, statusMessage, progress, onSc
 }
 
 const TestItemDisplay = ({catalogId, title, testDetails, severity, onScanComplete}) => {
-    const {testId, fuzzingStatus, fuzzingStartTime, fuzzingStatusMessage} = testDetails;
+    const {testId, fuzzingStatus, fuzzingStartTime, errorMessage: fuzzingStatusMessage} = testDetails;
 
     return (
         <FuzzingTestLoaderDisplayWrapper

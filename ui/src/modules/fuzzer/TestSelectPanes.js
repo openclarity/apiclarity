@@ -7,8 +7,6 @@ import KeyValueList from 'components/KeyValueList';
 import VulnerabilityIcon from 'components/VulnerabilityIcon';
 import BreadcrumbSelectPanes, { SelectItemNotification } from 'components/BreadcrumbSelectPanes';
 import { TooltipWrapper } from 'components/Tooltip';
-// import { FUZZING_STATUS_ITEMS, UnfuzzableMessageDisplay } from 'layout/Apis/utils';
-import FindingsAccordion from 'layout/Inventory/InventoryDetails/FindingsAccordion';
 import FindingsTable from 'components/FindingsTable';
 import MethodWithRiskDisplay from 'components/MethodWithRiskDisplay';
 import { formatDate } from 'utils/utils';
@@ -36,7 +34,6 @@ const TestSelectPanes = ({catalogId, testElements, onNewTestClick, onScanComplet
         return {...testElement, id: testId, title: formatDate(fuzzingStartTime), disabled: fuzzingStatus === FUZZING_STATUS_ITEMS.IN_PROGRESS.value};
     });
 
-    console.log(selectData);
     const displayData = [
         {
             getTitle: () => "Tests",
@@ -108,7 +105,6 @@ const TestSelectPanes = ({catalogId, testElements, onNewTestClick, onScanComplet
                             ]}
                         />
                     </DisplaySection>
-                    {/* <FindingsAccordion findingsDetails={findings} withOccurrencesCount={false} elementsKey="elements" /> */}
                     <FindingsTable data={{items: findings.elements}} />
                 </div>
             )
