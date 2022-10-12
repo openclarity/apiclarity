@@ -31,8 +31,7 @@ export const InnerFieldWrapper = ({title, isVisable, children, isSecondLayer=fal
 
 export const FormNotificationMessage = ({children, className, secondary=false, isError=false}) => (
     <div className={classnames("form-message-container", className, {secondary}, {error: isError})}>
-        {/* <Icon name={secondary ? ICON_NAMES.ALERT : ICON_NAMES.EXCLAMATION_MARK_ROUND} /> */}
-        <Icon name={secondary ? ICON_NAMES.ALERT : ICON_NAMES.INFO} />
+        <Icon name={secondary ? ICON_NAMES.ALERT : ICON_NAMES.EXCLAMATION_MARK_ROUND} />
         <div className="message">{children}</div>
     </div>
 );
