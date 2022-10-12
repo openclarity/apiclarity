@@ -30,7 +30,7 @@ import (
 func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDiscoveredAPIsParams) middleware.Responder {
 	log.Debugf("PostControlNewDiscoveredAPIs controller was invoked")
 
-	// Iterate over each hosts and check if it alreay exists
+	// Iterate over each hosts and check if it already exists
 	for _, h := range params.Body.Hosts {
 		host, strPort, err := net.SplitHostPort(h)
 		if err != nil {
@@ -45,10 +45,10 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 		}
 
 		apiInfo := &_database.APIInfo{
-			Type:                 models.APITypeINTERNAL,
-			Name:                 host,
-			Port:                 int64(port),
-			DestinationNamespace: "",
+			Type:      models.APITypeINTERNAL,
+			Name:      host,
+			Port:      int64(port),
+			CreatedBy: params.Body.Source,
 		}
 		created, err := s.dbHandler.APIInventoryTable().FirstOrCreate(apiInfo)
 		if err != nil {
@@ -56,7 +56,7 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 			continue
 		}
 		if created {
-			log.Infof("New API '%s' was added to inventory", h)
+			log.Infof("New API '%s' managed by '%s' was added to inventory", h, params.Body.Source)
 			_ = s.speculator.InitSpec(host, strconv.Itoa(port))
 		}
 	}

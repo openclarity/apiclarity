@@ -93,6 +93,10 @@ definitions:
         default: false
       destinationNamespace:
         type: 'string'
+      createdBy:
+        description: 'String representing the entity which created this API. APICLARITY means it has been created by APIClarity on first trace'
+        type: 'string'
+        default: 'APICLARITY'
 
   ApiInfoWithType:
     type: 'object'
@@ -802,17 +806,21 @@ paths:
 
   /control/newDiscoveredAPIs:
     post:
-      summary: 'List of new external services discovered by API gateways'
+      summary: 'Allows a client to notify APIClarity about new APIs.'
+      description: 'This allows a client (a gateway for example) to notify APIclarity about newly discovered APIs. If one of the APIs already exists, it is ignored.'
       parameters:
         - in: 'body'
           name: 'body'
-          description: 'List of new discovered APIs by the external API Gateway'
+          description: 'List of new discovered APIs'
           required: true
           schema:
             type: 'object'
             required:
               - hosts
             properties:
+              source:
+                type: 'string'
+                description: 'Optional name identifying the entity sending this notification.'
               hosts:
                 type: 'array'
                 description: 'List of discovered APIs, format of hostname:port'

@@ -33,7 +33,7 @@ type PostControlNewDiscoveredAPIsParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
-	/*List of new discovered APIs by the external API Gateway
+	/*List of new discovered APIs
 	  Required: true
 	  In: body
 	*/

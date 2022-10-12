@@ -61,7 +61,7 @@ type PostControlNewDiscoveredAPIsParams struct {
 
 	/* Body.
 
-	   List of new discovered APIs by the external API Gateway
+	   List of new discovered APIs
 	*/
 	Body PostControlNewDiscoveredAPIsBody
 

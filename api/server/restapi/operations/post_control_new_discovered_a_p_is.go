@@ -36,7 +36,9 @@ func NewPostControlNewDiscoveredAPIs(ctx *middleware.Context, handler PostContro
 
 /* PostControlNewDiscoveredAPIs swagger:route POST /control/newDiscoveredAPIs postControlNewDiscoveredAPIs
 
-List of new external services discovered by API gateways
+Allows a client to notify APIClarity about new APIs.
+
+This allows a client (a gateway for example) to notify APIclarity about newly discovered APIs. If one of the APIs already exists, it is ignored.
 
 */
 type PostControlNewDiscoveredAPIs struct {
@@ -68,6 +70,9 @@ type PostControlNewDiscoveredAPIsBody struct {
 	// List of discovered APIs, format of hostname:port
 	// Required: true
 	Hosts []string `json:"hosts"`
+
+	// Optional name identifying the entity sending this notification.
+	Source string `json:"source,omitempty"`
 }
 
 // Validate validates this post control new discovered a p is body

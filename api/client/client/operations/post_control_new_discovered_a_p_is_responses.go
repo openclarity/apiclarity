@@ -124,6 +124,9 @@ type PostControlNewDiscoveredAPIsBody struct {
 	// List of discovered APIs, format of hostname:port
 	// Required: true
 	Hosts []string `json:"hosts"`
+
+	// Optional name identifying the entity sending this notification.
+	Source string `json:"source,omitempty"`
 }
 
 // Validate validates this post control new discovered a p is body

@@ -819,7 +819,9 @@ func (a *Client) PostAPIInventoryReviewIDApprovedReview(params *PostAPIInventory
 }
 
 /*
-  PostControlNewDiscoveredAPIs lists of new external services discovered by API gateways
+  PostControlNewDiscoveredAPIs allows a client to notify API clarity about new a p is
+
+  This allows a client (a gateway for example) to notify APIclarity about newly discovered APIs. If one of the APIs already exists, it is ignored.
 */
 func (a *Client) PostControlNewDiscoveredAPIs(params *PostControlNewDiscoveredAPIsParams, opts ...ClientOption) (*PostControlNewDiscoveredAPIsOK, error) {
 	// TODO: Validate the params before sending

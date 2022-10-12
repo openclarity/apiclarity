@@ -48,18 +48,19 @@ type APIInfo struct {
 	// will be populated after inserting to DB
 	ID uint `json:"id,omitempty" gorm:"primarykey" faker:"-"`
 
-	Type                       models.APIType  `json:"type,omitempty" gorm:"column:type" faker:"oneof: INTERNAL, EXTERNAL"`
-	Name                       string          `json:"name,omitempty" gorm:"column:name" faker:"oneof: test.com, example.com, kaki.org"`
-	Port                       int64           `json:"port,omitempty" gorm:"column:port" faker:"oneof: 80, 443"`
+	Type                       models.APIType  `json:"type,omitempty" gorm:"column:type;uniqueIndex:api_info_idx_model" faker:"oneof: INTERNAL, EXTERNAL"`
+	Name                       string          `json:"name,omitempty" gorm:"column:name;uniqueIndex:api_info_idx_model" faker:"oneof: test.com, example.com, kaki.org"`
+	Port                       int64           `json:"port,omitempty" gorm:"column:port;uniqueIndex:api_info_idx_model" faker:"oneof: 80, 443"`
 	HasProvidedSpec            bool            `json:"hasProvidedSpec,omitempty" gorm:"column:has_provided_spec"`
 	HasReconstructedSpec       bool            `json:"hasReconstructedSpec,omitempty" gorm:"column:has_reconstructed_spec"`
 	ReconstructedSpec          string          `json:"reconstructedSpec,omitempty" gorm:"column:reconstructed_spec" faker:"-"`
 	ReconstructedSpecInfo      string          `json:"reconstructedSpecInfo,omitempty" gorm:"column:reconstructed_spec_info" faker:"-"`
 	ProvidedSpec               string          `json:"providedSpec,omitempty" gorm:"column:provided_spec" faker:"-"`
 	ProvidedSpecInfo           string          `json:"providedSpecInfo,omitempty" gorm:"column:provided_spec_info" faker:"-"`
-	DestinationNamespace       string          `json:"destinationNamespace,omitempty" gorm:"column:destination_namespace" faker:"-"`
+	DestinationNamespace       string          `json:"destinationNamespace,omitempty" gorm:"column:destination_namespace;uniqueIndex:api_info_idx_model" faker:"-"`
 	ProvidedSpecCreatedAt      strfmt.DateTime `json:"providedSpecCreatedAt,omitempty" gorm:"column:provided_spec_created_at" faker:"-"`
 	ReconstructedSpecCreatedAt strfmt.DateTime `json:"reconstructedSpecCreatedAt,omitempty" gorm:"column:reconstructed_spec_created_at" faker:"-"`
+	CreatedBy                  string          `json:"createdBy,omitempty" gorm:"column:created_by;default:APICLARITY;uniqueIndex:api_info_idx_model" faker:"-"` // This is the name of the Gateway which notified of this API. Empty means it was auto discovered by APIClarity on first.
 
 	Annotations []*APIInfoAnnotation `gorm:"foreignKey:APIID;references:ID"`
 }
@@ -94,6 +95,7 @@ func APIInfoFromDB(apiInfo *APIInfo) *models.APIInfo {
 		Name:                 apiInfo.Name,
 		Port:                 apiInfo.Port,
 		DestinationNamespace: apiInfo.DestinationNamespace,
+		CreatedBy:            &apiInfo.CreatedBy,
 	}
 }
 

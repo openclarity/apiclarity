@@ -17,6 +17,9 @@ import (
 // swagger:model ApiInfo
 type APIInfo struct {
 
+	// String representing the entity which created this API. APICLARITY means it has been created by APIClarity on first trace
+	CreatedBy *string `json:"createdBy,omitempty"`
+
 	// destination namespace
 	DestinationNamespace string `json:"destinationNamespace,omitempty"`
 

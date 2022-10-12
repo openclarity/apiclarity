@@ -699,10 +699,11 @@ func init() {
     },
     "/control/newDiscoveredAPIs": {
       "post": {
-        "summary": "List of new external services discovered by API gateways",
+        "description": "This allows a client (a gateway for example) to notify APIclarity about newly discovered APIs. If one of the APIs already exists, it is ignored.",
+        "summary": "Allows a client to notify APIClarity about new APIs.",
         "parameters": [
           {
-            "description": "List of new discovered APIs by the external API Gateway",
+            "description": "List of new discovered APIs",
             "name": "body",
             "in": "body",
             "required": true,
@@ -718,6 +719,10 @@ func init() {
                   "items": {
                     "type": "string"
                   }
+                },
+                "source": {
+                  "description": "Optional name identifying the entity sending this notification.",
+                  "type": "string"
                 }
               }
             }
@@ -1008,6 +1013,11 @@ func init() {
     "ApiInfo": {
       "type": "object",
       "properties": {
+        "createdBy": {
+          "description": "String representing the entity which created this API. APICLARITY means it has been created by APIClarity on first trace",
+          "type": "string",
+          "default": "APICLARITY"
+        },
         "destinationNamespace": {
           "type": "string"
         },
@@ -2922,10 +2932,11 @@ func init() {
     },
     "/control/newDiscoveredAPIs": {
       "post": {
-        "summary": "List of new external services discovered by API gateways",
+        "description": "This allows a client (a gateway for example) to notify APIclarity about newly discovered APIs. If one of the APIs already exists, it is ignored.",
+        "summary": "Allows a client to notify APIClarity about new APIs.",
         "parameters": [
           {
-            "description": "List of new discovered APIs by the external API Gateway",
+            "description": "List of new discovered APIs",
             "name": "body",
             "in": "body",
             "required": true,
@@ -2941,6 +2952,10 @@ func init() {
                   "items": {
                     "type": "string"
                   }
+                },
+                "source": {
+                  "description": "Optional name identifying the entity sending this notification.",
+                  "type": "string"
                 }
               }
             }
@@ -3256,6 +3271,11 @@ func init() {
     "ApiInfo": {
       "type": "object",
       "properties": {
+        "createdBy": {
+          "description": "String representing the entity which created this API. APICLARITY means it has been created by APIClarity on first trace",
+          "type": "string",
+          "default": "APICLARITY"
+        },
         "destinationNamespace": {
           "type": "string"
         },
