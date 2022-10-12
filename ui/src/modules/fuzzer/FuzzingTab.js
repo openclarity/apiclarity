@@ -6,7 +6,6 @@ import Loader from 'components/Loader';
 import FormModal from 'components/FormModal';
 import TestSelectPanes from './TestSelectPanes';
 import NewTestForm from './NewTestForm';
-import TestDetails from './TestDetails';
 import EmptyFuzzingDisplay from './EmptyFuzzingDisplay';
 import { formatDateBy } from 'utils/utils';
 import {asyncDataFetcher} from 'utils/apiUtils';
@@ -28,7 +27,6 @@ const convertTestResponse = async (apiId, data) => {
         tags: { elements: [], severity: null },
         testDetails: {
             testId: '',
-            fuzzingProgress: 0,
             fuzzingStartTime: null,
             fuzzingStatus: null,
             fuzzingStatusMessage: null,
@@ -72,11 +70,7 @@ const convertTestResponse = async (apiId, data) => {
             ...model.testDetails,
             ...{
                 testId: '' + t.starttime,
-                fuzzingStatusMessage: t.errorMessage,
-                fuzzingProgress: t.progress,
                 fuzzingStartTime: formatDateBy(t.starttime * 1000),
-
-                // TODO: need status to be on the list of tests from backend.
                 fuzzingStatus: getTestStatus(t),
             }
         };
