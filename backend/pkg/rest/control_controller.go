@@ -45,7 +45,7 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 		}
 
 		apiInfo := &_database.APIInfo{
-			Type:                 models.APITypeEXTERNAL,
+			Type:                 models.APITypeINTERNAL,
 			Name:                 host,
 			Port:                 int64(port),
 			DestinationNamespace: "",
