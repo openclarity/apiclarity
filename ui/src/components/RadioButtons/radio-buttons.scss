@@ -1,0 +1,77 @@
+@import 'utils/scss_variables.module.scss';
+
+.ps-radio-container {
+    .ps-radio-wrapper {
+        display: flex;
+        align-items: center;
+        position: relative;
+        padding: 5px;
+        cursor: pointer;
+
+        &.disabled {
+            cursor: not-allowed;
+
+            .ps-radio-text {
+                color: $color-grey;
+            }
+            .checkmark {
+                border-color: $color-grey;
+
+                &:after {
+                    background-color: $color-grey !important;
+                }
+            }
+        }
+        .info-icon-tooltip-wrapper {
+            margin-left: 10px;
+        }
+        .ps-radio-text {
+            padding-left: 16px;
+            -webkit-box-decoration-break: clone;
+            box-decoration-break: clone;
+        }
+        input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+
+            &:checked ~ .checkmark:after {
+                content: "";
+                position: absolute;
+                display: block;
+                top: 1px;
+                left: 1px;
+                width: 6px;
+                height: 6px;
+                border-radius: 50px;
+                background: $color-main;
+            }
+        }
+        .checkmark {
+            position: absolute;
+            top: 11px;
+            left: 5px;
+            height: 10px;
+            width: 10px;
+            background-color: $color-white;
+            border-radius: 50px;
+            border: 1px solid grey;
+        }
+    }
+
+    &.horizontal {
+        display: table;
+
+        .ps-radio-wrapper {
+            float: left;
+            margin-right: 15px;
+        }
+    }
+    &.small {
+        font-size: 11px;
+
+        .ps-radio-wrapper .checkmark {
+            top: 7px;
+        }
+    }
+}

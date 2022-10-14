@@ -1,0 +1,22 @@
+@import 'utils/scss_variables.module.scss';
+
+.modal-confirmation {
+    .confirmation-actions-container {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+
+        .confirmation-title {
+            font-size: 34px;
+            line-height: 45px;
+            font-weight: bold;
+            text-transform: none;
+        }
+        .confirmation-cancel-button {
+            margin-right: 10px;
+        }
+        .confirmation-confirmation-button.alert {
+            background-color: $color-error;
+        }
+    }
+}

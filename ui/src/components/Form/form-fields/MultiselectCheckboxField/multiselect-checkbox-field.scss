@@ -1,0 +1,44 @@
+@import 'utils/scss_variables.module.scss';
+
+.ps-multiselect-checkbox-field-wrapper {
+    .selector-wrapper {
+        .input-field {
+            border-radius: 2px;
+            border: solid 1px $color-grey-light;
+            color: $color-grey-black;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            background-color: $color-white;
+            padding: 0 3px;
+            padding-right: 15px;
+            position: relative;
+
+            .open-menu-icon {
+                position: absolute;
+                top: -1px;
+                right: 0;
+                color: $color-main;
+            }
+        }
+    }
+    .dropdown-menu {
+        padding: 0;
+        border-radius: 2px;
+        box-shadow: 0 0 17px 0 rgba(55, 72, 95, 0.12);
+
+        &:focus {
+            outline: none;
+        }
+        .multiselect-content-container {
+            padding: 10px;
+            
+            .multiselect-item-container {
+                margin-left: 10px;
+                max-height: 200px;
+                overflow-y: auto;
+            }
+        }
+    }
+    
+}

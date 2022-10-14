@@ -1,0 +1,14 @@
+.new-fuzzing-test-form {
+    .new-test-alert {
+        margin-bottom: 50px;
+        margin-top: 15px;
+    }
+    .basic-auth-fields {
+        display: flex;
+        justify-content: space-between;
+
+        .ps-field-wrapper {
+            width: 48%;
+        }
+    }
+}

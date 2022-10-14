@@ -1,0 +1,18 @@
+@import 'utils/scss_variables.module.scss';
+
+.ps-field-wrapper.ps-select-field-wrapper {
+    .selector-wrapper {
+        position: relative;
+        
+        .single-select__control {
+            border-color: $color-grey-light;
+            border-radius: 2px;
+        }
+        .single-select__control--is-focused {
+            box-shadow: 0px 0px 5px rgba(2, 188, 234, 0.5);
+        }
+        .single-select__menu {
+            z-index: 2;
+        }
+    }
+}
