@@ -9,6 +9,8 @@ paths:
       operationId: GetApiFindings
       summary: 'Get findings for an API and module'
       description: 'Asks for findings of an APIClarity module, and API. Implemented by each module'
+      tags:
+        - traceanalyzer
       parameters:
         - name: apiID
           in: path
@@ -33,6 +35,8 @@ paths:
     post:
       operationId: ResetApiFindings
       summary: 'Delete all API findings for an API'
+      tags:
+        - traceanalyzer
       parameters:
         - name: apiID
           in: path
@@ -53,6 +57,8 @@ paths:
       operationId: GetEventAnnotations
       summary: Get Annotations for an event
       description: Get Trace Analyzer Annotations for a specific event
+      tags:
+        - traceanalyzer
       parameters:
         - name: eventID
           in: path
@@ -74,6 +80,8 @@ paths:
       operationId: StartTraceAnalysis
       summary: Start Trace Analysis for an API
       description: Start Trace Analysis for an API. 
+      tags:
+        - traceanalyzer
       parameters:
         - name: apiID
           in: path
@@ -99,6 +107,8 @@ paths:
       operationId: StopTraceAnalysis
       summary: Stop Trace Analysis for an API
       description: Stop Trace Analysis for an API. 
+      tags:
+        - traceanalyzer
       parameters:
         - name: apiID
           in: path

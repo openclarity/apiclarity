@@ -10,7 +10,7 @@ paths:
       summary: Get the version of this Module
       description: Get the version of this Module
       tags:
-      - local-bfla
+      - bfla
       responses:
         '200':
           description: Version of the Module
@@ -98,7 +98,7 @@ paths:
   /authorizationModel/{apiID}/approve:
     put:
       tags:
-      - local-bfla
+      - bfla
       parameters:
         - name: apiID
           in: path
@@ -136,7 +136,7 @@ paths:
   /authorizationModel/{apiID}/deny:
     put:
       tags:
-      - local-bfla
+      - bfla
       parameters:
         - name: apiID
           in: path
@@ -301,7 +301,7 @@ paths:
   /event/{id}:
     get:
       tags:
-        - local-bfla
+        - bfla
       operationId: get_event
       parameters:
         - name: id
@@ -321,7 +321,7 @@ paths:
   /event/{id}/{operation}:
     put:
       tags:
-        - local-bfla
+        - bfla
       parameters:
         - in: path
           schema:

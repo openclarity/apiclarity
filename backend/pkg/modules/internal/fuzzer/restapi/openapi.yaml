@@ -19,6 +19,8 @@ paths:
       operationId: getVersion
       summary: Get the version of this Module
       description: Get the version of this Module
+      tags:
+        - fuzzer
       responses:
         '200':
           description: Version of the Module
@@ -32,6 +34,8 @@ paths:
       operationId: getState
       summary: Get the current running state of this module
       description: Get useful informations about the current running state of the testing module
+      tags:
+        - fuzzer
       responses:
         '200':
           description: Current testing module running state
@@ -200,6 +204,8 @@ paths:
       operationId: GetAPIFindings
       summary: 'Get findings for an API and module'
       description: 'Asks for findings of an APIClarity module, and API. Implemented by each module'
+      tags:
+        - fuzzer
       parameters:
         - name: apiID
           in: path
@@ -230,10 +236,10 @@ paths:
           $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
     get:
       operationId: GetUpdateStatus
-      summary: Retreive last update status for an API under fuzzing
-      description: Retreive last update status for an API under fuzzing
+      summary: Retrieve last update status for an API under fuzzing
+      description: Retrieve last update status for an API under fuzzing
       tags:
-        - local-fuzzer
+        - fuzzer
       responses:
         '200':
           content:
@@ -246,7 +252,7 @@ paths:
       summary: Update status for an API under fuzzing
       description: Provide the Update status for an API under fuzzing
       tags:
-        - local-fuzzer
+        - fuzzer
       requestBody:
         content:
           application/json:
@@ -263,7 +269,7 @@ paths:
       summary: Retreieve the list of tests for an API
       description: Retreive the list of tests for an API (without report)
       tags:
-        - local-fuzzer
+        - fuzzer
       parameters:
         - name: apiID
           in: path
@@ -284,7 +290,7 @@ paths:
       summary: Retreive a report for an API
       description: Retreive a report for an API identified by its timestamp
       tags:
-        - local-fuzzer
+        - fuzzer
       parameters:
         - name: apiID
           in: path
@@ -312,7 +318,7 @@ paths:
       summary: Retrieve a report for an API for a specific test
       description: Retreive a report for an API identified by its timestamp
       tags:
-        - local-fuzzer
+        - fuzzer
       parameters:
         - name: apiID
           in: path
@@ -340,7 +346,7 @@ paths:
       summary: Retreive the annotated spec for an API
       description: Retreive the annotated spec for an API if any, 404 Not Found otherwise
       tags:
-        - local-fuzzer
+        - fuzzer
       parameters:
         - name: apiID
           in: path
