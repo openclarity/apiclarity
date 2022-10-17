@@ -1639,7 +1639,7 @@ paths:
                 $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
           description: Error response
       tags:
-      - local-bfla
+      - bfla
   /modules/bfla/authorizationModel/{apiID}/deny:
     put:
       parameters:
@@ -1677,7 +1677,7 @@ paths:
                 $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
           description: Error response
       tags:
-      - local-bfla
+      - bfla
   /modules/bfla/authorizationModel/{apiID}/detection/start:
     put:
       parameters:
@@ -1838,7 +1838,7 @@ paths:
           description: API Event with annotations
       summary: Get the event with the annotations and bfla status
       tags:
-      - local-bfla
+      - bfla
   /modules/bfla/event/{id}/{operation}:
     put:
       parameters:
@@ -1866,7 +1866,7 @@ paths:
                 $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
           description: Error response
       tags:
-      - local-bfla
+      - bfla
   /modules/bfla/version:
     get:
       description: Get the version of this Module
@@ -1880,7 +1880,7 @@ paths:
           description: Version of the Module
       summary: Get the version of this Module
       tags:
-      - local-bfla
+      - bfla
   /modules/fuzzer/annotatedspec/{apiID}:
     get:
       description: Retreive the annotated spec for an API if any, 404 Not Found otherwise
@@ -1908,7 +1908,7 @@ paths:
           description: Spec not found
       summary: Retreive the annotated spec for an API
       tags:
-      - local-fuzzer
+      - fuzzer
   /modules/fuzzer/apiFindings/{apiID}:
     get:
       description: Asks for findings of an APIClarity module, and API. Implemented
@@ -1935,6 +1935,8 @@ paths:
                 $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
           description: Error response
       summary: Get findings for an API and module
+      tags:
+      - fuzzer
   /modules/fuzzer/fuzz/{apiID}/progress:
     get:
       description: Start a test for an API
@@ -2112,7 +2114,7 @@ paths:
           description: List of tests
       summary: Retreive a report for an API
       tags:
-      - local-fuzzer
+      - fuzzer
   /modules/fuzzer/report/{apiID}/{timestamp}/short:
     get:
       description: Retreive a report for an API identified by its timestamp
@@ -2139,7 +2141,7 @@ paths:
           description: List of tests
       summary: Retrieve a report for an API for a specific test
       tags:
-      - local-fuzzer
+      - fuzzer
   /modules/fuzzer/state:
     get:
       description: Get useful informations about the current running state of the
@@ -2153,6 +2155,8 @@ paths:
                 $ref: '#/components/schemas/TestingModuleState'
           description: Current testing module running state
       summary: Get the current running state of this module
+      tags:
+      - fuzzer
   /modules/fuzzer/tests/{apiID}:
     get:
       description: Retreive the list of tests for an API (without report)
@@ -2172,10 +2176,10 @@ paths:
           description: List of tests
       summary: Retreieve the list of tests for an API
       tags:
-      - local-fuzzer
+      - fuzzer
   /modules/fuzzer/updateStatus/{apiID}:
     get:
-      description: Retreive last update status for an API under fuzzing
+      description: Retrieve last update status for an API under fuzzing
       operationId: fuzzerGetUpdateStatus
       responses:
         "200":
@@ -2184,9 +2188,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/FuzzingStatusAndReport'
           description: Raw Finding Bundle
-      summary: Retreive last update status for an API under fuzzing
+      summary: Retrieve last update status for an API under fuzzing
       tags:
-      - local-fuzzer
+      - fuzzer
     parameters:
     - in: path
       name: apiID
@@ -2207,7 +2211,7 @@ paths:
           description: Successful Response
       summary: Update status for an API under fuzzing
       tags:
-      - local-fuzzer
+      - fuzzer
   /modules/fuzzer/version:
     get:
       description: Get the version of this Module
@@ -2220,6 +2224,8 @@ paths:
                 $ref: '#/components/schemas/Version'
           description: Version of the Module
       summary: Get the version of this Module
+      tags:
+      - fuzzer
   /modules/spec_differ/{apiID}/start:
     post:
       description: Start Differ for an API.
@@ -2292,6 +2298,8 @@ paths:
                 $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
           description: Error response
       summary: Start Trace Analysis for an API
+      tags:
+      - traceanalyzer
   /modules/traceanalyzer/{apiID}/stop:
     post:
       description: Stop Trace Analysis for an API.
@@ -2316,6 +2324,8 @@ paths:
                 $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
           description: Error response
       summary: Stop Trace Analysis for an API
+      tags:
+      - traceanalyzer
   /modules/traceanalyzer/apiFindings/{apiID}:
     get:
       description: Asks for findings of an APIClarity module, and API. Implemented
@@ -2342,6 +2352,8 @@ paths:
                 $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
           description: Error response
       summary: Get findings for an API and module
+      tags:
+      - traceanalyzer
   /modules/traceanalyzer/apiFindings/{apiID}/reset:
     post:
       operationId: traceanalyzerResetApiFindings
@@ -2361,6 +2373,8 @@ paths:
                 $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
           description: Error response
       summary: Delete all API findings for an API
+      tags:
+      - traceanalyzer
   /modules/traceanalyzer/eventAnnotations/{eventID}:
     get:
       description: Get Trace Analyzer Annotations for a specific event
@@ -2381,5 +2395,7 @@ paths:
                 $ref: '#/components/schemas/Annotations'
           description: Annotation
       summary: Get Annotations for an event
+      tags:
+      - traceanalyzer
 servers:
 - url: /api

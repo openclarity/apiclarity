@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/deepmap/oapi-codegen/pkg/runtime"
 	"github.com/getkin/kin-openapi/openapi3"
@@ -21,17 +22,17 @@ import (
 
 // APIDiffs defines model for APIDiffs.
 type APIDiffs struct {
-	ApiInfo externalRef0.ApiInfo `json:"apiInfo"`
-	Diffs   []Diff               `json:"diffs"`
+	ApiInfo externalRef0.ApiInfoWithType `json:"apiInfo"`
+	Diffs   []Diff                       `json:"diffs"`
 }
 
 // Diff defines model for Diff.
 type Diff struct {
 	DiffType externalRef0.DiffType `json:"diffType"`
 
-	// Timestamp of the time that the diff was last seen
-	LastSeen int64                    `json:"lastSeen"`
-	Method   *externalRef0.HttpMethod `json:"method,omitempty"`
+	// The time that the diff was last seen
+	LastSeen time.Time               `json:"lastSeen"`
+	Method   externalRef0.HttpMethod `json:"method"`
 
 	// New spec json string
 	NewSpec string `json:"newSpec"`
@@ -40,8 +41,11 @@ type Diff struct {
 	OldSpec string `json:"oldSpec"`
 
 	// Path of the diff element
-	Path     *string                `json:"path,omitempty"`
-	SpecType *externalRef0.SpecType `json:"specType,omitempty"`
+	Path string `json:"path"`
+
+	// the time that this spec was created. used also as spec version
+	SpecTimestamp time.Time             `json:"specTimestamp"`
+	SpecType      externalRef0.SpecType `json:"specType"`
 }
 
 // SpecDiffs defines model for SpecDiffs.
@@ -252,17 +256,18 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+xVT2sbPxD9KmJ+v+Oy6zalh725daGGJjF1biEHdXc2Vlj96WjcYIy+e5G8fxzbMTn4",
-	"UGjB4BUavfdm9Ga0hcpqZw0a9lBuwVcr1DJ9ThfzmWqa9O3IOiRWmFbSqblpbPz8n7CBEvK8OPhJp66K",
-	"ymptTWEdGulUvpG6/a8YCYuOrZh2gCGDuqdUjNrvUZw8GAXGU7xxCCVIIrmBEDIg/LlWhDWU94PcHvxh",
-	"iLc/nrDiCJCAjhKN8Xcp9FKZznrEkEErPS8RTWJCX5FyrKyBEu6URs9SO2EbwSsUrDQKXklOqyhLPEsv",
-	"IoLwESKDxpKWDCUowx8/QAasuI1JfuuDEgoMySvD+IgUlWjkla0vl+VXZne9wwwZGHxeOqyO07zBZ+Ed",
-	"VuLJWyM8kzKPo75uHTKwbX0a4Lat3wTgJK+OTy8kr/oCp5JiixoNn0KILJd1wrJHPLTrYIts9N9Yg7Gc",
-	"p2wcN15p2qGxzvXT0POHol7vnIHyxrJqVCV31d2CbNvbBsr7SxXsk/T4giNk55MZixEeQkxIdUPrpQ2m",
-	"i/nnVpLijbi29bpFMV3M9/pnbz+iIUEGv5D87vQkn+Tvkkl3+qGEq3ySX8HOdanixTaOoFkoPEvidDXW",
-	"87GSZdzuSERjSUgTteSQ0CllPa/7wEGMkyQ1MpJP1VYRKjk+AyN1mouRHvZvlGmNWTftLzvHZxDCQ6Ty",
-	"zhq/8977yST+VdZw7K/0hLi2u8ciNu/49lxUzfdOBaT7P6j2uqrQ+/ToYCPXLf95Gr8QWRI0RmTg11pL",
-	"2rxulxS1ZznrzjnOurcZzrp/fvvr/XbKLBEm/A4AAP//EhazK0cKAAA=",
+	"H4sIAAAAAAAC/+xVTW/jRgz9KwO2R1Vym5tubl2gPiQx6gB7CHLgStRqAs3HztAbGIb++4JjWXJsJ8jB",
+	"hwV2gQCRMcP3HslHzg4qZ7yzZDlCuYNYtWQwfc5Xy4VumvTtg/MUWFP6hV4vbePk8/dADZSQ58XJH3p9",
+	"U1TOGGcL58mi1/kWTfdbMREWA1sx3wN+0tw+bD1Bn0F9oNZMJh5RXQQQoRLFEl0ChoBb6PsMAn3d6EA1",
+	"lI+j7AP403jffX6migUgAZ0lLPeTsKtlvDgg9hl0GHlNZBMTxSpoz9pZKOGhJcXakOIWWXFLSpSoF4xK",
+	"glSUqAwaFwwylFAj0x8SAGNqkYO2X4TGELeuvl4K/zH72z1mn4Gll7Wn6jyHO3pR0VOlnqOzapBzQZ7r",
+	"6ssA9139IQCP3J5Hr5Bb5ZqpeNSRIcuXEITlQRuKjMafQ/FJN3Tc65J2VIGQqc7VJlKtsItO4XD8jUIU",
+	"gI/2Kam4qtnWB8TTiRidl00WnzoxNXU0z1DlI5GnVbs0VILxxioZx/y96R430an+t+d4pLxzrBtd4b6H",
+	"O8Cuu2+gfLxWbf/GSK84+uz9ZKZi9E+9JKSHVfrabPPV8p8Og+atunX1piM1Xy3FLpo7en0uaBQgg4PT",
+	"Spjls/zPNFV7/VDCTT7Lb4YGpooXO1mIi76IjIFTa1zkcyVrOR5IVOOCQitackjoIWW9rA8XRzEeAxpi",
+	"CjFVWwvUYB6LJm1poYfjjnLYUDa8Qdd9XRbQ909CFb2zce+9v2Yz+Vc5y7IQ0sPmu6GPhWyb6UW8qpr/",
+	"BxWQ+n9S7U1VUYzpCaQGNx3/eBr/DcEFFaYbGcSNMRi2b9sl3TqynPPvOc75jxnO+V9+++n9dsksAtN/",
+	"DwAA//9Bipoe3QoAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
