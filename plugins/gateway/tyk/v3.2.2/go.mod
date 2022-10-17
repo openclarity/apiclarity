@@ -3,7 +3,6 @@ module github.com/openclarity/apiclarity/plugins/gateway/tyk
 go 1.16
 
 // From here: https://tyk.io/docs/plugins/supported-languages/golang/#plugin-development-flow
-//nolint:gomoddirectives
 replace github.com/jensneuse/graphql-go-tools => github.com/TykTechnologies/graphql-go-tools v1.6.2-0.20211112130051-ad1e36a78a9a
 
 require (

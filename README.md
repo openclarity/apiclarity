@@ -28,10 +28,10 @@ from real-time workload traffic seamlessly.
 
 ![High level architecture](diagram.jpg "High level architecture")
 
-
 ## Getting started
 
 ### Supported traffic source integrations
+
 APIClarity supports integrating with the following traffic sources. Install APIClarity and follow the instructions per required integration.
 
 * Istio Service Mesh
@@ -58,7 +58,9 @@ Contributions of integrations with additional traffic sources are more than welc
    ```shell
    helm repo add apiclarity https://openclarity.github.io/apiclarity
    ```
+
 2. Save APIClarity default chart values
+
     ```shell
     helm show values apiclarity/apiclarity > values.yaml
     ```
@@ -71,21 +73,23 @@ Contributions of integrations with additional traffic sources are more than welc
    helm install --values values.yaml --create-namespace apiclarity apiclarity/apiclarity -n apiclarity
    ```
 
-3. Port forward to APIClarity UI:
+5. Port forward to APIClarity UI:
 
    ```shell
    kubectl port-forward -n apiclarity svc/apiclarity-apiclarity 9999:8080
    ```
 
-4. Open APIClarity UI in the browser: <http://localhost:9999/>
-5. Generate some traffic in the traced applications and check the APIClarity UI :)
+6. Open APIClarity UI in the browser: <http://localhost:9999/>
+7. Generate some traffic in the traced applications and check the APIClarity UI :)
 
 ### Uninstall APIClarity from a K8s cluster using Helm:
 
 1. Helm uninstall
+
    ```shell
    helm uninstall apiclarity -n apiclarity
    ```
+
 2. Clean resources
 
     By default, Helm will not remove the PVCs and PVs for the StatefulSets. Run the following command to delete them all:
@@ -93,6 +97,7 @@ Contributions of integrations with additional traffic sources are more than welc
     ```shell
     kubectl delete pvc -l app.kubernetes.io/instance=apiclarity -n apiclarity
     ```
+
 ## Configurations
 
 The file [values.yaml](https://github.com/openclarity/apiclarity/blob/master/charts/apiclarity/values.yaml) is used to deploy and configure APIClarity on your cluster via Helm.
@@ -118,9 +123,11 @@ To deploy the Sock Shop Demo, follow these steps:
    ```
 
 3. Deploy APIClarity in the `sock-shop` namespace (e.g. Istio service-mesh traffic source):
+
    ```shell
    helm repo add apiclarity https://openclarity.github.io/apiclarity
    ```
+
    ```shell
    helm install --set 'trafficSource.envoyWasm.enabled=true' --set 'trafficSource.envoyWasm.namespaces={sock-shop}' --create-namespace apiclarity apiclarity/apiclarity -n apiclarity
    ```
@@ -137,11 +144,13 @@ To deploy the Sock Shop Demo, follow these steps:
 ## Building
 
 ### Building from source:
+
 Build and push the image to your repo:
 
 ```shell
 DOCKER_IMAGE=<your docker registry>/apiclarity DOCKER_TAG=<your tag> make push-docker
 ```
+
 Update [values.yaml](https://github.com/openclarity/apiclarity/blob/master/charts/apiclarity/values.yaml) accordingly.
 
 ## Running locally with demo data
@@ -159,11 +168,13 @@ Update [values.yaml](https://github.com/openclarity/apiclarity/blob/master/chart
    ```
 
 3. Run backend and frontend locally using demo data:
-   
+
    Note: You might need to delete the old local state file and local db:
+
    ```shell
    rm state.gob; rm db.db
    ```
+
    ```shell
    DATABASE_DRIVER=LOCAL K8S_LOCAL=true FAKE_TRACES=true FAKE_TRACES_PATH=./backend/pkg/test/trace_files \
    ENABLE_DB_INFO_LOGS=true ./backend/bin/backend run
@@ -177,6 +188,10 @@ Pull requests and bug reports are welcome.
 
 For larger changes please create an Issue in GitHub first to discuss your
 proposed changes and possible implications.
+
+## Contributors
+
+https://panoptica.app
 
 ## License
 

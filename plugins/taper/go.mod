@@ -88,14 +88,10 @@ require (
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
 
-// nolint:gomoddirectives
 replace github.com/up9inc/mizu/tap/api v0.0.0 => github.com/up9inc/mizu/tap/api v0.0.0-20211107103142-4badaadcc134
 
-// nolint:gomoddirectives
 replace github.com/up9inc/mizu/shared v0.0.0 => github.com/up9inc/mizu/shared v0.0.0-20211107103142-4badaadcc134
 
-// nolint:gomoddirectives
 replace github.com/openclarity/apiclarity/plugins/api v0.0.0 => ./../api
 
-// nolint:gomoddirectives
 replace github.com/openclarity/apiclarity/plugins/common v0.0.0 => ../common

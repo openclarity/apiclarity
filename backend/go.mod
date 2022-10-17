@@ -86,7 +86,7 @@ require (
 	github.com/jinzhu/now v1.1.2 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/labstack/echo/v4 v4.7.2 // indirect
+	github.com/labstack/echo/v4 v4.9.0 // indirect
 	github.com/labstack/gommon v0.3.1 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
@@ -150,3 +150,6 @@ replace github.com/openclarity/apiclarity/api v0.0.0 => ./../api
 replace github.com/openclarity/apiclarity/api3 v0.0.0 => ./../api3
 
 replace github.com/openclarity/apiclarity/plugins/api v0.0.0 => ./../plugins/api
+
+// fix CVE-2022-40083
+replace github.com/labstack/echo/v4 => github.com/labstack/echo/v4 v4.9.0
