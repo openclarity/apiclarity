@@ -26,13 +26,19 @@ import (
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
+	"go.opentelemetry.io/otel/attribute"
 	semconv "go.opentelemetry.io/otel/semconv/v1.9.0"
 )
 
 const (
-	missingAttrValue     string = "<missing>"
-	DefaultSourceAddress string = "client:5280"
-	DefaultStatusCode    string = "200"
+	missingAttrValue     = "<missing>"
+	DefaultSourceAddress = "client:5280"
+	DefaultStatusCode    = "200"
+	DefaultScheme        = "http"
+	DefaultTarget        = "/"
+	DefaultSpanKind      = ptrace.SpanKindServer
+	RequestBody          = attribute.Key("request_body")
+	ResponseBody         = attribute.Key("response_body")
 )
 
 func wrapAttributeError(logger *zap.Logger, msg, attrKey, attrValue string, err error) error {
@@ -212,13 +218,21 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 		actel.Scheme = schemeAttr.AsString()
 	} else if !urlOk {
 		//Either HTTPURLKey or HTTPSchemeKey should be defined
-		return nil, wrapAttributeError(e.logger, "missing attribute", string(semconv.HTTPSchemeKey), missingAttrValue, nil)
+		actel.Scheme = DefaultScheme
+		e.logger.Warn("Using default value for missing attribute",
+			zap.String("attribute", string(semconv.HTTPSchemeKey)),
+			zap.String("value", DefaultScheme),
+		)
 	}
 	if targetAttr, targetOk := attrs.Get(string(semconv.HTTPTargetKey)); targetOk {
 		actel.Request.Path = targetAttr.AsString()
 	} else if !urlOk {
 		//Either HTTPURLKey or HTTPTargetKey should be defined
-		return nil, wrapAttributeError(e.logger, "missing attribute", string(semconv.HTTPTargetKey), missingAttrValue, nil)
+		actel.Request.Path = DefaultTarget
+		e.logger.Warn("Using default value for missing attribute",
+			zap.String("attribute", string(semconv.HTTPTargetKey)),
+			zap.String("value", DefaultTarget),
+		)
 	}
 	//Do not override URL with Host header, but check for use later
 	if hostAttr, hostOk := attrs.Get(string(semconv.HTTPHostKey)); hostOk && actel.Request.Host == "" {
@@ -231,8 +245,20 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 		err = setTelemetryClientSpan(actel, resource, attrs, e.logger)
 	case ptrace.SpanKindServer:
 		err = setTelemetryServerSpan(actel, resource, attrs, e.logger)
+	case ptrace.SpanKindUnspecified:
+		e.logger.Warn("span kind unspecified, assuming default",
+			zap.String("kind", span.Kind().String()),
+			zap.String("name", span.Name()),
+			zap.String("traceid", span.TraceID().HexString()),
+			zap.String("default", string(DefaultSpanKind)),
+		)
+		if DefaultSpanKind == ptrace.SpanKindClient {
+			err = setTelemetryClientSpan(actel, resource, attrs, e.logger)
+		} else {
+			err = setTelemetryServerSpan(actel, resource, attrs, e.logger)
+		}
 	default:
-		e.logger.Debug("ignoring span because it is not client or server",
+		e.logger.Warn("ignoring span that is not client or server",
 			zap.String("kind", span.Kind().String()),
 			zap.String("name", span.Name()),
 			zap.String("traceid", span.TraceID().HexString()),
@@ -240,7 +266,7 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 	}
 	if err != nil {
 		span.Attributes().Range(func(k string, v pcommon.Value) bool {
-			e.logger.Warn("Failing span attribute",
+			e.logger.Warn("failing span attribute",
 				zap.String("key", k),
 				zap.String("value", v.AsString()),
 			)
@@ -314,6 +340,36 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 	}
 	if route, ok := attrs.Get(string(semconv.HTTPRouteKey)); ok {
 		actel.Request.Path = route.AsString()
+	}
+
+	// Add payloads if available
+	if reqBody, ok := attrs.Get(string(RequestBody)); ok {
+		if reqBody.Type() == pcommon.ValueTypeBytes {
+			actel.Request.Common.Body = reqBody.Bytes().AsRaw()
+		} else if reqBody.Type() == pcommon.ValueTypeStr {
+			actel.Request.Common.Body = []byte(reqBody.Str())
+		} else {
+			e.logger.Warn("unknown request body value type",
+				zap.String("kind", span.Kind().String()),
+				zap.String("name", span.Name()),
+				zap.String("traceid", span.TraceID().HexString()),
+				zap.String("type", reqBody.Type().String()),
+			)
+		}
+	}
+	if respBody, ok := attrs.Get(string(ResponseBody)); ok {
+		if respBody.Type() == pcommon.ValueTypeBytes {
+			actel.Response.Common.Body = respBody.Bytes().AsRaw()
+		} else if respBody.Type() == pcommon.ValueTypeStr {
+			actel.Response.Common.Body = []byte(respBody.Str())
+		} else {
+			e.logger.Warn("unknown response body value type",
+				zap.String("kind", span.Kind().String()),
+				zap.String("name", span.Name()),
+				zap.String("traceid", span.TraceID().HexString()),
+				zap.String("type", respBody.Type().String()),
+			)
+		}
 	}
 
 	attrs.Range(func(k string, v pcommon.Value) bool {
