@@ -53,25 +53,4 @@ $large-modal-height: calc(100vh - 2 * #{$main-content-padding} - 2 * #{$large-he
             }
         }
     }
-    
-    &.center .modal-container {
-        position: absolute;
-        top: 15%;
-        left: 50%;
-        transform: translateX(-50%);
-        width: $default-width;
-        min-width: $default-width;
-        max-height: 250px;
-    }
-    &.center-large .modal-container {
-        position: absolute;     
-        width: calc(100% - 2 * #{$large-width-padding});
-        min-width: $default-width;
-        height: $large-modal-height;
-        max-height: $large-modal-height;
-        top: $large-height-padding;
-        left: $large-width-padding;
-        right: $large-width-padding
-        
-    }
 }

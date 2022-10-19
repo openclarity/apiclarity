@@ -7,19 +7,18 @@ import KeyValueList from 'components/KeyValueList';
 import VulnerabilityIcon from 'components/VulnerabilityIcon';
 import BreadcrumbSelectPanes, { SelectItemNotification } from 'components/BreadcrumbSelectPanes';
 import { TooltipWrapper } from 'components/Tooltip';
-// import { FUZZING_STATUS_ITEMS, UnfuzzableMessageDisplay } from 'layout/Apis/utils';
-import FindingsAccordion from 'layout/Inventory/InventoryDetails/FindingsAccordion';
+import FindingsTable from 'components/FindingsTable';
 import MethodWithRiskDisplay from 'components/MethodWithRiskDisplay';
 import { formatDate } from 'utils/utils';
 import { SYSTEM_RISKS } from 'utils/systemConsts';
 import TestItemDisplay from './TestItemDisplay';
 import { TEST_TYPES, AUTH_SCHEME_TYPES, FUZZING_STATUS_ITEMS, UnfuzzableMessageDisplay } from './utils';
 
-const RiskDisplay = ({severity}) => (
-    <VulnerabilityIcon severity={ severity || SYSTEM_RISKS.UNKNOWN.value} />
+const RiskDisplay = ({ severity }) => (
+    <VulnerabilityIcon severity={severity || SYSTEM_RISKS.UNKNOWN.value} />
 )
 
-const StartTestButton = ({disabled, onClick}) => (
+const StartTestButton = ({ disabled, onClick }) => (
     <IconWithTitle
         name={ICON_NAMES.ADD}
         title="Start new test"
@@ -28,24 +27,23 @@ const StartTestButton = ({disabled, onClick}) => (
     />
 )
 
-const TestSelectPanes = ({catalogId, testElements, onNewTestClick, onScanComplete, isFuzzable}) => {
+const TestSelectPanes = ({ catalogId, testElements, onNewTestClick, onScanComplete, isFuzzable }) => {
     const selectData = testElements.map(testElement => {
-        const {testId, fuzzingStatus, fuzzingStartTime} = testElement.testDetails;
+        const { testId, fuzzingStatus, fuzzingStartTime } = testElement.testDetails;
 
-        return {...testElement, id: testId, title: formatDate(fuzzingStartTime), disabled: fuzzingStatus === FUZZING_STATUS_ITEMS.IN_PROGRESS.value};
+        return { ...testElement, id: testId, title: formatDate(fuzzingStartTime), disabled: fuzzingStatus === FUZZING_STATUS_ITEMS.IN_PROGRESS.value };
     });
 
-    console.log(selectData);
     const displayData = [
         {
             getTitle: () => "Tests",
             getSelectItems: () => [...selectData],
-            itemDisplay: ({title, testDetails, tags}) => (
+            itemDisplay: ({ title, testDetails, tags }) => (
                 <TestItemDisplay
                     title={title}
                     testDetails={testDetails}
                     catalogId={catalogId}
-                    severity={tags.severity || SYSTEM_RISKS.UNKNOWN.value}
+                    severity={tags.highestSeverity || SYSTEM_RISKS.UNKNOWN.value}
                     onScanComplete={onScanComplete}
                 />
             ),
@@ -69,21 +67,21 @@ const TestSelectPanes = ({catalogId, testElements, onNewTestClick, onScanComplet
         },
         {
             getTitle: () => "Tags",
-            getSelectItems: ({tags}) => tags.elements.map(item => ({...item, id: item.name, title: item.name})),
-            itemDisplay: ({name, highestSeverity: severity}) => <TitleWithRiskDisplay title={name} risk={severity} customRiskDisplay={() => <RiskDisplay severity={severity} />} />,
+            getSelectItems: ({ tags }) => tags.elements.map(item => ({ ...item, id: item.name, title: item.name })),
+            itemDisplay: ({ name, highestSeverity: severity }) => <TitleWithRiskDisplay title={name} risk={severity} customRiskDisplay={() => <RiskDisplay severity={severity} />} />,
             checkAdvanceLevel: () => true,
-            emptySelectDisplay: ({title, testDetails}) => {
-                const {testConfiguration, fuzzingStatus} = testDetails;
-                const {auth, depth} = testConfiguration;
-                const {label} = FUZZING_STATUS_ITEMS[fuzzingStatus] || {};
+            emptySelectDisplay: ({ title, testDetails }) => {
+                const { testConfiguration, fuzzingStatus } = testDetails;
+                const { auth, depth } = testConfiguration;
+                const { label } = FUZZING_STATUS_ITEMS[fuzzingStatus] || {};
 
                 return (
                     <DisplaySection title={title}>
                         <KeyValueList
                             items={[
-                                {label: "Status", value: label},
-                                {label: "Test type", value: TEST_TYPES[depth]?.label},
-                                {label: "Authorization Scheme", value: AUTH_SCHEME_TYPES[auth?.authorizationSchemeType]?.label}
+                                { label: "Status", value: label },
+                                { label: "Test type", value: TEST_TYPES[depth]?.label },
+                                { label: "Authorization Scheme", value: AUTH_SCHEME_TYPES[auth?.authorizationSchemeType]?.label }
                             ]}
                         />
                     </DisplaySection>
@@ -91,23 +89,23 @@ const TestSelectPanes = ({catalogId, testElements, onNewTestClick, onScanComplet
             }
         },
         {
-            getTitle: ({title}) => title,
-            getSelectItems: ({methods}) => methods.map(item => ({ ...item, id: `${item.method}-${item.path}` })),
-            itemDisplay: ({highestSeverity: severity, method, path}) => (
+            getTitle: ({ title }) => title,
+            getSelectItems: ({ methods }) => methods.map(item => ({ ...item, id: `${item.method}-${item.path}` })),
+            itemDisplay: ({ highestSeverity: severity, method, path }) => (
                 <MethodWithRiskDisplay path={path} method={method} risk={severity} customRiskDisplay={() => <RiskDisplay severity={severity} />} />
             ),
             checkAdvanceLevel: () => false,
             emptySelectDisplay: () => <SelectItemNotification title="Select a method to see details" />,
-            selectContentDisplay: ({path, method, findings, requestCount}) => (
+            selectContentDisplay: ({ path, method, findings, requestCount }) => (
                 <div className="test-findings-content-wrapper">
                     <DisplaySection title={<div className="test-findings-content-title">{`${method} ${path}`}</div>}>
                         <KeyValueList
                             items={[
-                                {label: "Number of requests", value: requestCount}
+                                { label: "Number of requests", value: requestCount }
                             ]}
                         />
                     </DisplaySection>
-                    <FindingsAccordion findingsDetails={findings} withOccurrencesCount={false} elementsKey="elements" />
+                    <FindingsTable data={{ items: findings.elements }} />
                 </div>
             )
         },

@@ -907,12 +907,6 @@ type GetDashboardApiUsageParams struct {
 	EndTime EndTime `form:"endTime" json:"endTime"`
 }
 
-// BflaGetAPIFindingsForAPIParams defines parameters for BflaGetAPIFindingsForAPI.
-type BflaGetAPIFindingsForAPIParams struct {
-	// Should findings include sensitive data ?
-	Sensitive *externalRef0.Sensitive `form:"sensitive,omitempty" json:"sensitive,omitempty"`
-}
-
 // BflaGetApiFindingsParams defines parameters for BflaGetApiFindings.
 type BflaGetApiFindingsParams struct {
 	// Should findings include sensitive data ?
@@ -1198,9 +1192,6 @@ type ClientInterface interface {
 	// GetFeatures request
 	GetFeatures(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// BflaGetAPIFindingsForAPI request
-	BflaGetAPIFindingsForAPI(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetAPIFindingsForAPIParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// BflaGetApiFindings request
 	BflaGetApiFindings(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetApiFindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1267,6 +1258,9 @@ type ClientInterface interface {
 
 	// FuzzerGetReport request
 	FuzzerGetReport(ctx context.Context, apiID externalRef0.ApiID, timestamp int64, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// FuzzerGetShortReportByTimestamp request
+	FuzzerGetShortReportByTimestamp(ctx context.Context, apiID externalRef0.ApiID, timestamp int64, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// FuzzergetState request
 	FuzzergetState(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1595,18 +1589,6 @@ func (c *Client) GetFeatures(ctx context.Context, reqEditors ...RequestEditorFn)
 	return c.Client.Do(req)
 }
 
-func (c *Client) BflaGetAPIFindingsForAPI(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetAPIFindingsForAPIParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewBflaGetAPIFindingsForAPIRequest(c.Server, apiID, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 func (c *Client) BflaGetApiFindings(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetApiFindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewBflaGetApiFindingsRequest(c.Server, apiID, params)
 	if err != nil {
@@ -1873,6 +1855,18 @@ func (c *Client) FuzzerStopTest(ctx context.Context, apiID externalRef0.ApiID, r
 
 func (c *Client) FuzzerGetReport(ctx context.Context, apiID externalRef0.ApiID, timestamp int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewFuzzerGetReportRequest(c.Server, apiID, timestamp)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) FuzzerGetShortReportByTimestamp(ctx context.Context, apiID externalRef0.ApiID, timestamp int64, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFuzzerGetShortReportByTimestampRequest(c.Server, apiID, timestamp)
 	if err != nil {
 		return nil, err
 	}
@@ -3961,60 +3955,6 @@ func NewGetFeaturesRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewBflaGetAPIFindingsForAPIRequest generates requests for BflaGetAPIFindingsForAPI
-func NewBflaGetAPIFindingsForAPIRequest(server string, apiID externalRef0.ApiID, params *BflaGetAPIFindingsForAPIParams) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/modules/bfla/api/findings/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	queryValues := queryURL.Query()
-
-	if params.Sensitive != nil {
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sensitive", runtime.ParamLocationQuery, *params.Sensitive); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-	}
-
-	queryURL.RawQuery = queryValues.Encode()
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 // NewBflaGetApiFindingsRequest generates requests for BflaGetApiFindings
 func NewBflaGetApiFindingsRequest(server string, apiID externalRef0.ApiID, params *BflaGetApiFindingsParams) (*http.Request, error) {
 	var err error
@@ -4902,6 +4842,47 @@ func NewFuzzerGetReportRequest(server string, apiID externalRef0.ApiID, timestam
 	return req, nil
 }
 
+// NewFuzzerGetShortReportByTimestampRequest generates requests for FuzzerGetShortReportByTimestamp
+func NewFuzzerGetShortReportByTimestampRequest(server string, apiID externalRef0.ApiID, timestamp int64) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "timestamp", runtime.ParamLocationPath, timestamp)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/modules/fuzzer/report/%s/%s/short", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewFuzzergetStateRequest generates requests for FuzzergetState
 func NewFuzzergetStateRequest(server string) (*http.Request, error) {
 	var err error
@@ -5461,9 +5442,6 @@ type ClientWithResponsesInterface interface {
 	// GetFeatures request
 	GetFeaturesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetFeaturesResponse, error)
 
-	// BflaGetAPIFindingsForAPI request
-	BflaGetAPIFindingsForAPIWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetAPIFindingsForAPIParams, reqEditors ...RequestEditorFn) (*BflaGetAPIFindingsForAPIResponse, error)
-
 	// BflaGetApiFindings request
 	BflaGetApiFindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetApiFindingsParams, reqEditors ...RequestEditorFn) (*BflaGetApiFindingsResponse, error)
 
@@ -5530,6 +5508,9 @@ type ClientWithResponsesInterface interface {
 
 	// FuzzerGetReport request
 	FuzzerGetReportWithResponse(ctx context.Context, apiID externalRef0.ApiID, timestamp int64, reqEditors ...RequestEditorFn) (*FuzzerGetReportResponse, error)
+
+	// FuzzerGetShortReportByTimestamp request
+	FuzzerGetShortReportByTimestampWithResponse(ctx context.Context, apiID externalRef0.ApiID, timestamp int64, reqEditors ...RequestEditorFn) (*FuzzerGetShortReportByTimestampResponse, error)
 
 	// FuzzergetState request
 	FuzzergetStateWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*FuzzergetStateResponse, error)
@@ -6066,29 +6047,6 @@ func (r GetFeaturesResponse) StatusCode() int {
 	return 0
 }
 
-type BflaGetAPIFindingsForAPIResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *externalRef0.APIFindings
-	JSONDefault  *externalRef0.ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r BflaGetAPIFindingsForAPIResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r BflaGetAPIFindingsForAPIResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type BflaGetApiFindingsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -6568,6 +6526,28 @@ func (r FuzzerGetReportResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r FuzzerGetReportResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type FuzzerGetShortReportByTimestampResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ShortTestReport
+}
+
+// Status returns HTTPResponse.Status
+func (r FuzzerGetShortReportByTimestampResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r FuzzerGetShortReportByTimestampResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7055,15 +7035,6 @@ func (c *ClientWithResponses) GetFeaturesWithResponse(ctx context.Context, reqEd
 	return ParseGetFeaturesResponse(rsp)
 }
 
-// BflaGetAPIFindingsForAPIWithResponse request returning *BflaGetAPIFindingsForAPIResponse
-func (c *ClientWithResponses) BflaGetAPIFindingsForAPIWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetAPIFindingsForAPIParams, reqEditors ...RequestEditorFn) (*BflaGetAPIFindingsForAPIResponse, error) {
-	rsp, err := c.BflaGetAPIFindingsForAPI(ctx, apiID, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseBflaGetAPIFindingsForAPIResponse(rsp)
-}
-
 // BflaGetApiFindingsWithResponse request returning *BflaGetApiFindingsResponse
 func (c *ClientWithResponses) BflaGetApiFindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *BflaGetApiFindingsParams, reqEditors ...RequestEditorFn) (*BflaGetApiFindingsResponse, error) {
 	rsp, err := c.BflaGetApiFindings(ctx, apiID, params, reqEditors...)
@@ -7267,6 +7238,15 @@ func (c *ClientWithResponses) FuzzerGetReportWithResponse(ctx context.Context, a
 		return nil, err
 	}
 	return ParseFuzzerGetReportResponse(rsp)
+}
+
+// FuzzerGetShortReportByTimestampWithResponse request returning *FuzzerGetShortReportByTimestampResponse
+func (c *ClientWithResponses) FuzzerGetShortReportByTimestampWithResponse(ctx context.Context, apiID externalRef0.ApiID, timestamp int64, reqEditors ...RequestEditorFn) (*FuzzerGetShortReportByTimestampResponse, error) {
+	rsp, err := c.FuzzerGetShortReportByTimestamp(ctx, apiID, timestamp, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFuzzerGetShortReportByTimestampResponse(rsp)
 }
 
 // FuzzergetStateWithResponse request returning *FuzzergetStateResponse
@@ -8097,39 +8077,6 @@ func ParseGetFeaturesResponse(rsp *http.Response) (*GetFeaturesResponse, error) 
 	return response, nil
 }
 
-// ParseBflaGetAPIFindingsForAPIResponse parses an HTTP response from a BflaGetAPIFindingsForAPIWithResponse call
-func ParseBflaGetAPIFindingsForAPIResponse(rsp *http.Response) (*BflaGetAPIFindingsForAPIResponse, error) {
-	bodyBytes, err := ioutil.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &BflaGetAPIFindingsForAPIResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest externalRef0.APIFindings
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParseBflaGetApiFindingsResponse parses an HTTP response from a BflaGetApiFindingsWithResponse call
 func ParseBflaGetApiFindingsResponse(rsp *http.Response) (*BflaGetApiFindingsResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
@@ -8837,6 +8784,32 @@ func ParseFuzzerGetReportResponse(rsp *http.Response) (*FuzzerGetReportResponse,
 	return response, nil
 }
 
+// ParseFuzzerGetShortReportByTimestampResponse parses an HTTP response from a FuzzerGetShortReportByTimestampWithResponse call
+func ParseFuzzerGetShortReportByTimestampResponse(rsp *http.Response) (*FuzzerGetShortReportByTimestampResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &FuzzerGetShortReportByTimestampResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ShortTestReport
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseFuzzergetStateResponse parses an HTTP response from a FuzzergetStateWithResponse call
 func ParseFuzzergetStateResponse(rsp *http.Response) (*FuzzergetStateResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
@@ -9239,9 +9212,6 @@ type ServerInterface interface {
 	// Get the list of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for
 	// (GET /features)
 	GetFeatures(w http.ResponseWriter, r *http.Request)
-	// Get Findings for an API
-	// (GET /modules/bfla/api/findings/{apiID})
-	BflaGetAPIFindingsForAPI(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params BflaGetAPIFindingsForAPIParams)
 	// Get findings for an API and module
 	// (GET /modules/bfla/apiFindings/{apiID})
 	BflaGetApiFindings(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params BflaGetApiFindingsParams)
@@ -9305,10 +9275,13 @@ type ServerInterface interface {
 	// Retreive a report for an API
 	// (GET /modules/fuzzer/report/{apiID}/{timestamp})
 	FuzzerGetReport(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, timestamp int64)
+	// Retrieve a report for an API for a specific test
+	// (GET /modules/fuzzer/report/{apiID}/{timestamp}/short)
+	FuzzerGetShortReportByTimestamp(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, timestamp int64)
 	// Get the current running state of this module
 	// (GET /modules/fuzzer/state)
 	FuzzergetState(w http.ResponseWriter, r *http.Request)
-	// Retreive the list of tests for an API
+	// Retreieve the list of tests for an API
 	// (GET /modules/fuzzer/tests/{apiID})
 	FuzzerGetTests(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 	// Retreive last update status for an API under fuzzing
@@ -10755,46 +10728,6 @@ func (siw *ServerInterfaceWrapper) GetFeatures(w http.ResponseWriter, r *http.Re
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// BflaGetAPIFindingsForAPI operation middleware
-func (siw *ServerInterfaceWrapper) BflaGetAPIFindingsForAPI(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var err error
-
-	// ------------- Path parameter "apiID" -------------
-	var apiID externalRef0.ApiID
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
-		return
-	}
-
-	// Parameter object where we will unmarshal all parameters from the context
-	var params BflaGetAPIFindingsForAPIParams
-
-	// ------------- Optional query parameter "sensitive" -------------
-	if paramValue := r.URL.Query().Get("sensitive"); paramValue != "" {
-
-	}
-
-	err = runtime.BindQueryParameter("form", true, false, "sensitive", r.URL.Query(), &params.Sensitive)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sensitive", Err: err})
-		return
-	}
-
-	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.BflaGetAPIFindingsForAPI(w, r, apiID, params)
-	})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r.WithContext(ctx))
-}
-
 // BflaGetApiFindings operation middleware
 func (siw *ServerInterfaceWrapper) BflaGetApiFindings(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -11480,6 +11413,41 @@ func (siw *ServerInterfaceWrapper) FuzzerGetReport(w http.ResponseWriter, r *htt
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// FuzzerGetShortReportByTimestamp operation middleware
+func (siw *ServerInterfaceWrapper) FuzzerGetShortReportByTimestamp(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "timestamp" -------------
+	var timestamp int64
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "timestamp", runtime.ParamLocationPath, chi.URLParam(r, "timestamp"), &timestamp)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "timestamp", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.FuzzerGetShortReportByTimestamp(w, r, apiID, timestamp)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 // FuzzergetState operation middleware
 func (siw *ServerInterfaceWrapper) FuzzergetState(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -11975,9 +11943,6 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/features", wrapper.GetFeatures)
 	})
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/modules/bfla/api/findings/{apiID}", wrapper.BflaGetAPIFindingsForAPI)
-	})
-	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/modules/bfla/apiFindings/{apiID}", wrapper.BflaGetApiFindings)
 	})
 	r.Group(func(r chi.Router) {
@@ -12039,6 +12004,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/modules/fuzzer/report/{apiID}/{timestamp}", wrapper.FuzzerGetReport)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/modules/fuzzer/report/{apiID}/{timestamp}/short", wrapper.FuzzerGetShortReportByTimestamp)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/modules/fuzzer/state", wrapper.FuzzergetState)
@@ -12168,31 +12136,31 @@ var swaggerSpec = []string{
 	"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",
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

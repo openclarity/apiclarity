@@ -355,11 +355,15 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if err != nil {
 			return fmt.Errorf("unable to parse spec info: %w", err)
 		}
+		tagNames, err := resolveTagsFromPathAndMethod(tags, cmd.path, cmd.method)
+		if err != nil {
+			return fmt.Errorf("unable to resolve to tags: %w", err)
+		}
 		_, _, err = l.checkBFLAState(cmd.apiID, BFLALearnt, BFLADetecting)
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Mark Legitimate': %w", err)
 		}
-		err = l.updateAuthorizationModel(tags, cmd.path, cmd.method, cmd.clientRef, cmd.apiID, cmd.detectedUser, true, true)
+		err = l.updateAuthorizationModel(tagNames, cmd.path, cmd.method, cmd.clientRef, cmd.apiID, cmd.detectedUser, true, true)
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Mark Legitimate': %w", err)
 		}
@@ -380,11 +384,15 @@ func (l *learnAndDetectBFLA) commandsRunner(ctx context.Context, command Command
 		if err != nil {
 			return fmt.Errorf("unable to parse spec info: %w", err)
 		}
+		tagNames, err := resolveTagsFromPathAndMethod(tags, cmd.path, cmd.method)
+		if err != nil {
+			return fmt.Errorf("unable to resolve to tags: %w", err)
+		}
 		_, _, err = l.checkBFLAState(cmd.apiID, BFLALearnt, BFLADetecting)
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Mark Illegitimate': %w", err)
 		}
-		err = l.updateAuthorizationModel(tags, cmd.path, cmd.method, cmd.clientRef, cmd.apiID, cmd.detectedUser, false, true)
+		err = l.updateAuthorizationModel(tagNames, cmd.path, cmd.method, cmd.clientRef, cmd.apiID, cmd.detectedUser, false, true)
 		if err != nil {
 			return fmt.Errorf("unable to perform command 'Mark Illegitimate': %w", err)
 		}
@@ -616,7 +624,7 @@ func Contains(items []string, val string) bool {
 	return false
 }
 
-//nolint: gocyclo
+// nolint: gocyclo
 func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTrace) (err error) {
 	defer runtimeRecover()
 	defer l.statePersister.AckSubmit(trace.APIEvent.ID)
@@ -631,7 +639,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	if err != nil {
 		return fmt.Errorf("unable to parse spec info: %w", err)
 	}
-	resolvedPath, err := ResolvePath(tags, trace.APIEvent)
+	resolvedPath, tagNames, err := ResolvePath(tags, trace.APIEvent)
 	if err != nil {
 		return fmt.Errorf("unable to process trace: %w", err)
 	}
@@ -671,7 +679,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 	case BFLALearning:
 		/* We are in the learning state */
 		log.Debugf("api %d; To process: %d", trace.APIEvent.APIInfoID, state.TraceCounter)
-		err := l.updateAuthorizationModel(tags, resolvedPath, string(trace.APIEvent.Method),
+		err := l.updateAuthorizationModel(tagNames, resolvedPath, string(trace.APIEvent.Method),
 			trace.K8SSource, trace.APIEvent.APIInfoID, trace.DetectedUser, true, false)
 		if err != nil {
 			return err
@@ -704,7 +712,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		return err
 	case BFLADetecting:
 		/* We are in detecting state */
-		if err := l.updateAuthorizationModel(tags, resolvedPath, string(trace.APIEvent.Method),
+		if err := l.updateAuthorizationModel(tagNames, resolvedPath, string(trace.APIEvent.Method),
 			trace.K8SSource, trace.APIEvent.APIInfoID, trace.DetectedUser, false, false); err != nil {
 			return err
 		}
@@ -712,6 +720,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		if err != nil {
 			return fmt.Errorf("unable to find source obj: %w", err)
 		}
+		log.Debugf("Detected audience is: %v, external=%v, authorized=%v", aud.K8sObject.Name, aud.External, aud.Authorized)
 		findingsUpdated := false
 		if !aud.Authorized {
 			// updates the auth model but this time as unauthorized
@@ -725,7 +734,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 				severity = core.AlertWarn
 				finding = APIFindingBFLASuspiciousCallHigh(specType, resolvedPath, trace.APIEvent.Method)
 			}
-
+			log.Debugf("BFLA finding created: %s %s %s", finding.Name, finding.Description, resolvedPath)
 			findingsUpdated, err = l.findingsRegistry.Add(apiID, finding)
 			if err != nil {
 				log.Warnf("unable to add findings: %s", err)
@@ -733,7 +742,7 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 			if err := l.eventAlerter.SetEventAlert(ctx, l.modName, trace.APIEvent.ID, severity); err != nil {
 				log.Warnf("unable to set alert annotation: %s", err)
 			}
-
+			log.Debugf("finding Updated=%v", findingsUpdated)
 			// l.logError(l.notifyAuthzModel(ctx, trace.APIEvent.APIInfoID))
 			aud.WarningStatus = ResolveBFLAStatusInt(int(trace.APIEvent.StatusCode))
 		}
@@ -820,7 +829,7 @@ func (l *learnAndDetectBFLA) initAuthorizationModel(apiID uint) error {
 	return nil
 }
 
-func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser, authorize, updateAuthorized bool) error {
+func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []string, path, method string, clientRef *k8straceannotator.K8sObjectRef, apiID uint, user *DetectedUser, authorize, updateAuthorized bool) error {
 	log.Debugf("Update auth model: tags = %v, path = %s, method=%s, apidId=%d", tags, path, method, apiID)
 
 	if path == "" || method == "" {
@@ -837,7 +846,7 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, pa
 			Operations: []*Operation{{
 				Method:   method,
 				Path:     path,
-				Tags:     resolveTagsForPathAndMethod(tags, path, method),
+				Tags:     tags,
 				Audience: []*SourceObject{{External: external, K8sObject: clientRef, Authorized: authorize, WarningStatus: restapi.LEGITIMATE}},
 			}},
 		}
@@ -855,7 +864,7 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, pa
 		op = &Operation{
 			Method:   method,
 			Path:     path,
-			Tags:     resolveTagsForPathAndMethod(tags, path, method),
+			Tags:     tags,
 			Audience: []*SourceObject{{External: external, K8sObject: clientRef, Authorized: authorize, WarningStatus: restapi.LEGITIMATE}},
 		}
 		if user != nil {
@@ -876,7 +885,7 @@ func (l *learnAndDetectBFLA) updateAuthorizationModel(tags []*models.SpecTag, pa
 		}
 		return sa.K8sObject.Uid == clientRef.Uid
 	})
-	if audience == nil {
+	if audience == nil && !external {
 		log.Debugf("Looking for name match %s", clientRef.Name)
 		audienceIndex, audience = op.Audience.Find(func(sa *SourceObject) bool {
 			if external {
@@ -984,7 +993,7 @@ func (l *learnAndDetectBFLA) findSourceObj(path, method string, clientRef *k8str
 		if external {
 			return sa.External
 		}
-		return sa.K8sObject.Uid == clientRef.Uid
+		return sa.K8sObject != nil && sa.K8sObject.Uid == clientRef.Uid
 	})
 
 	if obj == nil {

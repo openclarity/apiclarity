@@ -12,26 +12,26 @@ import COLORS from 'utils/scss_variables.module.scss';
 
 import './test-item-display.scss';
 
-const InProgressDisplay = ({id, progress, doAbort, allowStop}) => (
-    <div style={{display: "flex", alignItems: "center"}}>
-        {allowStop && <div style={{marginRight: "10px"}} onClick={() => console.log('click')}><Button secondary onClick={doAbort}>Stop test</Button></div>}
+const InProgressDisplay = ({ id, progress, doAbort, allowStop }) => (
+    <div style={{ display: "flex", alignItems: "center" }}>
+        {allowStop && <div style={{ marginRight: "10px" }}><Button secondary onClick={doAbort}>Stop test</Button></div>}
         <TooltipWrapper id={id} text={<span><b>Test in progress</b>{` ${progress}%`}</span>}><DotLoader /></TooltipWrapper>
     </div>
 )
 
-const DoneDisplay = ({severity}) => (
+const DoneDisplay = ({ severity }) => (
     <VulnerabilityIcon severity={severity} />
 )
 
-const ErrorDisplay = ({id, statusMessage, isCancelled}) => (
-    <TooltipWrapper id={id} text={isCancelled ? "Test stopped by user" : <span style={{whiteSpace: "break-spaces"}}><b>Test failed</b>{` ${statusMessage}`}</span>}>
-        <Icon name={ICON_NAMES.X_MARK} style={{color: COLORS["color-error"]}} />
+const ErrorDisplay = ({ id, statusMessage, isCancelled }) => (
+    <TooltipWrapper id={id} text={isCancelled ? "Test stopped by user" : <span style={{ whiteSpace: "break-spaces" }}><b>Test failed</b>{` ${statusMessage}`}</span>}>
+        <Icon name={ICON_NAMES.X_MARK} style={{ color: COLORS["color-error"] }} />
     </TooltipWrapper>
 )
 
 const checkInProgress = status => FUZZING_STATUS_IN_PROGRESS.includes(status);
 
-const TestDisplay = ({id, title, severity, status, statusMessage, progress, onScanComplete, doAbort}) => {
+const TestDisplay = ({ id, title, severity, status, statusMessage, progress, onScanComplete, doAbort }) => {
     const prevStatus = usePrevious(status);
 
     const isInProgress = checkInProgress(status);
@@ -60,14 +60,14 @@ const TestDisplay = ({id, title, severity, status, statusMessage, progress, onSc
     )
 }
 
-const TestItemDisplay = ({catalogId, title, testDetails, severity, onScanComplete}) => {
-    const {testId, fuzzingStatus, fuzzingStartTime, fuzzingStatusMessage} = testDetails;
+const TestItemDisplay = ({ catalogId, title, testDetails, severity, onScanComplete }) => {
+    const { testId, fuzzingStatus, fuzzingStartTime, errorMessage: fuzzingStatusMessage } = testDetails;
 
     return (
         <FuzzingTestLoaderDisplayWrapper
             id={catalogId}
             status={fuzzingStatus}
-        // currently the id is the timestamp,
+            // currently the id is the timestamp,
             testId={testId}
             startTime={fuzzingStartTime}
             statusMessage={fuzzingStatusMessage}
