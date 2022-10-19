@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import classNames from 'classnames';
 import IconWithTitle from 'components/IconWithTitle';
 import ListDisplay from 'components/ListDisplay';
-import ToggleButton from 'components/ToggleButton';
 import { ICON_NAMES } from 'components/Icon';
 import ModalConfirmation from 'components/ModalConfirmation';
 import MessageImageDisplay from 'layout/Inventory/InventoryDetails/MessageImageDisplay';
@@ -11,6 +10,7 @@ import AudienceView from '../AudienceView';
 import StartDetectionResumeLearningScreen from '../StartDetectionResumeLearningScreen';
 import ListItemDisplayBFLA from '../ListItemDisplayBFLA';
 import BreadcrumbsDisplayBFLA from '../BreadcrumbsDisplayBFLA';
+import ToggleButtonBFLA from '../ToogleButtonBFLA';
 import utils from '../utils'
 
 import './data-collected-screen.scss'
@@ -108,7 +108,7 @@ export default function DataCollectedScreen({
                                 {
                                     getSelectItems(wrapperLevelData)
                                         .filter((item) => !item.authorized)?.length > 0 &&
-                                    <ToggleButton
+                                    <ToggleButtonBFLA
                                         title="Violations only"
                                         icons={false}
                                         checked={violationsOnlyState}
