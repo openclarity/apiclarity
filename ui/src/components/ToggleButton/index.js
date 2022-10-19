@@ -1,45 +1,45 @@
 import React from 'react';
-import Toggle from 'react-toggle-button';
-import COLORS from 'utils/scss_variables.module.scss';
+import Toggle from 'react-toggle';
+import { isEmpty } from 'lodash';
+import classnames from 'classnames';
 
+import 'react-toggle/style.css';
 import './toggle-button.scss';
 
-const ToggleButton = ({title, value, onChange}) => (
-    <label className="toggle-button-wrapper">
-        <Toggle
-            inactiveLabel=""
-            activeLabel=""
-            colors={{
-                activeThumb: {
-                    base: "white",
-                    border: COLORS["color-main-light"]
-                },
-                inactiveThumb: {
-                    base: COLORS["color-grey"],
-                },
-                active: {
-                    base: COLORS["color-main-light"]
-                },
-                inactive: {
-                    base: COLORS["color-grey-light"]
-                }
-            }}
-            trackStyle={{
-                height: "12px",
-                width: "40px",
-                border: "none"
-            }}
-            thumbStyle={{
-                height: "22px",
-                width: "22px",
-                border: value ? `1px solid ${COLORS["color-main-light"]}` : "none"
-            }}
-            thumbAnimateRange={[0, 18]}
-            value={value}
-            onToggle={() => onChange(!value)}
-        />
-        <div className="toggle-button-title">{title}</div>
-    </label>
-)
+const Title = ({ title, withLeftMargin, withBoldTitle }) => {
+    return !isEmpty(title) && <span className={classnames("toggle-title", { "with-left-margin": withLeftMargin }, { "with-bold-text": withBoldTitle })}>{title}</span>;
+};
+
+const ToggleButton = (props) => {
+    const { title, withBoldTitle, checked = false, onChange, disabled, fullWidth = false, width, className, secondaryTitle, small } = props;
+
+    const labelProps = {
+        className: classnames(
+            "toggle-container",
+            { "full-width": fullWidth },
+            { [className]: !!className },
+            { "with-secondary": !!secondaryTitle },
+            { disabled: !!disabled },
+            { small }
+        )
+    };
+
+    if (!!width) {
+        labelProps.style = { width };
+    }
+
+    return (
+        <label {...labelProps}>
+            {!!secondaryTitle ? <Title title={secondaryTitle} withBoldTitle={withBoldTitle} /> : <Title title={title} withBoldTitle={withBoldTitle} />}
+            <Toggle
+                icons={false}
+                checked={checked}
+                onChange={({ target }) => onChange(target.checked)}
+                disabled={disabled}
+            />
+            {!!secondaryTitle && <Title title={title} withLeftMargin />}
+        </label>
+    );
+}
 
 export default ToggleButton;
