@@ -100,7 +100,7 @@ func fillSpanOne(span ptrace.Span, kind ptrace.SpanKind) {
 	ev0 := evs.AppendEmpty()
 	ev0.SetTimestamp(TestSpanEventTimestamp)
 	ev0.SetName("event-with-attr")
-	pcommon.NewMapFromRaw(spanEventAttributes).CopyTo(ev0.Attributes())
+	pcommon.NewMap().FromRaw(spanEventAttributes).CopyTo(ev0.Attributes())
 	ev0.SetDroppedAttributesCount(2)
 	ev1 := evs.AppendEmpty()
 	ev1.SetTimestamp(TestSpanEventTimestamp)
@@ -117,9 +117,9 @@ func fillSpanAttributes(span ptrace.Span, spanAttributes map[string]interface{})
 	for key, value := range spanAttributes {
 		switch value := value.(type) {
 		case string:
-			attrs.UpsertString(key, value)
+			attrs.PutString(key, value)
 		case int:
-			attrs.UpsertInt(key, int64(value))
+			attrs.PutInt(key, int64(value))
 		}
 	}
 }
@@ -128,7 +128,7 @@ func generateTracesOneSpan() ptrace.Traces {
 	td := ptrace.NewTraces()
 	td.ResourceSpans().AppendEmpty()
 	rs0 := td.ResourceSpans().At(0)
-	pcommon.NewMapFromRaw(resourceAttributes1).CopyTo(rs0.Resource().Attributes())
+	pcommon.NewMap().FromRaw(resourceAttributes1).CopyTo(rs0.Resource().Attributes())
 	td.ResourceSpans().At(0).ScopeSpans().AppendEmpty()
 	rs0ils0 := td.ResourceSpans().At(0).ScopeSpans().At(0)
 	rs0ils0.Spans().AppendEmpty()

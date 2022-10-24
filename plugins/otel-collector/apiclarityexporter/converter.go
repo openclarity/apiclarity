@@ -299,7 +299,8 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 		)
 		actel.SourceAddress = DefaultSourceAddress
 	} else if !strings.Contains(actel.SourceAddress, ":") {
-		_, defaultPort, _ := strings.Cut(DefaultSourceAddress, ":")
+		parts := strings.Split(DefaultSourceAddress, ":")
+		defaultPort := parts[1]
 		e.logger.Warn("Cannot infer source port, using default",
 			zap.String("kind", span.Kind().String()),
 			zap.String("name", span.Name()),
