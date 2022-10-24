@@ -95,7 +95,7 @@ func startTracesExporter(t *testing.T, baseURL string) component.TracesExporter 
 	t.Logf("Starting traces exporter with URL: %s", baseURL)
 	factory := NewFactory()
 	cfg := factory.CreateDefaultConfig().(*Config)
-	cfg.Endpoint = baseURL
+	cfg.HTTPClientSettings.Endpoint = baseURL
 	cfg.QueueSettings.Enabled = false
 	cfg.RetrySettings.Enabled = false
 
@@ -103,7 +103,7 @@ func startTracesExporter(t *testing.T, baseURL string) component.TracesExporter 
 	set := componenttest.NewNopExporterCreateSettings()
 	set.Logger, err = zap.NewDevelopment()
 	require.NoError(t, err)
-	t.Logf("Creating traces exporter with URL: %s", cfg.Endpoint)
+	t.Logf("Creating traces exporter with URL: %s", cfg.HTTPClientSettings.Endpoint)
 	exp, err := factory.CreateTracesExporter(context.Background(), set, cfg)
 	require.NoError(t, err)
 	startAndCleanup(t, exp)
