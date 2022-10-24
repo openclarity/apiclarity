@@ -250,7 +250,7 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 			zap.String("kind", span.Kind().String()),
 			zap.String("name", span.Name()),
 			zap.String("traceid", span.TraceID().HexString()),
-			zap.String("default", string(DefaultSpanKind)),
+			zap.Int("default", int(DefaultSpanKind)),
 		)
 		if DefaultSpanKind == ptrace.SpanKindClient {
 			err = setTelemetryClientSpan(actel, resource, attrs, e.logger)
