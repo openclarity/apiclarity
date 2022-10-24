@@ -5,49 +5,50 @@
 package database
 
 import (
+	reflect "reflect"
+
 	strfmt "github.com/go-openapi/strfmt"
 	gomock "github.com/golang/mock/gomock"
 	models "github.com/openclarity/apiclarity/api/server/models"
 	operations "github.com/openclarity/apiclarity/api/server/restapi/operations"
-	reflect "reflect"
 )
 
-// MockAPIInventoryTable is a mock of APIInventoryTable interface
+// MockAPIInventoryTable is a mock of APIInventoryTable interface.
 type MockAPIInventoryTable struct {
 	ctrl     *gomock.Controller
 	recorder *MockAPIInventoryTableMockRecorder
 }
 
-// MockAPIInventoryTableMockRecorder is the mock recorder for MockAPIInventoryTable
+// MockAPIInventoryTableMockRecorder is the mock recorder for MockAPIInventoryTable.
 type MockAPIInventoryTableMockRecorder struct {
 	mock *MockAPIInventoryTable
 }
 
-// NewMockAPIInventoryTable creates a new mock instance
+// NewMockAPIInventoryTable creates a new mock instance.
 func NewMockAPIInventoryTable(ctrl *gomock.Controller) *MockAPIInventoryTable {
 	mock := &MockAPIInventoryTable{ctrl: ctrl}
 	mock.recorder = &MockAPIInventoryTableMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockAPIInventoryTable) EXPECT() *MockAPIInventoryTableMockRecorder {
 	return m.recorder
 }
 
-// CreateAPIInfo mocks base method
+// CreateAPIInfo mocks base method.
 func (m *MockAPIInventoryTable) CreateAPIInfo(arg0 *APIInfo) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "CreateAPIInfo", arg0)
 }
 
-// CreateAPIInfo indicates an expected call of CreateAPIInfo
+// CreateAPIInfo indicates an expected call of CreateAPIInfo.
 func (mr *MockAPIInventoryTableMockRecorder) CreateAPIInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAPIInfo", reflect.TypeOf((*MockAPIInventoryTable)(nil).CreateAPIInfo), arg0)
 }
 
-// DeleteApprovedAPISpec mocks base method
+// DeleteApprovedAPISpec mocks base method.
 func (m *MockAPIInventoryTable) DeleteApprovedAPISpec(arg0 uint32) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteApprovedAPISpec", arg0)
@@ -55,13 +56,13 @@ func (m *MockAPIInventoryTable) DeleteApprovedAPISpec(arg0 uint32) error {
 	return ret0
 }
 
-// DeleteApprovedAPISpec indicates an expected call of DeleteApprovedAPISpec
+// DeleteApprovedAPISpec indicates an expected call of DeleteApprovedAPISpec.
 func (mr *MockAPIInventoryTableMockRecorder) DeleteApprovedAPISpec(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteApprovedAPISpec", reflect.TypeOf((*MockAPIInventoryTable)(nil).DeleteApprovedAPISpec), arg0)
 }
 
-// DeleteProvidedAPISpec mocks base method
+// DeleteProvidedAPISpec mocks base method.
 func (m *MockAPIInventoryTable) DeleteProvidedAPISpec(arg0 uint32) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteProvidedAPISpec", arg0)
@@ -69,13 +70,13 @@ func (m *MockAPIInventoryTable) DeleteProvidedAPISpec(arg0 uint32) error {
 	return ret0
 }
 
-// DeleteProvidedAPISpec indicates an expected call of DeleteProvidedAPISpec
+// DeleteProvidedAPISpec indicates an expected call of DeleteProvidedAPISpec.
 func (mr *MockAPIInventoryTableMockRecorder) DeleteProvidedAPISpec(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteProvidedAPISpec", reflect.TypeOf((*MockAPIInventoryTable)(nil).DeleteProvidedAPISpec), arg0)
 }
 
-// First mocks base method
+// First mocks base method.
 func (m *MockAPIInventoryTable) First(arg0 *APIInfo, arg1 ...interface{}) error {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
@@ -87,28 +88,29 @@ func (m *MockAPIInventoryTable) First(arg0 *APIInfo, arg1 ...interface{}) error 
 	return ret0
 }
 
-// First indicates an expected call of First
+// First indicates an expected call of First.
 func (mr *MockAPIInventoryTableMockRecorder) First(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0}, arg1...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "First", reflect.TypeOf((*MockAPIInventoryTable)(nil).First), varargs...)
 }
 
-// FirstOrCreate mocks base method
-func (m *MockAPIInventoryTable) FirstOrCreate(arg0 *APIInfo) error {
+// FirstOrCreate mocks base method.
+func (m *MockAPIInventoryTable) FirstOrCreate(arg0 *APIInfo) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FirstOrCreate", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// FirstOrCreate indicates an expected call of FirstOrCreate
+// FirstOrCreate indicates an expected call of FirstOrCreate.
 func (mr *MockAPIInventoryTableMockRecorder) FirstOrCreate(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FirstOrCreate", reflect.TypeOf((*MockAPIInventoryTable)(nil).FirstOrCreate), arg0)
 }
 
-// GetAPIID mocks base method
+// GetAPIID mocks base method.
 func (m *MockAPIInventoryTable) GetAPIID(arg0, arg1 string) (uint, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAPIID", arg0, arg1)
@@ -117,13 +119,13 @@ func (m *MockAPIInventoryTable) GetAPIID(arg0, arg1 string) (uint, error) {
 	return ret0, ret1
 }
 
-// GetAPIID indicates an expected call of GetAPIID
+// GetAPIID indicates an expected call of GetAPIID.
 func (mr *MockAPIInventoryTableMockRecorder) GetAPIID(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAPIID", reflect.TypeOf((*MockAPIInventoryTable)(nil).GetAPIID), arg0, arg1)
 }
 
-// GetAPIInventoryAndTotal mocks base method
+// GetAPIInventoryAndTotal mocks base method.
 func (m *MockAPIInventoryTable) GetAPIInventoryAndTotal(arg0 operations.GetAPIInventoryParams) ([]APIInfo, int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAPIInventoryAndTotal", arg0)
@@ -133,13 +135,13 @@ func (m *MockAPIInventoryTable) GetAPIInventoryAndTotal(arg0 operations.GetAPIIn
 	return ret0, ret1, ret2
 }
 
-// GetAPIInventoryAndTotal indicates an expected call of GetAPIInventoryAndTotal
+// GetAPIInventoryAndTotal indicates an expected call of GetAPIInventoryAndTotal.
 func (mr *MockAPIInventoryTableMockRecorder) GetAPIInventoryAndTotal(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAPIInventoryAndTotal", reflect.TypeOf((*MockAPIInventoryTable)(nil).GetAPIInventoryAndTotal), arg0)
 }
 
-// GetAPISpecs mocks base method
+// GetAPISpecs mocks base method.
 func (m *MockAPIInventoryTable) GetAPISpecs(arg0 uint32) (*APIInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAPISpecs", arg0)
@@ -148,13 +150,13 @@ func (m *MockAPIInventoryTable) GetAPISpecs(arg0 uint32) (*APIInfo, error) {
 	return ret0, ret1
 }
 
-// GetAPISpecs indicates an expected call of GetAPISpecs
+// GetAPISpecs indicates an expected call of GetAPISpecs.
 func (mr *MockAPIInventoryTableMockRecorder) GetAPISpecs(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAPISpecs", reflect.TypeOf((*MockAPIInventoryTable)(nil).GetAPISpecs), arg0)
 }
 
-// GetAPISpecsInfo mocks base method
+// GetAPISpecsInfo mocks base method.
 func (m *MockAPIInventoryTable) GetAPISpecsInfo(arg0 uint32) (*models.OpenAPISpecs, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAPISpecsInfo", arg0)
@@ -163,13 +165,13 @@ func (m *MockAPIInventoryTable) GetAPISpecsInfo(arg0 uint32) (*models.OpenAPISpe
 	return ret0, ret1
 }
 
-// GetAPISpecsInfo indicates an expected call of GetAPISpecsInfo
+// GetAPISpecsInfo indicates an expected call of GetAPISpecsInfo.
 func (mr *MockAPIInventoryTableMockRecorder) GetAPISpecsInfo(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAPISpecsInfo", reflect.TypeOf((*MockAPIInventoryTable)(nil).GetAPISpecsInfo), arg0)
 }
 
-// PutAPISpec mocks base method
+// PutAPISpec mocks base method.
 func (m *MockAPIInventoryTable) PutAPISpec(arg0 uint, arg1 string, arg2 *models.SpecInfo, arg3 specType, arg4 strfmt.DateTime) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PutAPISpec", arg0, arg1, arg2, arg3, arg4)
@@ -177,7 +179,7 @@ func (m *MockAPIInventoryTable) PutAPISpec(arg0 uint, arg1 string, arg2 *models.
 	return ret0
 }
 
-// PutAPISpec indicates an expected call of PutAPISpec
+// PutAPISpec indicates an expected call of PutAPISpec.
 func (mr *MockAPIInventoryTableMockRecorder) PutAPISpec(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutAPISpec", reflect.TypeOf((*MockAPIInventoryTable)(nil).PutAPISpec), arg0, arg1, arg2, arg3, arg4)

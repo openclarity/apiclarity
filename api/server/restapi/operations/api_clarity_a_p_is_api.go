@@ -102,6 +102,9 @@ func NewAPIClarityAPIsAPI(spec *loads.Document) *APIClarityAPIsAPI {
 		PostAPIInventoryReviewIDApprovedReviewHandler: PostAPIInventoryReviewIDApprovedReviewHandlerFunc(func(params PostAPIInventoryReviewIDApprovedReviewParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostAPIInventoryReviewIDApprovedReview has not yet been implemented")
 		}),
+		PostControlNewDiscoveredAPIsHandler: PostControlNewDiscoveredAPIsHandlerFunc(func(params PostControlNewDiscoveredAPIsParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostControlNewDiscoveredAPIs has not yet been implemented")
+		}),
 		PutAPIInventoryAPIIDSpecsProvidedSpecHandler: PutAPIInventoryAPIIDSpecsProvidedSpecHandlerFunc(func(params PutAPIInventoryAPIIDSpecsProvidedSpecParams) middleware.Responder {
 			return middleware.NotImplemented("operation PutAPIInventoryAPIIDSpecsProvidedSpec has not yet been implemented")
 		}),
@@ -181,6 +184,8 @@ type APIClarityAPIsAPI struct {
 	PostAPIInventoryHandler PostAPIInventoryHandler
 	// PostAPIInventoryReviewIDApprovedReviewHandler sets the operation handler for the post API inventory review ID approved review operation
 	PostAPIInventoryReviewIDApprovedReviewHandler PostAPIInventoryReviewIDApprovedReviewHandler
+	// PostControlNewDiscoveredAPIsHandler sets the operation handler for the post control new discovered a p is operation
+	PostControlNewDiscoveredAPIsHandler PostControlNewDiscoveredAPIsHandler
 	// PutAPIInventoryAPIIDSpecsProvidedSpecHandler sets the operation handler for the put API inventory API ID specs provided spec operation
 	PutAPIInventoryAPIIDSpecsProvidedSpecHandler PutAPIInventoryAPIIDSpecsProvidedSpecHandler
 
@@ -319,6 +324,9 @@ func (o *APIClarityAPIsAPI) Validate() error {
 	}
 	if o.PostAPIInventoryReviewIDApprovedReviewHandler == nil {
 		unregistered = append(unregistered, "PostAPIInventoryReviewIDApprovedReviewHandler")
+	}
+	if o.PostControlNewDiscoveredAPIsHandler == nil {
+		unregistered = append(unregistered, "PostControlNewDiscoveredAPIsHandler")
 	}
 	if o.PutAPIInventoryAPIIDSpecsProvidedSpecHandler == nil {
 		unregistered = append(unregistered, "PutAPIInventoryAPIIDSpecsProvidedSpecHandler")
@@ -491,6 +499,10 @@ func (o *APIClarityAPIsAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/apiInventory/{reviewId}/approvedReview"] = NewPostAPIInventoryReviewIDApprovedReview(o.context, o.PostAPIInventoryReviewIDApprovedReviewHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/control/newDiscoveredAPIs"] = NewPostControlNewDiscoveredAPIs(o.context, o.PostControlNewDiscoveredAPIsHandler)
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}
