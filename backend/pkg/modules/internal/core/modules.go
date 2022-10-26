@@ -26,8 +26,7 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
 	"github.com/openclarity/apiclarity/backend/pkg/config"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core/notifier"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core/tls"
+	"github.com/openclarity/apiclarity/backend/pkg/notifier"
 	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
 	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
 	interfacemanager "github.com/openclarity/trace-sampling-manager/manager/pkg/manager/interface"
@@ -47,11 +46,6 @@ type Event struct {
 	APIEvent  *database.APIEvent
 	Telemetry *pluginsmodels.Telemetry
 }
-
-const (
-	notificationMaxQueueSize = 100
-	notificationWorkers      = 10
-)
 
 // Module each APIClarity module needs to implement this interface.
 type Module interface {
@@ -88,32 +82,22 @@ type BackendAccessor interface {
 	Notify(ctx context.Context, modName string, apiID uint, notification notifications.APIClarityNotification) error
 }
 
-func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager, speculatorAccessor speculatoraccessor.SpeculatorAccessor, conf *config.Config) (BackendAccessor, error) {
-	var n *notifier.Notifier
-	if conf.NotificationPrefix != "" {
-		tlsOptions, err := tls.CreateClientTLSOptions(conf)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create client tls options: %v", err)
-		}
-
-		n = notifier.NewNotifier(conf.NotificationPrefix, notificationMaxQueueSize, notificationWorkers, tlsOptions)
-		n.Start(context.Background())
-	}
+func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager, speculatorAccessor speculatoraccessor.SpeculatorAccessor, notifier *notifier.Notifier, conf *config.Config) (BackendAccessor, error) {
 	return &accessor{
 		dbHandler:          dbHandler,
 		clientset:          clientset,
-		notifier:           n,
 		samplingManager:    samplingManager,
 		speculatorAccessor: speculatorAccessor,
+		notifier:           notifier,
 	}, nil
 }
 
 type accessor struct {
 	dbHandler          *database.Handler
 	clientset          kubernetes.Interface
-	notifier           *notifier.Notifier
 	samplingManager    *manager.Manager
 	speculatorAccessor speculatoraccessor.SpeculatorAccessor
+	notifier           *notifier.Notifier
 }
 
 func (b *accessor) K8SClient() kubernetes.Interface {

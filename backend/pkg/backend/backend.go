@@ -40,9 +40,11 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/healthz"
 	"github.com/openclarity/apiclarity/backend/pkg/k8smonitor"
 	"github.com/openclarity/apiclarity/backend/pkg/modules"
+	_notifier "github.com/openclarity/apiclarity/backend/pkg/notifier"
 	"github.com/openclarity/apiclarity/backend/pkg/rest"
 	"github.com/openclarity/apiclarity/backend/pkg/traces"
 	speculatorutils "github.com/openclarity/apiclarity/backend/pkg/utils/speculator"
+	tls "github.com/openclarity/apiclarity/backend/pkg/utils/tls"
 	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
 	_spec "github.com/openclarity/speculator/pkg/spec"
 	_speculator "github.com/openclarity/speculator/pkg/speculator"
@@ -59,9 +61,10 @@ type Backend struct {
 	apiInventoryLock    sync.RWMutex
 	dbHandler           _database.Database
 	modulesManager      modules.ModulesManager
+	notifier            *_notifier.Notifier
 }
 
-func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, dbHandler *_database.Handler, modulesManager modules.ModulesManager) *Backend {
+func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, dbHandler *_database.Handler, modulesManager modules.ModulesManager, notifier *_notifier.Notifier) *Backend {
 	return &Backend{
 		speculator:          speculator,
 		stateBackupInterval: time.Second * time.Duration(config.StateBackupIntervalSec),
@@ -69,6 +72,7 @@ func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculat
 		monitor:             monitor,
 		dbHandler:           dbHandler,
 		modulesManager:      modulesManager,
+		notifier:            notifier,
 	}
 }
 
@@ -171,7 +175,19 @@ func Run() {
 		log.Infof("Using encoded speculator state")
 	}
 
-	modulesWrapper, modInfos, err := modules.New(globalCtx, dbHandler, clientset, samplingManager, speculatoraccessor.NewSpeculatorAccessor(speculator), config)
+	var notifier *_notifier.Notifier
+	if config.NotificationPrefix != "" {
+		tlsOptions, err := tls.CreateClientTLSOptions(config)
+		if err != nil {
+			log.Errorf("failed to create client tls options: %v", err)
+			return
+		}
+
+		notifier = _notifier.NewNotifier(config.NotificationPrefix, _notifier.NotificationMaxQueueSize, _notifier.NotificationWorkers, tlsOptions)
+		notifier.Start(context.Background())
+	}
+
+	modulesWrapper, modInfos, err := modules.New(globalCtx, dbHandler, clientset, samplingManager, speculatoraccessor.NewSpeculatorAccessor(speculator), notifier, config)
 	if err != nil {
 		log.Errorf("Failed to create module wrapper and info: %v", err)
 		return
@@ -186,7 +202,8 @@ func Run() {
 			})
 		}
 	}
-	backend := CreateBackend(config, monitor, speculator, dbHandler, modulesWrapper)
+
+	backend := CreateBackend(config, monitor, speculator, dbHandler, modulesWrapper, notifier)
 
 	serverConfig := &rest.ServerConfig{
 		EnableTLS:             config.EnableTLS,
@@ -302,12 +319,16 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 	if !isNonAPI {
 		// lock the API inventory to avoid creating API entries twice on trace handling races
 		b.apiInventoryLock.Lock()
-		if _, err := b.dbHandler.APIInventoryTable().FirstOrCreate(&apiInfo); err != nil {
+		created, err := b.dbHandler.APIInventoryTable().FirstOrCreate(&apiInfo)
+		if err != nil {
 			b.apiInventoryLock.Unlock()
 			return fmt.Errorf("failed to get or create API info: %v", err)
 		}
 		b.apiInventoryLock.Unlock()
 		log.Infof("API Info in DB: %+v", apiInfo)
+		if created {
+			log.Infof("Sending notification for new created API %+v", apiInfo)
+		}
 
 		// Handle trace telemetry by Speculator
 		if !b.speculator.HasApprovedSpec(specKey) {
