@@ -1,0 +1,27 @@
+@import 'utils/scss_variables.module.scss';
+
+
+.data-collection-container-bfla {
+    height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+
+
+    .data-collection-title-bfla {
+        font-size: 20px;
+        margin-bottom: 20px;
+        color: $color-main;
+    }
+
+    .data-collection-subtitle-bfla {
+        font-size: 11px;
+        margin-bottom: 20px;
+        line-height: 16px;
+        text-align: center;
+        color: 'black';
+        overflow-wrap: break-word;
+        inline-size: 370px;
+    }
+}

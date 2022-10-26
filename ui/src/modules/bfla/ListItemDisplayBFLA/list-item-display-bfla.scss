@@ -1,0 +1,42 @@
+@import 'utils/scss_variables.module.scss';
+
+.api-inventory-endpoints {
+    .display-pane {
+        flex-wrap: wrap;
+        padding: 30px;
+        padding-top: 0;
+    }
+}
+
+.legitimate {
+    color: $color-success
+}
+
+.illegitimate {
+    color: $color-error
+}
+
+.display-list-item-container {
+    display: flex;
+    align-items: center;
+
+    .display-list-item-name {
+        font-weight: bold;
+        font-size: 11px;
+        line-height: 1rem;
+    }
+
+    .display-list-item-path {
+        margin-left: 0.5rem;
+        font-weight: normal;
+        font-size: 11px;
+        line-height: 1rem;
+    }
+
+    .display-list-item-namespace {
+        font-weight: normal;
+        font-size: 11px;
+        line-height: 1rem;
+    }
+
+}

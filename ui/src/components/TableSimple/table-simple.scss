@@ -1,0 +1,34 @@
+@import 'utils/scss_variables.module.scss';
+
+.table-simple {
+    width: 100%;
+
+    &.no-border {
+        thead {
+            border: none;
+        }
+        tbody td {
+            border: none;
+        }
+    }
+    thead {
+        font-weight: bold;
+        font-size: 9px;
+        text-transform: uppercase;
+        color: $color-main;
+        border-bottom: 1px solid $color-main;
+
+        th {
+            padding: 10px;
+        }
+    }
+    tbody {
+        font-size: 11px;
+
+        td {
+            border: 1px solid $color-grey-light;
+            border-top: none;
+            padding: 10px;
+        }
+    }
+}

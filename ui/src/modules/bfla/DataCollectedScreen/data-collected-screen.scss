@@ -1,0 +1,98 @@
+@import 'utils/scss_variables.module.scss';
+
+$select-padding: 20px;
+
+.spec-select-panes-wrapper-bfla {
+    display: flex;
+    min-height: 485px;
+
+    .select-pane-bfla {
+        width: 33%;
+        flex-shrink: 0;
+        border-right: 1px solid $color-grey-light;
+
+        .select-breadcrumbs {
+            font-size: 11px;
+            line-height: 16px;
+            display: flex;
+            padding: $select-padding;
+            padding-bottom: 0;
+
+            .breadcrumb-wrapper {
+                display: flex;
+                align-items: center;
+
+                .arrow-icon {
+                    color: $color-main;
+                }
+                .breadcrumb-title.clickable {
+                    text-decoration: underline;
+                    color: $color-main;
+                    cursor: pointer;
+                }
+            }
+        }
+        .select-pane-title {
+            font-size: 12px;
+            font-weight: 700;
+            padding: $select-padding;
+        }
+    }
+    .display-pane-bfla {
+        flex-grow: 1;
+        padding: 30px;
+        padding-top: 0;
+
+        .spec-summary-wrapper {
+            font-size: 11px;
+            line-height: 16px;
+            position: relative;
+
+            .spec-summary-title-wrapper {
+                .title-wrapper {
+                    font-weight: normal;
+
+                    .spec-name {
+                        font-weight: bold;
+                        margin-right: 5px;
+                    }
+                    .spec-base-url-wrapper,
+                    .spec-link-wrapper {
+                        padding-top: 5px;
+                    }
+                }
+                .buttons-wrapper {
+                    color: $color-main;
+                    position: absolute;
+                    top: 20px;
+                    right: 0;
+
+                    > :not(:last-child) {
+                        margin-right: 10px;
+                    }
+                }
+            }
+            .spec-description-wrapper {
+                margin-bottom: 20px;
+            }
+            .spec-links-wrapper {
+                font-weight: bold;
+            }
+        }
+        .method-content-wrapper {
+            .path-wrapper {
+                font-weight: normal;
+                margin-left: 5px;
+            }
+        }
+        .spec-content-wrapper {
+            position: relative;
+
+            .swagger-button {
+                position: absolute;
+                top: 10px;
+                right: 0;
+            }
+        }
+    }
+}

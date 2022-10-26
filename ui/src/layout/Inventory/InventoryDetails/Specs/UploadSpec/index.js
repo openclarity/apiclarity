@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {useDropzone} from 'react-dropzone';
+import { useDropzone } from 'react-dropzone';
 import { isNull } from 'lodash';
 import classNames from 'classnames';
 import { useFetch, FETCH_METHODS, usePrevious } from 'hooks';
@@ -8,17 +8,17 @@ import Button from 'components/Button';
 
 import './upload-spec.scss';
 
-const NoFileSepected = ({getRootProps, getInputProps, onBrowse}) => (
-    <div {...getRootProps({className: "dropzone-wrapper"})}>
+const NoFileSepected = ({ getRootProps, getInputProps, onBrowse }) => (
+    <div {...getRootProps({ className: "dropzone-wrapper" })}>
         <div className="inner-wrapper">
             <input {...getInputProps()} />
             <Icon name={ICON_NAMES.DOWNLOAD} />
-            <div>{`Drag file here or `}<Button secondary onClick={onBrowse}>browse</Button></div>
+            <div>{`Drag file here or `}<Button tertiary onClick={onBrowse}>browse</Button></div>
         </div>
     </div>
 );
 
-const FileSelected = ({fileName, onRemove, disabled}) => (
+const FileSelected = ({ fileName, onRemove, disabled }) => (
     <div className="file-selected-wrapper">
         <Icon name={ICON_NAMES.DOWNLOAD_JSON} className="file-icon" />
         <div className="file-name">{fileName}</div>
@@ -42,8 +42,8 @@ const readFile = (file) => {
     });
 };
 
-const UploadSpec = ({title, inventoryId, onUpdate}) => {
-    const [{error, loading}, uploadSpec] = useFetch(`apiInventory/${inventoryId}/specs/providedSpec`, {loadOnMount: false});
+const UploadSpec = ({ title, inventoryId, onUpdate }) => {
+    const [{ error, loading }, uploadSpec] = useFetch(`apiInventory/${inventoryId}/specs/providedSpec`, { loadOnMount: false });
     const prevLoading = usePrevious(loading);
 
     const [selectedFile, setSlectedFile] = useState(null);
@@ -57,11 +57,11 @@ const UploadSpec = ({title, inventoryId, onUpdate}) => {
 
     const onUploadSpec = async () => {
         const fileToUpload = await readFile(selectedFile);
-        
-        uploadSpec({submitData: {rawSpec: fileToUpload}, method: FETCH_METHODS.PUT});
+
+        uploadSpec({ submitData: { rawSpec: fileToUpload }, method: FETCH_METHODS.PUT });
     };
-    
-    const {getRootProps, getInputProps, open: onBrowse} = useDropzone({
+
+    const { getRootProps, getInputProps, open: onBrowse } = useDropzone({
         onDrop: acceptedFiles => setSlectedFile(acceptedFiles[0] || null),
         multiple: false,
         noClick: true,
@@ -74,13 +74,13 @@ const UploadSpec = ({title, inventoryId, onUpdate}) => {
             <div className="upload-spec-content">
                 <div className="upload-spec-file-container">
                     {noFileSelected ?
-                        <NoFileSepected getRootProps={getRootProps} getInputProps={getInputProps} onBrowse={onBrowse}/> :
+                        <NoFileSepected getRootProps={getRootProps} getInputProps={getInputProps} onBrowse={onBrowse} /> :
                         <FileSelected fileName={selectedFile.name} onRemove={() => setSlectedFile(null)} disabled={loading} />
                     }
                 </div>
                 <div className="upload-spec-file-container-footer">
                     {(loading || !!error) &&
-                        <div className={classNames("upload-spec-file-status-message", {error: !loading && !!error})}>
+                        <div className={classNames("upload-spec-file-status-message", { error: !loading && !!error })}>
                             {loading ? "Processing..." : "Error in file"}
                         </div>
                     }
