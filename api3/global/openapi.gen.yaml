@@ -122,6 +122,13 @@ components:
       schema:
         format: date-time
         type: string
+    gatewayId:
+      description: Gateway ID
+      in: path
+      name: gatewayId
+      required: true
+      schema:
+        type: integer
     hasProvidedSpecFilter:
       in: query
       name: hasProvidedSpec[is]
@@ -421,6 +428,31 @@ components:
       - bflaStatus
       - external
       - mismatchedScopes
+    APIGateway:
+      description: Gateway which is externally exposing APIs
+      properties:
+        description:
+          type: string
+        id:
+          type: integer
+        name:
+          description: Unique name identifying a gateway
+          type: string
+        token:
+          format: byte
+          type: string
+        type:
+          $ref: '#/components/schemas/APIGatewayType'
+      required:
+      - name
+      - type
+      type: object
+    APIGatewayType:
+      enum:
+      - TYK
+      - KONG
+      - APIGEEX
+      type: string
     Annotation:
       properties:
         annotation:
@@ -1470,6 +1502,105 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       summary: Get a hit count within a selected timeframe for the filtered API events
+  /control/gateways:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                properties:
+                  gateways:
+                    description: List of gateways
+                    items:
+                      $ref: '#/components/schemas/APIGateway'
+                    type: array
+                required:
+                - gateways
+                type: object
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: List of configured gateways
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/APIGateway'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIGateway'
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Create a new gateway
+  /control/gateways/{gatewayId}:
+    delete:
+      responses:
+        "204":
+          description: Success
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: API Gateway not found
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Delete a gateway
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIGateway'
+          description: Gateway information
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: API Gateway not found
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Get gateway information
+    parameters:
+    - $ref: '#/components/parameters/gatewayId'
+  /control/newDiscoveredAPIs:
+    post:
+      description: This allows a client (a gateway for example) to notify APIclarity
+        about newly discovered APIs. If one of the APIs already exists, it is ignored.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                hosts:
+                  description: List of discovered APIs, format of hostname:port
+                  items:
+                    type: string
+                  type: array
+                source:
+                  description: Optional name identifying the entity sending this notification.
+                  type: string
+              required:
+              - hosts
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/SuccessResponse
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Allows a client to notify APIClarity about new APIs.
   /dashboard/apiUsage:
     get:
       parameters:

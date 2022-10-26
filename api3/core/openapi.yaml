@@ -442,6 +442,108 @@ paths:
                 $ref: "../common/openapi.yaml#/components/schemas/SuccessResponse"
         default:
           $ref: "#/components/responses/UnknownError"
+
+  /control/newDiscoveredAPIs:
+    post:
+      summary: 'Allows a client to notify APIClarity about new APIs.'
+      description: 'This allows a client (a gateway for example) to notify APIclarity about newly discovered APIs. If one of the APIs already exists, it is ignored.'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: 'object'
+              required:
+                - hosts
+              properties:
+                source:
+                  type: 'string'
+                  description: 'Optional name identifying the entity sending this notification.'
+                hosts:
+                  type: 'array'
+                  description: 'List of discovered APIs, format of hostname:port'
+                  items:
+                    type: 'string'
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            application/json:
+              schema:
+                $ref: "../common/openapi.yaml#/components/schemas/SuccessResponse"
+        default:
+          $ref: "#/components/responses/UnknownError"
+
+  /control/gateways:
+    get:
+      summary: 'List of configured gateways'
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            application/json:
+              schema:
+                type: 'object'
+                required:
+                  - gateways
+                properties:
+                  gateways:
+                    type: 'array'
+                    description: 'List of gateways'
+                    items:
+                      $ref: '#/components/schemas/APIGateway'
+        default:
+          $ref: "#/components/responses/UnknownError"
+    post:
+      summary: 'Create a new gateway'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: 'Create a new gateway'
+              $ref: '#/components/schemas/APIGateway'
+      responses:
+        '201':
+          description: 'Success'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIGateway'
+        default:
+          $ref: "#/components/responses/UnknownError"
+  /control/gateways/{gatewayId}:
+    parameters:
+      - $ref: "#/components/parameters/gatewayId"
+    get:
+      summary: 'Get gateway information'
+      responses:
+        '200':
+          description: 'Gateway information'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIGateway'
+        '404':
+          description: 'API Gateway not found'
+          content:
+            application/json:
+              schema:
+                $ref: "../common/openapi.yaml#/components/schemas/ApiResponse"
+        default:
+          $ref: "#/components/responses/UnknownError"
+    delete:
+      summary: 'Delete a gateway'
+      responses:
+        '204':
+          description: 'Success'
+        '404':
+          description: 'API Gateway not found'
+          content:
+            application/json:
+              schema:
+                $ref: "../common/openapi.yaml#/components/schemas/ApiResponse"
+        default:
+          $ref: "#/components/responses/UnknownError"
+
 servers:
   - url: /api
 components:
@@ -827,6 +929,13 @@ components:
       schema:
         type: integer
         format: uint32
+    gatewayId:
+      name: gatewayId
+      in: path
+      description: 'Gateway ID'
+      required: true
+      schema:
+        type: integer
   responses:
     UnknownError:
       description: unknown error
@@ -865,6 +974,28 @@ components:
       enum:
         - specreconstructor
         - specdiffs
-        
-
-  
+    APIGateway:
+      description: 'Gateway which is externally exposing APIs'
+      type: 'object'
+      properties:
+        id:
+          type: 'integer'
+        name:
+          description: 'Unique name identifying a gateway'
+          type: 'string'
+        type:
+          $ref: '#/components/schemas/APIGatewayType'
+        description:
+          type: 'string'
+        token:
+          type: 'string'
+          format: 'byte'
+      required:
+        - name
+        - type
+    APIGatewayType:
+      type: string
+      enum:
+        - TYK
+        - KONG
+        - APIGEEX
