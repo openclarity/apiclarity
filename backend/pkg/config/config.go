@@ -46,6 +46,7 @@ const (
 	TLSServerCertFilePath        = "TLS_SERVER_CERT_FILE_PATH"
 	TLSServerKeyFilePath         = "TLS_SERVER_KEY_FILE_PATH"
 	RootCertFilePath             = "ROOT_CERT_FILE_PATH"
+	TraceSamplingTLSPort         = "TRACE_SAMPLING_TLS_PORT"
 
 	DBNameEnvVar     = "DB_NAME"
 	DBUserEnvVar     = "DB_USER"
@@ -88,6 +89,7 @@ type Config struct {
 	HostToTraceSecretName        string
 	HostToTraceSecretNamespace   string
 	HostToTraceSecretOwnerName   string
+	TraceSamplingTLSPort         int
 
 	// database config
 	DatabaseDriver   string
@@ -112,6 +114,7 @@ func LoadConfig() (*Config, error) {
 	config.HostToTraceSecretNamespace = viper.GetString(HostToTraceSecretNamespace)
 	config.HostToTraceSecretOwnerName = viper.GetString(HostToTraceSecretOwnerName)
 	config.TraceSamplingEnabled = viper.GetBool(TraceSamplingEnabled)
+	config.TraceSamplingTLSPort = viper.GetInt(TraceSamplingTLSPort)
 	config.HealthCheckAddress = viper.GetString(HealthCheckAddress)
 	config.StateBackupIntervalSec = viper.GetInt(StateBackupIntervalSec)
 	config.DatabaseCleanerIntervalSec = viper.GetInt(DatabaseCleanerIntervalSec)

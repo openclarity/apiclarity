@@ -51,6 +51,7 @@ import (
 	_mimeutils "github.com/openclarity/speculator/pkg/utils"
 	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
 	interfacemanager "github.com/openclarity/trace-sampling-manager/manager/pkg/manager/interface"
+	restmanager "github.com/openclarity/trace-sampling-manager/manager/pkg/rest"
 )
 
 type Backend struct {
@@ -137,12 +138,17 @@ func Run() {
 	var monitor *k8smonitor.Monitor
 	var samplingManager *manager.Manager
 
-	samplingManager, err = manager.Create(clientset, &manager.Config{
+	samplingManager, err = manager.Create(clientset, &restmanager.Config{
 		RestServerPort:             config.HTTPTraceSamplingManagerPort,
 		GRPCServerPort:             config.GRPCTraceSamplingManagerPort,
 		HostToTraceSecretName:      config.HostToTraceSecretName,
 		HostToTraceSecretNamespace: config.HostToTraceSecretNamespace,
 		HostToTraceSecretOwnerName: config.HostToTraceSecretOwnerName,
+		EnableTLS:                  config.EnableTLS,
+		TLSServerCertFilePath:      config.TLSServerCertFilePath,
+		TLSServerKeyFilePath:       config.TLSServerKeyFilePath,
+		RootCertFilePath:           config.RootCertFilePath,
+		RestServerTLSPort:          config.TraceSamplingTLSPort,
 	})
 	if err != nil {
 		log.Errorf("Failed to create a trace sampling manager: %v", err)
