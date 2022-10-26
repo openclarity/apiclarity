@@ -1,41 +1,61 @@
-import React, { useEffect, useState } from 'react';
+import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
+import { isEmpty } from 'lodash';
+import Loader from 'components/Loader';
 import CloseButton from 'components/CloseButton';
-import Button from 'components/Button';
+import { ModalSection, ModalTitleDataItem } from './utils';
 
 import './modal.scss';
 
-const Modal = ({title, children, onClose, className, height=380, onDone, doneTitle="Done", disableDone}) => {
-    const [portalContainer, setPortalContainer] = useState(null);
+export {
+    ModalSection,
+    ModalTitleDataItem
+}
 
-    useEffect(() => {
-        const container = document.querySelector("main");
-
-        if (!container) {
-            return;
-        }
-        
-        setPortalContainer(container);
-    }, []);
-
-    if (!portalContainer) {
-        return null;
+class Modal extends Component {
+    state = {
+        container: null
     }
 
-    return ReactDOM.createPortal(
-        <div className="modal-outer-wrapper">
-            <div className={classnames("modal-inner-wrapper", className)} style={{height: `${height}px`}}>
-                <div className="modal-title">{title}</div>
-                <div className="modal-content">{children}</div>
-                <CloseButton onClose={onClose} />
-                <div className="modal-actions">
-                    <Button secondary onClick={onClose}>Cancel</Button>
-                    <Button onClick={onDone} disabled={disableDone}>{doneTitle}</Button>
+    componentDidMount() {
+        const container = document.querySelector("main[role='main']");
+        if (!!container && container !== this.state.container) {
+            this.setState({ container });
+        }
+    }
+
+    render() {
+        const { container } = this.state;
+
+        if (!container) {
+            return null;
+        }
+
+        return ReactDOM.createPortal(
+            <ModalInner {...this.props} />,
+            container
+        );
+    }
+}
+
+const ModalInner = ({ children, onClose, className, allowClose = true, loading = false, center = false, centerLarge = false }) => {
+    const onOuterClick = event => {
+        event.stopPropagation();
+        event.preventDefault();
+
+        if (allowClose) {
+            onClose();
+        }
+    }
+
+    return (
+        <div className={classnames("modal-outer", { center }, { "center-large": centerLarge })} onClick={onOuterClick}>
+            <div className={classnames("modal-container", { [className]: !isEmpty(className) })} onClick={(event) => event.stopPropagation()}>
+                {allowClose && <CloseButton onClose={onClose} />}
+                {loading ? <Loader /> : children}
             </div>
-            </div>
-        </div>,
-        portalContainer
+        </div>
     );
 }
 

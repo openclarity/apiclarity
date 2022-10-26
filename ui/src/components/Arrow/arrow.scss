@@ -1,6 +1,7 @@
 .arrow-icon {
     width: 16px;
     height: 16px;
+    transition: transform .2s ease-in-out;
 
     &.right-arrow {
         transform: rotate(180deg);

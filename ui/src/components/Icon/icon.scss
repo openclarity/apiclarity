@@ -1,9 +1,11 @@
-$icon-size: 22px;
+@import 'utils/scss_variables.module.scss';
 
 .icon {
     display: inline-block;
-    width: $icon-size;
-    height: $icon-size;
+    width: $default-icon-size;
+    height: $default-icon-size;
+    min-width: $default-icon-size;
+    min-height: $default-icon-size;
     stroke-width: 0;
     stroke: currentColor;
     fill: currentColor;
@@ -13,6 +15,6 @@ $icon-size: 22px;
     }
     &.disabled {
         cursor: not-allowed;
-        color: #AEB5BC;
+        color: $color-grey;
     }
 }

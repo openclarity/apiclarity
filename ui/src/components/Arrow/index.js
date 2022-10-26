@@ -11,15 +11,15 @@ export const ARROW_NAMES = {
     LEFT: "left"
 }
 
-const Arrow = ({name=ARROW_NAMES.TOP, onClick, disabled, small=false}) => {
+const Arrow = ({ name = ARROW_NAMES.TOP, onClick, disabled, small = false, className }) => {
     if (!Object.values(ARROW_NAMES).includes(name)) {
         console.error(`Arrow name '${name}' does not exist`);
     }
 
     return (
         <Icon
-            name={ICON_NAMES.ARROW_LEFT}
-            className={classnames("arrow-icon", `${name}-arrow`, {small}, {clickable: !!onClick})}
+            name={small ? ICON_NAMES.SMALL_ARROW_LEFT : ICON_NAMES.ARROW_LEFT}
+            className={classnames("arrow-icon", `${name}-arrow`, { small }, { [className]: !!className }, { clickable: !!onClick })}
             onClick={onClick}
             disabled={disabled}
         />

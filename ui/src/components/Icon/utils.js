@@ -26,5 +26,9 @@ export const ICON_NAMES = {
     ZOMBIE: "zombie",
     SHADOW: "shadow",
     BEETLE_ROUND: "beetle-round",
-    INFO: "info"
+    INFO: "info",
+    SHIELD_CHECK: "shield-check",
+    SHIELD_CROSS: "shield-cross",
+    SMALL_ARROW_LEFT: "small-arrow-left",
+    ERROR: 'error',
 }
