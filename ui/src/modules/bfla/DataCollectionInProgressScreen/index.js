@@ -1,7 +1,7 @@
 import React from 'react'
 import Button from 'components/Button'
 import MessageImageDisplay from 'layout/Inventory/InventoryDetails/MessageImageDisplay'
-import inProgressImage from 'images/in_progress.svg'
+import inProgressImage from 'utils/images/in_progress.svg'
 
 export default function DataCollectionInProgress({ isLearning, handleStop }) {
 

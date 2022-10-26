@@ -19,6 +19,7 @@
     "react-select": "^4.3.1",
     "react-simple-timefield": "^3.2.3",
     "react-table": "^7.7.0",
+    "react-toggle": "^4.1.3",
     "react-toggle-button": "^2.2.0",
     "react-tooltip": "^4.2.21",
     "reactstrap": "^8.9.0",
