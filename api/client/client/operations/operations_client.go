@@ -34,6 +34,8 @@ type ClientService interface {
 
 	DeleteAPIInventoryAPIIDSpecsReconstructedSpec(params *DeleteAPIInventoryAPIIDSpecsReconstructedSpecParams, opts ...ClientOption) (*DeleteAPIInventoryAPIIDSpecsReconstructedSpecOK, error)
 
+	DeleteControlGatewaysGatewayID(params *DeleteControlGatewaysGatewayIDParams, opts ...ClientOption) (*DeleteControlGatewaysGatewayIDNoContent, error)
+
 	GetAPIEvents(params *GetAPIEventsParams, opts ...ClientOption) (*GetAPIEventsOK, error)
 
 	GetAPIEventsEventID(params *GetAPIEventsEventIDParams, opts ...ClientOption) (*GetAPIEventsEventIDOK, error)
@@ -58,6 +60,10 @@ type ClientService interface {
 
 	GetAPIUsageHitCount(params *GetAPIUsageHitCountParams, opts ...ClientOption) (*GetAPIUsageHitCountOK, error)
 
+	GetControlGateways(params *GetControlGatewaysParams, opts ...ClientOption) (*GetControlGatewaysOK, error)
+
+	GetControlGatewaysGatewayID(params *GetControlGatewaysGatewayIDParams, opts ...ClientOption) (*GetControlGatewaysGatewayIDOK, error)
+
 	GetDashboardAPIUsage(params *GetDashboardAPIUsageParams, opts ...ClientOption) (*GetDashboardAPIUsageOK, error)
 
 	GetDashboardAPIUsageLatestDiffs(params *GetDashboardAPIUsageLatestDiffsParams, opts ...ClientOption) (*GetDashboardAPIUsageLatestDiffsOK, error)
@@ -69,6 +75,8 @@ type ClientService interface {
 	PostAPIInventory(params *PostAPIInventoryParams, opts ...ClientOption) (*PostAPIInventoryOK, error)
 
 	PostAPIInventoryReviewIDApprovedReview(params *PostAPIInventoryReviewIDApprovedReviewParams, opts ...ClientOption) (*PostAPIInventoryReviewIDApprovedReviewOK, error)
+
+	PostControlGateways(params *PostControlGatewaysParams, opts ...ClientOption) (*PostControlGatewaysCreated, error)
 
 	PostControlNewDiscoveredAPIs(params *PostControlNewDiscoveredAPIsParams, opts ...ClientOption) (*PostControlNewDiscoveredAPIsOK, error)
 
@@ -148,6 +156,43 @@ func (a *Client) DeleteAPIInventoryAPIIDSpecsReconstructedSpec(params *DeleteAPI
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*DeleteAPIInventoryAPIIDSpecsReconstructedSpecDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  DeleteControlGatewaysGatewayID deletes a gateway
+*/
+func (a *Client) DeleteControlGatewaysGatewayID(params *DeleteControlGatewaysGatewayIDParams, opts ...ClientOption) (*DeleteControlGatewaysGatewayIDNoContent, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewDeleteControlGatewaysGatewayIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "DeleteControlGatewaysGatewayID",
+		Method:             "DELETE",
+		PathPattern:        "/control/gateways/{gatewayId}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteControlGatewaysGatewayIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*DeleteControlGatewaysGatewayIDNoContent)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*DeleteControlGatewaysGatewayIDDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
@@ -596,6 +641,80 @@ func (a *Client) GetAPIUsageHitCount(params *GetAPIUsageHitCountParams, opts ...
 }
 
 /*
+  GetControlGateways lists of configured gateways
+*/
+func (a *Client) GetControlGateways(params *GetControlGatewaysParams, opts ...ClientOption) (*GetControlGatewaysOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetControlGatewaysParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "GetControlGateways",
+		Method:             "GET",
+		PathPattern:        "/control/gateways",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetControlGatewaysReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetControlGatewaysOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*GetControlGatewaysDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  GetControlGatewaysGatewayID gets gateway information
+*/
+func (a *Client) GetControlGatewaysGatewayID(params *GetControlGatewaysGatewayIDParams, opts ...ClientOption) (*GetControlGatewaysGatewayIDOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetControlGatewaysGatewayIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "GetControlGatewaysGatewayID",
+		Method:             "GET",
+		PathPattern:        "/control/gateways/{gatewayId}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetControlGatewaysGatewayIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetControlGatewaysGatewayIDOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*GetControlGatewaysGatewayIDDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
   GetDashboardAPIUsage gets API usage
 */
 func (a *Client) GetDashboardAPIUsage(params *GetDashboardAPIUsageParams, opts ...ClientOption) (*GetDashboardAPIUsageOK, error) {
@@ -815,6 +934,43 @@ func (a *Client) PostAPIInventoryReviewIDApprovedReview(params *PostAPIInventory
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*PostAPIInventoryReviewIDApprovedReviewDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  PostControlGateways creates a new gateway
+*/
+func (a *Client) PostControlGateways(params *PostControlGatewaysParams, opts ...ClientOption) (*PostControlGatewaysCreated, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewPostControlGatewaysParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "PostControlGateways",
+		Method:             "POST",
+		PathPattern:        "/control/gateways",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostControlGatewaysReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*PostControlGatewaysCreated)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*PostControlGatewaysDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

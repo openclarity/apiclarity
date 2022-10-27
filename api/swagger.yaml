@@ -394,7 +394,32 @@ definitions:
       - bfla
       - spec_differ
       - fuzzer
-      
+  APIGateway:
+    description: 'Gateway which is externally exposing APIs'
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+      name:
+        description: 'Unique name identifying a gateway'
+        type: 'string'
+      type:
+        $ref: '#/definitions/APIGatewayType'
+      description:
+        type: 'string'
+      token:
+        type: 'string'
+        format: 'byte'
+    required:
+      - name
+      - type
+
+  APIGatewayType:
+    type: string
+    enum:
+      - TYK
+      - KONG
+      - APIGEEX
 
 paths:
   /apiEvents:
@@ -833,6 +858,73 @@ paths:
             $ref: '#/responses/Success'
         default:
           $ref: '#/responses/UnknownError'
+
+  /control/gateways:
+    get:
+      summary: 'List of configured gateways'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: 'object'
+            required:
+              - gateways
+            properties:
+              gateways:
+                type: 'array'
+                description: 'List of gateways'
+                items:
+                  $ref: '#/definitions/APIGateway'
+        default:
+          $ref: '#/responses/UnknownError'
+    post:
+      summary: 'Create a new gateway'
+      parameters:
+        - in: 'body'
+          name: 'body'
+          required: true
+          schema:
+            description: 'Create a new gateway'
+            $ref: '#/definitions/APIGateway'
+      responses:
+        '201':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/APIGateway'
+        default:
+          $ref: '#/responses/UnknownError'
+  /control/gateways/{gatewayId}:
+    get:
+      summary: 'Get gateway information'
+      parameters:
+        - $ref: '#/parameters/gatewayId'
+      responses:
+        '200':
+          description: 'Gateway information'
+          schema:
+            $ref: '#/definitions/APIGateway'
+        '404':
+          description: 'API Gateway not found'
+          schema:
+            $ref: '#/definitions/ApiResponse'
+        default:
+          $ref: '#/responses/UnknownError'
+    delete:
+      summary: 'Delete a gateway'
+      parameters:
+        - $ref: '#/parameters/gatewayId'
+      responses:
+        '204':
+          description: 'Success'
+          # schema:
+          #   $ref: '#/responses/Success'
+        '404':
+          description: 'API Gateway not found'
+          schema:
+            $ref: '#/definitions/ApiResponse'
+        default:
+          $ref: '#/responses/UnknownError'
+
 parameters:
   
   startTime:
@@ -1220,6 +1312,13 @@ parameters:
     in: 'path'
     type: 'integer'
     format: 'uint32'
+    required: true
+
+  gatewayId:
+    name: 'gatewayId'
+    in: path
+    description: 'Gateway ID'
+    type: 'integer'
     required: true
 
 responses:
