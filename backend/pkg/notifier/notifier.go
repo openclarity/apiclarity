@@ -24,7 +24,12 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/apiclarity/api3/notifications"
-	coretls "github.com/openclarity/apiclarity/backend/pkg/modules/internal/core/tls"
+	coretls "github.com/openclarity/apiclarity/backend/pkg/utils/tls"
+)
+
+const (
+	NotificationMaxQueueSize = 100
+	NotificationWorkers      = 10
 )
 
 type notificationWithParams struct {
