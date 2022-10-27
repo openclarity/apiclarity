@@ -26,27 +26,27 @@ import (
 )
 
 const (
-	BackendRestPort              = "BACKEND_REST_PORT"
-	BackendRestTLSPort           = "BACKEND_REST_TLS_PORT"
-	TraceSamplingEnabled         = "TRACE_SAMPLING_ENABLED"
-	HTTPTracesPort               = "HTTP_TRACES_PORT"
-	HTTPTracesTLSPort            = "HTTP_TRACES_TLS_PORT"
-	HTTPTraceSamplingManagerPort = "HTTP_TRACE_SAMPLING_MANAGER_PORT"
-	GRPCTraceSamplingManagerPort = "GRPC_TRACE_SAMPLING_MANAGER_PORT"
-	HostToTraceSecretName        = "HOST_TO_TRACE_SECRET_NAME"       //nolint:gosec
-	HostToTraceSecretNamespace   = "HOST_TO_TRACE_SECRET_NAMESPACE"  //nolint:gosec
-	HostToTraceSecretOwnerName   = "HOST_TO_TRACE_SECRET_OWNER_NAME" //nolint:gosec
-	HealthCheckAddress           = "HEALTH_CHECK_ADDRESS"
-	StateBackupIntervalSec       = "STATE_BACKUP_INTERVAL_SEC"
-	DatabaseCleanerIntervalSec   = "DATABASE_CLEANER_INTERVAL_SEC"
-	StateBackupFileName          = "STATE_BACKUP_FILE_NAME"
-	NoMonitorEnvVar              = "NO_K8S_MONITOR"
-	K8sLocalEnvVar               = "K8S_LOCAL"
-	EnableTLS                    = "ENABLE_TLS"
-	TLSServerCertFilePath        = "TLS_SERVER_CERT_FILE_PATH"
-	TLSServerKeyFilePath         = "TLS_SERVER_KEY_FILE_PATH"
-	RootCertFilePath             = "ROOT_CERT_FILE_PATH"
-	TraceSamplingTLSPort         = "TRACE_SAMPLING_TLS_PORT"
+	BackendRestPort               = "BACKEND_REST_PORT"
+	BackendRestTLSPort            = "BACKEND_REST_TLS_PORT"
+	TraceSamplingEnabled          = "TRACE_SAMPLING_ENABLED"
+	HTTPTracesPort                = "HTTP_TRACES_PORT"
+	HTTPTracesTLSPort             = "HTTP_TRACES_TLS_PORT"
+	HTTPTraceSamplingManagerPort  = "HTTP_TRACE_SAMPLING_MANAGER_PORT"
+	HTTPSTraceSamplingManagerPort = "HTTPS_TRACE_SAMPLING_MANAGER_PORT"
+	GRPCTraceSamplingManagerPort  = "GRPC_TRACE_SAMPLING_MANAGER_PORT"
+	HostToTraceSecretName         = "HOST_TO_TRACE_SECRET_NAME"       //nolint:gosec
+	HostToTraceSecretNamespace    = "HOST_TO_TRACE_SECRET_NAMESPACE"  //nolint:gosec
+	HostToTraceSecretOwnerName    = "HOST_TO_TRACE_SECRET_OWNER_NAME" //nolint:gosec
+	HealthCheckAddress            = "HEALTH_CHECK_ADDRESS"
+	StateBackupIntervalSec        = "STATE_BACKUP_INTERVAL_SEC"
+	DatabaseCleanerIntervalSec    = "DATABASE_CLEANER_INTERVAL_SEC"
+	StateBackupFileName           = "STATE_BACKUP_FILE_NAME"
+	NoMonitorEnvVar               = "NO_K8S_MONITOR"
+	K8sLocalEnvVar                = "K8S_LOCAL"
+	EnableTLS                     = "ENABLE_TLS"
+	TLSServerCertFilePath         = "TLS_SERVER_CERT_FILE_PATH"
+	TLSServerKeyFilePath          = "TLS_SERVER_KEY_FILE_PATH"
+	RootCertFilePath              = "ROOT_CERT_FILE_PATH"
 
 	DBNameEnvVar     = "DB_NAME"
 	DBUserEnvVar     = "DB_USER"
@@ -83,13 +83,13 @@ type Config struct {
 	NotificationPrefix string
 
 	// trace sampling config
-	HTTPTraceSamplingManagerPort int
-	GRPCTraceSamplingManagerPort int
-	TraceSamplingEnabled         bool
-	HostToTraceSecretName        string
-	HostToTraceSecretNamespace   string
-	HostToTraceSecretOwnerName   string
-	TraceSamplingTLSPort         int
+	HTTPTraceSamplingManagerPort  int
+	HTTPSTraceSamplingManagerPort int
+	GRPCTraceSamplingManagerPort  int
+	TraceSamplingEnabled          bool
+	HostToTraceSecretName         string
+	HostToTraceSecretNamespace    string
+	HostToTraceSecretOwnerName    string
 
 	// database config
 	DatabaseDriver   string
@@ -109,12 +109,12 @@ func LoadConfig() (*Config, error) {
 	config.HTTPTracesPort = viper.GetInt(HTTPTracesPort)
 	config.HTTPTracesTLSPort = viper.GetInt(HTTPTracesTLSPort)
 	config.HTTPTraceSamplingManagerPort = viper.GetInt(HTTPTraceSamplingManagerPort)
+	config.HTTPSTraceSamplingManagerPort = viper.GetInt(HTTPSTraceSamplingManagerPort)
 	config.GRPCTraceSamplingManagerPort = viper.GetInt(GRPCTraceSamplingManagerPort)
 	config.HostToTraceSecretName = viper.GetString(HostToTraceSecretName)
 	config.HostToTraceSecretNamespace = viper.GetString(HostToTraceSecretNamespace)
 	config.HostToTraceSecretOwnerName = viper.GetString(HostToTraceSecretOwnerName)
 	config.TraceSamplingEnabled = viper.GetBool(TraceSamplingEnabled)
-	config.TraceSamplingTLSPort = viper.GetInt(TraceSamplingTLSPort)
 	config.HealthCheckAddress = viper.GetString(HealthCheckAddress)
 	config.StateBackupIntervalSec = viper.GetInt(StateBackupIntervalSec)
 	config.DatabaseCleanerIntervalSec = viper.GetInt(DatabaseCleanerIntervalSec)
