@@ -148,7 +148,7 @@ func Run() {
 		TLSServerCertFilePath:      config.TLSServerCertFilePath,
 		TLSServerKeyFilePath:       config.TLSServerKeyFilePath,
 		RootCertFilePath:           config.RootCertFilePath,
-		RestServerTLSPort:          config.TraceSamplingTLSPort,
+		RestServerTLSPort:          config.HTTPSTraceSamplingManagerPort,
 	})
 	if err != nil {
 		log.Errorf("Failed to create a trace sampling manager: %v", err)
