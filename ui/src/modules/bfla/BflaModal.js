@@ -1,7 +1,7 @@
-import React, {useEffect} from 'react';
-import Modal from 'components/Modal';
+import React, { useEffect } from 'react';
 import { useFetch, FETCH_METHODS } from 'hooks';
 import Loader from 'components/Loader';
+import ModalConfirmation from 'components/ModalConfirmation';
 
 export const MODAL_ACTION_TYPE = {
     APPROVE: 'approve',
@@ -13,8 +13,8 @@ const MODAL_TITLE_TYPE = {
     ILLEGITIMATE: 'illegitimate'
 };
 
-const BflaModal = ({eventId, type, onClose, onSuccess}) => {
-    const [{loading: updatePending, data: updateData }, updateBflaWarning] = useFetch(`modules/bfla/event`, {loadOnMount: false});
+const BflaModal = ({ eventId, type, onClose, onSuccess }) => {
+    const [{ loading: updatePending, data: updateData }, updateBflaWarning] = useFetch(`modules/bfla/event`, { loadOnMount: false });
 
     useEffect(() => {
         if (updateData) {
@@ -31,16 +31,13 @@ const BflaModal = ({eventId, type, onClose, onSuccess}) => {
     const titleType = type === MODAL_ACTION_TYPE.APPROVE ? MODAL_TITLE_TYPE.LEGITIMATE : MODAL_TITLE_TYPE.ILLEGITIMATE;
 
     return (
-        <Modal
+        <ModalConfirmation
             title={`Mark the API call as ${titleType}`}
-            height={230}
-            onClose={onClose}
-            doneTitle="Continue"
-            onDone={fetchModelAndUpdate}
-        >
-            <div>Would you like to mark the selected API call as {titleType}? This will update the API authorization model accordingly.</div>
-            {updatePending && <Loader />}
-        </Modal>
+            message={`Would you like to mark the selected API call as ${titleType}? This will update the API authorization model accordingly.`}
+            confirmTitle="Continue"
+            onCancle={onClose}
+            onConfirm={fetchModelAndUpdate}
+        />
     );
 };
 

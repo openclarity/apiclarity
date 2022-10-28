@@ -1,19 +1,28 @@
-.arrow-icon {
-    width: 16px;
-    height: 16px;
-    transition: transform .2s ease-in-out;
+@import 'utils/scss_variables.module.scss';
 
-    &.right-arrow {
-        transform: rotate(180deg);
-    }
-    &.top-arrow {
-        transform: rotate(90deg);
-    }
-    &.bottom-arrow {
-        transform: rotate(-90deg);
+.arrow-icon {
+    transition: transform .2s ease-in-out;
+    
+    &:not(.small) {
+        &.right-arrow {
+            transform: rotate(90deg);
+        }
+        &.left-arrow {
+            transform: rotate(-90deg);
+        }
+        &.bottom-arrow {
+            transform: rotate(180deg);
+        }
     }
     &.small {
-        width: 10px;
-        height: 10px;
+        &.right-arrow {
+            transform: rotate(180deg);
+        }
+        &.bottom-arrow {
+            transform: rotate(-90deg);
+        }
+        &.top-arrow {
+            transform: rotate(90deg);
+        }
     }
 }

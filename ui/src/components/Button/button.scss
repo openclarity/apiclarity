@@ -2,7 +2,7 @@
 
 $button-icon-size: 16px;
 
-.scn-button {
+.ag-button {
     border: none;
     outline: none;
     font-weight: bold;
@@ -19,7 +19,7 @@ $button-icon-size: 16px;
     &:disabled {
         cursor: not-allowed;
     }
-    &.scn-button--primary {
+    &.ag-button--primary {
         background-color: $color-main;
         color: $color-white;
         border-radius: 50px;
@@ -34,7 +34,7 @@ $button-icon-size: 16px;
             color: $color-grey;
         }
     }
-    &.scn-button--secondary {
+    &.ag-button--secondary {
         color: $color-main;
         border: 1px solid $color-main;
         border-radius: 50px;
@@ -49,7 +49,7 @@ $button-icon-size: 16px;
             border-color: $color-grey;
         }
     }
-    &.scn-button--tertiary {
+    &.ag-button--tertiary {
         color: $color-main;
         text-decoration: underline;
 

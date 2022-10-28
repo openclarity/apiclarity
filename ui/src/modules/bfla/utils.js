@@ -61,8 +61,8 @@ const formatDataForDisplay = (operations) => {
     return returnData
 }
 
-const getDataSelectElements = (data, nestingItem) => data[nestingItem].map(item =>
-    ({ ...item, id: uuidv4(), title: item.name || item.path })
+const getDataSelectElements = (data, nestingItem) => data[nestingItem].map((item, key) =>
+    ({ ...item, id: key, title: item.name || item.path })
 );
 
 const BFLA_API_FINDINGS_URL = (apiID) => `/api/modules/bfla/apiFindings/${apiID}`;

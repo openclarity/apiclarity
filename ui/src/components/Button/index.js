@@ -8,10 +8,10 @@ const Button = ({ type = "button", className, children, onClick, disabled = fals
     <button
         type={type}
         className={classnames(
-            "scn-button",
-            { "scn-button--primary": !secondary && !tertiary },
-            { "scn-button--secondary": secondary },
-            { "scn-button--tertiary": tertiary },
+            "ag-button",
+            { "ag-button--primary": !secondary && !tertiary },
+            { "ag-button--secondary": secondary },
+            { "ag-button--tertiary": tertiary },
             className
         )}
         onClick={event => !disabled && onClick ? onClick(event) : null}
