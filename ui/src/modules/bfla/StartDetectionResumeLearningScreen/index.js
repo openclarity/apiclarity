@@ -1,6 +1,6 @@
 import React from 'react'
 import MessageImageDisplay from 'layout/Inventory/InventoryDetails/MessageImageDisplay'
-import MessageTextButton from 'layout/Inventory/InventoryDetails/MessageTextButton'
+import MessageTextButton from 'components/MessageTextButton'
 import emptySelectImage from 'utils/images/empty_select_image.svg'
 
 export default function StartDetectionResumeLearningScreen({ handleStartDetection, handleStartLearning }) {

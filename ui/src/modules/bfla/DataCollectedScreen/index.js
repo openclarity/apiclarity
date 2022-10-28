@@ -9,11 +9,11 @@ import emptySelectImage from 'utils/images/select.svg';
 import AudienceView from '../AudienceView';
 import StartDetectionResumeLearningScreen from '../StartDetectionResumeLearningScreen';
 import ListItemDisplayBFLA from '../ListItemDisplayBFLA';
-import BreadcrumbsDisplayBFLA from '../BreadcrumbsDisplayBFLA';
-import ToggleButtonBFLA from '../ToogleButtonBFLA';
+import ToggleButtonBFLA from '../ToggleButtonBFLA';
 import utils from '../utils'
 
 import './data-collected-screen.scss'
+import BreadcrumbsDisplay from 'components/BreadcrumbSelectPanes/BreadcrumbsDisplay';
 
 export default function DataCollectedScreen({
     data,
@@ -70,7 +70,8 @@ export default function DataCollectedScreen({
         <div className={classNames("spec-select-panes-wrapper-bfla")}>
             <div className="select-pane-bfla">
                 {selectedLevelIndex > 0 && (
-                    <BreadcrumbsDisplayBFLA
+                    <BreadcrumbsDisplay
+                        mainTitle="Tags"
                         selectedData={selectedData}
                         displayData={displayData}
                         selectedLevelIndex={selectedLevelIndex}
