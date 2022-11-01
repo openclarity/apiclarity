@@ -17,6 +17,7 @@ package apiclarityexporter
 
 import (
 	"fmt"
+	"net"
 	"net/url"
 	"strings"
 
@@ -50,21 +51,83 @@ func wrapAttributeError(logger *zap.Logger, msg, attrKey, attrValue string, err 
 	return fmt.Errorf("%s, attribute: %s, value: %s, error: %w", msg, attrKey, attrValue, err)
 }
 
-func parseResourceServerAttrs(actel *apiclientmodels.Telemetry, resource pcommon.Resource) bool {
+func (e *exporter) convertAddr(addr string) string {
+	//TODO: make it configurable to prefer IP or hostname
+	isIpAddr := net.ParseIP(addr) != nil
+	if isIpAddr && e.config.preferHostNames {
+		if aliases, err := net.LookupAddr(addr); err != nil && len(aliases) > 0 {
+			e.logger.Info("lookup IP to get hostname",
+				zap.String("address", addr),
+				zap.String("host", aliases[0]),
+			)
+			return aliases[0]
+		} else if err != nil {
+			e.logger.Info("failed lookup IP to get hostname",
+				zap.String("address", addr),
+				zap.Error(err),
+			)
+		}
+	} else if !isIpAddr && !e.config.preferHostNames {
+		if hosts, err := net.LookupHost(addr); err != nil && len(hosts) > 0 {
+			e.logger.Info("lookup hostname to get IP",
+				zap.String("address", addr),
+				zap.String("host", hosts[0]),
+			)
+			return hosts[0]
+		} else if err != nil {
+			e.logger.Info("failed lookup hostname to get IP",
+				zap.String("address", addr),
+				zap.Error(err),
+			)
+		}
+	} else {
+		e.logger.Info("address is already in preferred form",
+			zap.String("address", addr),
+		)
+	}
+	return addr
+}
+
+func (e *exporter) convertHost(addr string) string {
+	if addr == "" {
+		return addr
+	}
+	//Manage prefs for IP v. hostname for <ip|host>[:port]
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		e.logger.Error("failed to split host/port",
+			zap.String("address", addr),
+			zap.Error(err),
+		)
+		return addr
+	}
+	if host != "" {
+		host = e.convertAddr(host)
+	}
+	if host != "" && port != "" {
+		return host + ":" + port
+	} else if host != "" {
+		return host
+	} else {
+		return ":" + port
+	}
+}
+
+func (e *exporter) parseResourceServerAttrs(actel *apiclientmodels.Telemetry, resource pcommon.Resource) bool {
 	ok := true
 	resAttrs := resource.Attributes()
 	if ipAddr, ok := resAttrs.Get("ip"); ok {
-		actel.DestinationAddress = ipAddr.AsString()
+		actel.DestinationAddress = e.convertAddr(ipAddr.AsString())
 		if servicePort, ok := resAttrs.Get("port"); ok {
 			actel.DestinationAddress = actel.DestinationAddress + ":" + servicePort.AsString()
 		}
 	} else if serviceIP, ok := resAttrs.Get(string("ipv4")); ok {
-		actel.DestinationAddress = serviceIP.AsString()
+		actel.DestinationAddress = e.convertAddr(serviceIP.AsString())
 		if servicePort, ok := resAttrs.Get("port"); ok {
 			actel.DestinationAddress = actel.DestinationAddress + ":" + servicePort.AsString()
 		}
 	} else if hostName, ok := resAttrs.Get(string(semconv.HostNameKey)); ok {
-		actel.DestinationAddress = hostName.AsString()
+		actel.DestinationAddress = e.convertAddr(hostName.AsString())
 		if servicePort, ok := resAttrs.Get("port"); ok {
 			actel.DestinationAddress = actel.DestinationAddress + ":" + servicePort.AsString()
 		}
@@ -76,31 +139,32 @@ func parseResourceServerAttrs(actel *apiclientmodels.Telemetry, resource pcommon
 	return ok
 }
 
-func setTelemetryClientSpan(actel *apiclientmodels.Telemetry, resource pcommon.Resource, attrs pcommon.Map, logger *zap.Logger) error {
+func (e *exporter) setTelemetryClientSpan(actel *apiclientmodels.Telemetry, resource pcommon.Resource, attrs pcommon.Map, logger *zap.Logger) error {
 	//Set destination/server address
 	if peerName, ok := attrs.Get(string(semconv.NetPeerNameKey)); ok {
-		actel.DestinationAddress = peerName.AsString()
+		actel.DestinationAddress = e.convertAddr(peerName.AsString())
 		if portAttr, portOk := attrs.Get(string(semconv.NetPeerPortKey)); portOk {
 			actel.DestinationAddress = actel.DestinationAddress + ":" + portAttr.AsString()
 		}
 	} else if peerIP, ok := attrs.Get(string(semconv.NetPeerIPKey)); ok {
-		actel.DestinationAddress = peerIP.AsString()
+		actel.DestinationAddress = e.convertAddr(peerIP.AsString())
 		if portAttr, portOk := attrs.Get(string(semconv.NetPeerPortKey)); portOk {
 			actel.DestinationAddress = actel.DestinationAddress + ":" + portAttr.AsString()
 		}
 	} else if actel.Request.Host != "" {
 		//Assume this is from URL or Host header...
+		//TODO: split addr/port and convertAddr
 		actel.DestinationAddress = actel.Request.Host
-	} else if ok := parseResourceServerAttrs(actel, resource); !ok {
+	} else if ok := e.parseResourceServerAttrs(actel, resource); !ok {
 		//Either HTTPURLKey, HTTPHostKey, NetPeerNameKey or NetPeerIPKey should be defined
 		return wrapAttributeError(logger, "missing attribute", string(semconv.NetPeerIPKey), missingAttrValue, nil)
 	}
 
 	//Set source/client address
 	if hostIpAttr, ok := attrs.Get(string(semconv.NetHostIPKey)); ok {
-		actel.SourceAddress = hostIpAttr.AsString()
+		actel.SourceAddress = e.convertAddr(hostIpAttr.AsString())
 	} else if hostNameAttr, ok := attrs.Get(string(semconv.NetHostNameKey)); ok {
-		actel.SourceAddress = hostNameAttr.AsString()
+		actel.SourceAddress = e.convertAddr(hostNameAttr.AsString())
 	}
 	if portAttr, portOk := attrs.Get(string(semconv.NetHostPortKey)); portOk {
 		actel.SourceAddress = actel.SourceAddress + ":" + portAttr.AsString()
@@ -109,38 +173,38 @@ func setTelemetryClientSpan(actel *apiclientmodels.Telemetry, resource pcommon.R
 	return nil
 }
 
-func setTelemetryServerSpan(actel *apiclientmodels.Telemetry, resource pcommon.Resource, attrs pcommon.Map, logger *zap.Logger) error {
+func (e *exporter) setTelemetryServerSpan(actel *apiclientmodels.Telemetry, resource pcommon.Resource, attrs pcommon.Map, logger *zap.Logger) error {
 	//Set destination/server address
 	if serverNameAttr, ok := attrs.Get(string(semconv.HTTPServerNameKey)); ok {
-		actel.DestinationAddress = serverNameAttr.AsString()
+		actel.DestinationAddress = e.convertAddr(serverNameAttr.AsString())
 		if portAttr, portOk := attrs.Get(string(semconv.NetHostPortKey)); portOk {
 			actel.DestinationAddress = actel.DestinationAddress + ":" + portAttr.AsString()
 		}
 	} else if hostNameAttr, ok := attrs.Get(string(semconv.NetHostNameKey)); ok {
-		actel.DestinationAddress = hostNameAttr.AsString()
+		actel.DestinationAddress = e.convertAddr(hostNameAttr.AsString())
 		if portAttr, portOk := attrs.Get(string(semconv.NetHostPortKey)); portOk {
 			actel.DestinationAddress = actel.DestinationAddress + ":" + portAttr.AsString()
 		}
 	} else if hostIPAttr, ok := attrs.Get(string(semconv.NetHostIPKey)); ok {
-		actel.DestinationAddress = hostIPAttr.AsString()
+		actel.DestinationAddress = e.convertAddr(hostIPAttr.AsString())
 		if portAttr, portOk := attrs.Get(string(semconv.NetHostPortKey)); portOk {
 			actel.DestinationAddress = actel.DestinationAddress + ":" + portAttr.AsString()
 		}
 	} else if actel.Request.Host != "" {
 		//Assume this is from URL or Host header...
 		actel.DestinationAddress = actel.Request.Host
-	} else if ok := parseResourceServerAttrs(actel, resource); !ok {
+	} else if ok := e.parseResourceServerAttrs(actel, resource); !ok {
 		//Either HTTPURLKey, HTTPHostKey, HTTPServerNameKey or NetHostNameKey should be defined
 		return wrapAttributeError(logger, "missing attribute", string(semconv.HTTPServerNameKey), missingAttrValue, nil)
 	}
 
 	//Set source/client address
 	if clientIP, ok := attrs.Get(string(semconv.HTTPClientIPKey)); ok {
-		actel.SourceAddress = clientIP.AsString()
+		actel.SourceAddress = e.convertAddr(clientIP.AsString())
 	} else if peerName, ok := attrs.Get(string(semconv.NetPeerNameKey)); ok {
-		actel.SourceAddress = peerName.AsString()
+		actel.SourceAddress = e.convertAddr(peerName.AsString())
 	} else if peerIP, ok := attrs.Get(string(semconv.NetPeerIPKey)); ok {
-		actel.SourceAddress = peerIP.AsString() // this could be a proxy
+		actel.SourceAddress = e.convertAddr(peerIP.AsString()) //this could be a proxy
 	}
 	if portAttr, portOk := attrs.Get(string(semconv.NetPeerPortKey)); portOk {
 		actel.SourceAddress = actel.SourceAddress + ":" + portAttr.AsString()
@@ -210,7 +274,7 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 				return nil, wrapAttributeError(e.logger, "cannot parse attribute", string(semconv.HTTPURLKey), urlVal, err)
 			}
 			actel.Scheme = urlInfo.Scheme
-			actel.Request.Host = urlInfo.Host
+			actel.Request.Host = e.convertHost(urlInfo.Host)
 			actel.Request.Path = urlInfo.Path
 		}
 	}
@@ -224,7 +288,10 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 			zap.String("value", DefaultScheme),
 		)
 	}
-	if targetAttr, targetOk := attrs.Get(string(semconv.HTTPTargetKey)); targetOk {
+	//Some frameworks use http.path although it's not in the semconv
+	if path, ok := attrs.Get("http.path"); ok {
+		actel.Request.Path = path.AsString()
+	} else if targetAttr, targetOk := attrs.Get(string(semconv.HTTPTargetKey)); targetOk {
 		actel.Request.Path = targetAttr.AsString()
 	} else if !urlOk {
 		//Either HTTPURLKey or HTTPTargetKey should be defined
@@ -236,15 +303,15 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 	}
 	//Do not override URL with Host header, but check for use later
 	if hostAttr, hostOk := attrs.Get(string(semconv.HTTPHostKey)); hostOk && actel.Request.Host == "" {
-		actel.Request.Host = hostAttr.AsString() // host is Host Header. Is this correct?
+		actel.Request.Host = e.convertHost(hostAttr.AsString()) // host is Host Header. Is this correct?
 	}
 
 	var err error
 	switch span.Kind() {
 	case ptrace.SpanKindClient:
-		err = setTelemetryClientSpan(actel, resource, attrs, e.logger)
+		err = e.setTelemetryClientSpan(actel, resource, attrs, e.logger)
 	case ptrace.SpanKindServer:
-		err = setTelemetryServerSpan(actel, resource, attrs, e.logger)
+		err = e.setTelemetryServerSpan(actel, resource, attrs, e.logger)
 	case ptrace.SpanKindUnspecified:
 		e.logger.Warn("span kind unspecified, assuming default",
 			zap.String("kind", span.Kind().String()),
@@ -253,9 +320,9 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 			zap.Int("default", int(DefaultSpanKind)),
 		)
 		if DefaultSpanKind == ptrace.SpanKindClient {
-			err = setTelemetryClientSpan(actel, resource, attrs, e.logger)
+			err = e.setTelemetryClientSpan(actel, resource, attrs, e.logger)
 		} else {
-			err = setTelemetryServerSpan(actel, resource, attrs, e.logger)
+			err = e.setTelemetryServerSpan(actel, resource, attrs, e.logger)
 		}
 	default:
 		e.logger.Warn("ignoring span that is not client or server",
@@ -357,6 +424,13 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 				zap.String("type", reqBody.Type().String()),
 			)
 		}
+		//TODO: check media type
+		if actel.Request.Common.Body != nil {
+			actel.Request.Common.Headers = append(actel.Request.Common.Headers, &apiclientmodels.Header{
+				Key:   "Content-Type",
+				Value: "application/json",
+			})
+		}
 	}
 	if respBody, ok := attrs.Get(string(ResponseBody)); ok {
 		if respBody.Type() == pcommon.ValueTypeBytes {
@@ -370,6 +444,13 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 				zap.String("traceid", span.TraceID().HexString()),
 				zap.String("type", respBody.Type().String()),
 			)
+		}
+		//TODO: check media type
+		if actel.Response.Common.Body != nil {
+			actel.Response.Common.Headers = append(actel.Response.Common.Headers, &apiclientmodels.Header{
+				Key:   "Content-Type",
+				Value: "application/json",
+			})
 		}
 	}
 
