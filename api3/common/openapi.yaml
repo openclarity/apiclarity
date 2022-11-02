@@ -401,6 +401,39 @@ components:
           type: string
         alert:
           $ref: "#/components/schemas/AlertSeverityEnum"
+    APIClarityFeatureList:
+      type: 'object'
+      description: List of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for
+      properties:
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/APIClarityFeature'
+    APIClarityFeature:
+      type: 'object'
+      description: Description of APIClarity feature and the list of API hosts (in the form 'host:port') the feature requires to get trace for
+      properties:
+        featureName:
+          $ref: '#/components/schemas/APIClarityFeatureEnum'
+        featureDescription:
+          description: "Short human readable description of the feature"
+          type: string
+        hostsToTrace:
+          type: array
+          items:
+            type: string
+      required:
+      - featureName
+    APIClarityFeatureEnum:
+      description: 'APIClarity Feature Name'
+      type: string
+      enum:
+        - specreconstructor
+        - specdiffs
+        - traceanalyzer
+        - bfla
+        - spec_differ
+        - fuzzer
     ApiID:
       type: integer
       format: int64
