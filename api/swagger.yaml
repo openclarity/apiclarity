@@ -916,8 +916,6 @@ paths:
       responses:
         '204':
           description: 'Success'
-          # schema:
-          #   $ref: '#/responses/Success'
         '404':
           description: 'API Gateway not found'
           schema:

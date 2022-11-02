@@ -434,6 +434,31 @@ components:
         - bfla
         - spec_differ
         - fuzzer
+    APIGateway:
+      description: 'Gateway which is externally exposing APIs'
+      type: 'object'
+      properties:
+        id:
+          type: 'integer'
+        name:
+          description: 'Unique name identifying a gateway'
+          type: 'string'
+        type:
+          $ref: '#/components/schemas/APIGatewayType'
+        description:
+          type: 'string'
+        token:
+          type: 'string'
+          format: 'byte'
+      required:
+        - name
+        - type
+    APIGatewayType:
+      type: string
+      enum:
+        - TYK
+        - KONG
+        - APIGEEX
     ApiID:
       type: integer
       format: int64
