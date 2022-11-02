@@ -43,6 +43,20 @@ type ApiFindingsNotification struct {
 	NotificationType string                     `json:"notificationType"`
 }
 
+// ApiInfo defines model for ApiInfo.
+type ApiInfo struct {
+	// String representing the entity which created this API. APICLARITY means it has been created by APIClarity on first trace
+	CreatedBy            *string             `json:"createdBy,omitempty"`
+	DestinationNamespace *string             `json:"destinationNamespace,omitempty"`
+	HasProvidedSpec      *bool               `json:"hasProvidedSpec,omitempty"`
+	HasReconstructedSpec *bool               `json:"hasReconstructedSpec,omitempty"`
+	Id                   *externalRef0.ApiID `json:"id,omitempty"`
+
+	// API name
+	Name *string `json:"name,omitempty"`
+	Port *int    `json:"port,omitempty"`
+}
+
 // AuthorizationModel defines model for AuthorizationModel.
 type AuthorizationModel struct {
 	Learning   bool                                       `json:"learning"`
@@ -61,6 +75,21 @@ type AuthorizationModelNotification struct {
 // Base Notification all APIClarity notifications must extend
 type BaseNotification struct {
 	NotificationType string `json:"notificationType"`
+}
+
+// NewDiscoveredAPINotification defines model for NewDiscoveredAPINotification.
+type NewDiscoveredAPINotification struct {
+	// String representing the entity which created this API. APICLARITY means it has been created by APIClarity on first trace
+	CreatedBy            *string             `json:"createdBy,omitempty"`
+	DestinationNamespace *string             `json:"destinationNamespace,omitempty"`
+	HasProvidedSpec      *bool               `json:"hasProvidedSpec,omitempty"`
+	HasReconstructedSpec *bool               `json:"hasReconstructedSpec,omitempty"`
+	Id                   *externalRef0.ApiID `json:"id,omitempty"`
+
+	// API name
+	Name             *string `json:"name,omitempty"`
+	NotificationType string  `json:"notificationType"`
+	Port             *int    `json:"port,omitempty"`
 }
 
 // Describes the progress of an ongoing test
@@ -205,6 +234,19 @@ func (t *APIClarityNotification) FromTestReportNotification(v TestReportNotifica
 	return err
 }
 
+func (t APIClarityNotification) AsNewDiscoveredAPINotification() (NewDiscoveredAPINotification, error) {
+	var body NewDiscoveredAPINotification
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+func (t *APIClarityNotification) FromNewDiscoveredAPINotification(v NewDiscoveredAPINotification) error {
+	v.NotificationType = "NewDiscoveredAPINotification"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
 func (t APIClarityNotification) Discriminator() (string, error) {
 	var discriminator struct {
 		Discriminator string `json:"notificationType"`
@@ -223,6 +265,8 @@ func (t APIClarityNotification) ValueByDiscriminator() (interface{}, error) {
 		return t.AsApiFindingsNotification()
 	case "AuthorizationModelNotification":
 		return t.AsAuthorizationModelNotification()
+	case "NewDiscoveredAPINotification":
+		return t.AsNewDiscoveredAPINotification()
 	case "SpecDiffsNotification":
 		return t.AsSpecDiffsNotification()
 	case "TestProgressNotification":
@@ -673,24 +717,27 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/8RXS4/bNhD+KwTbo2A7adGDb062AXxI1qh9C3zgSiOZgfgoOXLiNfzfCz70sCQ/dptt",
-	"b7Y0j4/ffDNDHWmqhFYSJFo6P1Kb7kAw/3OxWn4smeF4+KKQ5zxlyJV0bzJuU8MFlwyVcQ8E05rLwntp",
-	"/onLjMvCnrvRX6ZtqmnMM71kntBFhTtl+LP//1llUN4V77pXQtca0gee53ehGzdO6AYsrowqDNi74ly0",
-	"D6H+Aq0M3htoxPqUUG2UBoOHL0wAnVPZeb05aHAmSsJjTudfj/RXA/lLK3JKbvhdZ/6W+zjVt7wuEnuP",
-	"4xiR21PihF8z4NUOTu06lmVBCqMqTVRO8tqoYZ+D9+AIYtS15BZ7no1tRDuZOLhCyanSIJnmkwMT5Tjj",
-	"DU5XXXRVnlNmDDvQU/tAPX2DFJ3FxdY8UlaWd0jjA7PwMk10mAzUDkTisp+zVwIzMk6TeIYnpUpgXufO",
-	"0nufM92yV5TqiZUNewXIKwwO4DzW4YeUJtRqSH0zvTrhuo7gCmTg74obyOj8axv67IRJS8Z2rKA3RuTb",
-	"1XVYRl/eQaBBDzgL0jUhrCxJu2pId3BZIiqLBH4gyGzQZYMR1+rFovFd0SN54DFG6nqnDHbnyvAQD/7f",
-	"E1iCOyA62rnGZpIoWSguC4JgcYCZab58eGW3e9cw6S/gWnWQOGQRgmA/uKgEnb+bzRIquAz/ZglFjiU0",
-	"B9JxJUVKuEQowHjhIzOIXMAw54YLsMiErpN62x6CXBnBMMT843faJl57Yx95mLffIg2IDgfbTixXOOIq",
-	"Rxoiwoin18ocTQYH64Rrovz8Yu54sQOLa9iDk//rojXe/1upfF6s/sUo/lQ9P3NZrH2YP2Ul2qCfwVpW",
-	"jBwoviC5MiSYkgyQ8dImhLtmPJzjdwYi+kTD9iz1zEgosuJnLJd4oiCeDQuhI5gNK6y/DdCRxX1J9JHi",
-	"cclfUXp9sxqu2qx+/Mr1uVqGwH3UIe72Gpj/aFO1h/cL6vLF/e0QDPZJg2Ts3v/2OKJSTtuTKxuXufKb",
-	"M0rqozJAHherpe+qzmLufbfswdjQhe8ms3gxc4qhc/rbZDZ576Ylw51X17S7eKdHPzdPXo3K+snbXHmW",
-	"mVtjyp6REoali2eYAARjPTvcJXc5aEJl+Oph0bLVIpoKkvhV6zINx1t/6WyDO1j8oDI/kFMlESSGka/L",
-	"+hzfbKhXG/zGVXjsa9rX4Hyq9Yg+P4tvNKuVtKGD389mL4LYvyANsq+rNPUideO3EoKZQ7hZ7HkGBBVZ",
-	"aJ5GSdSfM4Z9J1zqCr1mGCn4HqTTDlk+EGatSjlDyMh3jrvmNdbbKKCwYPZ1ZStT0jmdOon+EwAA//+L",
-	"diYroBAAAA==",
+	"H4sIAAAAAAAC/8RYwY7bOA9+FUH/fzSStLvYQ25pZwsE2HaCSS6LIgfFpm0WtqSV6EwzQd59IVl2nNjJ",
+	"ZKad7i22SYr8SH6ksuexKrWSIMny6Z7bOIdS+J+zxfxjIQzS7osiTDEWhEq6Lwna2GCJUpAy7kUptEaZ",
+	"eS2Nn1AmKDN7qsb/Nz4eNQ7njC+JR3xWUa4MPvnnzyqB4iZ717Ui/gUe79DGagsGktlifovRqzoRX2qI",
+	"7zBNbwp4WDjiK7C0MCozYG+yc1G+NvUAWhm61dCA9CHi2igNhnZfRAl8ymXn82qnwYkoCfcpn37d8/8b",
+	"SF+a5EP0jN71ZD6nPgz1c1oXgb1FcRDI62pXi+uwPkSuERv4fPeB6z4dcjpjmVGVZiplaSPUpg7BayBB",
+	"OahaoKUzzVY2+DwaOadLJcdKgxQaRztRFsPpav10pUGuRKZcGCN2/HB8oTbfICYncZEq9lwUxQ119UFY",
+	"eFlBdZCsodU4l6lyR55CFhsQBMmHXQ1bKqqCHGSL+ce/Zg/z1d88OkNzSQZlxgxoAxYkuQfKgbmftGOP",
+	"OcY5C2YZ5WjZbDEfsaNFVoKQliGxXFi2AZCt+GbHjmzMlGQpGkuMjIiBt8ha74FDNgFLjp1RSde8Vju5",
+	"6b4vmAu7MGqLCSSuW06CTUVhoTW+UaoAIYPSA8RKWjJVTC/RxOSVlaVxfucMSE9FvUJezJn/MgCF68dO",
+	"6CgJMjAXCrLHN/3CKEAYGWZdP0An6bVP++4YcVaojSjaiDOQV6LuuXPfmO83WMSthtjz8qsPXDYWHDoG",
+	"/qnQQMKnX4+mTyKMjmCsb0LzV3V5P42+2XuGeoXkJFhXhImi6LZedwZaVlaWGHwnkEmPc3vTst9+ZyD3",
+	"NIZAvb6+vB2kgSc9jstcGeqOyT6Qd/5pA9ZToA5ybtQIyZTMlGdHsNTDTfhW/zGW0Bf9WnQ8cZ4FF0rx",
+	"Hcuq5NN3k0nES5T10yTihFRAG5AOG9Y5mUTckjBEOMROKyzBkih1c6iXPfMgVaYUVNv843d+PHjphb3l",
+	"aIjETtq0daKDwbpjyyWOucyxFoh6Y+EDpdamOYj0AuuYa638/GTmmOVgaQlbcC34Omut9n+WKn8uVT8w",
+	"Dj5VT08os6U386esyqPRz2CtyAYCCh9YqgyrRVkCJLCwEUPXjLtT/51AGXSC4NBQJZH9jAEXIqqLZyVq",
+	"08GZlcis30/5wCp5qegDxMMlf6XSm4tCf9wnzetXjvDFvDZ87nVtd33NmV9E7cfgPblfvoe+nQe9edJ6",
+	"MnSNfXs/QqUc1geXNgwXhKakPioD7N7tnK6rOsvB2TV8C8bWXfhuNAnLoasYPuW/jSaj944tBeW+usbd",
+	"4T/ee948+GpU1jNvu3bNEzfGlD0BpSZLZ8+IEgiM9eigO9ydwZvNOTBytxbJVBCF/33cSX16Ox8661od",
+	"LH1QiSfkWEkCSTXl66KJ45ut83U0/szlbOj/Jp+DU1Y7A/o0Ft9oVitp6w5+P5m8yMXzJa13+rKKY1+k",
+	"jn6rshRmV28W7hrFSLGZxjiURHPBNuKRodQV+ZoRLMMtSFc7bH7HhLUqRn/Re0TK28/UTKPaCwtm22S2",
+	"MgWf8rEr0X8DAAD//8oNqlnCEwAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

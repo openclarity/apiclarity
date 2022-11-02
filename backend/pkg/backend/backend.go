@@ -222,6 +222,7 @@ func Run() {
 		ModulesManager:        modulesWrapper,
 		SamplingManager:       samplingManager,
 		Features:              features,
+		Notifier:              notifier,
 	}
 	restServer, err := rest.CreateRESTServer(serverConfig)
 	if err != nil {

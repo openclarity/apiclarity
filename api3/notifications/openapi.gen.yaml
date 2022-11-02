@@ -8,6 +8,7 @@ components:
           SpecDiffsNotification: '#/components/schemas/SpecDiffsNotification'
           TestProgressNotification: '#/components/schemas/TestProgressNotification'
           TestReportNotification: '#/components/schemas/TestReportNotification'
+          NewDiscoveredAPINotification: '#/components/schemas/NewDiscoveredAPINotification'
         propertyName: notificationType
       oneOf:
       - $ref: '#/components/schemas/ApiFindingsNotification'
@@ -15,6 +16,7 @@ components:
       - $ref: '#/components/schemas/SpecDiffsNotification'
       - $ref: '#/components/schemas/TestProgressNotification'
       - $ref: '#/components/schemas/TestReportNotification'
+      - $ref: '#/components/schemas/NewDiscoveredAPINotification'
     APIFindings:
       description: A group of findings
       properties:
@@ -104,6 +106,28 @@ components:
       - status
       title: Short Test Report
       type: object
+    ApiInfo:
+      type: 'object'
+      properties:
+        id:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+        name:
+          description: 'API name'
+          type: 'string'
+        port:
+          type: 'integer'
+        hasReconstructedSpec:
+          type: 'boolean'
+          default: false
+        hasProvidedSpec:
+          type: 'boolean'
+          default: false
+        destinationNamespace:
+          type: 'string'
+        createdBy:
+          description: 'String representing the entity which created this API. APICLARITY means it has been created by APIClarity on first trace'
+          type: 'string'
+          default: 'APICLARITY'
     SpecDiffs:
       properties:
         diffs:
@@ -123,6 +147,10 @@ components:
       allOf:
       - $ref: '#/components/schemas/BaseNotification'
       - $ref: '#/components/schemas/ShortTestReport'
+    NewDiscoveredAPINotification:
+      allOf:
+      - $ref: '#/components/schemas/BaseNotification'
+      - $ref: '#/components/schemas/ApiInfo'
 info:
   title: Core OAPI for APIClarity Notification
   version: "1.0"

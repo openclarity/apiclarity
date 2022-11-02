@@ -23,12 +23,14 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/api3/notifications"
+
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 )
 
 func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDiscoveredAPIsParams) middleware.Responder {
-	log.Debugf("PostControlNewDiscoveredAPIs controller was invoked")
+	log.Infof("PostControlNewDiscoveredAPIs controller was invoked")
 
 	// Check the token and retreive the corresponding trace source
 	token := []byte("") // FIXME: get the token from the http header
@@ -66,7 +68,36 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 		if created {
 			log.Infof("New API '%s' managed by source '%v' was added to inventory", h, traceSourceID)
 			_ = s.speculator.InitSpec(host, strconv.Itoa(port))
+
+			if s.notifier != nil {
+				apiID := int64(apiInfo.ID)
+				port := int(apiInfo.Port)
+				newDiscoveredAPINotification := notifications.NewDiscoveredAPINotification{
+					Id:                   &apiID,
+					Name:                 &apiInfo.Name,
+					Port:                 &port,
+					HasReconstructedSpec: &apiInfo.HasReconstructedSpec,
+					HasProvidedSpec:      &apiInfo.HasProvidedSpec,
+					DestinationNamespace: &apiInfo.DestinationNamespace,
+					CreatedBy:            &apiInfo.CreatedBy,
+				}
+				notification := notifications.APIClarityNotification{}
+				err := notification.FromNewDiscoveredAPINotification(newDiscoveredAPINotification)
+				if err != nil {
+					log.Error("failed to create 'NewDiscoveredAPI' notification, err=(%v)", err)
+				} else {
+					log.Infof("will send notification 'NewDiscoveredAPI' with (%v)", notification)
+					log.Infof("s.notifier (%v)", s.notifier)
+					err = s.notifier.Notify(apiInfo.ID, notification)
+					if err != nil {
+						log.Error("failed to send 'NewDiscoveredAPI' notification, err=(%v)", err)
+					} else {
+						log.Infof("notification 'NewDiscoveredAPI' successfully sent (%v)", notification)
+					}
+				}
+			}
 		}
+
 	}
 
 	return operations.NewPostControlNewDiscoveredAPIsOK()
