@@ -45,6 +45,7 @@ func main() {
 	viper.SetDefault(config.HTTPTracesPort, "9000")
 	viper.SetDefault(config.HTTPTracesTLSPort, "9443")
 	viper.SetDefault(config.HTTPTraceSamplingManagerPort, "9990")
+	viper.SetDefault(config.HTTPSTraceSamplingManagerPort, "9943")
 	viper.SetDefault(config.GRPCTraceSamplingManagerPort, "9991")
 	viper.SetDefault(config.HostToTraceSecretName, "hosts-to-trace")
 	viper.SetDefault(config.HostToTraceSecretNamespace, os.Getenv("POD_NAMESPACE"))
