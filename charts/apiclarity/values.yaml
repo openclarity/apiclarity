@@ -242,7 +242,7 @@ APIClarityRuntimeFuzzing:
   docker:
     ## Fuzzer docker image to load
     ##
-    image: gcr.io/eticloud/k8sec/scn-dast:0f7bf51435d8ae2d37cc8f573dca36323efaff37
+    image: gcr.io/eticloud/k8sec/scn-dast:f425b0aefe272d6707649c0a9845eabceade7f91
 
   ## Fuzzing methods (scn-fuzzer, restler, crud). It is a comma separated list.
   ##
