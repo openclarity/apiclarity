@@ -11,7 +11,7 @@ export {
 	IconTemplates
 }
 
-const Icon = ({name, className, onClick, disabled, style={}}) => {
+const Icon = ({ name, className, onClick, disabled, style = {} }) => {
 	if (!Object.values(ICON_NAMES).includes(name)) {
 		console.error(`Icon name '${name}' does not exist`);
 	}
@@ -23,9 +23,9 @@ const Icon = ({name, className, onClick, disabled, style={}}) => {
 			className={classnames(
 				"icon",
 				`icon-${name}`,
-				{[className]: !isEmpty(className)},
-				{clickable: !!onClick && !disabled},
-				{disabled}
+				{ [className]: !isEmpty(className) },
+				{ clickable: !!onClick && !disabled },
+				{ disabled }
 			)}
 			onClick={event => !disabled && !!onClick ? onClick(event) : undefined}
 			style={style}

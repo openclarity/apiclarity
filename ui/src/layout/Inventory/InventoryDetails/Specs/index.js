@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useHistory, useRouteMatch, useLocation } from 'react-router-dom';
 import classnames from 'classnames';
 import { isEmpty, isNull } from 'lodash';
-import { useNotificationDispatch, showNotification } from 'context/NotificationProvider'; 
+import { useNotificationDispatch, showNotification } from 'context/NotificationProvider';
 import { useFetch, FETCH_METHODS, usePrevious } from 'hooks';
 import ListDisplay from 'components/ListDisplay';
 import Button from 'components/Button';
@@ -19,33 +19,33 @@ import emptySelectImage from 'utils/images/select.svg';
 
 import './specs.scss';
 
-const NotSelected = ({title}) => (
+const NotSelected = ({ title }) => (
     <div className="not-selected-wrapper">
         <div className="not-selected-title">{title}</div>
         <img src={emptySelectImage} alt="no tag selected" />
     </div>
 );
 
-const BackHeader = ({title, onBack}) => (
+const BackHeader = ({ title, onBack }) => (
     <div className="selected-back-header">
         <Arrow name={ARROW_NAMES.LEFT} onClick={onBack} />
         <div>{title}</div>
     </div>
 );
 
-const MethodTitle = ({method, path}) => (
+const MethodTitle = ({ method, path }) => (
     <div className="method-item-title"><MethodTag method={method} /><span>{path}</span></div>
 );
 
-const SelectedMethodDisplay = ({method, path, pathId, specType, inventoryName, onBack}) => (
+const SelectedMethodDisplay = ({ method, path, pathId, specType, inventoryName, onBack }) => (
     <div className="selected-method-wrapper">
         <BackHeader title={<MethodTitle method={method} path={path} />} onBack={onBack} />
         <MethodHitCount method={method} pathId={pathId} spec={inventoryName} specType={specType} />
     </div>
 )
 
-const SelectedTagDisplay = ({onBack, data, inventoryName, specType}) => {
-    const {name, methodAndPathList} = data;
+const SelectedTagDisplay = ({ onBack, data, inventoryName, specType }) => {
+    const { name, methodAndPathList } = data;
 
     const [selectedMethodData, setSelectedMethodData] = useState(null);
 
@@ -61,8 +61,8 @@ const SelectedTagDisplay = ({onBack, data, inventoryName, specType}) => {
             <div className="tag-selected-methods-list">
                 <div className="methods-list-title">Methods list</div>
                 <ListDisplay
-                    items={methodAndPathList.map(item => ({...item, id: `${item.method}${item.path}`}))}
-                    itemDisplay={({method, path}) => <MethodTitle method={method} path={path} />}
+                    items={methodAndPathList.map(item => ({ ...item, id: `${item.method}${item.path}` }))}
+                    itemDisplay={({ method, path }) => <MethodTitle method={method} path={path} />}
                     selectedId={!!selectedMethodData ? selectedMethodData.id : null}
                     onSelect={selected => setSelectedMethodData(selected)}
                 />
@@ -71,17 +71,17 @@ const SelectedTagDisplay = ({onBack, data, inventoryName, specType}) => {
     );
 }
 
-const SpecDisplay = ({tags, notSelectedTitle, inventoryName, specType}) => {
+const SpecDisplay = ({ tags, notSelectedTitle, inventoryName, specType }) => {
     const [selectedTagData, setSelectedTagData] = useState(null);
 
-    const tagItems = tags.map(tag => ({id: tag.name, ...tag}));
+    const tagItems = tags.map(tag => ({ id: tag.name, ...tag }));
 
     return (
         <div className="spec-display-wrapper">
             <div className="select-pane">
                 <ListDisplay
                     items={tagItems}
-                    itemDisplay={({name}) => <span>{name}</span>}
+                    itemDisplay={({ name }) => <span>{name}</span>}
                     selectedId={!!selectedTagData ? selectedTagData.id : null}
                     onSelect={selected => setSelectedTagData(selected)}
                 />
@@ -94,13 +94,13 @@ const SpecDisplay = ({tags, notSelectedTitle, inventoryName, specType}) => {
     )
 }
 
-const ViewInSwaggerLink = ({inventoryId, specType}) => (
+const ViewInSwaggerLink = ({ inventoryId, specType }) => (
     <a href={`${window.location.origin}/swagger?apiId=${inventoryId}&specType=${specType}`} target="_blank" rel="noopener noreferrer">
         see on Swagger
     </a>
 );
 
-const ProvidedSpecDisplay = ({specData, inventoryId, inventoryName, refreshData, specType, onReset}) => {
+const ProvidedSpecDisplay = ({ specData, inventoryId, inventoryName, refreshData, specType, onReset }) => {
     const [showUploadSpec, setShowUploadSpec] = useState(!specData);
 
     if (showUploadSpec) {
@@ -113,20 +113,20 @@ const ProvidedSpecDisplay = ({specData, inventoryId, inventoryName, refreshData,
         <SpecDisplay
             inventoryName={inventoryName}
             tags={specData.tags || []}
-            notSelectedTitle={<span>Select a tag to see details, <ViewInSwaggerLink inventoryId={inventoryId} specType="provided" />,<br /><Button secondary onClick={() => setShowUploadSpec(true)}>replace</Button> or <Button secondary onClick={onReset}>reset spec</Button></span>}
+            notSelectedTitle={<span>Select a tag to see details, <ViewInSwaggerLink inventoryId={inventoryId} specType="provided" />,<br /><Button tertiary onClick={() => setShowUploadSpec(true)}>replace</Button> or <Button tertiary onClick={onReset}>reset spec</Button></span>}
             specType={specType}
         />
     )
 }
 
-const ReconstructedSpecDisplay = ({specData, inventoryId, inventoryName, specType, onReset}) => {
+const ReconstructedSpecDisplay = ({ specData, inventoryId, inventoryName, specType, onReset }) => {
     const history = useHistory();
-    const {url} = useRouteMatch();
+    const { url } = useRouteMatch();
 
     if (!specData) {
         return (
             <NotSelected
-                title={<span><Button secondary onClick={() => history.push({pathname: "/reviewer", query: {inventoryId, inventoryName, backUrl: url}})}>Review</Button> reconstructed spec</span>}
+                title={<span><Button tertiary onClick={() => history.push({ pathname: "/reviewer", query: { inventoryId, inventoryName, backUrl: url } })}>Review</Button> reconstructed spec</span>}
             />
         )
     }
@@ -135,7 +135,7 @@ const ReconstructedSpecDisplay = ({specData, inventoryId, inventoryName, specTyp
         <SpecDisplay
             inventoryName={inventoryName}
             tags={specData.tags || []}
-            notSelectedTitle={<span>Select a tag to see details,<br /><ViewInSwaggerLink inventoryId={inventoryId} specType="reconstructed" /> or <Button secondary onClick={onReset}>reset</Button></span>}
+            notSelectedTitle={<span>Select a tag to see details,<br /><ViewInSwaggerLink inventoryId={inventoryId} specType="reconstructed" /> or <Button tertiary onClick={onReset}>reset</Button></span>}
             specType={specType}
         />
     )
@@ -160,30 +160,30 @@ export const SPEC_TAB_ITEMS = {
     }
 }
 
-const InnerTabs = ({selected, items, onSelect}) => (
+const InnerTabs = ({ selected, items, onSelect }) => (
     <div className="spec-inner-tabs-wrapper">
         {
-            items.map(({value, label}) => (
-                <div key={value} className={classnames("inner-tab-item", {selected: selected === value})} onClick={() => onSelect(value)}>{label}</div>
+            items.map(({ value, label }) => (
+                <div key={value} className={classnames("inner-tab-item", { selected: selected === value })} onClick={() => onSelect(value)}>{label}</div>
             ))
         }
     </div>
 );
 
-const Specs = ({inventoryId, inventoryName}) => {
-    const {query} = useLocation();
-    const {inititalSelectedTab=SPEC_TAB_ITEMS.PROVIDED.value} = query || {};
-    
+const Specs = ({ inventoryId, inventoryName }) => {
+    const { query } = useLocation();
+    const { inititalSelectedTab = SPEC_TAB_ITEMS.PROVIDED.value } = query || {};
+
     const [selectedTab, setSelectedTab] = useState(inititalSelectedTab);
-    const {component: TabContentComponent, dataKey: specDataKey, value: type} = SPEC_TAB_ITEMS[selectedTab];
+    const { component: TabContentComponent, dataKey: specDataKey, value: type } = SPEC_TAB_ITEMS[selectedTab];
 
     const specUrl = `apiInventory/${inventoryId}/specs`;
 
-    const [{loading, data, error}, fetchSpecsData] = useFetch(specUrl);
+    const [{ loading, data, error }, fetchSpecsData] = useFetch(specUrl);
 
     const [resetSpecType, setResetSpecType] = useState(null);
     const closeResetConfimrationodal = () => setResetSpecType(null);
-    const {resetUrlSuffix, resetConfirmationText, label: resetTitle} = SPEC_TAB_ITEMS[resetSpecType] || {};
+    const { resetUrlSuffix, resetConfirmationText, label: resetTitle } = SPEC_TAB_ITEMS[resetSpecType] || {};
 
     const notificationDispatch = useNotificationDispatch();
     const showResetNotification = useCallback(() => showNotification(notificationDispatch, {
@@ -191,7 +191,7 @@ const Specs = ({inventoryId, inventoryName}) => {
     }), [resetTitle, notificationDispatch]);
 
 
-    const [{loading: resetting, error: resetError}, resetSpecData] = useFetch(specUrl, {loadOnMount: false});
+    const [{ loading: resetting, error: resetError }, resetSpecData] = useFetch(specUrl, { loadOnMount: false });
     const prevResetting = usePrevious(resetting);
     const doSpecReset = () => resetSpecData({
         formatUrl: url => `${url}/${resetUrlSuffix}`,
@@ -213,7 +213,7 @@ const Specs = ({inventoryId, inventoryName}) => {
     return (
         <React.Fragment>
             <div className="inventory-details-spec-wrapper">
-                {(loading || resetting) ? <Loader /> : 
+                {(loading || resetting) ? <Loader /> :
                     <React.Fragment>
                         <InnerTabs selected={selectedTab} items={Object.values(SPEC_TAB_ITEMS)} onSelect={selected => setSelectedTab(selected)} />
                         <TabContentComponent
@@ -235,7 +235,7 @@ const Specs = ({inventoryId, inventoryName}) => {
                     height={230}
                     onDone={() => {
                         doSpecReset();
-                    }} 
+                    }}
                     doneTitle="Reset"
                 >
                     <div>{resetConfirmationText}</div>

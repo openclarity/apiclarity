@@ -4,7 +4,7 @@ import COLORS from 'utils/scss_variables.module.scss';
 
 import './toggle-button.scss';
 
-const ToggleButton = ({title, value, onChange}) => (
+const ToggleButton = ({ title, value, onChange }) => (
     <label className="toggle-button-wrapper">
         <Toggle
             inactiveLabel=""
