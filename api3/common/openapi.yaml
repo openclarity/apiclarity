@@ -178,6 +178,10 @@ components:
           default: false
         destinationNamespace:
           type: string
+        createdBy:
+          description: 'String representing the entity which created this API. APICLARITY means it has been created by APIClarity on first trace'
+          type: 'string'
+          default: 'APICLARITY'
     ApiInfoWithType:
       type: object
       allOf:
