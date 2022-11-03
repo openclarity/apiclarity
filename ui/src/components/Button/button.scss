@@ -5,49 +5,36 @@ $button-icon-size: 16px;
 .ag-button {
     border: none;
     outline: none;
-    font-weight: bold;
     background-color: transparent;
     box-sizing: border-box;
     padding: 0;
     height: 26px;
-    font-size: 12px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     white-space: nowrap;
-    
     &:disabled {
         cursor: not-allowed;
     }
     &.ag-button--primary {
-        background-color: $color-main;
-        color: $color-white;
+        font-size: 14px;
+        line-height: 16px;
+        background-color: $color-main-light;
+        color: $color-grey-black;
         border-radius: 50px;
-        text-transform: uppercase;
-        padding: 0 20px;
+        padding: 0 25px;
 
-        &:hover:not(:disabled) {
-            background-color: $color-main-dark;
-        }
         &:disabled {
             background-color: $color-grey-light;
             color: $color-grey;
         }
     }
     &.ag-button--secondary {
+        font-size: 12px;
+        line-height: 16px;
         color: $color-main;
-        border: 1px solid $color-main;
-        border-radius: 50px;
-        text-transform: uppercase;
-        padding: 0 20px;
-
-        &:hover:not(:disabled) {
-            background-color: $color-blue-light;
-        }
-        &:disabled {
-            color: $color-grey;
-            border-color: $color-grey;
-        }
+        text-decoration: underline;
+        padding: 0;
     }
     &.ag-button--tertiary {
         color: $color-main;
