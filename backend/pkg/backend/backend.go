@@ -427,22 +427,22 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 
 						//TODO: check if the parameterized path is the same as the found paths or no suspected params?
 						//If we have only ever seen the same path, count number of events
-						var sortDir = string("ASC")
+						//var sortDir = string("ASC")
 						params := operations.GetAPIEventsParams{
 							DestinationIPIs:   []string{destInfo.IP},
 							DestinationPortIs: []string{destInfo.Port},
 							MethodIs:          []string{telemetry.Request.Method},
 							PathIs:            []string{pathIs},
-							Page:              int64(0),
-							PageSize:          int64(100),
-							SortDir:           &sortDir,
-							SortKey:           "path",
 							StartTime:         strfmt.NewDateTime(),
 							EndTime:           strfmt.NewDateTime(),
+							//Page:              int64(0),
+							//PageSize:          int64(100),
+							//SortDir:           &sortDir,
+							//SortKey:           "path",
 						}
-						_, count, err = b.dbHandler.APIEventsTable().GetAPIEventsAndTotal(params)
-						log.Debugf("Found %d api events for path %s (parameterized %s) in spec %s while checking auto-approve",
-							count, pathIs, reviewPathItem.ParameterizedPath, string(specKey))
+						count, err = b.dbHandler.APIEventsTable().GetAPIEventsTotal(params)
+						log.Debugf("Found %d api events for op %s on path %s (parameterized %s) to %s:%s in spec %s while checking auto-approve",
+							count, telemetry.Request.Method, pathIs, reviewPathItem.ParameterizedPath, destInfo.IP, destInfo.Port, string(specKey))
 						if err != nil {
 							log.Errorf("Not auto-approving spec %s because we cannot get events for path %s: %v",
 								string(specKey), reviewPathItem.ParameterizedPath, err)
