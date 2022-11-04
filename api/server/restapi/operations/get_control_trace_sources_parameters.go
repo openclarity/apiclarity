@@ -12,19 +12,19 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
-// NewGetControlGatewaysParams creates a new GetControlGatewaysParams object
+// NewGetControlTraceSourcesParams creates a new GetControlTraceSourcesParams object
 //
 // There are no default values defined in the spec.
-func NewGetControlGatewaysParams() GetControlGatewaysParams {
+func NewGetControlTraceSourcesParams() GetControlTraceSourcesParams {
 
-	return GetControlGatewaysParams{}
+	return GetControlTraceSourcesParams{}
 }
 
-// GetControlGatewaysParams contains all the bound params for the get control gateways operation
+// GetControlTraceSourcesParams contains all the bound params for the get control trace sources operation
 // typically these are obtained from a http.Request
 //
-// swagger:parameters GetControlGateways
-type GetControlGatewaysParams struct {
+// swagger:parameters GetControlTraceSources
+type GetControlTraceSourcesParams struct {
 
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
@@ -33,8 +33,8 @@ type GetControlGatewaysParams struct {
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
 // for simple values it will use straight method calls.
 //
-// To ensure default values, the struct must have been initialized with NewGetControlGatewaysParams() beforehand.
-func (o *GetControlGatewaysParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
+// To ensure default values, the struct must have been initialized with NewGetControlTraceSourcesParams() beforehand.
+func (o *GetControlTraceSourcesParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
 	o.HTTPRequest = r
