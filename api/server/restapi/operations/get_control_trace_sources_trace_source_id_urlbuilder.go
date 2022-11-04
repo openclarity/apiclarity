@@ -14,9 +14,9 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// GetControlGatewaysGatewayIDURL generates an URL for the get control gateways gateway ID operation
-type GetControlGatewaysGatewayIDURL struct {
-	GatewayID int64
+// GetControlTraceSourcesTraceSourceIDURL generates an URL for the get control trace sources trace source ID operation
+type GetControlTraceSourcesTraceSourceIDURL struct {
+	TraceSourceID int64
 
 	_basePath string
 	// avoid unkeyed usage
@@ -26,7 +26,7 @@ type GetControlGatewaysGatewayIDURL struct {
 // WithBasePath sets the base path for this url builder, only required when it's different from the
 // base path specified in the swagger spec.
 // When the value of the base path is an empty string
-func (o *GetControlGatewaysGatewayIDURL) WithBasePath(bp string) *GetControlGatewaysGatewayIDURL {
+func (o *GetControlTraceSourcesTraceSourceIDURL) WithBasePath(bp string) *GetControlTraceSourcesTraceSourceIDURL {
 	o.SetBasePath(bp)
 	return o
 }
@@ -34,21 +34,21 @@ func (o *GetControlGatewaysGatewayIDURL) WithBasePath(bp string) *GetControlGate
 // SetBasePath sets the base path for this url builder, only required when it's different from the
 // base path specified in the swagger spec.
 // When the value of the base path is an empty string
-func (o *GetControlGatewaysGatewayIDURL) SetBasePath(bp string) {
+func (o *GetControlTraceSourcesTraceSourceIDURL) SetBasePath(bp string) {
 	o._basePath = bp
 }
 
 // Build a url path and query string
-func (o *GetControlGatewaysGatewayIDURL) Build() (*url.URL, error) {
+func (o *GetControlTraceSourcesTraceSourceIDURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/control/gateways/{gatewayId}"
+	var _path = "/control/traceSources/{traceSourceId}"
 
-	gatewayID := swag.FormatInt64(o.GatewayID)
-	if gatewayID != "" {
-		_path = strings.Replace(_path, "{gatewayId}", gatewayID, -1)
+	traceSourceID := swag.FormatInt64(o.TraceSourceID)
+	if traceSourceID != "" {
+		_path = strings.Replace(_path, "{traceSourceId}", traceSourceID, -1)
 	} else {
-		return nil, errors.New("gatewayId is required on GetControlGatewaysGatewayIDURL")
+		return nil, errors.New("traceSourceId is required on GetControlTraceSourcesTraceSourceIDURL")
 	}
 
 	_basePath := o._basePath
@@ -61,7 +61,7 @@ func (o *GetControlGatewaysGatewayIDURL) Build() (*url.URL, error) {
 }
 
 // Must is a helper function to panic when the url builder returns an error
-func (o *GetControlGatewaysGatewayIDURL) Must(u *url.URL, err error) *url.URL {
+func (o *GetControlTraceSourcesTraceSourceIDURL) Must(u *url.URL, err error) *url.URL {
 	if err != nil {
 		panic(err)
 	}
@@ -72,17 +72,17 @@ func (o *GetControlGatewaysGatewayIDURL) Must(u *url.URL, err error) *url.URL {
 }
 
 // String returns the string representation of the path with query string
-func (o *GetControlGatewaysGatewayIDURL) String() string {
+func (o *GetControlTraceSourcesTraceSourceIDURL) String() string {
 	return o.Must(o.Build()).String()
 }
 
 // BuildFull builds a full url with scheme, host, path and query string
-func (o *GetControlGatewaysGatewayIDURL) BuildFull(scheme, host string) (*url.URL, error) {
+func (o *GetControlTraceSourcesTraceSourceIDURL) BuildFull(scheme, host string) (*url.URL, error) {
 	if scheme == "" {
-		return nil, errors.New("scheme is required for a full url on GetControlGatewaysGatewayIDURL")
+		return nil, errors.New("scheme is required for a full url on GetControlTraceSourcesTraceSourceIDURL")
 	}
 	if host == "" {
-		return nil, errors.New("host is required for a full url on GetControlGatewaysGatewayIDURL")
+		return nil, errors.New("host is required for a full url on GetControlTraceSourcesTraceSourceIDURL")
 	}
 
 	base, err := o.Build()
@@ -96,6 +96,6 @@ func (o *GetControlGatewaysGatewayIDURL) BuildFull(scheme, host string) (*url.UR
 }
 
 // StringFull returns the string representation of a complete url
-func (o *GetControlGatewaysGatewayIDURL) StringFull(scheme, host string) string {
+func (o *GetControlTraceSourcesTraceSourceIDURL) StringFull(scheme, host string) string {
 	return o.Must(o.BuildFull(scheme, host)).String()
 }

@@ -697,108 +697,6 @@ func init() {
         }
       }
     },
-    "/control/gateways": {
-      "get": {
-        "summary": "List of configured gateways",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "type": "object",
-              "required": [
-                "gateways"
-              ],
-              "properties": {
-                "gateways": {
-                  "description": "List of gateways",
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/APIGateway"
-                  }
-                }
-              }
-            }
-          },
-          "default": {
-            "$ref": "#/responses/UnknownError"
-          }
-        }
-      },
-      "post": {
-        "summary": "Create a new gateway",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "description": "Create a new gateway",
-              "$ref": "#/definitions/APIGateway"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/APIGateway"
-            }
-          },
-          "default": {
-            "$ref": "#/responses/UnknownError"
-          }
-        }
-      }
-    },
-    "/control/gateways/{gatewayId}": {
-      "get": {
-        "summary": "Get gateway information",
-        "parameters": [
-          {
-            "$ref": "#/parameters/gatewayId"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Gateway information",
-            "schema": {
-              "$ref": "#/definitions/APIGateway"
-            }
-          },
-          "404": {
-            "description": "API Gateway not found",
-            "schema": {
-              "$ref": "#/definitions/ApiResponse"
-            }
-          },
-          "default": {
-            "$ref": "#/responses/UnknownError"
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete a gateway",
-        "parameters": [
-          {
-            "$ref": "#/parameters/gatewayId"
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Success"
-          },
-          "404": {
-            "description": "API Gateway not found",
-            "schema": {
-              "$ref": "#/definitions/ApiResponse"
-            }
-          },
-          "default": {
-            "$ref": "#/responses/UnknownError"
-          }
-        }
-      }
-    },
     "/control/newDiscoveredAPIs": {
       "post": {
         "description": "This allows a client (a gateway for example) to notify APIclarity about newly discovered APIs. If one of the APIs already exists, it is ignored.",
@@ -835,6 +733,108 @@ func init() {
             "description": "Success",
             "schema": {
               "$ref": "#/responses/Success"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/control/traceSources": {
+      "get": {
+        "summary": "List of configured trace sources",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "required": [
+                "trace_sources"
+              ],
+              "properties": {
+                "trace_sources": {
+                  "description": "List of trace sources",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/TraceSource"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new Trace Source",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "description": "Create a new Trace Source",
+              "$ref": "#/definitions/TraceSource"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/TraceSource"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/control/traceSources/{traceSourceId}": {
+      "get": {
+        "summary": "Get Trace Source information",
+        "parameters": [
+          {
+            "$ref": "#/parameters/traceSourceId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Trace Source information",
+            "schema": {
+              "$ref": "#/definitions/TraceSource"
+            }
+          },
+          "404": {
+            "description": "Trace Source not found",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a Trace Source",
+        "parameters": [
+          {
+            "$ref": "#/parameters/traceSourceId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "404": {
+            "description": "Trace Source not found",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
             }
           },
           "default": {
@@ -965,41 +965,6 @@ func init() {
           }
         }
       }
-    },
-    "APIGateway": {
-      "description": "Gateway which is externally exposing APIs",
-      "type": "object",
-      "required": [
-        "name",
-        "type"
-      ],
-      "properties": {
-        "description": {
-          "type": "string"
-        },
-        "id": {
-          "type": "integer"
-        },
-        "name": {
-          "description": "Unique name identifying a gateway",
-          "type": "string"
-        },
-        "token": {
-          "type": "string",
-          "format": "byte"
-        },
-        "type": {
-          "$ref": "#/definitions/APIGatewayType"
-        }
-      }
-    },
-    "APIGatewayType": {
-      "type": "string",
-      "enum": [
-        "TYK",
-        "KONG",
-        "APIGEEX"
-      ]
     },
     "AlertSeverityEnum": {
       "description": "Level of alert",
@@ -1452,6 +1417,41 @@ func init() {
         }
       }
     },
+    "TraceSource": {
+      "description": "A Source which is sending traces to APIClarity",
+      "type": "object",
+      "required": [
+        "name",
+        "type"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "description": "Unique name identifying a Trace Source",
+          "type": "string"
+        },
+        "token": {
+          "type": "string",
+          "format": "byte"
+        },
+        "type": {
+          "$ref": "#/definitions/TraceSourceType"
+        }
+      }
+    },
+    "TraceSourceType": {
+      "type": "string",
+      "enum": [
+        "TYK",
+        "KONG",
+        "APIGEEX"
+      ]
+    },
     "rawSpec": {
       "description": "spec in json or yaml format",
       "type": "object",
@@ -1624,13 +1624,6 @@ func init() {
       "description": "End time of the query",
       "name": "endTime",
       "in": "query",
-      "required": true
-    },
-    "gatewayId": {
-      "type": "integer",
-      "description": "Gateway ID",
-      "name": "gatewayId",
-      "in": "path",
       "required": true
     },
     "hasProvidedSpecFilter": {
@@ -1886,6 +1879,13 @@ func init() {
       "description": "less than or equal",
       "name": "statusCode[lte]",
       "in": "query"
+    },
+    "traceSourceId": {
+      "type": "integer",
+      "description": "Trace Source ID",
+      "name": "traceSourceId",
+      "in": "path",
+      "required": true
     }
   },
   "responses": {
@@ -3074,128 +3074,6 @@ func init() {
         }
       }
     },
-    "/control/gateways": {
-      "get": {
-        "summary": "List of configured gateways",
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "type": "object",
-              "required": [
-                "gateways"
-              ],
-              "properties": {
-                "gateways": {
-                  "description": "List of gateways",
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/APIGateway"
-                  }
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "unknown error",
-            "schema": {
-              "$ref": "#/definitions/ApiResponse"
-            }
-          }
-        }
-      },
-      "post": {
-        "summary": "Create a new gateway",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "description": "Create a new gateway",
-              "$ref": "#/definitions/APIGateway"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Success",
-            "schema": {
-              "$ref": "#/definitions/APIGateway"
-            }
-          },
-          "default": {
-            "description": "unknown error",
-            "schema": {
-              "$ref": "#/definitions/ApiResponse"
-            }
-          }
-        }
-      }
-    },
-    "/control/gateways/{gatewayId}": {
-      "get": {
-        "summary": "Get gateway information",
-        "parameters": [
-          {
-            "type": "integer",
-            "description": "Gateway ID",
-            "name": "gatewayId",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Gateway information",
-            "schema": {
-              "$ref": "#/definitions/APIGateway"
-            }
-          },
-          "404": {
-            "description": "API Gateway not found",
-            "schema": {
-              "$ref": "#/definitions/ApiResponse"
-            }
-          },
-          "default": {
-            "description": "unknown error",
-            "schema": {
-              "$ref": "#/definitions/ApiResponse"
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete a gateway",
-        "parameters": [
-          {
-            "type": "integer",
-            "description": "Gateway ID",
-            "name": "gatewayId",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Success"
-          },
-          "404": {
-            "description": "API Gateway not found",
-            "schema": {
-              "$ref": "#/definitions/ApiResponse"
-            }
-          },
-          "default": {
-            "description": "unknown error",
-            "schema": {
-              "$ref": "#/definitions/ApiResponse"
-            }
-          }
-        }
-      }
-    },
     "/control/newDiscoveredAPIs": {
       "post": {
         "description": "This allows a client (a gateway for example) to notify APIclarity about newly discovered APIs. If one of the APIs already exists, it is ignored.",
@@ -3235,6 +3113,128 @@ func init() {
               "schema": {
                 "$ref": "#/definitions/SuccessResponse"
               }
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/control/traceSources": {
+      "get": {
+        "summary": "List of configured trace sources",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "required": [
+                "trace_sources"
+              ],
+              "properties": {
+                "trace_sources": {
+                  "description": "List of trace sources",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/TraceSource"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new Trace Source",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "description": "Create a new Trace Source",
+              "$ref": "#/definitions/TraceSource"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/TraceSource"
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/control/traceSources/{traceSourceId}": {
+      "get": {
+        "summary": "Get Trace Source information",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "Trace Source ID",
+            "name": "traceSourceId",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Trace Source information",
+            "schema": {
+              "$ref": "#/definitions/TraceSource"
+            }
+          },
+          "404": {
+            "description": "Trace Source not found",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a Trace Source",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "Trace Source ID",
+            "name": "traceSourceId",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "404": {
+            "description": "Trace Source not found",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
             }
           },
           "default": {
@@ -3387,41 +3387,6 @@ func init() {
           }
         }
       }
-    },
-    "APIGateway": {
-      "description": "Gateway which is externally exposing APIs",
-      "type": "object",
-      "required": [
-        "name",
-        "type"
-      ],
-      "properties": {
-        "description": {
-          "type": "string"
-        },
-        "id": {
-          "type": "integer"
-        },
-        "name": {
-          "description": "Unique name identifying a gateway",
-          "type": "string"
-        },
-        "token": {
-          "type": "string",
-          "format": "byte"
-        },
-        "type": {
-          "$ref": "#/definitions/APIGatewayType"
-        }
-      }
-    },
-    "APIGatewayType": {
-      "type": "string",
-      "enum": [
-        "TYK",
-        "KONG",
-        "APIGEEX"
-      ]
     },
     "AlertSeverityEnum": {
       "description": "Level of alert",
@@ -3874,6 +3839,41 @@ func init() {
         }
       }
     },
+    "TraceSource": {
+      "description": "A Source which is sending traces to APIClarity",
+      "type": "object",
+      "required": [
+        "name",
+        "type"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "description": "Unique name identifying a Trace Source",
+          "type": "string"
+        },
+        "token": {
+          "type": "string",
+          "format": "byte"
+        },
+        "type": {
+          "$ref": "#/definitions/TraceSourceType"
+        }
+      }
+    },
+    "TraceSourceType": {
+      "type": "string",
+      "enum": [
+        "TYK",
+        "KONG",
+        "APIGEEX"
+      ]
+    },
     "rawSpec": {
       "description": "spec in json or yaml format",
       "type": "object",
@@ -4046,13 +4046,6 @@ func init() {
       "description": "End time of the query",
       "name": "endTime",
       "in": "query",
-      "required": true
-    },
-    "gatewayId": {
-      "type": "integer",
-      "description": "Gateway ID",
-      "name": "gatewayId",
-      "in": "path",
       "required": true
     },
     "hasProvidedSpecFilter": {
@@ -4308,6 +4301,13 @@ func init() {
       "description": "less than or equal",
       "name": "statusCode[lte]",
       "in": "query"
+    },
+    "traceSourceId": {
+      "type": "integer",
+      "description": "Trace Source ID",
+      "name": "traceSourceId",
+      "in": "path",
+      "required": true
     }
   },
   "responses": {

@@ -14,10 +14,10 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// APIGateway Gateway which is externally exposing APIs
+// TraceSource A Source which is sending traces to APIClarity
 //
-// swagger:model APIGateway
-type APIGateway struct {
+// swagger:model TraceSource
+type TraceSource struct {
 
 	// description
 	Description string `json:"description,omitempty"`
@@ -25,7 +25,7 @@ type APIGateway struct {
 	// id
 	ID int64 `json:"id,omitempty"`
 
-	// Unique name identifying a gateway
+	// Unique name identifying a Trace Source
 	// Required: true
 	Name *string `json:"name"`
 
@@ -35,11 +35,11 @@ type APIGateway struct {
 
 	// type
 	// Required: true
-	Type *APIGatewayType `json:"type"`
+	Type *TraceSourceType `json:"type"`
 }
 
-// Validate validates this API gateway
-func (m *APIGateway) Validate(formats strfmt.Registry) error {
+// Validate validates this trace source
+func (m *TraceSource) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateName(formats); err != nil {
@@ -56,7 +56,7 @@ func (m *APIGateway) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *APIGateway) validateName(formats strfmt.Registry) error {
+func (m *TraceSource) validateName(formats strfmt.Registry) error {
 
 	if err := validate.Required("name", "body", m.Name); err != nil {
 		return err
@@ -65,7 +65,7 @@ func (m *APIGateway) validateName(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *APIGateway) validateType(formats strfmt.Registry) error {
+func (m *TraceSource) validateType(formats strfmt.Registry) error {
 
 	if err := validate.Required("type", "body", m.Type); err != nil {
 		return err
@@ -87,8 +87,8 @@ func (m *APIGateway) validateType(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validate this API gateway based on the context it is used
-func (m *APIGateway) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this trace source based on the context it is used
+func (m *TraceSource) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateType(ctx, formats); err != nil {
@@ -101,7 +101,7 @@ func (m *APIGateway) ContextValidate(ctx context.Context, formats strfmt.Registr
 	return nil
 }
 
-func (m *APIGateway) contextValidateType(ctx context.Context, formats strfmt.Registry) error {
+func (m *TraceSource) contextValidateType(ctx context.Context, formats strfmt.Registry) error {
 
 	if m.Type != nil {
 		if err := m.Type.ContextValidate(ctx, formats); err != nil {
@@ -116,7 +116,7 @@ func (m *APIGateway) contextValidateType(ctx context.Context, formats strfmt.Reg
 }
 
 // MarshalBinary interface implementation
-func (m *APIGateway) MarshalBinary() ([]byte, error) {
+func (m *TraceSource) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -124,8 +124,8 @@ func (m *APIGateway) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *APIGateway) UnmarshalBinary(b []byte) error {
-	var res APIGateway
+func (m *TraceSource) UnmarshalBinary(b []byte) error {
+	var res TraceSource
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

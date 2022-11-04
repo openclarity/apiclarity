@@ -163,20 +163,20 @@ func CreateRESTServer(config *ServerConfig) (*Server, error) {
 		return s.PostControlNewDiscoveredAPIs(params)
 	})
 
-	api.GetControlGatewaysHandler = operations.GetControlGatewaysHandlerFunc(func(params operations.GetControlGatewaysParams) middleware.Responder {
-		return s.GetControlAPIGateways(params)
+	api.GetControlTraceSourcesHandler = operations.GetControlTraceSourcesHandlerFunc(func(params operations.GetControlTraceSourcesParams) middleware.Responder {
+		return s.GetControlTraceSources(params)
 	})
 
-	api.PostControlGatewaysHandler = operations.PostControlGatewaysHandlerFunc(func(params operations.PostControlGatewaysParams) middleware.Responder {
-		return s.PostControlAPIGateways(params)
+	api.PostControlTraceSourcesHandler = operations.PostControlTraceSourcesHandlerFunc(func(params operations.PostControlTraceSourcesParams) middleware.Responder {
+		return s.PostControlTraceSources(params)
 	})
 
-	api.GetControlGatewaysGatewayIDHandler = operations.GetControlGatewaysGatewayIDHandlerFunc(func(params operations.GetControlGatewaysGatewayIDParams) middleware.Responder {
-		return s.GetControlAPIGatewaysGatewayID(params)
+	api.GetControlTraceSourcesTraceSourceIDHandler = operations.GetControlTraceSourcesTraceSourceIDHandlerFunc(func(params operations.GetControlTraceSourcesTraceSourceIDParams) middleware.Responder {
+		return s.GetControlTraceSourcesTraceSourceID(params)
 	})
 
-	api.DeleteControlGatewaysGatewayIDHandler = operations.DeleteControlGatewaysGatewayIDHandlerFunc(func(params operations.DeleteControlGatewaysGatewayIDParams) middleware.Responder {
-		return s.DeleteControlAPIGatewaysGatewayID(params)
+	api.DeleteControlTraceSourcesTraceSourceIDHandler = operations.DeleteControlTraceSourcesTraceSourceIDHandlerFunc(func(params operations.DeleteControlTraceSourcesTraceSourceIDParams) middleware.Responder {
+		return s.DeleteControlTraceSourcesTraceSourceID(params)
 	})
 
 	server := restapi.NewServer(api)
