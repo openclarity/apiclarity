@@ -35,13 +35,6 @@ const (
 	Traceanalyzer     APIClarityFeatureEnum = "traceanalyzer"
 )
 
-// Defines values for APIGatewayType.
-const (
-	APIGEEX APIGatewayType = "APIGEEX"
-	KONG    APIGatewayType = "KONG"
-	TYK     APIGatewayType = "TYK"
-)
-
 // Defines values for AuthorizationTypeEnum.
 const (
 	APITOKEN    AuthorizationTypeEnum = "APITOKEN"
@@ -122,6 +115,13 @@ const (
 	QUICK   TestInputDepthEnum = "QUICK"
 )
 
+// Defines values for TraceSourceType.
+const (
+	APIGEEX TraceSourceType = "APIGEEX"
+	KONG    TraceSourceType = "KONG"
+	TYK     TraceSourceType = "TYK"
+)
+
 // Defines values for SortDir.
 const (
 	SortDirASC  SortDir = "ASC"
@@ -173,20 +173,6 @@ type APIEventAnnotations struct {
 	MismatchedScopes     bool          `json:"mismatchedScopes"`
 	SourceK8sObject      *K8sObjectRef `json:"sourceK8sObject,omitempty"`
 }
-
-// Gateway which is externally exposing APIs
-type APIGateway struct {
-	Description *string `json:"description,omitempty"`
-	Id          *int    `json:"id,omitempty"`
-
-	// Unique name identifying a gateway
-	Name  string         `json:"name"`
-	Token *[]byte        `json:"token,omitempty"`
-	Type  APIGatewayType `json:"type"`
-}
-
-// APIGatewayType defines model for APIGatewayType.
-type APIGatewayType string
 
 // Annotation defines model for Annotation.
 type Annotation struct {
@@ -590,6 +576,20 @@ type Tests struct {
 	Total *int `json:"total,omitempty"`
 }
 
+// A Source which is sending traces to APIClarity
+type TraceSource struct {
+	Description *string `json:"description,omitempty"`
+	Id          *int    `json:"id,omitempty"`
+
+	// Unique name identifying a Trace Source
+	Name  string          `json:"name"`
+	Token *[]byte         `json:"token,omitempty"`
+	Type  TraceSourceType `json:"type"`
+}
+
+// TraceSourceType defines model for TraceSourceType.
+type TraceSourceType string
+
 // Version defines model for Version.
 type Version struct {
 	Version string `json:"version"`
@@ -666,9 +666,6 @@ type DestinationPortIsNotFilter = []string
 
 // EndTime defines model for endTime.
 type EndTime = time.Time
-
-// GatewayId defines model for gatewayId.
-type GatewayId = int
 
 // HasProvidedSpecFilter defines model for hasProvidedSpecFilter.
 type HasProvidedSpecFilter = bool
@@ -771,6 +768,9 @@ type StatusCodeIsNotFilter = []string
 
 // StatusCodeLteFilter defines model for statusCodeLteFilter.
 type StatusCodeLteFilter = string
+
+// TraceSourceId defines model for traceSourceId.
+type TraceSourceId = int
 
 // An object that is returned in all cases of failures
 type UnknownError = externalRef0.ApiResponse
@@ -922,17 +922,14 @@ type GetApiUsageHitCountParams struct {
 	SpecContains         *SpecContainsFilter         `form:"spec[contains],omitempty" json:"spec[contains],omitempty"`
 }
 
-// PostControlGatewaysJSONBody defines parameters for PostControlGateways.
-type PostControlGatewaysJSONBody = APIGateway
-
 // PostControlNewDiscoveredAPIsJSONBody defines parameters for PostControlNewDiscoveredAPIs.
 type PostControlNewDiscoveredAPIsJSONBody struct {
 	// List of discovered APIs, format of hostname:port
 	Hosts []string `json:"hosts"`
-
-	// Optional name identifying the entity sending this notification.
-	Source *string `json:"source,omitempty"`
 }
+
+// PostControlTraceSourcesJSONBody defines parameters for PostControlTraceSources.
+type PostControlTraceSourcesJSONBody = TraceSource
 
 // GetDashboardApiUsageParams defines parameters for GetDashboardApiUsage.
 type GetDashboardApiUsageParams struct {
@@ -1003,11 +1000,11 @@ type PutApiInventoryApiIdSpecsProvidedSpecJSONRequestBody = PutApiInventoryApiId
 // PostApiInventoryReviewIdApprovedReviewJSONRequestBody defines body for PostApiInventoryReviewIdApprovedReview for application/json ContentType.
 type PostApiInventoryReviewIdApprovedReviewJSONRequestBody = PostApiInventoryReviewIdApprovedReviewJSONBody
 
-// PostControlGatewaysJSONRequestBody defines body for PostControlGateways for application/json ContentType.
-type PostControlGatewaysJSONRequestBody = PostControlGatewaysJSONBody
-
 // PostControlNewDiscoveredAPIsJSONRequestBody defines body for PostControlNewDiscoveredAPIs for application/json ContentType.
 type PostControlNewDiscoveredAPIsJSONRequestBody PostControlNewDiscoveredAPIsJSONBody
+
+// PostControlTraceSourcesJSONRequestBody defines body for PostControlTraceSources for application/json ContentType.
+type PostControlTraceSourcesJSONRequestBody = PostControlTraceSourcesJSONBody
 
 // PostModulesBflaAuthorizationModelApiIDJSONRequestBody defines body for PostModulesBflaAuthorizationModelApiID for application/json ContentType.
 type PostModulesBflaAuthorizationModelApiIDJSONRequestBody = PostModulesBflaAuthorizationModelApiIDJSONBody
@@ -1222,24 +1219,24 @@ type ClientInterface interface {
 	// GetApiUsageHitCount request
 	GetApiUsageHitCount(ctx context.Context, params *GetApiUsageHitCountParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetControlGateways request
-	GetControlGateways(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostControlGateways request with any body
-	PostControlGatewaysWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostControlGateways(ctx context.Context, body PostControlGatewaysJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// DeleteControlGatewaysGatewayId request
-	DeleteControlGatewaysGatewayId(ctx context.Context, gatewayId GatewayId, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetControlGatewaysGatewayId request
-	GetControlGatewaysGatewayId(ctx context.Context, gatewayId GatewayId, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// PostControlNewDiscoveredAPIs request with any body
 	PostControlNewDiscoveredAPIsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostControlNewDiscoveredAPIs(ctx context.Context, body PostControlNewDiscoveredAPIsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetControlTraceSources request
+	GetControlTraceSources(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostControlTraceSources request with any body
+	PostControlTraceSourcesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostControlTraceSources(ctx context.Context, body PostControlTraceSourcesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteControlTraceSourcesTraceSourceId request
+	DeleteControlTraceSourcesTraceSourceId(ctx context.Context, traceSourceId TraceSourceId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetControlTraceSourcesTraceSourceId request
+	GetControlTraceSourcesTraceSourceId(ctx context.Context, traceSourceId TraceSourceId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetDashboardApiUsage request
 	GetDashboardApiUsage(ctx context.Context, params *GetDashboardApiUsageParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1602,66 +1599,6 @@ func (c *Client) GetApiUsageHitCount(ctx context.Context, params *GetApiUsageHit
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetControlGateways(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetControlGatewaysRequest(c.Server)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostControlGatewaysWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostControlGatewaysRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostControlGateways(ctx context.Context, body PostControlGatewaysJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostControlGatewaysRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) DeleteControlGatewaysGatewayId(ctx context.Context, gatewayId GatewayId, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteControlGatewaysGatewayIdRequest(c.Server, gatewayId)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetControlGatewaysGatewayId(ctx context.Context, gatewayId GatewayId, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetControlGatewaysGatewayIdRequest(c.Server, gatewayId)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 func (c *Client) PostControlNewDiscoveredAPIsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostControlNewDiscoveredAPIsRequestWithBody(c.Server, contentType, body)
 	if err != nil {
@@ -1676,6 +1613,66 @@ func (c *Client) PostControlNewDiscoveredAPIsWithBody(ctx context.Context, conte
 
 func (c *Client) PostControlNewDiscoveredAPIs(ctx context.Context, body PostControlNewDiscoveredAPIsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostControlNewDiscoveredAPIsRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetControlTraceSources(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetControlTraceSourcesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostControlTraceSourcesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostControlTraceSourcesRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostControlTraceSources(ctx context.Context, body PostControlTraceSourcesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostControlTraceSourcesRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteControlTraceSourcesTraceSourceId(ctx context.Context, traceSourceId TraceSourceId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteControlTraceSourcesTraceSourceIdRequest(c.Server, traceSourceId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetControlTraceSourcesTraceSourceId(ctx context.Context, traceSourceId TraceSourceId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetControlTraceSourcesTraceSourceIdRequest(c.Server, traceSourceId)
 	if err != nil {
 		return nil, err
 	}
@@ -3964,141 +3961,6 @@ func NewGetApiUsageHitCountRequest(server string, params *GetApiUsageHitCountPar
 	return req, nil
 }
 
-// NewGetControlGatewaysRequest generates requests for GetControlGateways
-func NewGetControlGatewaysRequest(server string) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/control/gateways")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewPostControlGatewaysRequest calls the generic PostControlGateways builder with application/json body
-func NewPostControlGatewaysRequest(server string, body PostControlGatewaysJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostControlGatewaysRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewPostControlGatewaysRequestWithBody generates requests for PostControlGateways with any type of body
-func NewPostControlGatewaysRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/control/gateways")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewDeleteControlGatewaysGatewayIdRequest generates requests for DeleteControlGatewaysGatewayId
-func NewDeleteControlGatewaysGatewayIdRequest(server string, gatewayId GatewayId) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "gatewayId", runtime.ParamLocationPath, gatewayId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/control/gateways/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetControlGatewaysGatewayIdRequest generates requests for GetControlGatewaysGatewayId
-func NewGetControlGatewaysGatewayIdRequest(server string, gatewayId GatewayId) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "gatewayId", runtime.ParamLocationPath, gatewayId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/control/gateways/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 // NewPostControlNewDiscoveredAPIsRequest calls the generic PostControlNewDiscoveredAPIs builder with application/json body
 func NewPostControlNewDiscoveredAPIsRequest(server string, body PostControlNewDiscoveredAPIsJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -4135,6 +3997,141 @@ func NewPostControlNewDiscoveredAPIsRequestWithBody(server string, contentType s
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetControlTraceSourcesRequest generates requests for GetControlTraceSources
+func NewGetControlTraceSourcesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/control/traceSources")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostControlTraceSourcesRequest calls the generic PostControlTraceSources builder with application/json body
+func NewPostControlTraceSourcesRequest(server string, body PostControlTraceSourcesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostControlTraceSourcesRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostControlTraceSourcesRequestWithBody generates requests for PostControlTraceSources with any type of body
+func NewPostControlTraceSourcesRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/control/traceSources")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteControlTraceSourcesTraceSourceIdRequest generates requests for DeleteControlTraceSourcesTraceSourceId
+func NewDeleteControlTraceSourcesTraceSourceIdRequest(server string, traceSourceId TraceSourceId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "traceSourceId", runtime.ParamLocationPath, traceSourceId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/control/traceSources/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetControlTraceSourcesTraceSourceIdRequest generates requests for GetControlTraceSourcesTraceSourceId
+func NewGetControlTraceSourcesTraceSourceIdRequest(server string, traceSourceId TraceSourceId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "traceSourceId", runtime.ParamLocationPath, traceSourceId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/control/traceSources/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -5750,24 +5747,24 @@ type ClientWithResponsesInterface interface {
 	// GetApiUsageHitCount request
 	GetApiUsageHitCountWithResponse(ctx context.Context, params *GetApiUsageHitCountParams, reqEditors ...RequestEditorFn) (*GetApiUsageHitCountResponse, error)
 
-	// GetControlGateways request
-	GetControlGatewaysWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetControlGatewaysResponse, error)
-
-	// PostControlGateways request with any body
-	PostControlGatewaysWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostControlGatewaysResponse, error)
-
-	PostControlGatewaysWithResponse(ctx context.Context, body PostControlGatewaysJSONRequestBody, reqEditors ...RequestEditorFn) (*PostControlGatewaysResponse, error)
-
-	// DeleteControlGatewaysGatewayId request
-	DeleteControlGatewaysGatewayIdWithResponse(ctx context.Context, gatewayId GatewayId, reqEditors ...RequestEditorFn) (*DeleteControlGatewaysGatewayIdResponse, error)
-
-	// GetControlGatewaysGatewayId request
-	GetControlGatewaysGatewayIdWithResponse(ctx context.Context, gatewayId GatewayId, reqEditors ...RequestEditorFn) (*GetControlGatewaysGatewayIdResponse, error)
-
 	// PostControlNewDiscoveredAPIs request with any body
 	PostControlNewDiscoveredAPIsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostControlNewDiscoveredAPIsResponse, error)
 
 	PostControlNewDiscoveredAPIsWithResponse(ctx context.Context, body PostControlNewDiscoveredAPIsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostControlNewDiscoveredAPIsResponse, error)
+
+	// GetControlTraceSources request
+	GetControlTraceSourcesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetControlTraceSourcesResponse, error)
+
+	// PostControlTraceSources request with any body
+	PostControlTraceSourcesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostControlTraceSourcesResponse, error)
+
+	PostControlTraceSourcesWithResponse(ctx context.Context, body PostControlTraceSourcesJSONRequestBody, reqEditors ...RequestEditorFn) (*PostControlTraceSourcesResponse, error)
+
+	// DeleteControlTraceSourcesTraceSourceId request
+	DeleteControlTraceSourcesTraceSourceIdWithResponse(ctx context.Context, traceSourceId TraceSourceId, reqEditors ...RequestEditorFn) (*DeleteControlTraceSourcesTraceSourceIdResponse, error)
+
+	// GetControlTraceSourcesTraceSourceId request
+	GetControlTraceSourcesTraceSourceIdWithResponse(ctx context.Context, traceSourceId TraceSourceId, reqEditors ...RequestEditorFn) (*GetControlTraceSourcesTraceSourceIdResponse, error)
 
 	// GetDashboardApiUsage request
 	GetDashboardApiUsageWithResponse(ctx context.Context, params *GetDashboardApiUsageParams, reqEditors ...RequestEditorFn) (*GetDashboardApiUsageResponse, error)
@@ -6295,102 +6292,6 @@ func (r GetApiUsageHitCountResponse) StatusCode() int {
 	return 0
 }
 
-type GetControlGatewaysResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// List of gateways
-		Gateways []APIGateway `json:"gateways"`
-	}
-	JSONDefault *externalRef0.ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r GetControlGatewaysResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetControlGatewaysResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostControlGatewaysResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON201      *APIGateway
-	JSONDefault  *externalRef0.ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r PostControlGatewaysResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostControlGatewaysResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type DeleteControlGatewaysGatewayIdResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON404      *externalRef0.ApiResponse
-	JSONDefault  *externalRef0.ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r DeleteControlGatewaysGatewayIdResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r DeleteControlGatewaysGatewayIdResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetControlGatewaysGatewayIdResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *APIGateway
-	JSON404      *externalRef0.ApiResponse
-	JSONDefault  *externalRef0.ApiResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r GetControlGatewaysGatewayIdResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetControlGatewaysGatewayIdResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type PostControlNewDiscoveredAPIsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -6408,6 +6309,102 @@ func (r PostControlNewDiscoveredAPIsResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PostControlNewDiscoveredAPIsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetControlTraceSourcesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// List of trace sources
+		TraceSources []TraceSource `json:"trace_sources"`
+	}
+	JSONDefault *externalRef0.ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetControlTraceSourcesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetControlTraceSourcesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostControlTraceSourcesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *TraceSource
+	JSONDefault  *externalRef0.ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostControlTraceSourcesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostControlTraceSourcesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteControlTraceSourcesTraceSourceIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON404      *externalRef0.ApiResponse
+	JSONDefault  *externalRef0.ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteControlTraceSourcesTraceSourceIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteControlTraceSourcesTraceSourceIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetControlTraceSourcesTraceSourceIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *TraceSource
+	JSON404      *externalRef0.ApiResponse
+	JSONDefault  *externalRef0.ApiResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetControlTraceSourcesTraceSourceIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetControlTraceSourcesTraceSourceIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7457,50 +7454,6 @@ func (c *ClientWithResponses) GetApiUsageHitCountWithResponse(ctx context.Contex
 	return ParseGetApiUsageHitCountResponse(rsp)
 }
 
-// GetControlGatewaysWithResponse request returning *GetControlGatewaysResponse
-func (c *ClientWithResponses) GetControlGatewaysWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetControlGatewaysResponse, error) {
-	rsp, err := c.GetControlGateways(ctx, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetControlGatewaysResponse(rsp)
-}
-
-// PostControlGatewaysWithBodyWithResponse request with arbitrary body returning *PostControlGatewaysResponse
-func (c *ClientWithResponses) PostControlGatewaysWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostControlGatewaysResponse, error) {
-	rsp, err := c.PostControlGatewaysWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostControlGatewaysResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostControlGatewaysWithResponse(ctx context.Context, body PostControlGatewaysJSONRequestBody, reqEditors ...RequestEditorFn) (*PostControlGatewaysResponse, error) {
-	rsp, err := c.PostControlGateways(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostControlGatewaysResponse(rsp)
-}
-
-// DeleteControlGatewaysGatewayIdWithResponse request returning *DeleteControlGatewaysGatewayIdResponse
-func (c *ClientWithResponses) DeleteControlGatewaysGatewayIdWithResponse(ctx context.Context, gatewayId GatewayId, reqEditors ...RequestEditorFn) (*DeleteControlGatewaysGatewayIdResponse, error) {
-	rsp, err := c.DeleteControlGatewaysGatewayId(ctx, gatewayId, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseDeleteControlGatewaysGatewayIdResponse(rsp)
-}
-
-// GetControlGatewaysGatewayIdWithResponse request returning *GetControlGatewaysGatewayIdResponse
-func (c *ClientWithResponses) GetControlGatewaysGatewayIdWithResponse(ctx context.Context, gatewayId GatewayId, reqEditors ...RequestEditorFn) (*GetControlGatewaysGatewayIdResponse, error) {
-	rsp, err := c.GetControlGatewaysGatewayId(ctx, gatewayId, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetControlGatewaysGatewayIdResponse(rsp)
-}
-
 // PostControlNewDiscoveredAPIsWithBodyWithResponse request with arbitrary body returning *PostControlNewDiscoveredAPIsResponse
 func (c *ClientWithResponses) PostControlNewDiscoveredAPIsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostControlNewDiscoveredAPIsResponse, error) {
 	rsp, err := c.PostControlNewDiscoveredAPIsWithBody(ctx, contentType, body, reqEditors...)
@@ -7516,6 +7469,50 @@ func (c *ClientWithResponses) PostControlNewDiscoveredAPIsWithResponse(ctx conte
 		return nil, err
 	}
 	return ParsePostControlNewDiscoveredAPIsResponse(rsp)
+}
+
+// GetControlTraceSourcesWithResponse request returning *GetControlTraceSourcesResponse
+func (c *ClientWithResponses) GetControlTraceSourcesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetControlTraceSourcesResponse, error) {
+	rsp, err := c.GetControlTraceSources(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetControlTraceSourcesResponse(rsp)
+}
+
+// PostControlTraceSourcesWithBodyWithResponse request with arbitrary body returning *PostControlTraceSourcesResponse
+func (c *ClientWithResponses) PostControlTraceSourcesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostControlTraceSourcesResponse, error) {
+	rsp, err := c.PostControlTraceSourcesWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostControlTraceSourcesResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostControlTraceSourcesWithResponse(ctx context.Context, body PostControlTraceSourcesJSONRequestBody, reqEditors ...RequestEditorFn) (*PostControlTraceSourcesResponse, error) {
+	rsp, err := c.PostControlTraceSources(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostControlTraceSourcesResponse(rsp)
+}
+
+// DeleteControlTraceSourcesTraceSourceIdWithResponse request returning *DeleteControlTraceSourcesTraceSourceIdResponse
+func (c *ClientWithResponses) DeleteControlTraceSourcesTraceSourceIdWithResponse(ctx context.Context, traceSourceId TraceSourceId, reqEditors ...RequestEditorFn) (*DeleteControlTraceSourcesTraceSourceIdResponse, error) {
+	rsp, err := c.DeleteControlTraceSourcesTraceSourceId(ctx, traceSourceId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteControlTraceSourcesTraceSourceIdResponse(rsp)
+}
+
+// GetControlTraceSourcesTraceSourceIdWithResponse request returning *GetControlTraceSourcesTraceSourceIdResponse
+func (c *ClientWithResponses) GetControlTraceSourcesTraceSourceIdWithResponse(ctx context.Context, traceSourceId TraceSourceId, reqEditors ...RequestEditorFn) (*GetControlTraceSourcesTraceSourceIdResponse, error) {
+	rsp, err := c.GetControlTraceSourcesTraceSourceId(ctx, traceSourceId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetControlTraceSourcesTraceSourceIdResponse(rsp)
 }
 
 // GetDashboardApiUsageWithResponse request returning *GetDashboardApiUsageResponse
@@ -8471,148 +8468,6 @@ func ParseGetApiUsageHitCountResponse(rsp *http.Response) (*GetApiUsageHitCountR
 	return response, nil
 }
 
-// ParseGetControlGatewaysResponse parses an HTTP response from a GetControlGatewaysWithResponse call
-func ParseGetControlGatewaysResponse(rsp *http.Response) (*GetControlGatewaysResponse, error) {
-	bodyBytes, err := ioutil.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetControlGatewaysResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// List of gateways
-			Gateways []APIGateway `json:"gateways"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostControlGatewaysResponse parses an HTTP response from a PostControlGatewaysWithResponse call
-func ParsePostControlGatewaysResponse(rsp *http.Response) (*PostControlGatewaysResponse, error) {
-	bodyBytes, err := ioutil.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostControlGatewaysResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest APIGateway
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON201 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseDeleteControlGatewaysGatewayIdResponse parses an HTTP response from a DeleteControlGatewaysGatewayIdWithResponse call
-func ParseDeleteControlGatewaysGatewayIdResponse(rsp *http.Response) (*DeleteControlGatewaysGatewayIdResponse, error) {
-	bodyBytes, err := ioutil.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &DeleteControlGatewaysGatewayIdResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetControlGatewaysGatewayIdResponse parses an HTTP response from a GetControlGatewaysGatewayIdWithResponse call
-func ParseGetControlGatewaysGatewayIdResponse(rsp *http.Response) (*GetControlGatewaysGatewayIdResponse, error) {
-	bodyBytes, err := ioutil.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetControlGatewaysGatewayIdResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest APIGateway
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest externalRef0.ApiResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParsePostControlNewDiscoveredAPIsResponse parses an HTTP response from a PostControlNewDiscoveredAPIsWithResponse call
 func ParsePostControlNewDiscoveredAPIsResponse(rsp *http.Response) (*PostControlNewDiscoveredAPIsResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
@@ -8633,6 +8488,148 @@ func ParsePostControlNewDiscoveredAPIsResponse(rsp *http.Response) (*PostControl
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetControlTraceSourcesResponse parses an HTTP response from a GetControlTraceSourcesWithResponse call
+func ParseGetControlTraceSourcesResponse(rsp *http.Response) (*GetControlTraceSourcesResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetControlTraceSourcesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// List of trace sources
+			TraceSources []TraceSource `json:"trace_sources"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostControlTraceSourcesResponse parses an HTTP response from a PostControlTraceSourcesWithResponse call
+func ParsePostControlTraceSourcesResponse(rsp *http.Response) (*PostControlTraceSourcesResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostControlTraceSourcesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest TraceSource
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteControlTraceSourcesTraceSourceIdResponse parses an HTTP response from a DeleteControlTraceSourcesTraceSourceIdWithResponse call
+func ParseDeleteControlTraceSourcesTraceSourceIdResponse(rsp *http.Response) (*DeleteControlTraceSourcesTraceSourceIdResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteControlTraceSourcesTraceSourceIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetControlTraceSourcesTraceSourceIdResponse parses an HTTP response from a GetControlTraceSourcesTraceSourceIdWithResponse call
+func ParseGetControlTraceSourcesTraceSourceIdResponse(rsp *http.Response) (*GetControlTraceSourcesTraceSourceIdResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetControlTraceSourcesTraceSourceIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TraceSource
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest externalRef0.ApiResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest externalRef0.ApiResponse
@@ -9894,21 +9891,21 @@ type ServerInterface interface {
 	// Get a hit count within a selected timeframe for the filtered API events
 	// (GET /apiUsage/hitCount)
 	GetApiUsageHitCount(w http.ResponseWriter, r *http.Request, params GetApiUsageHitCountParams)
-	// List of configured gateways
-	// (GET /control/gateways)
-	GetControlGateways(w http.ResponseWriter, r *http.Request)
-	// Create a new gateway
-	// (POST /control/gateways)
-	PostControlGateways(w http.ResponseWriter, r *http.Request)
-	// Delete a gateway
-	// (DELETE /control/gateways/{gatewayId})
-	DeleteControlGatewaysGatewayId(w http.ResponseWriter, r *http.Request, gatewayId GatewayId)
-	// Get gateway information
-	// (GET /control/gateways/{gatewayId})
-	GetControlGatewaysGatewayId(w http.ResponseWriter, r *http.Request, gatewayId GatewayId)
 	// Allows a client to notify APIClarity about new APIs.
 	// (POST /control/newDiscoveredAPIs)
 	PostControlNewDiscoveredAPIs(w http.ResponseWriter, r *http.Request)
+	// List of configured trace sources
+	// (GET /control/traceSources)
+	GetControlTraceSources(w http.ResponseWriter, r *http.Request)
+	// Create a new Trace Source
+	// (POST /control/traceSources)
+	PostControlTraceSources(w http.ResponseWriter, r *http.Request)
+	// Delete a Trace Source
+	// (DELETE /control/traceSources/{traceSourceId})
+	DeleteControlTraceSourcesTraceSourceId(w http.ResponseWriter, r *http.Request, traceSourceId TraceSourceId)
+	// Get Trace Source information
+	// (GET /control/traceSources/{traceSourceId})
+	GetControlTraceSourcesTraceSourceId(w http.ResponseWriter, r *http.Request, traceSourceId TraceSourceId)
 	// Get API usage
 	// (GET /dashboard/apiUsage)
 	GetDashboardApiUsage(w http.ResponseWriter, r *http.Request, params GetDashboardApiUsageParams)
@@ -11344,94 +11341,94 @@ func (siw *ServerInterfaceWrapper) GetApiUsageHitCount(w http.ResponseWriter, r 
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// GetControlGateways operation middleware
-func (siw *ServerInterfaceWrapper) GetControlGateways(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetControlGateways(w, r)
-	})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r.WithContext(ctx))
-}
-
-// PostControlGateways operation middleware
-func (siw *ServerInterfaceWrapper) PostControlGateways(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostControlGateways(w, r)
-	})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r.WithContext(ctx))
-}
-
-// DeleteControlGatewaysGatewayId operation middleware
-func (siw *ServerInterfaceWrapper) DeleteControlGatewaysGatewayId(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var err error
-
-	// ------------- Path parameter "gatewayId" -------------
-	var gatewayId GatewayId
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "gatewayId", runtime.ParamLocationPath, chi.URLParam(r, "gatewayId"), &gatewayId)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "gatewayId", Err: err})
-		return
-	}
-
-	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.DeleteControlGatewaysGatewayId(w, r, gatewayId)
-	})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r.WithContext(ctx))
-}
-
-// GetControlGatewaysGatewayId operation middleware
-func (siw *ServerInterfaceWrapper) GetControlGatewaysGatewayId(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var err error
-
-	// ------------- Path parameter "gatewayId" -------------
-	var gatewayId GatewayId
-
-	err = runtime.BindStyledParameterWithLocation("simple", false, "gatewayId", runtime.ParamLocationPath, chi.URLParam(r, "gatewayId"), &gatewayId)
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "gatewayId", Err: err})
-		return
-	}
-
-	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetControlGatewaysGatewayId(w, r, gatewayId)
-	})
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r.WithContext(ctx))
-}
-
 // PostControlNewDiscoveredAPIs operation middleware
 func (siw *ServerInterfaceWrapper) PostControlNewDiscoveredAPIs(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PostControlNewDiscoveredAPIs(w, r)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// GetControlTraceSources operation middleware
+func (siw *ServerInterfaceWrapper) GetControlTraceSources(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetControlTraceSources(w, r)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// PostControlTraceSources operation middleware
+func (siw *ServerInterfaceWrapper) PostControlTraceSources(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostControlTraceSources(w, r)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// DeleteControlTraceSourcesTraceSourceId operation middleware
+func (siw *ServerInterfaceWrapper) DeleteControlTraceSourcesTraceSourceId(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "traceSourceId" -------------
+	var traceSourceId TraceSourceId
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "traceSourceId", runtime.ParamLocationPath, chi.URLParam(r, "traceSourceId"), &traceSourceId)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "traceSourceId", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteControlTraceSourcesTraceSourceId(w, r, traceSourceId)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// GetControlTraceSourcesTraceSourceId operation middleware
+func (siw *ServerInterfaceWrapper) GetControlTraceSourcesTraceSourceId(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "traceSourceId" -------------
+	var traceSourceId TraceSourceId
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "traceSourceId", runtime.ParamLocationPath, chi.URLParam(r, "traceSourceId"), &traceSourceId)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "traceSourceId", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetControlTraceSourcesTraceSourceId(w, r, traceSourceId)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -12737,19 +12734,19 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/apiUsage/hitCount", wrapper.GetApiUsageHitCount)
 	})
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/control/gateways", wrapper.GetControlGateways)
-	})
-	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/control/gateways", wrapper.PostControlGateways)
-	})
-	r.Group(func(r chi.Router) {
-		r.Delete(options.BaseURL+"/control/gateways/{gatewayId}", wrapper.DeleteControlGatewaysGatewayId)
-	})
-	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/control/gateways/{gatewayId}", wrapper.GetControlGatewaysGatewayId)
-	})
-	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/control/newDiscoveredAPIs", wrapper.PostControlNewDiscoveredAPIs)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/control/traceSources", wrapper.GetControlTraceSources)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/control/traceSources", wrapper.PostControlTraceSources)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/control/traceSources/{traceSourceId}", wrapper.DeleteControlTraceSourcesTraceSourceId)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/control/traceSources/{traceSourceId}", wrapper.GetControlTraceSourcesTraceSourceId)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/dashboard/apiUsage", wrapper.GetDashboardApiUsage)
@@ -12872,124 +12869,123 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"vKXjPd8+/38AAAD//1SM9l5T5AAA",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

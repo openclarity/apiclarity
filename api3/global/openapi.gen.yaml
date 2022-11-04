@@ -122,13 +122,6 @@ components:
       schema:
         format: date-time
         type: string
-    gatewayId:
-      description: Gateway ID
-      in: path
-      name: gatewayId
-      required: true
-      schema:
-        type: integer
     hasProvidedSpecFilter:
       in: query
       name: hasProvidedSpec[is]
@@ -355,6 +348,13 @@ components:
       name: statusCode[lte]
       schema:
         type: string
+    traceSourceId:
+      description: Trace Source ID
+      in: path
+      name: traceSourceId
+      required: true
+      schema:
+        type: integer
   responses:
     UnknownError:
       content:
@@ -428,31 +428,6 @@ components:
       - bflaStatus
       - external
       - mismatchedScopes
-    APIGateway:
-      description: Gateway which is externally exposing APIs
-      properties:
-        description:
-          type: string
-        id:
-          type: integer
-        name:
-          description: Unique name identifying a gateway
-          type: string
-        token:
-          format: byte
-          type: string
-        type:
-          $ref: '#/components/schemas/APIGatewayType'
-      required:
-      - name
-      - type
-      type: object
-    APIGatewayType:
-      enum:
-      - TYK
-      - KONG
-      - APIGEEX
-      type: string
     Annotation:
       properties:
         annotation:
@@ -1080,6 +1055,31 @@ components:
           type: integer
       title: Tests
       type: object
+    TraceSource:
+      description: A Source which is sending traces to APIClarity
+      properties:
+        description:
+          type: string
+        id:
+          type: integer
+        name:
+          description: Unique name identifying a Trace Source
+          type: string
+        token:
+          format: byte
+          type: string
+        type:
+          $ref: '#/components/schemas/TraceSourceType'
+      required:
+      - name
+      - type
+      type: object
+    TraceSourceType:
+      enum:
+      - TYK
+      - KONG
+      - APIGEEX
+      type: string
     Version:
       properties:
         version:
@@ -1502,75 +1502,6 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       summary: Get a hit count within a selected timeframe for the filtered API events
-  /control/gateways:
-    get:
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                properties:
-                  gateways:
-                    description: List of gateways
-                    items:
-                      $ref: '#/components/schemas/APIGateway'
-                    type: array
-                required:
-                - gateways
-                type: object
-          description: Success
-        default:
-          $ref: '#/components/responses/UnknownError'
-      summary: List of configured gateways
-    post:
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/APIGateway'
-      responses:
-        "201":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIGateway'
-          description: Success
-        default:
-          $ref: '#/components/responses/UnknownError'
-      summary: Create a new gateway
-  /control/gateways/{gatewayId}:
-    delete:
-      responses:
-        "204":
-          description: Success
-        "404":
-          content:
-            application/json:
-              schema:
-                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
-          description: API Gateway not found
-        default:
-          $ref: '#/components/responses/UnknownError'
-      summary: Delete a gateway
-    get:
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIGateway'
-          description: Gateway information
-        "404":
-          content:
-            application/json:
-              schema:
-                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
-          description: API Gateway not found
-        default:
-          $ref: '#/components/responses/UnknownError'
-      summary: Get gateway information
-    parameters:
-    - $ref: '#/components/parameters/gatewayId'
   /control/newDiscoveredAPIs:
     post:
       description: This allows a client (a gateway for example) to notify APIclarity
@@ -1585,9 +1516,6 @@ paths:
                   items:
                     type: string
                   type: array
-                source:
-                  description: Optional name identifying the entity sending this notification.
-                  type: string
               required:
               - hosts
               type: object
@@ -1601,6 +1529,75 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       summary: Allows a client to notify APIClarity about new APIs.
+  /control/traceSources:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                properties:
+                  trace_sources:
+                    description: List of trace sources
+                    items:
+                      $ref: '#/components/schemas/TraceSource'
+                    type: array
+                required:
+                - trace_sources
+                type: object
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: List of configured trace sources
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TraceSource'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TraceSource'
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Create a new Trace Source
+  /control/traceSources/{traceSourceId}:
+    delete:
+      responses:
+        "204":
+          description: Success
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Trace Source not found
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Delete a Trace Source
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TraceSource'
+          description: Trace Source information
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Trace Source not found
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Get Trace Source information
+    parameters:
+    - $ref: '#/components/parameters/traceSourceId'
   /dashboard/apiUsage:
     get:
       parameters:

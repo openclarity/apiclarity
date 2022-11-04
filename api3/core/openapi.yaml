@@ -455,9 +455,6 @@ paths:
               required:
                 - hosts
               properties:
-                source:
-                  type: 'string'
-                  description: 'Optional name identifying the entity sending this notification.'
                 hosts:
                   type: 'array'
                   description: 'List of discovered APIs, format of hostname:port'
@@ -473,9 +470,9 @@ paths:
         default:
           $ref: "#/components/responses/UnknownError"
 
-  /control/gateways:
+  /control/traceSources:
     get:
-      summary: 'List of configured gateways'
+      summary: 'List of configured trace sources'
       responses:
         '200':
           description: 'Success'
@@ -484,46 +481,46 @@ paths:
               schema:
                 type: 'object'
                 required:
-                  - gateways
+                  - trace_sources
                 properties:
-                  gateways:
+                  trace_sources:
                     type: 'array'
-                    description: 'List of gateways'
+                    description: 'List of trace sources'
                     items:
-                      $ref: '#/components/schemas/APIGateway'
+                      $ref: '#/components/schemas/TraceSource'
         default:
           $ref: "#/components/responses/UnknownError"
     post:
-      summary: 'Create a new gateway'
+      summary: 'Create a new Trace Source'
       requestBody:
         content:
           application/json:
             schema:
-              description: 'Create a new gateway'
-              $ref: '#/components/schemas/APIGateway'
+              description: 'Create a new Trace Source'
+              $ref: '#/components/schemas/TraceSource'
       responses:
         '201':
           description: 'Success'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIGateway'
+                $ref: '#/components/schemas/TraceSource'
         default:
           $ref: "#/components/responses/UnknownError"
-  /control/gateways/{gatewayId}:
+  /control/traceSources/{traceSourceId}:
     parameters:
-      - $ref: "#/components/parameters/gatewayId"
+      - $ref: "#/components/parameters/traceSourceId"
     get:
-      summary: 'Get gateway information'
+      summary: 'Get Trace Source information'
       responses:
         '200':
-          description: 'Gateway information'
+          description: 'Trace Source information'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIGateway'
+                $ref: '#/components/schemas/TraceSource'
         '404':
-          description: 'API Gateway not found'
+          description: 'Trace Source not found'
           content:
             application/json:
               schema:
@@ -531,12 +528,12 @@ paths:
         default:
           $ref: "#/components/responses/UnknownError"
     delete:
-      summary: 'Delete a gateway'
+      summary: 'Delete a Trace Source'
       responses:
         '204':
           description: 'Success'
         '404':
-          description: 'API Gateway not found'
+          description: 'Trace Source not found'
           content:
             application/json:
               schema:
@@ -929,10 +926,10 @@ components:
       schema:
         type: integer
         format: uint32
-    gatewayId:
-      name: gatewayId
+    traceSourceId:
+      name: traceSourceId
       in: path
-      description: 'Gateway ID'
+      description: 'Trace Source ID'
       required: true
       schema:
         type: integer
@@ -974,17 +971,17 @@ components:
       enum:
         - specreconstructor
         - specdiffs
-    APIGateway:
-      description: 'Gateway which is externally exposing APIs'
+    TraceSource:
+      description: 'A Source which is sending traces to APIClarity'
       type: 'object'
       properties:
         id:
           type: 'integer'
         name:
-          description: 'Unique name identifying a gateway'
+          description: 'Unique name identifying a Trace Source'
           type: 'string'
         type:
-          $ref: '#/components/schemas/APIGatewayType'
+          $ref: '#/components/schemas/TraceSourceType'
         description:
           type: 'string'
         token:
@@ -993,7 +990,7 @@ components:
       required:
         - name
         - type
-    APIGatewayType:
+    TraceSourceType:
       type: string
       enum:
         - TYK
