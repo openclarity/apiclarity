@@ -11,15 +11,15 @@ import (
 	golangswaggerpaths "path"
 )
 
-// PostControlGatewaysURL generates an URL for the post control gateways operation
-type PostControlGatewaysURL struct {
+// GetControlTraceSourcesURL generates an URL for the get control trace sources operation
+type GetControlTraceSourcesURL struct {
 	_basePath string
 }
 
 // WithBasePath sets the base path for this url builder, only required when it's different from the
 // base path specified in the swagger spec.
 // When the value of the base path is an empty string
-func (o *PostControlGatewaysURL) WithBasePath(bp string) *PostControlGatewaysURL {
+func (o *GetControlTraceSourcesURL) WithBasePath(bp string) *GetControlTraceSourcesURL {
 	o.SetBasePath(bp)
 	return o
 }
@@ -27,15 +27,15 @@ func (o *PostControlGatewaysURL) WithBasePath(bp string) *PostControlGatewaysURL
 // SetBasePath sets the base path for this url builder, only required when it's different from the
 // base path specified in the swagger spec.
 // When the value of the base path is an empty string
-func (o *PostControlGatewaysURL) SetBasePath(bp string) {
+func (o *GetControlTraceSourcesURL) SetBasePath(bp string) {
 	o._basePath = bp
 }
 
 // Build a url path and query string
-func (o *PostControlGatewaysURL) Build() (*url.URL, error) {
+func (o *GetControlTraceSourcesURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/control/gateways"
+	var _path = "/control/traceSources"
 
 	_basePath := o._basePath
 	if _basePath == "" {
@@ -47,7 +47,7 @@ func (o *PostControlGatewaysURL) Build() (*url.URL, error) {
 }
 
 // Must is a helper function to panic when the url builder returns an error
-func (o *PostControlGatewaysURL) Must(u *url.URL, err error) *url.URL {
+func (o *GetControlTraceSourcesURL) Must(u *url.URL, err error) *url.URL {
 	if err != nil {
 		panic(err)
 	}
@@ -58,17 +58,17 @@ func (o *PostControlGatewaysURL) Must(u *url.URL, err error) *url.URL {
 }
 
 // String returns the string representation of the path with query string
-func (o *PostControlGatewaysURL) String() string {
+func (o *GetControlTraceSourcesURL) String() string {
 	return o.Must(o.Build()).String()
 }
 
 // BuildFull builds a full url with scheme, host, path and query string
-func (o *PostControlGatewaysURL) BuildFull(scheme, host string) (*url.URL, error) {
+func (o *GetControlTraceSourcesURL) BuildFull(scheme, host string) (*url.URL, error) {
 	if scheme == "" {
-		return nil, errors.New("scheme is required for a full url on PostControlGatewaysURL")
+		return nil, errors.New("scheme is required for a full url on GetControlTraceSourcesURL")
 	}
 	if host == "" {
-		return nil, errors.New("host is required for a full url on PostControlGatewaysURL")
+		return nil, errors.New("host is required for a full url on GetControlTraceSourcesURL")
 	}
 
 	base, err := o.Build()
@@ -82,6 +82,6 @@ func (o *PostControlGatewaysURL) BuildFull(scheme, host string) (*url.URL, error
 }
 
 // StringFull returns the string representation of a complete url
-func (o *PostControlGatewaysURL) StringFull(scheme, host string) string {
+func (o *GetControlTraceSourcesURL) StringFull(scheme, host string) string {
 	return o.Must(o.BuildFull(scheme, host)).String()
 }

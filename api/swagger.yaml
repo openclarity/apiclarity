@@ -394,17 +394,17 @@ definitions:
       - bfla
       - spec_differ
       - fuzzer
-  APIGateway:
-    description: 'Gateway which is externally exposing APIs'
+  TraceSource:
+    description: 'A Source which is sending traces to APIClarity'
     type: 'object'
     properties:
       id:
         type: 'integer'
       name:
-        description: 'Unique name identifying a gateway'
+        description: 'Unique name identifying a Trace Source'
         type: 'string'
       type:
-        $ref: '#/definitions/APIGatewayType'
+        $ref: '#/definitions/TraceSourceType'
       description:
         type: 'string'
       token:
@@ -414,7 +414,7 @@ definitions:
       - name
       - type
 
-  APIGatewayType:
+  TraceSourceType:
     type: string
     enum:
       - TYK
@@ -859,67 +859,65 @@ paths:
         default:
           $ref: '#/responses/UnknownError'
 
-  /control/gateways:
+  /control/traceSources:
     get:
-      summary: 'List of configured gateways'
+      summary: 'List of configured trace sources'
       responses:
         '200':
           description: 'Success'
           schema:
             type: 'object'
             required:
-              - gateways
+              - trace_sources
             properties:
-              gateways:
+              trace_sources:
                 type: 'array'
-                description: 'List of gateways'
+                description: 'List of trace sources'
                 items:
-                  $ref: '#/definitions/APIGateway'
+                  $ref: '#/definitions/TraceSource'
         default:
           $ref: '#/responses/UnknownError'
     post:
-      summary: 'Create a new gateway'
+      summary: 'Create a new Trace Source'
       parameters:
         - in: 'body'
           name: 'body'
           required: true
           schema:
-            description: 'Create a new gateway'
-            $ref: '#/definitions/APIGateway'
+            description: 'Create a new Trace Source'
+            $ref: '#/definitions/TraceSource'
       responses:
         '201':
           description: 'Success'
           schema:
-            $ref: '#/definitions/APIGateway'
+            $ref: '#/definitions/TraceSource'
         default:
           $ref: '#/responses/UnknownError'
-  /control/gateways/{gatewayId}:
+  /control/traceSources/{traceSourceId}:
     get:
-      summary: 'Get gateway information'
+      summary: 'Get Trace Source information'
       parameters:
-        - $ref: '#/parameters/gatewayId'
+        - $ref: '#/parameters/traceSourceId'
       responses:
         '200':
-          description: 'Gateway information'
+          description: 'Trace Source information'
           schema:
-            $ref: '#/definitions/APIGateway'
+            $ref: '#/definitions/TraceSource'
         '404':
-          description: 'API Gateway not found'
+          description: 'Trace Source not found'
           schema:
             $ref: '#/definitions/ApiResponse'
         default:
           $ref: '#/responses/UnknownError'
     delete:
-      summary: 'Delete a gateway'
+      summary: 'Delete a Trace Source'
       parameters:
-        - $ref: '#/parameters/gatewayId'
+        - $ref: '#/parameters/traceSourceId'
       responses:
         '204':
           description: 'Success'
-          # schema:
-          #   $ref: '#/responses/Success'
         '404':
-          description: 'API Gateway not found'
+          description: 'Trace Source not found'
           schema:
             $ref: '#/definitions/ApiResponse'
         default:
@@ -1314,10 +1312,10 @@ parameters:
     format: 'uint32'
     required: true
 
-  gatewayId:
-    name: 'gatewayId'
+  traceSourceId:
+    name: 'traceSourceId'
     in: path
-    description: 'Gateway ID'
+    description: 'Trace Source ID'
     type: 'integer'
     required: true
 
