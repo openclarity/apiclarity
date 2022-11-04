@@ -43,6 +43,7 @@ type TraceSource struct {
 type TraceSourcesTable interface {
 	CreateTraceSource(source *TraceSource) error
 	GetTraceSource(ID uint) (*TraceSource, error)
+	GetTraceSourceFromToken(token []byte) (*TraceSource, error)
 	GetTraceSources() ([]*TraceSource, error)
 	DeleteTraceSource(ID uint) error
 }
@@ -68,6 +69,15 @@ func (source *TraceSource) BeforeCreate(tx *gorm.DB) error {
 func (h *TraceSourcesTableHandler) GetTraceSource(ID uint) (*TraceSource, error) {
 	source := TraceSource{}
 	if err := h.tx.First(&source, ID).Error; err != nil {
+		return nil, err
+	}
+
+	return &source, nil
+}
+
+func (h *TraceSourcesTableHandler) GetTraceSourceFromToken(token []byte) (*TraceSource, error) {
+	source := TraceSource{}
+	if err := h.tx.First(&source, TraceSource{Token: token}).Error; err != nil {
 		return nil, err
 	}
 

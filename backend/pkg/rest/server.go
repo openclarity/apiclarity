@@ -34,12 +34,13 @@ import (
 )
 
 type Server struct {
-	server          *restapi.Server
-	dbHandler       database.Database
-	speculator      *_speculator.Speculator
-	modulesManager  modules.ModulesManager
-	samplingManager *manager.Manager
-	features        []modules.ModuleInfo
+	server               *restapi.Server
+	dbHandler            database.Database
+	speculator           *_speculator.Speculator
+	modulesManager       modules.ModulesManager
+	samplingManager      *manager.Manager
+	features             []modules.ModuleInfo
+	needsTraceSourceAuth bool
 }
 
 type ServerConfig struct {
@@ -53,15 +54,17 @@ type ServerConfig struct {
 	ModulesManager        modules.ModulesManager
 	SamplingManager       *manager.Manager
 	Features              []modules.ModuleInfo
+	NeedsTraceSourceAuth  bool
 }
 
 func CreateRESTServer(config *ServerConfig) (*Server, error) {
 	s := &Server{
-		speculator:      config.Speculator,
-		dbHandler:       config.DBHandler,
-		modulesManager:  config.ModulesManager,
-		samplingManager: config.SamplingManager,
-		features:        config.Features,
+		speculator:           config.Speculator,
+		dbHandler:            config.DBHandler,
+		modulesManager:       config.ModulesManager,
+		samplingManager:      config.SamplingManager,
+		features:             config.Features,
+		needsTraceSourceAuth: config.NeedsTraceSourceAuth,
 	}
 
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)

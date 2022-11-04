@@ -93,8 +93,8 @@ definitions:
         default: false
       destinationNamespace:
         type: 'string'
-      createdBy:
-        description: 'String representing the entity which created this API. APICLARITY means it has been created by APIClarity on first trace'
+      traceSource:
+        description: 'String representing the entity which created this API. Empty means it has been created by APIClarity on first trace'
         type: 'string'
         default: 'APICLARITY'
 
@@ -843,9 +843,6 @@ paths:
             required:
               - hosts
             properties:
-              source:
-                type: 'string'
-                description: 'Optional name identifying the entity sending this notification.'
               hosts:
                 type: 'array'
                 description: 'List of discovered APIs, format of hostname:port'
