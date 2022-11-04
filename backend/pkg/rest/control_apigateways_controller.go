@@ -31,7 +31,7 @@ import (
 func (s *Server) GetControlAPIGateways(params operations.GetControlGatewaysParams) middleware.Responder {
 	log.Debugf("GetControlAPIGateways controller was invoked")
 
-	gateways, err := s.dbHandler.APIGatewaysTable().GetAPIGateways()
+	gateways, err := s.dbHandler.TraceSourcesTable().GetTraceSources()
 	if err != nil {
 		log.Errorf("Failed to Get APIGateways: %v", err)
 		return operations.NewGetControlGatewaysDefault(http.StatusInternalServerError)
@@ -56,12 +56,12 @@ func (s *Server) GetControlAPIGateways(params operations.GetControlGatewaysParam
 func (s *Server) PostControlAPIGateways(params operations.PostControlGatewaysParams) middleware.Responder {
 	log.Debugf("PostControlAPIGateways controller was invoked")
 
-	dbGw := _database.APIGateway{
+	dbGw := _database.TraceSource{
 		Name:        *params.Body.Name,
 		Type:        string(*params.Body.Type),
 		Description: params.Body.Description,
 	}
-	if err := s.dbHandler.APIGatewaysTable().CreateAPIGateway(&dbGw); err != nil {
+	if err := s.dbHandler.TraceSourcesTable().CreateTraceSource(&dbGw); err != nil {
 		log.Errorf("Failed to create new APIGateway: %v", err)
 		return operations.NewPostControlGatewaysDefault(http.StatusInternalServerError)
 	}
@@ -79,7 +79,7 @@ func (s *Server) PostControlAPIGateways(params operations.PostControlGatewaysPar
 func (s *Server) GetControlAPIGatewaysGatewayID(params operations.GetControlGatewaysGatewayIDParams) middleware.Responder {
 	log.Debugf("GetControlAPIGatewaysGatewayID controller was invoked")
 
-	dbGw, err := s.dbHandler.APIGatewaysTable().GetAPIGateway(uint(params.GatewayID))
+	dbGw, err := s.dbHandler.TraceSourcesTable().GetTraceSource(uint(params.GatewayID))
 	if err != nil {
 		log.Errorf("Failed to get Gateway: %v", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -101,7 +101,7 @@ func (s *Server) GetControlAPIGatewaysGatewayID(params operations.GetControlGate
 func (s *Server) DeleteControlAPIGatewaysGatewayID(params operations.DeleteControlGatewaysGatewayIDParams) middleware.Responder {
 	log.Debugf("DeleteControlAPIGatewaysGatewayID controller was invoked")
 
-	if err := s.dbHandler.APIGatewaysTable().DeleteAPIGateway(uint(params.GatewayID)); err != nil {
+	if err := s.dbHandler.TraceSourcesTable().DeleteTraceSource(uint(params.GatewayID)); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return operations.NewDeleteControlGatewaysGatewayIDNotFound()
 		}
