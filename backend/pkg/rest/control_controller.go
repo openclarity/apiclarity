@@ -24,8 +24,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/apiclarity/api/server/models"
-	"github.com/openclarity/apiclarity/api3/notifications"
-
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
 	"github.com/openclarity/apiclarity/api3/notifications"
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
@@ -101,7 +99,6 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 				}
 			}
 		}
-
 	}
 
 	return operations.NewPostControlNewDiscoveredAPIsOK()
