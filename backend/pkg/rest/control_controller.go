@@ -84,13 +84,13 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 				notification := notifications.APIClarityNotification{}
 				err := notification.FromNewDiscoveredAPINotification(newDiscoveredAPINotification)
 				if err != nil {
-					log.Error("failed to create 'NewDiscoveredAPI' notification, err=(%v)", err)
+					log.Errorf("failed to create 'NewDiscoveredAPI' notification, err=(%v)", err)
 				} else {
 					log.Infof("will send notification 'NewDiscoveredAPI' with (%v)", notification)
 					log.Infof("s.notifier (%v)", s.notifier)
 					err = s.notifier.Notify(apiInfo.ID, notification)
 					if err != nil {
-						log.Error("failed to send 'NewDiscoveredAPI' notification, err=(%v)", err)
+						log.Errorf("failed to send 'NewDiscoveredAPI' notification, err=(%v)", err)
 					} else {
 						log.Infof("notification 'NewDiscoveredAPI' successfully sent (%v)", notification)
 					}
