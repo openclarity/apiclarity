@@ -44,7 +44,7 @@ type Database interface {
 	ReviewTable() ReviewTable
 	APIEventsAnnotationsTable() APIEventAnnotationTable
 	APIInfoAnnotationsTable() APIAnnotationsTable
-	APIGatewaysTable() APIGatewaysTable
+	TraceSourcesTable() TraceSourcesTable
 }
 
 type Handler struct {
@@ -99,9 +99,9 @@ func (db *Handler) APIInfoAnnotationsTable() APIAnnotationsTable {
 	}
 }
 
-func (db *Handler) APIGatewaysTable() APIGatewaysTable {
-	return &APIGatewaysTableHandler{
-		tx: db.DB.Table(apiGatewaysTableName),
+func (db *Handler) TraceSourcesTable() TraceSourcesTable {
+	return &TraceSourcesTableHandler{
+		tx: db.DB.Table(traceSourcesTableName),
 	}
 }
 
@@ -137,7 +137,7 @@ func initDataBase(config *DBConfig) *gorm.DB {
 		&Review{},
 		&APIEventAnnotation{},
 		&APIInfoAnnotation{},
-		&APIGateway{}); err != nil {
+		&TraceSource{}); err != nil {
 		log.Fatalf("Failed to run auto migration: %v", err)
 	}
 

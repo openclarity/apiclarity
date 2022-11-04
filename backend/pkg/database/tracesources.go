@@ -24,14 +24,14 @@ import (
 )
 
 const (
-	apiGatewaysTableName = "api_gateways"
+	traceSourcesTableName = "trace_sources"
 )
 
 const (
 	tokenByteLength = 32
 )
 
-type APIGateway struct {
+type TraceSource struct {
 	gorm.Model
 
 	Name        string `json:"name,omitempty" gorm:"column:name;uniqueIndex" faker:"oneof: customer1.apigee.gw, mynicegateway"`
@@ -40,47 +40,47 @@ type APIGateway struct {
 	Token       []byte `json:"auth_token,omitempty" gorm:"column:auth_token" faker:"-"`
 }
 
-type APIGatewaysTable interface {
-	CreateAPIGateway(gateway *APIGateway) error
-	GetAPIGateway(ID uint) (*APIGateway, error)
-	GetAPIGateways() ([]*APIGateway, error)
-	DeleteAPIGateway(ID uint) error
+type TraceSourcesTable interface {
+	CreateTraceSource(source *TraceSource) error
+	GetTraceSource(ID uint) (*TraceSource, error)
+	GetTraceSources() ([]*TraceSource, error)
+	DeleteTraceSource(ID uint) error
 }
 
-type APIGatewaysTableHandler struct {
+type TraceSourcesTableHandler struct {
 	tx *gorm.DB
 }
 
-func (h *APIGatewaysTableHandler) CreateAPIGateway(gateway *APIGateway) error {
-	return h.tx.Where(*gateway).FirstOrCreate(gateway).Error
+func (h *TraceSourcesTableHandler) CreateTraceSource(source *TraceSource) error {
+	return h.tx.Where(*source).FirstOrCreate(source).Error
 }
 
-func (gw *APIGateway) BeforeCreate(tx *gorm.DB) error {
-	gw.Token = make([]byte, tokenByteLength)
-	if _, err := rand.Read(gw.Token); err != nil {
-		log.Errorf("Unable to generate token for APIGateway '%d': %v", gw.ID, err)
-		return fmt.Errorf("unable to generate token for APIGateway '%d': %v", gw.ID, err)
+func (source *TraceSource) BeforeCreate(tx *gorm.DB) error {
+	source.Token = make([]byte, tokenByteLength)
+	if _, err := rand.Read(source.Token); err != nil {
+		log.Errorf("Unable to generate token for Trace Source '%d': %v", source.ID, err)
+		return fmt.Errorf("unable to generate token for Trace Source '%d': %v", source.ID, err)
 	}
 
 	return nil
 }
 
-func (h *APIGatewaysTableHandler) GetAPIGateway(ID uint) (*APIGateway, error) {
-	egw := APIGateway{}
-	if err := h.tx.First(&egw, ID).Error; err != nil {
+func (h *TraceSourcesTableHandler) GetTraceSource(ID uint) (*TraceSource, error) {
+	source := TraceSource{}
+	if err := h.tx.First(&source, ID).Error; err != nil {
 		return nil, err
 	}
 
-	return &egw, nil
+	return &source, nil
 }
 
-func (h *APIGatewaysTableHandler) GetAPIGateways() ([]*APIGateway, error) {
-	dest := []*APIGateway{}
+func (h *TraceSourcesTableHandler) GetTraceSources() ([]*TraceSource, error) {
+	dest := []*TraceSource{}
 
 	h.tx.Find(&dest)
 	return dest, nil
 }
 
-func (h *APIGatewaysTableHandler) DeleteAPIGateway(ID uint) error {
-	return h.tx.Unscoped().Delete(&APIGateway{}, ID).Error
+func (h *TraceSourcesTableHandler) DeleteTraceSource(ID uint) error {
+	return h.tx.Unscoped().Delete(&TraceSource{}, ID).Error
 }
