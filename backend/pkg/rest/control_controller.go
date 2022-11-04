@@ -30,6 +30,14 @@ import (
 func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDiscoveredAPIsParams) middleware.Responder {
 	log.Debugf("PostControlNewDiscoveredAPIs controller was invoked")
 
+	// Check the token and retreive the corresponding trace source
+	token := []byte("") // FIXME: get the token from the http header
+	traceSourceID, err := s.CheckTraceSourceAuth(token)
+	if err != nil {
+		log.Errorf("Unable to authenticate the Trace Source")
+		return operations.NewPostControlNewDiscoveredAPIsDefault(401)
+	}
+
 	// Iterate over each hosts and check if it already exists
 	for _, h := range params.Body.Hosts {
 		host, strPort, err := net.SplitHostPort(h)
@@ -45,10 +53,10 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 		}
 
 		apiInfo := &_database.APIInfo{
-			Type:      models.APITypeINTERNAL,
-			Name:      host,
-			Port:      int64(port),
-			CreatedBy: params.Body.Source,
+			Type:        models.APITypeINTERNAL,
+			Name:        host,
+			Port:        int64(port),
+			TraceSourceID: traceSourceID,
 		}
 		created, err := s.dbHandler.APIInventoryTable().FirstOrCreate(apiInfo)
 		if err != nil {
@@ -56,7 +64,7 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 			continue
 		}
 		if created {
-			log.Infof("New API '%s' managed by '%s' was added to inventory", h, params.Body.Source)
+			log.Infof("New API '%s' managed by source '%v' was added to inventory", h, traceSourceID)
 			_ = s.speculator.InitSpec(host, strconv.Itoa(port))
 		}
 	}
