@@ -70,7 +70,7 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 			_ = s.speculator.InitSpec(host, strconv.Itoa(port))
 
 			if s.notifier != nil {
-				apiID := int64(apiInfo.ID)
+				apiID := uint32(apiInfo.ID)
 				port := int(apiInfo.Port)
 				newDiscoveredAPINotification := notifications.NewDiscoveredAPINotification{
 					Id:                   &apiID,

@@ -5,18 +5,18 @@ components:
         mapping:
           ApiFindingsNotification: '#/components/schemas/ApiFindingsNotification'
           AuthorizationModelNotification: '#/components/schemas/AuthorizationModelNotification'
+          NewDiscoveredAPINotification: '#/components/schemas/NewDiscoveredAPINotification'
           SpecDiffsNotification: '#/components/schemas/SpecDiffsNotification'
           TestProgressNotification: '#/components/schemas/TestProgressNotification'
           TestReportNotification: '#/components/schemas/TestReportNotification'
-          NewDiscoveredAPINotification: '#/components/schemas/NewDiscoveredAPINotification'
         propertyName: notificationType
       oneOf:
       - $ref: '#/components/schemas/ApiFindingsNotification'
       - $ref: '#/components/schemas/AuthorizationModelNotification'
+      - $ref: '#/components/schemas/NewDiscoveredAPINotification'
       - $ref: '#/components/schemas/SpecDiffsNotification'
       - $ref: '#/components/schemas/TestProgressNotification'
       - $ref: '#/components/schemas/TestReportNotification'
-      - $ref: '#/components/schemas/NewDiscoveredAPINotification'
     APIFindings:
       description: A group of findings
       properties:
@@ -30,6 +30,30 @@ components:
       allOf:
       - $ref: '#/components/schemas/BaseNotification'
       - $ref: '#/components/schemas/APIFindings'
+    ApiInfo:
+      properties:
+        createdBy:
+          default: APICLARITY
+          description: String representing the entity which created this API. APICLARITY
+            means it has been created by APIClarity on first trace
+          type: string
+        destinationNamespace:
+          type: string
+        hasProvidedSpec:
+          default: false
+          type: boolean
+        hasReconstructedSpec:
+          default: false
+          type: boolean
+        id:
+          format: uint32
+          type: integer
+        name:
+          description: API name
+          type: string
+        port:
+          type: integer
+      type: object
     AuthorizationModel:
       properties:
         learning:
@@ -57,6 +81,10 @@ components:
       required:
       - notificationType
       type: object
+    NewDiscoveredAPINotification:
+      allOf:
+      - $ref: '#/components/schemas/BaseNotification'
+      - $ref: '#/components/schemas/ApiInfo'
     ShortTestProgress:
       description: Describes the progress of an ongoing test
       properties:
@@ -106,28 +134,6 @@ components:
       - status
       title: Short Test Report
       type: object
-    ApiInfo:
-      type: 'object'
-      properties:
-        id:
-          $ref: ../common/openapi.yaml#/components/schemas/ApiID
-        name:
-          description: 'API name'
-          type: 'string'
-        port:
-          type: 'integer'
-        hasReconstructedSpec:
-          type: 'boolean'
-          default: false
-        hasProvidedSpec:
-          type: 'boolean'
-          default: false
-        destinationNamespace:
-          type: 'string'
-        createdBy:
-          description: 'String representing the entity which created this API. APICLARITY means it has been created by APIClarity on first trace'
-          type: 'string'
-          default: 'APICLARITY'
     SpecDiffs:
       properties:
         diffs:
@@ -147,10 +153,6 @@ components:
       allOf:
       - $ref: '#/components/schemas/BaseNotification'
       - $ref: '#/components/schemas/ShortTestReport'
-    NewDiscoveredAPINotification:
-      allOf:
-      - $ref: '#/components/schemas/BaseNotification'
-      - $ref: '#/components/schemas/ApiInfo'
 info:
   title: Core OAPI for APIClarity Notification
   version: "1.0"

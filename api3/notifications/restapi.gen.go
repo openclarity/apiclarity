@@ -46,11 +46,11 @@ type ApiFindingsNotification struct {
 // ApiInfo defines model for ApiInfo.
 type ApiInfo struct {
 	// String representing the entity which created this API. APICLARITY means it has been created by APIClarity on first trace
-	CreatedBy            *string             `json:"createdBy,omitempty"`
-	DestinationNamespace *string             `json:"destinationNamespace,omitempty"`
-	HasProvidedSpec      *bool               `json:"hasProvidedSpec,omitempty"`
-	HasReconstructedSpec *bool               `json:"hasReconstructedSpec,omitempty"`
-	Id                   *externalRef0.ApiID `json:"id,omitempty"`
+	CreatedBy            *string `json:"createdBy,omitempty"`
+	DestinationNamespace *string `json:"destinationNamespace,omitempty"`
+	HasProvidedSpec      *bool   `json:"hasProvidedSpec,omitempty"`
+	HasReconstructedSpec *bool   `json:"hasReconstructedSpec,omitempty"`
+	Id                   *uint32 `json:"id,omitempty"`
 
 	// API name
 	Name *string `json:"name,omitempty"`
@@ -80,11 +80,11 @@ type BaseNotification struct {
 // NewDiscoveredAPINotification defines model for NewDiscoveredAPINotification.
 type NewDiscoveredAPINotification struct {
 	// String representing the entity which created this API. APICLARITY means it has been created by APIClarity on first trace
-	CreatedBy            *string             `json:"createdBy,omitempty"`
-	DestinationNamespace *string             `json:"destinationNamespace,omitempty"`
-	HasProvidedSpec      *bool               `json:"hasProvidedSpec,omitempty"`
-	HasReconstructedSpec *bool               `json:"hasReconstructedSpec,omitempty"`
-	Id                   *externalRef0.ApiID `json:"id,omitempty"`
+	CreatedBy            *string `json:"createdBy,omitempty"`
+	DestinationNamespace *string `json:"destinationNamespace,omitempty"`
+	HasProvidedSpec      *bool   `json:"hasProvidedSpec,omitempty"`
+	HasReconstructedSpec *bool   `json:"hasReconstructedSpec,omitempty"`
+	Id                   *uint32 `json:"id,omitempty"`
 
 	// API name
 	Name             *string `json:"name,omitempty"`
@@ -195,6 +195,19 @@ func (t *APIClarityNotification) FromAuthorizationModelNotification(v Authorizat
 	return err
 }
 
+func (t APIClarityNotification) AsNewDiscoveredAPINotification() (NewDiscoveredAPINotification, error) {
+	var body NewDiscoveredAPINotification
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+func (t *APIClarityNotification) FromNewDiscoveredAPINotification(v NewDiscoveredAPINotification) error {
+	v.NotificationType = "NewDiscoveredAPINotification"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
 func (t APIClarityNotification) AsSpecDiffsNotification() (SpecDiffsNotification, error) {
 	var body SpecDiffsNotification
 	err := json.Unmarshal(t.union, &body)
@@ -229,19 +242,6 @@ func (t APIClarityNotification) AsTestReportNotification() (TestReportNotificati
 
 func (t *APIClarityNotification) FromTestReportNotification(v TestReportNotification) error {
 	v.NotificationType = "TestReportNotification"
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-func (t APIClarityNotification) AsNewDiscoveredAPINotification() (NewDiscoveredAPINotification, error) {
-	var body NewDiscoveredAPINotification
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-func (t *APIClarityNotification) FromNewDiscoveredAPINotification(v NewDiscoveredAPINotification) error {
-	v.NotificationType = "NewDiscoveredAPINotification"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -717,27 +717,27 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/8RYwY7bOA9+FUH/fzSStLvYQ25pZwsE2HaCSS6LIgfFpm0WtqSV6EwzQd59IVl2nNjJ",
-	"ZKad7i22SYr8SH6ksuexKrWSIMny6Z7bOIdS+J+zxfxjIQzS7osiTDEWhEq6Lwna2GCJUpAy7kUptEaZ",
-	"eS2Nn1AmKDN7qsb/Nz4eNQ7njC+JR3xWUa4MPvnnzyqB4iZ717Ui/gUe79DGagsGktlifovRqzoRX2qI",
-	"7zBNbwp4WDjiK7C0MCozYG+yc1G+NvUAWhm61dCA9CHi2igNhnZfRAl8ymXn82qnwYkoCfcpn37d8/8b",
-	"SF+a5EP0jN71ZD6nPgz1c1oXgb1FcRDI62pXi+uwPkSuERv4fPeB6z4dcjpjmVGVZiplaSPUpg7BayBB",
-	"OahaoKUzzVY2+DwaOadLJcdKgxQaRztRFsPpav10pUGuRKZcGCN2/HB8oTbfICYncZEq9lwUxQ119UFY",
-	"eFlBdZCsodU4l6lyR55CFhsQBMmHXQ1bKqqCHGSL+ce/Zg/z1d88OkNzSQZlxgxoAxYkuQfKgbmftGOP",
-	"OcY5C2YZ5WjZbDEfsaNFVoKQliGxXFi2AZCt+GbHjmzMlGQpGkuMjIiBt8ha74FDNgFLjp1RSde8Vju5",
-	"6b4vmAu7MGqLCSSuW06CTUVhoTW+UaoAIYPSA8RKWjJVTC/RxOSVlaVxfucMSE9FvUJezJn/MgCF68dO",
-	"6CgJMjAXCrLHN/3CKEAYGWZdP0An6bVP++4YcVaojSjaiDOQV6LuuXPfmO83WMSthtjz8qsPXDYWHDoG",
-	"/qnQQMKnX4+mTyKMjmCsb0LzV3V5P42+2XuGeoXkJFhXhImi6LZedwZaVlaWGHwnkEmPc3vTst9+ZyD3",
-	"NIZAvb6+vB2kgSc9jstcGeqOyT6Qd/5pA9ZToA5ybtQIyZTMlGdHsNTDTfhW/zGW0Bf9WnQ8cZ4FF0rx",
-	"Hcuq5NN3k0nES5T10yTihFRAG5AOG9Y5mUTckjBEOMROKyzBkih1c6iXPfMgVaYUVNv843d+PHjphb3l",
-	"aIjETtq0daKDwbpjyyWOucyxFoh6Y+EDpdamOYj0AuuYa638/GTmmOVgaQlbcC34Omut9n+WKn8uVT8w",
-	"Dj5VT08os6U386esyqPRz2CtyAYCCh9YqgyrRVkCJLCwEUPXjLtT/51AGXSC4NBQJZH9jAEXIqqLZyVq",
-	"08GZlcis30/5wCp5qegDxMMlf6XSm4tCf9wnzetXjvDFvDZ87nVtd33NmV9E7cfgPblfvoe+nQe9edJ6",
-	"MnSNfXs/QqUc1geXNgwXhKakPioD7N7tnK6rOsvB2TV8C8bWXfhuNAnLoasYPuW/jSaj944tBeW+usbd",
-	"4T/ee948+GpU1jNvu3bNEzfGlD0BpSZLZ8+IEgiM9eigO9ydwZvNOTBytxbJVBCF/33cSX16Ox8661od",
-	"LH1QiSfkWEkCSTXl66KJ45ut83U0/szlbOj/Jp+DU1Y7A/o0Ft9oVitp6w5+P5m8yMXzJa13+rKKY1+k",
-	"jn6rshRmV28W7hrFSLGZxjiURHPBNuKRodQV+ZoRLMMtSFc7bH7HhLUqRn/Re0TK28/UTKPaCwtm22S2",
-	"MgWf8rEr0X8DAAD//8oNqlnCEwAA",
+	"H4sIAAAAAAAC/8RYzW7bOBB+FYK7R8F228UefHOSLWBgmxixL4vCB1oaSVNIJJccOXUMv/uC1K8t2XGy",
+	"TXuzpJnh/HzzzdB7HqpcKwmSLJ/uuQ1TyIX/OVvMbzNhkHb3ijDGUBAq6b5EaEODOUpByrgXudAaZeK1",
+	"NH5GGaFM7LEa/23cHjWuzhmfEw/4rKBUGXz2z19UBNlV9i5rBfwenu7QhmoLBqLZYn6N0Ys6AV9qCO8w",
+	"jq8KeFg44CuwtDAqMWCvsnNWvjT1CFoZutbQgPQh4NooDYZ29yIHPuWy83m10+BElISHmE+/7vnvBuLX",
+	"FvkQvKB3uZgvqV8s20vKw3V6SetsVa5RHKrC+hC4RqzT57sPXPfpqqYzlhhVaKZiFtdCTekQvAYS5IOq",
+	"GVo60WxkK29HI+duruRYaZBC42gn8my4XI2fDhrkIDLlwhix44f2hdp8g5CcxFmq2HORZVfg6kZYeB2g",
+	"OpksU6txLmPljjxOWWhAEEQ3uzJtsSgycilbzG//nj3OV//w4CSbSzIoE2ZAG7AgyT1QCsz9pB17SjFM",
+	"WWWWUYqWzRbzEWstshyEtAyJpcKyDYBsxDc71rIxU5LFaCwxMiIE3mTWeg9cZiOw5NgZlXTNa7WTm+77",
+	"gqmwC6O2GEHkAH8UbCwyC43xjVIZCFkpPUKopCVThPQaTYycXKxMLlw2C5T06WMbAEqCBIyTlJ5zeohd",
+	"zJn/MhCz651OjI2tQeT1iKWPgAyEkdVQ60fiJL32cYO1TZNkaiOypmkSkBcap+fOQ22+30kBtxpCT8Bv",
+	"PnBZW3DZMfBvgQYiPv3amj6KMGiTsb4qmz+rnftl9F3dM9QDkpNgXREmsqzbY91hZ1leWGLwnUBGPXLt",
+	"jcV+n50kuacxlNTLe8r7pbQiRJ/HZaoMdUdaP5F3/mkD1nOdruTcTBGSKZkoT4NgqZc3oXF+98ZB41XL",
+	"DeWMX4uOJ86zyoVcfMe8yPn0w2QS8Bxl+TQJOCFl0ASkq1WqT0yWhCHCIXZaYQ6WRK7rQ73siQcN+aGk",
+	"P//g7cFLL+wtB0MkdtSmjROdHKw7tlzhmKscaxJRbhd8AGpNmSuRXmAdc42VH1/MFJMULC1hC64F32at",
+	"0f5lpfLnUvE/xsHn4vkZZbL0Zv6SRd4a/QLWimQgoOoDi5VhpSiLgARmNmDomnF37L8TyCudSnBoqJJI",
+	"fsSAqyIqwbMSpenKmZVIrF9E+cDOeA70VYqHIX8B6fVS3x/3Uf36jSN8MS8Nn3pd2l1fcuYnUXsbvCf3",
+	"8xfO9/OgN08aT4buq+/vR4WUw/rgyobVTaCG1K0ywB7czum6qrMcnNy3t2Bs2YUfRpNqOXSI4VP+aTQZ",
+	"uQVXC0o9usbd4T/ee948eDQq65m3WbvmkRtjyh4lpSRLZ8+IHAiM9dlBd7g7g9ebc8XIXSySKSCo/uA5",
+	"WsMbejsdOutSHSzdqMgTcqgkgaSS8nVWx/HNlvVqjb9wCxv6Y8nX4JjVThJ9HItvNKuVtGUHf5xMXuXi",
+	"6ZLWO31ZhKEHqaPfIs+F2ZWbhbsvMVJspjGsIFHfpI14Yih1QR4zgiW4Bemww+Z3TFirQvQ3uiektPlM",
+	"9TQqvbBgtnVlC5PxKR87iP4XAAD//5CEL/yrEwAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
