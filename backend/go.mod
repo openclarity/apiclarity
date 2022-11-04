@@ -150,3 +150,6 @@ replace github.com/openclarity/apiclarity/api v0.0.0 => ./../api
 replace github.com/openclarity/apiclarity/api3 v0.0.0 => ./../api3
 
 replace github.com/openclarity/apiclarity/plugins/api v0.0.0 => ./../plugins/api
+
+// fix CVE-2022-40083
+replace github.com/labstack/echo/v4 => github.com/labstack/echo/v4 v4.9.0

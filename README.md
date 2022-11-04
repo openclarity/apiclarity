@@ -2,36 +2,36 @@
 
 ![APIClarity](API_clarity.svg "APIClarity")
 
-Reconstruct [OpenAPI Specifications](https://spec.openapis.org/oas/latest.html)
-from real-time workload traffic seamlessly.
+APIClarity is a modular tool that addresses several aspects of API Security, focusing specifically on [OpenAPI](https://spec.openapis.org/oas/latest.html) based APIs.
 
-## Microservices API challenges
+APIClarity approaches API Security in 2 different ways:
+- Captures all API traffic in a given environment and performs a set of security analysis to discover all potential security problems with detected APIs
+- Actively tests API endpoints to detect security issues in the implementation of such APIs.
 
-- Not all applications have an OpenAPI specification available
-- How can we get this for legacy or external applications?
-- Detect whether microservices still use deprecated APIs (a.k.a. Zombie APIs)
-- Detect whether microservices use undocumented APIs (a.k.a. Shadow APIs)
-- Generate OpenAPI specifications without code instrumentation or
-  modifying existing workloads (seamless documentation)
+## OpenAPI automatic reconstruction
+Both approaches described above are way more effective when APIClarity is primed with the OpenAPI specifications of the APIs analyzed or tested. However, not all applications have an OpenAPI specification available. For this reason one of the main functionality of APIClarity is the automatic reconstruction of OpenAPI specifications based on observed API traffic. In this case, users have the ability to review and approve the reconstructed specifications.
 
-## Solution
+## Security Modules
+APIClarity is structured in a modular architecture, which allows to easily add new functionalities. 
 
-- Capture all API traffic in an existing environment using multiple traffic sources
-- Construct an OpenAPI specification by observing API traffic or upload a
-  reference OpenAPI spec
-- Review, modify and approve automatically generated OpenAPI specs
-- Alert on any differences between the approved API specification and the API
-  calls observed at runtime; detects shadow & zombie APIs
-- UI dashboard to audit and monitor the findings
+In the following a brief description of the modules currently implemented:
+
+- [**Spec Diffs**](.) This module compares the API traces with the OAPI specifications provided by the user or previously reconstructed. The result of this comparison provides:
+    - List of API endpoints that are observed but not documented in the specs, i.e. _Shadow APIs_;
+    - List of API endpoints that are observed but marked as deprecated in the specs, i.e. _Zombie APIs_;
+    - List of difference between of the APIs observed and their documented specification.
+- [**Trace Analyzer**](./backend/pkg/modules/internal/traceanalyzer/README.md) This module analyzes path, headers and body of API requests and responses to discover potential security issues, such as weak authentications, exposure of sensitive information, potential Broken Object Level Authorizations (BOLA) etc. 
+- [**BFLA Detector**](./backend/pkg/modules/internal/bfla/README.md) This module detects potential Broken Function Level Authorization. In particular it observes the API interactions and build an authorization model that captures what clients are supposed to be authorized to make the various API calls. Based on such authorization model it then signals violations which may represent potential issues in the API authorization procedures.
+- [**Fuzzer**](./backend/pkg/modules/internal/fuzzer/README.md) This module actively tests API endpoints based on their specification attempting in discovering security issues in the API server implementation.
 
 ## High level architecture
 
 ![High level architecture](diagram.jpg "High level architecture")
 
-
 ## Getting started
 
 ### Supported traffic source integrations
+
 APIClarity supports integrating with the following traffic sources. Install APIClarity and follow the instructions per required integration.
 
 * Istio Service Mesh
@@ -58,7 +58,9 @@ Contributions of integrations with additional traffic sources are more than welc
    ```shell
    helm repo add apiclarity https://openclarity.github.io/apiclarity
    ```
+
 2. Save APIClarity default chart values
+
     ```shell
     helm show values apiclarity/apiclarity > values.yaml
     ```
@@ -71,21 +73,23 @@ Contributions of integrations with additional traffic sources are more than welc
    helm install --values values.yaml --create-namespace apiclarity apiclarity/apiclarity -n apiclarity
    ```
 
-3. Port forward to APIClarity UI:
+5. Port forward to APIClarity UI:
 
    ```shell
    kubectl port-forward -n apiclarity svc/apiclarity-apiclarity 9999:8080
    ```
 
-4. Open APIClarity UI in the browser: <http://localhost:9999/>
-5. Generate some traffic in the traced applications and check the APIClarity UI :)
+6. Open APIClarity UI in the browser: <http://localhost:9999/>
+7. Generate some traffic in the traced applications and check the APIClarity UI :)
 
 ### Uninstall APIClarity from a K8s cluster using Helm:
 
 1. Helm uninstall
+
    ```shell
    helm uninstall apiclarity -n apiclarity
    ```
+
 2. Clean resources
 
     By default, Helm will not remove the PVCs and PVs for the StatefulSets. Run the following command to delete them all:
@@ -93,6 +97,7 @@ Contributions of integrations with additional traffic sources are more than welc
     ```shell
     kubectl delete pvc -l app.kubernetes.io/instance=apiclarity -n apiclarity
     ```
+
 ## Configurations
 
 The file [values.yaml](https://github.com/openclarity/apiclarity/blob/master/charts/apiclarity/values.yaml) is used to deploy and configure APIClarity on your cluster via Helm.
@@ -118,9 +123,11 @@ To deploy the Sock Shop Demo, follow these steps:
    ```
 
 3. Deploy APIClarity in the `sock-shop` namespace (e.g. Istio service-mesh traffic source):
+
    ```shell
    helm repo add apiclarity https://openclarity.github.io/apiclarity
    ```
+
    ```shell
    helm install --set 'trafficSource.envoyWasm.enabled=true' --set 'trafficSource.envoyWasm.namespaces={sock-shop}' --create-namespace apiclarity apiclarity/apiclarity -n apiclarity
    ```
@@ -137,11 +144,13 @@ To deploy the Sock Shop Demo, follow these steps:
 ## Building
 
 ### Building from source:
+
 Build and push the image to your repo:
 
 ```shell
 DOCKER_IMAGE=<your docker registry>/apiclarity DOCKER_TAG=<your tag> make push-docker
 ```
+
 Update [values.yaml](https://github.com/openclarity/apiclarity/blob/master/charts/apiclarity/values.yaml) accordingly.
 
 ## Running locally with demo data
@@ -159,11 +168,13 @@ Update [values.yaml](https://github.com/openclarity/apiclarity/blob/master/chart
    ```
 
 3. Run backend and frontend locally using demo data:
-   
+
    Note: You might need to delete the old local state file and local db:
+
    ```shell
    rm state.gob; rm db.db
    ```
+
    ```shell
    DATABASE_DRIVER=LOCAL K8S_LOCAL=true FAKE_TRACES=true FAKE_TRACES_PATH=./backend/pkg/test/trace_files \
    ENABLE_DB_INFO_LOGS=true ./backend/bin/backend run
@@ -177,6 +188,10 @@ Pull requests and bug reports are welcome.
 
 For larger changes please create an Issue in GitHub first to discuss your
 proposed changes and possible implications.
+
+## Contributors
+
+https://panoptica.app
 
 ## License
 
