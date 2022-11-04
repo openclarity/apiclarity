@@ -719,10 +719,6 @@ func init() {
                   "items": {
                     "type": "string"
                   }
-                },
-                "source": {
-                  "description": "Optional name identifying the entity sending this notification.",
-                  "type": "string"
                 }
               }
             }
@@ -1115,11 +1111,6 @@ func init() {
     "ApiInfo": {
       "type": "object",
       "properties": {
-        "createdBy": {
-          "description": "String representing the entity which created this API. APICLARITY means it has been created by APIClarity on first trace",
-          "type": "string",
-          "default": "APICLARITY"
-        },
         "destinationNamespace": {
           "type": "string"
         },
@@ -1141,6 +1132,11 @@ func init() {
         },
         "port": {
           "type": "integer"
+        },
+        "traceSource": {
+          "description": "String representing the entity which created this API. Empty means it has been created by APIClarity on first trace",
+          "type": "string",
+          "default": "APICLARITY"
         }
       }
     },
@@ -3096,10 +3092,6 @@ func init() {
                   "items": {
                     "type": "string"
                   }
-                },
-                "source": {
-                  "description": "Optional name identifying the entity sending this notification.",
-                  "type": "string"
                 }
               }
             }
@@ -3537,11 +3529,6 @@ func init() {
     "ApiInfo": {
       "type": "object",
       "properties": {
-        "createdBy": {
-          "description": "String representing the entity which created this API. APICLARITY means it has been created by APIClarity on first trace",
-          "type": "string",
-          "default": "APICLARITY"
-        },
         "destinationNamespace": {
           "type": "string"
         },
@@ -3563,6 +3550,11 @@ func init() {
         },
         "port": {
           "type": "integer"
+        },
+        "traceSource": {
+          "description": "String representing the entity which created this API. Empty means it has been created by APIClarity on first trace",
+          "type": "string",
+          "default": "APICLARITY"
         }
       }
     },

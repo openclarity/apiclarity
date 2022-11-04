@@ -17,9 +17,6 @@ import (
 // swagger:model ApiInfo
 type APIInfo struct {
 
-	// String representing the entity which created this API. APICLARITY means it has been created by APIClarity on first trace
-	CreatedBy *string `json:"createdBy,omitempty"`
-
 	// destination namespace
 	DestinationNamespace string `json:"destinationNamespace,omitempty"`
 
@@ -37,6 +34,9 @@ type APIInfo struct {
 
 	// port
 	Port int64 `json:"port,omitempty"`
+
+	// String representing the entity which created this API. Empty means it has been created by APIClarity on first trace
+	TraceSource *string `json:"traceSource,omitempty"`
 }
 
 // Validate validates this Api info
