@@ -17,6 +17,7 @@ package rest
 
 import (
 	"net"
+	"net/http"
 	"strconv"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -31,12 +32,12 @@ import (
 func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDiscoveredAPIsParams) middleware.Responder {
 	log.Infof("PostControlNewDiscoveredAPIs controller was invoked")
 
-	// Check the token and retreive the corresponding trace source
+	// Check the token and retrieve the corresponding trace source
 	token := []byte("") // FIXME: get the token from the http header
 	traceSourceID, err := s.CheckTraceSourceAuth(token)
 	if err != nil {
 		log.Errorf("Unable to authenticate the Trace Source")
-		return operations.NewPostControlNewDiscoveredAPIsDefault(401)
+		return operations.NewPostControlNewDiscoveredAPIsDefault(http.StatusUnauthorized)
 	}
 
 	// Iterate over each hosts and check if it already exists
@@ -73,7 +74,7 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 				port := int(apiInfo.Port)
 				traceSource := ""
 				if traceSourceID != nil {
-					traceSource = strconv.FormatUint(uint64(*traceSourceID), 10)
+					traceSource = strconv.FormatUint(uint64(*traceSourceID), 10) //nolint:gomnd
 				}
 				newDiscoveredAPINotification := notifications.NewDiscoveredAPINotification{
 					Id:                   &apiID,
@@ -87,14 +88,13 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 				notification := notifications.APIClarityNotification{}
 				err := notification.FromNewDiscoveredAPINotification(newDiscoveredAPINotification)
 				if err != nil {
-					log.Errorf("failed to create 'NewDiscoveredAPI' notification, err=(%v)", err)
+					log.Errorf("Failed to create 'NewDiscoveredAPI' notification, err=(%v)", err)
 				} else {
-					log.Infof("will send notification 'NewDiscoveredAPI' with (%v)", notification)
 					err = s.notifier.Notify(apiInfo.ID, notification)
 					if err != nil {
-						log.Errorf("failed to send 'NewDiscoveredAPI' notification, err=(%v)", err)
+						log.Errorf("Failed to send 'NewDiscoveredAPI' notification, err=(%v)", err)
 					} else {
-						log.Infof("notification 'NewDiscoveredAPI' successfully sent (%v)", notification)
+						log.Infof("Notification 'NewDiscoveredAPI' (api=%s) successfully sent", h)
 					}
 				}
 			}
