@@ -26,7 +26,7 @@ In the following a brief description of the modules currently implemented:
 
 ## High level architecture
 
-![High level architecture](diagram.jpg "High level architecture")
+![High level architecture](diagram.png "High level architecture")
 
 ## Getting started
 
