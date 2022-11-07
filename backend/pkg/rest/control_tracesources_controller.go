@@ -17,6 +17,7 @@ package rest
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/go-openapi/runtime/middleware"
@@ -113,7 +114,7 @@ func (s *Server) DeleteControlTraceSourcesTraceSourceID(params operations.Delete
 
 // Check if Trace Source authentication is needed
 // If not, returns nil, meaning that there is no Trace Source
-// If yes, check that the token is valid and return the corresponding TraceSource ID
+// If yes, check that the token is valid and return the corresponding TraceSource ID.
 func (s *Server) CheckTraceSourceAuth(token []byte) (*uint, error) {
 	if !s.needsTraceSourceAuth {
 		return nil, nil
@@ -121,7 +122,7 @@ func (s *Server) CheckTraceSourceAuth(token []byte) (*uint, error) {
 
 	traceSource, err := s.dbHandler.TraceSourcesTable().GetTraceSourceFromToken(token)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Unable to Trace Source: %v", err)
 	}
 	traceSourceID := traceSource.ID
 
