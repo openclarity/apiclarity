@@ -24,11 +24,12 @@ import (
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
+	"github.com/openclarity/apiclarity/api3/notifications"
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 )
 
 func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDiscoveredAPIsParams) middleware.Responder {
-	log.Debugf("PostControlNewDiscoveredAPIs controller was invoked")
+	log.Infof("PostControlNewDiscoveredAPIs controller was invoked")
 
 	// Check the token and retreive the corresponding trace source
 	token := []byte("") // FIXME: get the token from the http header
@@ -53,9 +54,9 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 		}
 
 		apiInfo := &_database.APIInfo{
-			Type:        models.APITypeINTERNAL,
-			Name:        host,
-			Port:        int64(port),
+			Type:          models.APITypeINTERNAL,
+			Name:          host,
+			Port:          int64(port),
 			TraceSourceID: traceSourceID,
 		}
 		created, err := s.dbHandler.APIInventoryTable().FirstOrCreate(apiInfo)
@@ -66,6 +67,37 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 		if created {
 			log.Infof("New API '%s' managed by source '%v' was added to inventory", h, traceSourceID)
 			_ = s.speculator.InitSpec(host, strconv.Itoa(port))
+
+			if s.notifier != nil {
+				apiID := uint32(apiInfo.ID)
+				port := int(apiInfo.Port)
+				traceSource := ""
+				if traceSourceID != nil {
+					traceSource = strconv.FormatUint(uint64(*traceSourceID), 10)
+				}
+				newDiscoveredAPINotification := notifications.NewDiscoveredAPINotification{
+					Id:                   &apiID,
+					Name:                 &apiInfo.Name,
+					Port:                 &port,
+					HasReconstructedSpec: &apiInfo.HasReconstructedSpec,
+					HasProvidedSpec:      &apiInfo.HasProvidedSpec,
+					DestinationNamespace: &apiInfo.DestinationNamespace,
+					TraceSource:          &traceSource,
+				}
+				notification := notifications.APIClarityNotification{}
+				err := notification.FromNewDiscoveredAPINotification(newDiscoveredAPINotification)
+				if err != nil {
+					log.Errorf("failed to create 'NewDiscoveredAPI' notification, err=(%v)", err)
+				} else {
+					log.Infof("will send notification 'NewDiscoveredAPI' with (%v)", notification)
+					err = s.notifier.Notify(apiInfo.ID, notification)
+					if err != nil {
+						log.Errorf("failed to send 'NewDiscoveredAPI' notification, err=(%v)", err)
+					} else {
+						log.Infof("notification 'NewDiscoveredAPI' successfully sent (%v)", notification)
+					}
+				}
+			}
 		}
 	}
 

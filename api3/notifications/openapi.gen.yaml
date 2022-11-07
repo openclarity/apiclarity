@@ -5,6 +5,7 @@ components:
         mapping:
           ApiFindingsNotification: '#/components/schemas/ApiFindingsNotification'
           AuthorizationModelNotification: '#/components/schemas/AuthorizationModelNotification'
+          NewDiscoveredAPINotification: '#/components/schemas/NewDiscoveredAPINotification'
           SpecDiffsNotification: '#/components/schemas/SpecDiffsNotification'
           TestProgressNotification: '#/components/schemas/TestProgressNotification'
           TestReportNotification: '#/components/schemas/TestReportNotification'
@@ -12,6 +13,7 @@ components:
       oneOf:
       - $ref: '#/components/schemas/ApiFindingsNotification'
       - $ref: '#/components/schemas/AuthorizationModelNotification'
+      - $ref: '#/components/schemas/NewDiscoveredAPINotification'
       - $ref: '#/components/schemas/SpecDiffsNotification'
       - $ref: '#/components/schemas/TestProgressNotification'
       - $ref: '#/components/schemas/TestReportNotification'
@@ -28,6 +30,30 @@ components:
       allOf:
       - $ref: '#/components/schemas/BaseNotification'
       - $ref: '#/components/schemas/APIFindings'
+    ApiInfo:
+      properties:
+        destinationNamespace:
+          type: string
+        hasProvidedSpec:
+          default: false
+          type: boolean
+        hasReconstructedSpec:
+          default: false
+          type: boolean
+        id:
+          format: uint32
+          type: integer
+        name:
+          description: API name
+          type: string
+        port:
+          type: integer
+        traceSource:
+          default: APICLARITY
+          description: String representing the entity which created this API. Empty
+            means it has been created by APIClarity on first trace
+          type: string
+      type: object
     AuthorizationModel:
       properties:
         learning:
@@ -55,6 +81,10 @@ components:
       required:
       - notificationType
       type: object
+    NewDiscoveredAPINotification:
+      allOf:
+      - $ref: '#/components/schemas/BaseNotification'
+      - $ref: '#/components/schemas/ApiInfo'
     ShortTestProgress:
       description: Describes the progress of an ongoing test
       properties:
