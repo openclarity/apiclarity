@@ -32,11 +32,6 @@ components:
       - $ref: '#/components/schemas/APIFindings'
     ApiInfo:
       properties:
-        createdBy:
-          default: APICLARITY
-          description: String representing the entity which created this API. APICLARITY
-            means it has been created by APIClarity on first trace
-          type: string
         destinationNamespace:
           type: string
         hasProvidedSpec:
@@ -53,6 +48,11 @@ components:
           type: string
         port:
           type: integer
+        traceSource:
+          default: APICLARITY
+          description: String representing the entity which created this API. Empty
+            means it has been created by APIClarity on first trace
+          type: string
       type: object
     AuthorizationModel:
       properties:

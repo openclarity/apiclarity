@@ -54,9 +54,9 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 		}
 
 		apiInfo := &_database.APIInfo{
-			Type:        models.APITypeINTERNAL,
-			Name:        host,
-			Port:        int64(port),
+			Type:          models.APITypeINTERNAL,
+			Name:          host,
+			Port:          int64(port),
 			TraceSourceID: traceSourceID,
 		}
 		created, err := s.dbHandler.APIInventoryTable().FirstOrCreate(apiInfo)
@@ -71,6 +71,10 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 			if s.notifier != nil {
 				apiID := uint32(apiInfo.ID)
 				port := int(apiInfo.Port)
+				traceSource := ""
+				if traceSourceID != nil {
+					traceSource = strconv.FormatUint(uint64(*traceSourceID), 10)
+				}
 				newDiscoveredAPINotification := notifications.NewDiscoveredAPINotification{
 					Id:                   &apiID,
 					Name:                 &apiInfo.Name,
@@ -78,7 +82,7 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 					HasReconstructedSpec: &apiInfo.HasReconstructedSpec,
 					HasProvidedSpec:      &apiInfo.HasProvidedSpec,
 					DestinationNamespace: &apiInfo.DestinationNamespace,
-					CreatedBy:            &apiInfo.CreatedBy,
+					TraceSource:          &traceSource,
 				}
 				notification := notifications.APIClarityNotification{}
 				err := notification.FromNewDiscoveredAPINotification(newDiscoveredAPINotification)
@@ -86,7 +90,6 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 					log.Errorf("failed to create 'NewDiscoveredAPI' notification, err=(%v)", err)
 				} else {
 					log.Infof("will send notification 'NewDiscoveredAPI' with (%v)", notification)
-					log.Infof("s.notifier (%v)", s.notifier)
 					err = s.notifier.Notify(apiInfo.ID, notification)
 					if err != nil {
 						log.Errorf("failed to send 'NewDiscoveredAPI' notification, err=(%v)", err)
