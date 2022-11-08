@@ -42,6 +42,7 @@ func TestLoadConfig(t *testing.T) {
 	cfg, err := servicetest.LoadConfigAndValidate(filepath.Join("testdata", "bad_empty_config.yaml"), factories)
 
 	require.Error(t, err)
+	require.NotNil(t, cfg)
 
 	e0 := cfg.Exporters[otelconfig.NewComponentID(typeStr)]
 	assert.Equal(t, e0, factory.CreateDefaultConfig())
@@ -87,5 +88,6 @@ func TestLoadConfig(t *testing.T) {
 				Timeout:         time.Second * 10,
 				Compression:     "none",
 			},
+			preferHostNames: true,
 		})
 }
