@@ -48,6 +48,8 @@ const (
 	TLSServerKeyFilePath          = "TLS_SERVER_KEY_FILE_PATH"
 	RootCertFilePath              = "ROOT_CERT_FILE_PATH"
 
+	ExternalHTTPTracesTLSPort = "EXTERNAL_HTTP_TRACES_TLS_PORT"
+
 	DBNameEnvVar     = "DB_NAME"
 	DBUserEnvVar     = "DB_USER"
 	DBPasswordEnvVar = "DB_PASS"
@@ -81,6 +83,9 @@ type Config struct {
 	RootCertFilePath           string
 
 	NotificationPrefix string
+
+	// External HTTP Trace server
+	ExternalHTTPTracesTLSPort int
 
 	// trace sampling config
 	HTTPTraceSamplingManagerPort  int
@@ -123,6 +128,8 @@ func LoadConfig() (*Config, error) {
 	config.TLSServerKeyFilePath = viper.GetString(TLSServerKeyFilePath)
 	config.RootCertFilePath = viper.GetString(RootCertFilePath)
 	config.NotificationPrefix = viper.GetString(NotificationPrefix)
+
+	config.ExternalHTTPTracesTLSPort = viper.GetInt(ExternalHTTPTracesTLSPort)
 
 	config.K8sLocal = viper.GetBool(K8sLocalEnvVar)
 	config.EnableTLS = viper.GetBool(EnableTLS)

@@ -237,6 +237,7 @@ func Run() {
 		TLSPort:               config.HTTPTracesTLSPort,
 		TLSServerCertFilePath: config.TLSServerCertFilePath,
 		TLSServerKeyFilePath:  config.TLSServerKeyFilePath,
+		NeedsTraceSourceAuth:  false,
 		TraceHandleFunc:       backend.handleHTTPTrace,
 	}
 	tracesServer, err := traces.CreateHTTPTracesServer(httpTracesServerConfig)
@@ -245,6 +246,25 @@ func Run() {
 	}
 	tracesServer.Start(errChan)
 	defer tracesServer.Stop()
+
+	if config.EnableTLS {
+		httpExternalTracesServerConfig := &traces.HTTPTracesServerConfig{
+			EnableTLS:             true,
+			TLSPort:               config.ExternalHTTPTracesTLSPort,
+			TLSServerCertFilePath: config.TLSServerCertFilePath,
+			TLSServerKeyFilePath:  config.TLSServerKeyFilePath,
+			NeedsTraceSourceAuth:  true,
+			TraceHandleFunc:       backend.handleHTTPTrace,
+		}
+		externalTracesServer, err := traces.CreateHTTPTracesServer(httpExternalTracesServerConfig)
+		if err != nil {
+			log.Fatalf("Failed to create external trace server: %v", err)
+		}
+		externalTracesServer.Start(errChan)
+		defer externalTracesServer.Stop()
+	} else {
+		log.Warningf("External trace server not started because TLS is not enabled")
+	}
 
 	backend.startStateBackup(globalCtx)
 

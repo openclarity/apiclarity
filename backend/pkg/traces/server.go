@@ -45,6 +45,7 @@ type HTTPTracesServerConfig struct {
 	TLSServerCertFilePath string
 	TLSServerKeyFilePath  string
 	TraceHandleFunc       HandleTraceFunc
+	NeedsTraceSourceAuth  bool
 }
 
 func CreateHTTPTracesServer(config *HTTPTracesServerConfig) (*HTTPTracesServer, error) {
@@ -67,10 +68,15 @@ func CreateHTTPTracesServer(config *HTTPTracesServerConfig) (*HTTPTracesServer, 
 	server.ConfigureAPI()
 	server.Port = config.Port
 
-	// We want to serve both http and https
+	// We want to serve both http and https, except if the NeedsTraceSourceAuth flag is set,
+	// in that case, we are on the public facing server, and we ONLY want HTTPS.
 	// TODO: need to use istio to secure the http port when the wasm is sending traces
 	if config.EnableTLS {
-		server.EnabledListeners = []string{"https", "http"}
+		if config.NeedsTraceSourceAuth {
+			server.EnabledListeners = []string{"https"}
+		} else {
+			server.EnabledListeners = []string{"https", "http"}
+		}
 		server.TLSCertificate = flags.Filename(config.TLSServerCertFilePath)
 		server.TLSCertificateKey = flags.Filename(config.TLSServerKeyFilePath)
 		server.TLSPort = config.TLSPort
