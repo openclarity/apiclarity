@@ -89,6 +89,7 @@ func init() {
           }
         },
         "time": {
+          "description": "Time since epoch (milliseconds)",
           "type": "integer",
           "format": "int64"
         },
@@ -170,6 +171,9 @@ func init() {
           "type": "string"
         }
       }
+    },
+    "TraceSourcePrincipal": {
+      "type": "string"
     }
   },
   "responses": {
@@ -185,7 +189,19 @@ func init() {
         "$ref": "#/definitions/ApiResponse"
       }
     }
-  }
+  },
+  "securityDefinitions": {
+    "TraceSourceTokenHeader": {
+      "type": "apiKey",
+      "name": "X-Trace-Source-Token",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "TraceSourceTokenHeader": []
+    }
+  ]
 }`))
 	FlatSwaggerJSON = json.RawMessage([]byte(`{
   "consumes": [
@@ -265,6 +281,7 @@ func init() {
           }
         },
         "time": {
+          "description": "Time since epoch (milliseconds)",
           "type": "integer",
           "format": "int64"
         },
@@ -346,6 +363,9 @@ func init() {
           "type": "string"
         }
       }
+    },
+    "TraceSourcePrincipal": {
+      "type": "string"
     }
   },
   "responses": {
@@ -361,6 +381,18 @@ func init() {
         "$ref": "#/definitions/ApiResponse"
       }
     }
-  }
+  },
+  "securityDefinitions": {
+    "TraceSourceTokenHeader": {
+      "type": "apiKey",
+      "name": "X-Trace-Source-Token",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "TraceSourceTokenHeader": []
+    }
+  ]
 }`))
 }

@@ -17,11 +17,15 @@ package traces
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/loads"
+	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/runtime/security"
 	"github.com/jessevdk/go-flags"
 	log "github.com/sirupsen/logrus"
 
@@ -31,11 +35,15 @@ import (
 	"github.com/openclarity/apiclarity/plugins/api/server/restapi/operations"
 )
 
-type HandleTraceFunc func(ctx context.Context, trace *models.Telemetry) error
+type (
+	HandleTraceFunc     func(ctx context.Context, trace *models.Telemetry, principal *models.TraceSourcePrincipal) error
+	TraceSourceAuthFunc func(ctx context.Context, token []byte) (*models.TraceSourcePrincipal, error)
+)
 
 type HTTPTracesServer struct {
-	traceHandleFunc HandleTraceFunc
-	server          *restapi.Server
+	traceHandleFunc     HandleTraceFunc
+	traceSourceAuthFunc TraceSourceAuthFunc
+	server              *restapi.Server
 }
 
 type HTTPTracesServerConfig struct {
@@ -45,7 +53,7 @@ type HTTPTracesServerConfig struct {
 	TLSServerCertFilePath string
 	TLSServerKeyFilePath  string
 	TraceHandleFunc       HandleTraceFunc
-	NeedsTraceSourceAuth  bool
+	TraceSourceAuthFunc   TraceSourceAuthFunc
 }
 
 func CreateHTTPTracesServer(config *HTTPTracesServerConfig) (*HTTPTracesServer, error) {
@@ -58,8 +66,20 @@ func CreateHTTPTracesServer(config *HTTPTracesServerConfig) (*HTTPTracesServer, 
 
 	api := operations.NewAPIClarityPluginsTelemetriesAPIAPI(swaggerSpec)
 
-	api.PostTelemetryHandler = operations.PostTelemetryHandlerFunc(func(params operations.PostTelemetryParams) middleware.Responder {
-		return s.PostTelemetry(params)
+	api.TraceSourceTokenHeaderAuth = s.ValidateTraceSource
+	if config.TraceHandleFunc == nil {
+		// Why do we override the APIKeyAuthenticator ?
+		// Because we want an authentication only when served on HTTPs.
+		// The default generated code, always checks for the presence of the
+		// authentication header. We don't want to check for authentication header
+		// while on the HTTP server (because it's not publicly exposed).
+		// This authenticator function returns a default empty principal when no
+		// authentication header is provided.
+		api.APIKeyAuthenticator = APIKeyNoAuth
+	}
+
+	api.PostTelemetryHandler = operations.PostTelemetryHandlerFunc(func(params operations.PostTelemetryParams, principal interface{}) middleware.Responder {
+		return s.PostTelemetry(params, principal)
 	})
 
 	server := restapi.NewServer(api)
@@ -68,11 +88,12 @@ func CreateHTTPTracesServer(config *HTTPTracesServerConfig) (*HTTPTracesServer, 
 	server.ConfigureAPI()
 	server.Port = config.Port
 
-	// We want to serve both http and https, except if the NeedsTraceSourceAuth flag is set,
+	// We want to serve both http and https, except if the TraceSourceAuthFunc
+	// function is set,
 	// in that case, we are on the public facing server, and we ONLY want HTTPS.
 	// TODO: need to use istio to secure the http port when the wasm is sending traces
 	if config.EnableTLS {
-		if config.NeedsTraceSourceAuth {
+		if config.TraceSourceAuthFunc != nil {
 			server.EnabledListeners = []string{"https"}
 		} else {
 			server.EnabledListeners = []string{"https", "http"}
@@ -84,6 +105,7 @@ func CreateHTTPTracesServer(config *HTTPTracesServerConfig) (*HTTPTracesServer, 
 
 	s.server = server
 	s.traceHandleFunc = config.TraceHandleFunc
+	s.traceSourceAuthFunc = config.TraceSourceAuthFunc
 
 	return s, nil
 }
@@ -108,11 +130,35 @@ func (s *HTTPTracesServer) Stop() {
 	}
 }
 
-func (s *HTTPTracesServer) PostTelemetry(params operations.PostTelemetryParams) middleware.Responder {
-	if err := s.traceHandleFunc(params.HTTPRequest.Context(), params.Body); err != nil {
+func (s *HTTPTracesServer) PostTelemetry(params operations.PostTelemetryParams, principal interface{}) middleware.Responder {
+	traceSourcePrincipal, ok := principal.(*models.TraceSourcePrincipal)
+	if !ok {
+		panic("Principal is not of type models.TraceSourcePrincipal")
+	}
+	if err := s.traceHandleFunc(params.HTTPRequest.Context(), params.Body, traceSourcePrincipal); err != nil {
 		log.Errorf("Error from trace handling func: %v", err)
 		return operations.NewPostTelemetryDefault(http.StatusInternalServerError)
 	}
 
 	return operations.NewPostTelemetryOK()
+}
+
+func APIKeyNoAuth(name, in string, authenticate security.TokenAuthentication) runtime.Authenticator {
+	return security.HttpAuthenticator(func(r *http.Request) (bool, interface{}, error) {
+		prin := models.TraceSourcePrincipal("")
+		return true, &prin, nil
+	})
+}
+
+func (s *HTTPTracesServer) ValidateTraceSource(token string) (interface{}, error) {
+	decodedToken, err := base64.StdEncoding.DecodeString(token)
+	if err != nil {
+		return nil, errors.New(http.StatusUnauthorized, "incorrect api key auth (not a valid base64 token)")
+	}
+	traceSourcePrinc, err := s.traceSourceAuthFunc(context.TODO(), decodedToken)
+	if err == nil && traceSourcePrinc != nil {
+		return traceSourcePrinc, nil
+	}
+
+	return nil, errors.New(http.StatusUnauthorized, "incorrect api key auth")
 }

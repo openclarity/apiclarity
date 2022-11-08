@@ -28,7 +28,7 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
-	PostTelemetry(params *PostTelemetryParams, opts ...ClientOption) (*PostTelemetryOK, error)
+	PostTelemetry(params *PostTelemetryParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostTelemetryOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
@@ -36,7 +36,7 @@ type ClientService interface {
 /*
   PostTelemetry posts an http telemetry
 */
-func (a *Client) PostTelemetry(params *PostTelemetryParams, opts ...ClientOption) (*PostTelemetryOK, error) {
+func (a *Client) PostTelemetry(params *PostTelemetryParams, authInfo runtime.ClientAuthInfoWriter, opts ...ClientOption) (*PostTelemetryOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewPostTelemetryParams()
@@ -50,6 +50,7 @@ func (a *Client) PostTelemetry(params *PostTelemetryParams, opts ...ClientOption
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostTelemetryReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}

@@ -641,7 +641,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 				dbHandler:      tt.fields.dbHandler,
 				modulesManager: mockModulesManager,
 			}
-			if err := b.handleHTTPTrace(ctx, tt.args.trace); (err != nil) != tt.wantErr {
+			if err := b.handleHTTPTrace(ctx, tt.args.trace, nil); (err != nil) != tt.wantErr {
 				t.Errorf("handleHTTPTrace() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

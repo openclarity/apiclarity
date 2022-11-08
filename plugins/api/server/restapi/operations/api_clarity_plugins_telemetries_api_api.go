@@ -42,9 +42,16 @@ func NewAPIClarityPluginsTelemetriesAPIAPI(spec *loads.Document) *APIClarityPlug
 
 		JSONProducer: runtime.JSONProducer(),
 
-		PostTelemetryHandler: PostTelemetryHandlerFunc(func(params PostTelemetryParams) middleware.Responder {
+		PostTelemetryHandler: PostTelemetryHandlerFunc(func(params PostTelemetryParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PostTelemetry has not yet been implemented")
 		}),
+
+		// Applies when the "X-Trace-Source-Token" header is set
+		TraceSourceTokenHeaderAuth: func(token string) (interface{}, error) {
+			return nil, errors.NotImplemented("api key auth (TraceSourceTokenHeader) X-Trace-Source-Token from header param [X-Trace-Source-Token] has not yet been implemented")
+		},
+		// default authorizer is authorized meaning no requests are blocked
+		APIAuthorizer: security.Authorized(),
 	}
 }
 
@@ -80,6 +87,13 @@ type APIClarityPluginsTelemetriesAPIAPI struct {
 	// JSONProducer registers a producer for the following mime types:
 	//   - application/json
 	JSONProducer runtime.Producer
+
+	// TraceSourceTokenHeaderAuth registers a function that takes a token and returns a principal
+	// it performs authentication based on an api key X-Trace-Source-Token provided in the header
+	TraceSourceTokenHeaderAuth func(string) (interface{}, error)
+
+	// APIAuthorizer provides access control (ACL/RBAC/ABAC) by providing access to the request and authenticated principal
+	APIAuthorizer runtime.Authorizer
 
 	// PostTelemetryHandler sets the operation handler for the post telemetry operation
 	PostTelemetryHandler PostTelemetryHandler
@@ -160,6 +174,10 @@ func (o *APIClarityPluginsTelemetriesAPIAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
+	if o.TraceSourceTokenHeaderAuth == nil {
+		unregistered = append(unregistered, "XTraceSourceTokenAuth")
+	}
+
 	if o.PostTelemetryHandler == nil {
 		unregistered = append(unregistered, "PostTelemetryHandler")
 	}
@@ -178,12 +196,21 @@ func (o *APIClarityPluginsTelemetriesAPIAPI) ServeErrorFor(operationID string) f
 
 // AuthenticatorsFor gets the authenticators for the specified security schemes
 func (o *APIClarityPluginsTelemetriesAPIAPI) AuthenticatorsFor(schemes map[string]spec.SecurityScheme) map[string]runtime.Authenticator {
-	return nil
+	result := make(map[string]runtime.Authenticator)
+	for name := range schemes {
+		switch name {
+		case "TraceSourceTokenHeader":
+			scheme := schemes[name]
+			result[name] = o.APIKeyAuthenticator(scheme.Name, scheme.In, o.TraceSourceTokenHeaderAuth)
+
+		}
+	}
+	return result
 }
 
 // Authorizer returns the registered authorizer
 func (o *APIClarityPluginsTelemetriesAPIAPI) Authorizer() runtime.Authorizer {
-	return nil
+	return o.APIAuthorizer
 }
 
 // ConsumersFor gets the consumers for the specified media types.

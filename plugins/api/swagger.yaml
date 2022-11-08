@@ -11,6 +11,15 @@ schemes:
 consumes: [ "application/json" ]
 produces: [ "application/json" ]
 
+securityDefinitions:
+  TraceSourceTokenHeader:
+    type: apiKey
+    in: header
+    name: X-Trace-Source-Token
+
+security:
+  - TraceSourceTokenHeader: []
+
 paths:
   /telemetry:
     post:
@@ -109,6 +118,9 @@ definitions:
     properties:
       message:
         type: 'string'
+
+  TraceSourcePrincipal:
+    type: string
 
 responses:
   UnknownError:

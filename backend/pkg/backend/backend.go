@@ -237,8 +237,8 @@ func Run() {
 		TLSPort:               config.HTTPTracesTLSPort,
 		TLSServerCertFilePath: config.TLSServerCertFilePath,
 		TLSServerKeyFilePath:  config.TLSServerKeyFilePath,
-		NeedsTraceSourceAuth:  false,
 		TraceHandleFunc:       backend.handleHTTPTrace,
+		TraceSourceAuthFunc:   nil,
 	}
 	tracesServer, err := traces.CreateHTTPTracesServer(httpTracesServerConfig)
 	if err != nil {
@@ -253,8 +253,8 @@ func Run() {
 			TLSPort:               config.ExternalHTTPTracesTLSPort,
 			TLSServerCertFilePath: config.TLSServerCertFilePath,
 			TLSServerKeyFilePath:  config.TLSServerKeyFilePath,
-			NeedsTraceSourceAuth:  true,
 			TraceHandleFunc:       backend.handleHTTPTrace,
+			TraceSourceAuthFunc:   backend.traceSourceAuth,
 		}
 		externalTracesServer, err := traces.CreateHTTPTracesServer(httpExternalTracesServerConfig)
 		if err != nil {
@@ -287,7 +287,17 @@ func Run() {
 	}
 }
 
-func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Telemetry) error {
+func (b *Backend) traceSourceAuth(ctx context.Context, token []byte) (*pluginsmodels.TraceSourcePrincipal, error) {
+	traceSource, err := b.dbHandler.TraceSourcesTable().GetTraceSourceFromToken(token)
+	if err != nil {
+		return nil, fmt.Errorf("no trace source found: %v", err)
+	}
+
+	principal := pluginsmodels.TraceSourcePrincipal(strconv.Itoa(int(traceSource.ID)))
+	return &principal, nil
+}
+
+func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Telemetry, principal *pluginsmodels.TraceSourcePrincipal) error {
 	var err error
 
 	log.Debugf("Handling telemetry: %+v", trace)

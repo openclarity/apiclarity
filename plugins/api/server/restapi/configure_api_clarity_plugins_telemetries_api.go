@@ -37,8 +37,21 @@ func configureAPI(api *operations.APIClarityPluginsTelemetriesAPIAPI) http.Handl
 
 	api.JSONProducer = runtime.JSONProducer()
 
+	// Applies when the "X-Trace-Source-Token" header is set
+	if api.TraceSourceTokenHeaderAuth == nil {
+		api.TraceSourceTokenHeaderAuth = func(token string) (interface{}, error) {
+			return nil, errors.NotImplemented("api key auth (TraceSourceTokenHeader) X-Trace-Source-Token from header param [X-Trace-Source-Token] has not yet been implemented")
+		}
+	}
+
+	// Set your custom authorizer if needed. Default one is security.Authorized()
+	// Expected interface runtime.Authorizer
+	//
+	// Example:
+	// api.APIAuthorizer = security.Authorized()
+
 	if api.PostTelemetryHandler == nil {
-		api.PostTelemetryHandler = operations.PostTelemetryHandlerFunc(func(params operations.PostTelemetryParams) middleware.Responder {
+		api.PostTelemetryHandler = operations.PostTelemetryHandlerFunc(func(params operations.PostTelemetryParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation operations.PostTelemetry has not yet been implemented")
 		})
 	}
