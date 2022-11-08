@@ -131,6 +131,7 @@ license-check: bin/licensei ## Run license check
 	cd plugins/gateway/kong && ../../../bin/licensei check --config=../../../.licensei.toml
 	cd plugins/gateway/tyk/v3.2.2 && ../../../../bin/licensei check --config=../../../../.licensei.toml
 	cd plugins/taper && ../../bin/licensei check --config=../../.licensei.toml
+	cd plugins/otel-collector && ../../bin/licensei check --config=../../.licensei.toml
 
 .PHONY: license-cache
 license-cache: bin/licensei ## Generate license cache
