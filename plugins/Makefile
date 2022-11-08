@@ -3,6 +3,7 @@ DOCKER_REGISTRY ?= ghcr.io/openclarity
 VERSION ?= $(shell git rev-parse HEAD)
 DOCKER_TAG ?= ${VERSION}
 TYK_VERSION ?= v3.2.2
+OTEL_COLLECTOR_VERSION ?= 0.60.0
 
 .PHONY: docker
 docker: docker-kong docker-tyk docker-taper docker-otelcollector
@@ -28,11 +29,15 @@ docker-tyk:
 	 cd -)
 
 .PHONY: docker-otelcollector
-docker-otelcollector:
-	@(cd otel-collector && $(MAKE) docker)
+docker-otelcollector: otel-collector/Dockerfile
+	@DOCKER_BUILDKIT=1 docker build \
+	  -f otel-collector/Dockerfile \
+	  --build-arg OTEL_COLLECTOR_VERSION=${OTEL_COLLECTOR_VERSION} \
+	  -t otel-apiclarityexporter:${DOCKER_TAG} \
+	  -t otel-apiclarityexporter:latest .
 
 .PHONY: push-docker
-push-docker: push-docker-kong push-docker-tyk push-docker-taper
+push-docker: push-docker-kong push-docker-tyk push-docker-taper push-docker-otelcollector
 
 .PHONY: push-docker-kong
 push-docker-kong: docker-kong
@@ -48,3 +53,8 @@ push-docker-tyk: docker-tyk
 push-docker-taper: docker-taper
 	@echo "Publishing passive taper Docker image ..."
 	docker push ${DOCKER_REGISTRY}/passive-taper:${DOCKER_TAG}
+
+.PHONY: push-docker-otelcollector
+push-docker-otelcollector: docker-otelcollector
+	@echo "Publishing otel-apiclarityexporter Docker image ..."
+	docker push ${DOCKER_REGISTRY}/otel-apiclarityexporter:${DOCKER_TAG}
