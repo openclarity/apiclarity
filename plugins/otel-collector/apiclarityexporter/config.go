@@ -29,7 +29,7 @@ type Config struct {
 	confighttp.HTTPClientSettings `mapstructure:",squash"` // squash ensures fields are correctly decoded in embedded struct.
 	exporterhelper.QueueSettings  `mapstructure:"sending_queue"`
 	exporterhelper.RetrySettings  `mapstructure:"retry_on_failure"`
-	preferHostNames               bool `mapstructure:"prefer_hostnames"`
+	PreferHostNames               bool `mapstructure:"prefer_hostnames"`
 }
 
 var _ otelconfig.Exporter = (*Config)(nil)

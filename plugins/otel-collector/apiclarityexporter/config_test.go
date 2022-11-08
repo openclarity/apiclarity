@@ -88,6 +88,6 @@ func TestLoadConfig(t *testing.T) {
 				Timeout:         time.Second * 10,
 				Compression:     "none",
 			},
-			preferHostNames: true,
+			PreferHostNames: false,
 		})
 }

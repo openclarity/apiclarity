@@ -54,7 +54,7 @@ func wrapAttributeError(logger *zap.Logger, msg, attrKey, attrValue string, err 
 func (e *exporter) convertAddr(addr string) string {
 	//TODO: make it configurable to prefer IP or hostname
 	isIpAddr := net.ParseIP(addr) != nil
-	if isIpAddr && e.config.preferHostNames {
+	if isIpAddr && e.config.PreferHostNames {
 		if aliases, err := net.LookupAddr(addr); err != nil && len(aliases) > 0 {
 			e.logger.Info("lookup IP to get hostname",
 				zap.String("address", addr),
@@ -67,7 +67,7 @@ func (e *exporter) convertAddr(addr string) string {
 				zap.Error(err),
 			)
 		}
-	} else if !isIpAddr && !e.config.preferHostNames {
+	} else if !isIpAddr && !e.config.PreferHostNames {
 		if hosts, err := net.LookupHost(addr); err != nil && len(hosts) > 0 {
 			e.logger.Info("lookup hostname to get IP",
 				zap.String("address", addr),
@@ -408,6 +408,7 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 	}
 	if route, ok := attrs.Get(string(semconv.HTTPRouteKey)); ok {
 		actel.Request.Path = route.AsString()
+		//actel.Request.ParameterizedPath = route.AsString()
 	}
 
 	// Add payloads if available

@@ -29,7 +29,7 @@ exporters:
       header1: 234
       another: "somevalue"
     compression: none
-    #prefer_hostnames: false
+    prefer_hostnames: false
 
 service:
   pipelines:
