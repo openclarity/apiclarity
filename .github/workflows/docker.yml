@@ -4,6 +4,9 @@ on:
     branches:
       - master
 
+env:
+  OTEL_COLLECTOR_VERSION: 0.60.0
+
 jobs:
   docker:
     name: Docker
@@ -88,3 +91,12 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
           build-args: |
             VERSION=latest
+
+      - name: Build OpenTelemetry Collector with APIClarity plugin
+        uses: docker/build-push-action@v3
+        with:
+          context: plugins
+          tags: otel-apiclarityexporter:latest,otel-apiclarityexporter:$GITHUB_SHA,otel-apiclarityexporter:$OTEL_COLLECTOR_VERSION
+          push: true
+          build-args: |
+            OTEL_COLLECTOR_VERSION=$OTEL_COLLECTOR_VERSION

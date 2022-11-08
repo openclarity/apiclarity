@@ -12,6 +12,7 @@ on:
 
 env:
   GO_VERSION: 1.17
+  OTEL_COLLECTOR_VERSION: 0.60.0
 
 jobs:
   verification:
@@ -159,6 +160,15 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
           build-args: |
             VERSION=${{ github.event.inputs.version }}
+
+      - name: Build and Push OpenTelemetry Collector with APIClarity plugin
+        uses: docker/build-push-action@v3
+        with:
+          context: plugins
+          tags: otel-apiclarityexporter:${{ github.event.inputs.version }}
+          push: true
+          build-args: |
+            OTEL_COLLECTOR_VERSION=$OTEL_COLLECTOR_VERSION
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
