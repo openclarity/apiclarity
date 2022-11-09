@@ -16,17 +16,17 @@ APIClarity is structured in a modular architecture, which allows to easily add n
 
 In the following a brief description of the modules currently implemented:
 
-- [**Spec Diffs**](.) This module compares the API traces with the OAPI specifications provided by the user or previously reconstructed. The result of this comparison provides:
+- **Spec Diffs** This module compares the API traces with the OAPI specifications provided by the user or previously reconstructed. The result of this comparison provides:
     - List of API endpoints that are observed but not documented in the specs, i.e. _Shadow APIs_;
     - List of API endpoints that are observed but marked as deprecated in the specs, i.e. _Zombie APIs_;
     - List of difference between of the APIs observed and their documented specification.
 - [**Trace Analyzer**](./backend/pkg/modules/internal/traceanalyzer/README.md) This module analyzes path, headers and body of API requests and responses to discover potential security issues, such as weak authentications, exposure of sensitive information, potential Broken Object Level Authorizations (BOLA) etc. 
 - [**BFLA Detector**](./backend/pkg/modules/internal/bfla/README.md) This module detects potential Broken Function Level Authorization. In particular it observes the API interactions and build an authorization model that captures what clients are supposed to be authorized to make the various API calls. Based on such authorization model it then signals violations which may represent potential issues in the API authorization procedures.
-- [**Fuzzer**](./backend/pkg/modules/internal/fuzzer/README.md) This module actively tests API endpoints based on their specification attempting in discovering security issues in the API server implementation.
+- **Fuzzer** This module actively tests API endpoints based on their specification attempting in discovering security issues in the API server implementation.
 
 ## High level architecture
 
-![High level architecture](diagram.jpg "High level architecture")
+![High level architecture](diagram.png "High level architecture")
 
 ## Getting started
 
