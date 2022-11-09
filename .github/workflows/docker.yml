@@ -93,10 +93,13 @@ jobs:
             VERSION=latest
 
       - name: Build OpenTelemetry Collector with APIClarity plugin
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v2
         with:
           context: plugins
-          tags: otel-apiclarityexporter:latest,otel-apiclarityexporter:$GITHUB_SHA,otel-apiclarityexporter:$OTEL_COLLECTOR_VERSION
+          tags: ghcr.io/otel-apiclarityexporter:latest
+          file: plugins/Dockerfile.otel-collector
           push: true
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
           build-args: |
             OTEL_COLLECTOR_VERSION=$OTEL_COLLECTOR_VERSION

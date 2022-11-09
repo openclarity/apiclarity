@@ -162,11 +162,14 @@ jobs:
             VERSION=${{ github.event.inputs.version }}
 
       - name: Build and Push OpenTelemetry Collector with APIClarity plugin
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v2
         with:
           context: plugins
           tags: otel-apiclarityexporter:${{ github.event.inputs.version }}
+          file: plugins/Dockerfile.otel-collector
           push: true
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
           build-args: |
             OTEL_COLLECTOR_VERSION=$OTEL_COLLECTOR_VERSION
 
