@@ -96,7 +96,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: plugins
-          tags: ghcr.io/otel-apiclarityexporter:latest
+          tags: ghcr.io/openclarity/otel-apiclarityexporter:latest
           file: plugins/Dockerfile.otel-collector
           push: true
           cache-from: type=local,src=/tmp/.buildx-cache
