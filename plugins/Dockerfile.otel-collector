@@ -6,9 +6,7 @@ ADD https://github.com/open-telemetry/opentelemetry-collector/releases/download/
 RUN chmod 755 /usr/local/bin/ocb
 
 WORKDIR /otelcol-build
-ARG APICLARITY_PLUGINS_API_VERSION=v0.0.0-20220915093602-8a11adcdb9e1
 ADD https://raw.githubusercontent.com/open-telemetry/opentelemetry-collector-releases/v${OTEL_COLLECTOR_VERSION}/distributions/otelcol/manifest.yaml ./
-
 COPY otel-collector/scripts/modify_otelcol_builder.awk /usr/local/bin/modify_otelcol_builder.awk
 RUN /usr/local/bin/modify_otelcol_builder.awk <./manifest.yaml >./otelcol-builder-${OTEL_COLLECTOR_VERSION}.yaml
 
