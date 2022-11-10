@@ -81,7 +81,7 @@ test: ## Run Unit Tests
 	cd plugins/gateway/kong && go test ./...
 	cd plugins/gateway/tyk/v3.2.2 && go test ./...
 	cd plugins/taper && go test ./...
-	$(MAKE) -C plugins/otel-collector test
+	cd plugins/otel-collector/apiclarityexporter && go test ./...
 
 .PHONY: clean
 clean: clean-ui clean-backend ## Clean all build artifacts
@@ -101,13 +101,15 @@ bin/golangci-lint-${GOLANGCI_VERSION}:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | bash -s -- -b ./bin/ v${GOLANGCI_VERSION}
 	@mv bin/golangci-lint $@
 
+# TODO: remove temporarily exempted package from typecheck linter
 .PHONY: lint
 lint: bin/golangci-lint ## Run linter
 	cd backend && ../bin/golangci-lint run
 	cd plugins/gateway/kong && ../../../bin/golangci-lint run
 	cd plugins/gateway/tyk/v3.2.2 && ../../../../bin/golangci-lint run
 	cd plugins/taper && ../../bin/golangci-lint run
-	$(MAKE) -C plugins/otel-collector lint
+	cd plugins/otel-collector/apiclarityexporter && ../../../bin/golangci-lint run \
+	  --skip-files '../../../../../../go/pkg/mod/github.com/klauspost/compress'
 
 .PHONY: fix
 fix: bin/golangci-lint ## Fix lint violations
@@ -115,7 +117,7 @@ fix: bin/golangci-lint ## Fix lint violations
 	cd plugins/gateway/kong && ../../../bin/golangci-lint run --fix
 	cd plugins/gateway/tyk/v3.2.2 && ../../../../bin/golangci-lint run --fix
 	cd plugins/taper && ../../bin/golangci-lint run --fix
-	$(MAKE) -C plugins/otel-collector fix
+	cd plugins/otel-collector/apiclarityexporter && ../../../bin/golangci-lint run --fix
 
 bin/licensei: bin/licensei-${LICENSEI_VERSION}
 	@ln -sf licensei-${LICENSEI_VERSION} bin/licensei
@@ -131,7 +133,7 @@ license-check: bin/licensei ## Run license check
 	cd plugins/gateway/kong && ../../../bin/licensei check --config=../../../.licensei.toml
 	cd plugins/gateway/tyk/v3.2.2 && ../../../../bin/licensei check --config=../../../../.licensei.toml
 	cd plugins/taper && ../../bin/licensei check --config=../../.licensei.toml
-	cd plugins/otel-collector && ../../bin/licensei check --config=../../.licensei.toml
+	cd plugins/otel-collector/apiclarityexporter && ../../../bin/licensei check --config=../../../.licensei.toml
 
 .PHONY: license-cache
 license-cache: bin/licensei ## Generate license cache
