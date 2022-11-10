@@ -2,7 +2,6 @@
 
 $content-margin: 30px;
 
-// .title-value-display-wrapper {
     .bfla-status {
         width: 100%;
         padding: 10px;
@@ -22,6 +21,7 @@ $content-margin: 30px;
     }
 
     .bfla-inventory-wrapper {
+        height: 100%;
         position: relative;
         min-height: 300px;
         .spec-inner-tabs-wrapper {
@@ -182,5 +182,3 @@ $content-margin: 30px;
             }
         }
     }
-
-// }

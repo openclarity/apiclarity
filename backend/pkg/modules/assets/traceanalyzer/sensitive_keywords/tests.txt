@@ -1,0 +1,4 @@
+password
+ssn
+ip
+covid_positive

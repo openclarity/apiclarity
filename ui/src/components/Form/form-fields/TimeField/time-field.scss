@@ -1,0 +1,11 @@
+@import 'utils/scss_variables.module.scss';
+
+.ps-field-wrapper.ps-time-field-wrapper {
+    .time-input {
+        width: 100px !important;
+        height: 38px;
+        text-align: center;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+    }
+}

@@ -1,0 +1,17 @@
+digraph BFLA_FSM {
+
+Start->Learning [label=startLearning, color=green]
+Learning->Learnt [label=stopLearning, color=red]
+Learning->Detecting[label=startDetection]
+Learning->Start[label=reset, color=red]
+Learnt->Start [label=reset]
+Learnt->Detecting [label=startDetection, color=green]
+Learnt->Learning [label=startLearning, color=green]
+Detecting->Learnt [label=stopDetection, color=red]
+Detecting->Start [label=reset, color=red]
+Detecting->Learning [label=startLearning]
+Learnt->Learnt[label=updateModel]
+Detecting->Detecting[label=updateModel]
+
+a  [label="red=disable traces \n green=enable traces\nblack=no changes in tracing status", shape="box"]
+}

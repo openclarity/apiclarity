@@ -91,6 +91,12 @@ definitions:
       hasProvidedSpec:
         type: 'boolean'
         default: false
+      destinationNamespace:
+        type: 'string'
+      createdBy:
+        description: 'String representing the entity which created this API. APICLARITY means it has been created by APIClarity on first trace'
+        type: 'string'
+        default: 'APICLARITY'
 
   ApiInfoWithType:
     type: 'object'
@@ -245,6 +251,9 @@ definitions:
       rawSpec:
         type: 'string'
         description: 'spec in json or yaml format'
+      createdAt:
+        type: 'string'
+        format: 'date-time'
 
   SpecTag:
     type: 'object'
@@ -352,6 +361,65 @@ definitions:
         type: 'string'
       alert:
         $ref: '#/definitions/AlertSeverityEnum'
+  APIClarityFeatureList:
+    type: 'object'
+    description: List of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for
+    properties:
+      features:
+        type: array
+        items:
+          $ref: '#/definitions/APIClarityFeature'
+  APIClarityFeature:
+    type: 'object'
+    description: Description of APIClarity feature and the list of API hosts (in the form 'host:port') the feature requires to get trace for
+    properties:
+      featureName:
+        $ref: '#/definitions/APIClarityFeatureEnum'
+      featureDescription:
+        description: "Short human readable description of the feature"
+        type: string
+      hostsToTrace:
+        type: array
+        items:
+          type: string
+    required:
+    - featureName
+  APIClarityFeatureEnum:
+    description: 'APIClarity Feature Name'
+    type: string
+    enum:
+      - specreconstructor
+      - specdiffs
+      - traceanalyzer
+      - bfla
+      - spec_differ
+      - fuzzer
+  APIGateway:
+    description: 'Gateway which is externally exposing APIs'
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+      name:
+        description: 'Unique name identifying a gateway'
+        type: 'string'
+      type:
+        $ref: '#/definitions/APIGatewayType'
+      description:
+        type: 'string'
+      token:
+        type: 'string'
+        format: 'byte'
+    required:
+      - name
+      - type
+
+  APIGatewayType:
+    type: string
+    enum:
+      - TYK
+      - KONG
+      - APIGEEX
 
 paths:
   /apiEvents:
@@ -365,6 +433,7 @@ paths:
         - $ref: '#/parameters/apiEventSortKey'
         - $ref: '#/parameters/sortDir'
         - $ref: '#/parameters/showNonApi'
+        - $ref: '#/parameters/apiInfoIdIsFilter'
         - $ref: '#/parameters/methodIsFilter'
         - $ref: '#/parameters/pathIsFilter'
         - $ref: '#/parameters/pathIsNotFilter'
@@ -389,6 +458,7 @@ paths:
         - $ref: '#/parameters/specEndsWithFilter'
         - $ref: '#/parameters/specContainsFilter'
         - $ref: '#/parameters/alertIsFilter'
+        - $ref: '#/parameters/alertIsType'
       responses:
         '200':
           description: 'Success'
@@ -554,6 +624,15 @@ paths:
               $ref: '#/definitions/SpecDiffTime'
         default:
           $ref: '#/responses/UnknownError'
+          
+  /features:
+    get:
+      summary: Get the list of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/APIClarityFeatureList'
 
   /apiInventory/{apiId}/specs:
     get:
@@ -638,7 +717,7 @@ paths:
         '200':
           description: 'Success'
           schema:
-            $ref: '#/definitions/ApiInfo'
+            $ref: '#/definitions/ApiInfoWithType'
         default:
           $ref: '#/responses/UnknownError'
 
@@ -655,6 +734,10 @@ paths:
             description: 'api id'
             type: 'integer'
             format: 'uint32'
+        '404':
+          description: 'API ID Not Found'
+          schema:
+            $ref: '#/definitions/ApiResponse'
         default:
           $ref: '#/responses/UnknownError'
 
@@ -746,7 +829,104 @@ paths:
         default:
           $ref: '#/responses/UnknownError'
 
+  /control/newDiscoveredAPIs:
+    post:
+      summary: 'Allows a client to notify APIClarity about new APIs.'
+      description: 'This allows a client (a gateway for example) to notify APIclarity about newly discovered APIs. If one of the APIs already exists, it is ignored.'
+      parameters:
+        - in: 'body'
+          name: 'body'
+          description: 'List of new discovered APIs'
+          required: true
+          schema:
+            type: 'object'
+            required:
+              - hosts
+            properties:
+              source:
+                type: 'string'
+                description: 'Optional name identifying the entity sending this notification.'
+              hosts:
+                type: 'array'
+                description: 'List of discovered APIs, format of hostname:port'
+                items:
+                  type: 'string'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/responses/Success'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /control/gateways:
+    get:
+      summary: 'List of configured gateways'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            type: 'object'
+            required:
+              - gateways
+            properties:
+              gateways:
+                type: 'array'
+                description: 'List of gateways'
+                items:
+                  $ref: '#/definitions/APIGateway'
+        default:
+          $ref: '#/responses/UnknownError'
+    post:
+      summary: 'Create a new gateway'
+      parameters:
+        - in: 'body'
+          name: 'body'
+          required: true
+          schema:
+            description: 'Create a new gateway'
+            $ref: '#/definitions/APIGateway'
+      responses:
+        '201':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/APIGateway'
+        default:
+          $ref: '#/responses/UnknownError'
+  /control/gateways/{gatewayId}:
+    get:
+      summary: 'Get gateway information'
+      parameters:
+        - $ref: '#/parameters/gatewayId'
+      responses:
+        '200':
+          description: 'Gateway information'
+          schema:
+            $ref: '#/definitions/APIGateway'
+        '404':
+          description: 'API Gateway not found'
+          schema:
+            $ref: '#/definitions/ApiResponse'
+        default:
+          $ref: '#/responses/UnknownError'
+    delete:
+      summary: 'Delete a gateway'
+      parameters:
+        - $ref: '#/parameters/gatewayId'
+      responses:
+        '204':
+          description: 'Success'
+          # schema:
+          #   $ref: '#/responses/Success'
+        '404':
+          description: 'API Gateway not found'
+          schema:
+            $ref: '#/definitions/ApiResponse'
+        default:
+          $ref: '#/responses/UnknownError'
+
 parameters:
+  
   startTime:
     name: 'startTime'
     description: 'Start time of the query'
@@ -826,6 +1006,13 @@ parameters:
     in: 'query'
     type: 'boolean'
     required: true
+
+  apiInfoIdIsFilter:
+    name: 'apiInfoId[is]'
+    in: 'query'
+    type: 'integer'
+    format: 'uint32'
+    required: false
 
   methodIsFilter:
     name: 'method[is]'
@@ -1105,6 +1292,14 @@ parameters:
       enum: *AlertSeverityEnum
     required: false
 
+  alertIsType:
+    name: 'alertType[is]'
+    in: 'query'
+    type: 'array'
+    items:
+      type: 'string'
+    required: false
+
   apiId:
     name: 'apiId'
     in: 'path'
@@ -1117,6 +1312,13 @@ parameters:
     in: 'path'
     type: 'integer'
     format: 'uint32'
+    required: true
+
+  gatewayId:
+    name: 'gatewayId'
+    in: path
+    description: 'Gateway ID'
+    type: 'integer'
     required: true
 
 responses:

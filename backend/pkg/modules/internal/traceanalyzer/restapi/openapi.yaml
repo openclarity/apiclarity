@@ -1,0 +1,160 @@
+openapi: 3.0.3
+info:
+  title: APIClarity Trace Analyzer Module
+  version: 0.0.1
+  description: APIClarity Trace Analyzer Module API
+paths:
+  /apiFindings/{apiID}:
+    get:
+      operationId: GetApiFindings
+      summary: 'Get findings for an API and module'
+      description: 'Asks for findings of an APIClarity module, and API. Implemented by each module'
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID'
+        - $ref: '../../../../../../api3/common/openapi.yaml#/components/parameters/Sensitive'
+      responses:
+        '200':
+          description: 'An API Findings Bundle'
+          content:
+            application/json:
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/APIFindings'
+        default:
+          description: 'Error response'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+  /apiFindings/{apiID}/reset:
+    post:
+      operationId: ResetApiFindings
+      summary: 'Delete all API findings for an API'
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID'
+      responses:
+        '204':
+          description: 'Reset'
+        default:
+          description: 'Error response'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+  /eventAnnotations/{eventID}:
+    get:
+      operationId: GetEventAnnotations
+      summary: Get Annotations for an event
+      description: Get Trace Analyzer Annotations for a specific event
+      parameters:
+        - name: eventID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - $ref: '#/components/parameters/redacted'
+      responses:
+        '200':
+          description: Annotation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Annotations'
+
+  /{apiID}/start:
+     post:
+      operationId: StartTraceAnalysis
+      summary: Start Trace Analysis for an API
+      description: Start Trace Analysis for an API. 
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse' 
+        default:
+          description: 'Error response'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+
+  /{apiID}/stop:
+     post:
+      operationId: StopTraceAnalysis
+      summary: Stop Trace Analysis for an API
+      description: Stop Trace Analysis for an API. 
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        '200':
+          description: 'Success'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse' 
+        default:
+          description: 'Error response'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+
+components:
+  schemas:
+    Annotation:
+      type: object
+      properties:
+        name:
+          type: string
+        annotation:
+          type: string
+        severity:
+          type: string
+        kind:
+          type: string
+      required:
+        - id
+        - name
+        - annotation
+        - severity
+        - kind
+    Annotations:
+      type: object
+      required:
+        - total
+      properties:
+        total:
+          type: 'integer'
+          description: 'Total event annotations count'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Annotation'
+  parameters:
+    redacted:
+      name: redacted
+      in: query
+      required: false
+      schema:
+        default: false
+        type: boolean

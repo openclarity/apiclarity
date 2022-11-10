@@ -9,14 +9,30 @@ metadata:
     helm.sh/hook: pre-install
 spec:
   ports:
-    - name: trace-server
+    - name: http-trace-server
       port: 9000
       protocol: TCP
       targetPort: 9000
-    - name: backend
+{{- if .Values.apiclarity.tls.enabled }}
+    - name: https-trace-server
+      port: 9443
+      protocol: TCP
+      targetPort: 9443
+{{- end }}
+    - name: http-backend
       port: 8080
       protocol: TCP
       targetPort: 8080
+{{- if .Values.apiclarity.tls.enabled }}
+    - name: https-backend
+      port: 8443
+      protocol: TCP
+      targetPort: 8443
+    - name: https-trace-sampling-manager-server
+      port: 9943
+      protocol: TCP
+      targetPort: 9943
+{{- end }}
     - name: http-trace-sampling-manager-server
       port: 9990
       protocol: TCP

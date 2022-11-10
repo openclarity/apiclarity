@@ -1,0 +1,34 @@
+@import 'utils/scss_variables.module.scss';
+
+.breadcrumb-display-inventory-wrapper {
+    display: flex;
+    user-select: none;
+    margin-left: 11px;
+    margin-top: 11px;
+    margin-bottom: 11px;
+
+    .breadcrumb-display-inventory-item {
+        transition: font-size .1s ease-in-out;
+
+        padding: 9px;
+        font-style: normal;
+        font-weight: 400;
+        font-size: 11px;
+        line-height: 16px;
+        color: $color-main;
+        text-align: center;
+
+        &:not(:last-child) {
+            text-decoration-line: underline;
+            cursor: pointer;
+
+            &:hover {
+                font-size: 12px;
+            }
+        }
+
+        &:last-child {
+            color: $color-grey-black;
+        }
+    }
+}

@@ -1,18 +1,28 @@
 @import 'utils/scss_variables.module.scss';
 
+$button-icon-size: 16px;
+
 .ag-button {
     border: none;
+    outline: none;
     background-color: transparent;
-    height: 28px;
-
+    box-sizing: border-box;
+    padding: 0;
+    height: 26px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    &:disabled {
+        cursor: not-allowed;
+    }
     &.ag-button--primary {
         font-size: 14px;
         line-height: 16px;
-        border-radius: 50px;
-        display: inline-block;
         background-color: $color-main-light;
         color: $color-grey-black;
-        padding: 0px 25px;
+        border-radius: 50px;
+        padding: 0 25px;
 
         &:disabled {
             background-color: $color-grey-light;
@@ -26,10 +36,22 @@
         text-decoration: underline;
         padding: 0;
     }
-    &.clickable:not(:disabled) {
-        cursor: pointer;
+    &.ag-button--tertiary {
+        color: $color-main;
+        text-decoration: underline;
+
+        &:hover:not(:disabled) {
+            color: $color-main-dark;
+        }
+        &:disabled {
+            color: $color-grey;
+        }
     }
-    &:disabled {
-        cursor: not-allowed;
+    .button-icon {
+        width: $button-icon-size;
+        height: $button-icon-size;
+        min-width: $button-icon-size;
+        min-height: $button-icon-size;
+        margin-right: 5px;
     }
 }

@@ -7,6 +7,7 @@ package database
 import (
 	reflect "reflect"
 
+	strfmt "github.com/go-openapi/strfmt"
 	gomock "github.com/golang/mock/gomock"
 	models "github.com/openclarity/apiclarity/api/server/models"
 	operations "github.com/openclarity/apiclarity/api/server/restapi/operations"
@@ -95,11 +96,12 @@ func (mr *MockAPIInventoryTableMockRecorder) First(arg0 interface{}, arg1 ...int
 }
 
 // FirstOrCreate mocks base method.
-func (m *MockAPIInventoryTable) FirstOrCreate(arg0 *APIInfo) error {
+func (m *MockAPIInventoryTable) FirstOrCreate(arg0 *APIInfo) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FirstOrCreate", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // FirstOrCreate indicates an expected call of FirstOrCreate.
@@ -170,15 +172,15 @@ func (mr *MockAPIInventoryTableMockRecorder) GetAPISpecsInfo(arg0 interface{}) *
 }
 
 // PutAPISpec mocks base method.
-func (m *MockAPIInventoryTable) PutAPISpec(arg0 uint, arg1 string, arg2 *models.SpecInfo, arg3 specType) error {
+func (m *MockAPIInventoryTable) PutAPISpec(arg0 uint, arg1 string, arg2 *models.SpecInfo, arg3 specType, arg4 strfmt.DateTime) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PutAPISpec", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "PutAPISpec", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // PutAPISpec indicates an expected call of PutAPISpec.
-func (mr *MockAPIInventoryTableMockRecorder) PutAPISpec(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockAPIInventoryTableMockRecorder) PutAPISpec(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutAPISpec", reflect.TypeOf((*MockAPIInventoryTable)(nil).PutAPISpec), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutAPISpec", reflect.TypeOf((*MockAPIInventoryTable)(nil).PutAPISpec), arg0, arg1, arg2, arg3, arg4)
 }

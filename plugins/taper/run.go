@@ -69,7 +69,7 @@ func run(c *cli.Context) {
 	var tlsOptions *common.ClientTLSOptions
 	if runConfig.EnableTLS {
 		tlsOptions = &common.ClientTLSOptions{
-			RootCAFileName: common.CACertFile,
+			RootCAFileName: runConfig.RootCertFilePath,
 		}
 	}
 	apiClient, err := common.NewTelemetryAPIClient(runConfig.UpstreamAddress, tlsOptions)

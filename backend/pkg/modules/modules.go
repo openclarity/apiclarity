@@ -17,22 +17,33 @@ package modules
 
 import (
 	"context"
+	"fmt"
 
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
+	"github.com/openclarity/apiclarity/backend/pkg/config"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 
 	// Enables the bfla module.
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 
-	// Enables the demo module.
-	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/demo"
+	// Enables the fuzzer module.
+	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer"
+
+	// Enables the spec differ module.
+	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/spec_differ"
+
+	// Enables the traceanalyzer module.
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer"
+	"github.com/openclarity/apiclarity/backend/pkg/notifier"
+	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
 )
 
 type (
-	Module              = core.Module
+	ModuleInfo          = core.ModuleInfo
+	ModulesManager      = core.Module //nolint:revive
 	MockModule          = core.MockModule
 	Annotation          = core.Annotation
 	BackendAccessor     = core.BackendAccessor
@@ -41,10 +52,17 @@ type (
 )
 
 var (
-	NewMockModule          = core.NewMockModule
+	NewMockModulesManager  = core.NewMockModule
 	NewMockBackendAccessor = core.NewMockBackendAccessor
 )
 
-func New(ctx context.Context, dbHandler *database.Handler, clientset kubernetes.Interface) Module {
-	return core.New(ctx, core.NewAccessor(dbHandler, clientset))
+func New(ctx context.Context, dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager, speculatorAccessor speculatoraccessor.SpeculatorAccessor, notifier *notifier.Notifier, config *config.Config) (ModulesManager, []ModuleInfo, error) {
+	backendAccessor, err := core.NewAccessor(dbHandler, clientset, samplingManager, speculatorAccessor, notifier, config)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create backend accessor: %v", err)
+	}
+
+	module, infos := core.New(ctx, backendAccessor, samplingManager)
+
+	return module, infos, nil
 }

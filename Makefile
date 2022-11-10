@@ -46,8 +46,17 @@ backend_test: ## Build Backend test
 	@(echo "Building Backend test ..." )
 	@(cd backend && go build --tags=json1 -o bin/backend_test cmd/test/main.go && ls -l bin/)
 
+.PHONY: api3-verify
+api3-verify: 
+	@(echo "Checking if api3 code was generated")
+	@(cd api3; ./generate.sh --verify) 
+
+.PHONY: api3
+api3: 
+	@(cd api3; ./generate.sh) 
+
 .PHONY: api
-api: ## Generating API code
+api: api3 ## Generating API code
 	@(echo "Generating API code ..." )
 	@(cd api; ./generate.sh)
 
@@ -57,6 +66,7 @@ docker:	docker-backend docker-plugins
 .PHONY: docker-backend
 docker-backend: ## Build Docker image
 	@(echo "Building backend docker image ..." )
+	@(cd backend)
 	docker build --build-arg VERSION=${VERSION} \
 		--build-arg BUILD_TIMESTAMP=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") \
 		--build-arg COMMIT_HASH=$(shell git rev-parse HEAD) \
@@ -106,6 +116,7 @@ lint: bin/golangci-lint ## Run linter
 	cd plugins/gateway/kong && ../../../bin/golangci-lint run
 	cd plugins/gateway/tyk/v3.2.2 && ../../../../bin/golangci-lint run
 	cd plugins/taper && ../../bin/golangci-lint run
+
 
 .PHONY: fix
 fix: bin/golangci-lint ## Fix lint violations

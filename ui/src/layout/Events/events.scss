@@ -7,7 +7,7 @@
         .time-filter-wrapper {
             position: absolute;
             top: 0;
-            right: 0;
+            right: 90px;
         }
         .general-filter-wrapper {
             .filter-form-wrapper {
@@ -33,6 +33,7 @@
     }
     .page-container {
         position: relative;
+        // min-height: 500px;
 
         .table-wrapper {
             .pagination-container {
@@ -44,6 +45,11 @@
                 width: 14px;
                 height: 14px;
                 color: $color-warning;
+            }
+            .table-columns-class {
+                position: absolute;
+                top: -47px;
+                right: 0px;
             }
         }
         .events-chart-wrapper {

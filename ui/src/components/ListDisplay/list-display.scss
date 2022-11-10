@@ -10,9 +10,11 @@
         color: $color-main;
         font-size: 14px;
         line-height: 16px;
-        cursor: pointer;
         border-top: 1px solid $color-grey-light;
 
+        &:not(.disabled) {
+            cursor: pointer;
+        }
         &:last-child {
             border-bottom: 1px solid $color-grey-light;
         }

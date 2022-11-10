@@ -1,0 +1,19 @@
+@import 'utils/scss_variables.module.scss';
+
+.ps-field-wrapper.ps-text-area-wrapper {
+    textarea {
+        width: 100%;
+        color: $color-grey-black;
+        outline: none;
+        border: 1px solid $color-grey-light;
+        border-radius: 2px;
+        padding: 10px;
+        resize: none;
+        height: 150px;
+        font-size: 12px;
+
+        &:focus {
+            box-shadow: 0px 0px 5px rgba(2, 188, 234, 0.5);
+        }
+    }
+}

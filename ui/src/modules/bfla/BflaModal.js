@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, { useEffect } from 'react';
 import Modal from 'components/Modal';
 import { useFetch, FETCH_METHODS } from 'hooks';
 import Loader from 'components/Loader';
@@ -13,8 +13,8 @@ const MODAL_TITLE_TYPE = {
     ILLEGITIMATE: 'illegitimate'
 };
 
-const BflaModal = ({eventId, type, onClose, onSuccess}) => {
-    const [{loading: updatePending, data: updateData }, updateBflaWarning] = useFetch(`modules/bfla/event`, {loadOnMount: false});
+const BflaModal = ({ eventId, type, onClose, onSuccess }) => {
+    const [{ loading: updatePending, data: updateData }, updateBflaWarning] = useFetch(`modules/bfla/event`, { loadOnMount: false });
 
     useEffect(() => {
         if (updateData) {

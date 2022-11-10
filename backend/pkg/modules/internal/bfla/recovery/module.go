@@ -29,7 +29,7 @@ func ResyncedModule(wrappedModuleFactory core.ModuleFactory) core.ModuleFactory 
 		if err != nil {
 			return nil, err
 		}
-		rec := NewRecovery(wrappedModule.Name(), accessor)
+		rec := NewRecovery(wrappedModule.Info().Name, accessor)
 		m := &module{
 			Module:   wrappedModule,
 			eventsCh: make(chan *core.Event),

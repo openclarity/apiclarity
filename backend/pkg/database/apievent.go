@@ -26,6 +26,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
@@ -117,15 +118,26 @@ type APIEventsTable interface {
 	GetAPIUsages(params operations.GetAPIUsageHitCountParams) ([]*models.HitCount, error)
 	GetDashboardAPIUsages(startTime, endTime time.Time, apiType APIUsageType) ([]*models.APIUsage, error)
 	CreateAPIEvent(event *APIEvent)
+	UpdateAPIEvent(event *APIEvent) error
 	GroupByAPIInfo() ([]HostGroup, error)
+}
+
+func (a *APIEventsTableHandler) UpdateAPIEvent(event *APIEvent) error {
+	err := a.tx.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}},
+		UpdateAll: true,
+	}).Create(&event).Error
+
+	return err
 }
 
 type GetAPIEventsQuery struct {
 	EventID *uint32
 
-	Offset int
-	Limit  int
-	Order  string
+	Offset     int
+	Limit      int
+	Order      string
+	AscSortDir bool
 
 	APIEventsFilters          *APIEventsFilters
 	APIEventAnnotationFilters *APIEventAnnotationFilters
@@ -186,6 +198,7 @@ type APIEventsFilters struct {
 	StatusCodeIsNot       []string
 	StatusCodeIs          []string
 	StatusCodeLte         *string
+	APIInfoIDIs           *uint32
 }
 
 const dashboardTopAPIsNum = 5
@@ -251,9 +264,15 @@ func (a *APIEventsTableHandler) GetAPIEventsWithAnnotations(ctx context.Context,
 	}
 
 	tx = tx.Preload("Annotations")
+
+	sortDir := "DESC"
+	if query.AscSortDir {
+		sortDir = "ASC"
+	}
+
 	if err := tx.Offset(query.Offset).
 		Limit(query.Limit).
-		Order(fmt.Sprintf("%s DESC", query.Order)).
+		Order(fmt.Sprintf("%s %s", query.Order, sortDir)).
 		WithContext(ctx).
 		Find(&events).Error; err != nil {
 		return nil, err
@@ -347,22 +366,30 @@ func (a *APIEventsTableHandler) GetAPIEventsAndTotal(params operations.GetAPIEve
 	var count int64
 
 	tx := a.setAPIEventsFilters(getAPIEventsParamsToFilters(params))
-
+	// if the user requests a filter on alert we need to join with the event_annotations table
+	// and do the filtering on the foreign table
+	if len(params.AlertIs) > 0 || len(params.AlertTypeIs) > 0 {
+		tx = tx.Joins(fmt.Sprintf("LEFT JOIN %s ea ON %s.%s = ea.%s",
+			eventAnnotationsTableName,
+			apiEventTableName, idColumnName,
+			eventIDColumnName)).
+			Distinct()
+		if len(params.AlertTypeIs) > 0 {
+			tx = tx.Where(fmt.Sprintf("ea.%s IN ?", moduleNameColumnName), params.AlertTypeIs).Where(fmt.Sprintf("ea.%s = 'ALERT'", nameColumnName))
+		}
+		if len(params.AlertIs) > 0 {
+			or := tx.Where(fmt.Sprintf("ea.%s LIKE ?", annotationColumnName), params.AlertIs[0])
+			for severity := range params.AlertIs[1:] {
+				or = or.Or(fmt.Sprintf("ea.%s LIKE ?", annotationColumnName), severity)
+			}
+			tx = tx.Where(or)
+		}
+	}
 	// get total count item with the current filters
 	if err := tx.Count(&count).Error; err != nil {
 		return nil, 0, err
 	}
 
-	// if the user requests a filter on alert we need to join with the event_annotations table
-	// and do the filtering on the foreign table
-	if len(params.AlertIs) > 0 {
-		tx = tx.Joins(fmt.Sprintf("LEFT JOIN %s ea ON %s.%s = ea.%s",
-			eventAnnotationsTableName,
-			apiEventTableName, idColumnName,
-			eventIDColumnName)).
-			Where(fmt.Sprintf("ea.%s IN ?", annotationColumnName), params.AlertIs).
-			Distinct()
-	}
 	sortOrder, err := CreateSortOrder(params.SortKey, params.SortDir)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to create sort order: %v", err)
@@ -475,6 +502,9 @@ func (a *APIEventsTableHandler) setAPIEventsFilters(filters *APIEventsFilters) *
 	tx = FilterStartsWith(tx, hostSpecNameColumnName, filters.SpecStart)
 	tx = FilterEndsWith(tx, hostSpecNameColumnName, filters.SpecEnd)
 
+	// API Id filter
+	tx = FilterIsUint32(tx, apiInfoIDColumnName, filters.APIInfoIDIs)
+
 	// ignore non APIs
 	if !filters.ShowNonAPI {
 		tx.Where(fmt.Sprintf("%s = ?", isNonAPIColumnName), false)
@@ -568,6 +598,7 @@ func getAPIEventsParamsToFilters(params operations.GetAPIEventsParams) *APIEvent
 		StatusCodeIsNot:      params.StatusCodeIsNot,
 		StatusCodeIs:         params.StatusCodeIs,
 		StatusCodeLte:        params.StatusCodeLte,
+		APIInfoIDIs:          params.APIInfoIDIs,
 	}
 }
 

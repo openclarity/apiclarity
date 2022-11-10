@@ -1,0 +1,41 @@
+@import 'utils/scss_variables.module.scss';
+
+.client-view-wrapper {
+    padding: 30px;
+    cursor: default;
+
+    .section-title {
+        width: 100%
+    }
+
+    .bfla-client-vire-basic-info {
+        display: flex;
+        justify-content: space-between;
+        width: 90%;
+
+        .legitimate {
+            color: $color-success
+        }
+
+        .illegitimate {
+            color: $color-error
+        }
+
+        .bfla-status-icon {
+            margin-right: 0.5rem;
+        }
+
+        .bfla-client-title {
+            color: $color-grey-black;
+            font-size: 10px;
+            line-height: 14px;
+            font-weight: bold;
+        }
+
+        .bfla-client-value {
+            font-size: 12px;
+            font-weight: bold;
+            color: $color-grey-dark;
+        }
+    }
+}

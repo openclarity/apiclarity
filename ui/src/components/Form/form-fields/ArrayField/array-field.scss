@@ -1,0 +1,50 @@
+@import 'utils/scss_variables.module.scss';
+
+$action-buttons-width: 50px;
+
+.ps-field-wrapper.ps-array-field-wrapper {
+    margin-bottom: 0 !important;
+
+    .fields-wrapper {
+        margin-bottom: 20px;
+
+        &.with-background .input-wrapper {
+            background-color: $color-blue-light;
+            padding: 20px;
+            padding-bottom: 1px;
+        }
+        &.horizontal {
+            display: flex;
+            margin-bottom: 0;
+
+            .input-wrapper {
+                width: calc(100% - #{$action-buttons-width});
+                display: flex;
+
+                .ps-field-wrapper {
+                    width: 48%;
+                    margin-right: 10px;
+                }
+            }
+            .actions-wrapper {
+                width: $action-buttons-width;
+            }
+        }
+        .actions-wrapper {
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 10px !important;
+            
+            &.with-labels {
+                padding-top: 30px;
+            }
+            > .round-icon-container {
+                margin-right: 5px;
+
+                &:not(.disabled) {
+                    background-color: $color-main;
+                }
+            }
+        }
+    }
+}
