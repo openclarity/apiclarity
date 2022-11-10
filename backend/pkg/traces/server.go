@@ -17,6 +17,7 @@ package traces
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 
@@ -25,17 +26,26 @@ import (
 	"github.com/jessevdk/go-flags"
 	log "github.com/sirupsen/logrus"
 
+	backendmodels "github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/backend/pkg/common"
 	"github.com/openclarity/apiclarity/plugins/api/server/models"
 	"github.com/openclarity/apiclarity/plugins/api/server/restapi"
 	"github.com/openclarity/apiclarity/plugins/api/server/restapi/operations"
 )
 
-type HandleTraceFunc func(ctx context.Context, trace *models.Telemetry) error
+const (
+	traceSourceAuthTokenHeaderName = "X-Trace-Source-Token" //nolint:gosec
+)
+
+type (
+	HandleTraceFunc     func(ctx context.Context, trace *models.Telemetry, traceSource *backendmodels.TraceSource) error
+	TraceSourceAuthFunc func(ctx context.Context, token []byte) (*backendmodels.TraceSource, error)
+)
 
 type HTTPTracesServer struct {
-	traceHandleFunc HandleTraceFunc
-	server          *restapi.Server
+	traceHandleFunc     HandleTraceFunc
+	traceSourceAuthFunc TraceSourceAuthFunc
+	server              *restapi.Server
 }
 
 type HTTPTracesServerConfig struct {
@@ -45,7 +55,7 @@ type HTTPTracesServerConfig struct {
 	TLSServerCertFilePath string
 	TLSServerKeyFilePath  string
 	TraceHandleFunc       HandleTraceFunc
-	NeedsTraceSourceAuth  bool
+	TraceSourceAuthFunc   TraceSourceAuthFunc
 }
 
 func CreateHTTPTracesServer(config *HTTPTracesServerConfig) (*HTTPTracesServer, error) {
@@ -62,17 +72,22 @@ func CreateHTTPTracesServer(config *HTTPTracesServerConfig) (*HTTPTracesServer, 
 		return s.PostTelemetry(params)
 	})
 
+	if config.TraceSourceAuthFunc != nil {
+		s.traceSourceAuthFunc = config.TraceSourceAuthFunc
+		api.AddMiddlewareFor("POST", "/telemetry", s.traceSourceAuthMiddleware)
+	}
+
 	server := restapi.NewServer(api)
 
 	server.ConfigureFlags()
 	server.ConfigureAPI()
 	server.Port = config.Port
 
-	// We want to serve both http and https, except if the NeedsTraceSourceAuth flag is set,
+	// We want to serve both http and https, except if the authencation is wanted,
 	// in that case, we are on the public facing server, and we ONLY want HTTPS.
 	// TODO: need to use istio to secure the http port when the wasm is sending traces
 	if config.EnableTLS {
-		if config.NeedsTraceSourceAuth {
+		if config.TraceSourceAuthFunc != nil { // If authentication is enabled, only enable https
 			server.EnabledListeners = []string{"https"}
 		} else {
 			server.EnabledListeners = []string{"https", "http"}
@@ -108,8 +123,50 @@ func (s *HTTPTracesServer) Stop() {
 	}
 }
 
+const traceSourceKey = "contextTraceSource"
+
+type traceServerContextKey string
+
+func WithTraceSource(ctx context.Context, traceSource *backendmodels.TraceSource) context.Context {
+	return context.WithValue(ctx, traceServerContextKey(traceSourceKey), traceSource)
+}
+
+func TraceSourceFromContext(ctx context.Context) *backendmodels.TraceSource {
+	v := ctx.Value(traceServerContextKey(traceSourceKey))
+	if v == nil {
+		return nil
+	}
+	return v.(*backendmodels.TraceSource)
+}
+
+func (s *HTTPTracesServer) traceSourceAuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get(traceSourceAuthTokenHeaderName)
+		if token == "" { // Header is not set.
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		decodedToken, err := base64.StdEncoding.DecodeString(token)
+		if err != nil {
+			http.Error(w, "incorrect api key auth (not a valid base64 token)", http.StatusUnauthorized)
+			return
+		}
+
+		traceSource, err := s.traceSourceAuthFunc(r.Context(), decodedToken)
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		r = r.WithContext(WithTraceSource(r.Context(), traceSource))
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (s *HTTPTracesServer) PostTelemetry(params operations.PostTelemetryParams) middleware.Responder {
-	if err := s.traceHandleFunc(params.HTTPRequest.Context(), params.Body); err != nil {
+	traceSource := TraceSourceFromContext(params.HTTPRequest.Context())
+	if err := s.traceHandleFunc(params.HTTPRequest.Context(), params.Body, traceSource); err != nil {
 		log.Errorf("Error from trace handling func: %v", err)
 		return operations.NewPostTelemetryDefault(http.StatusInternalServerError)
 	}

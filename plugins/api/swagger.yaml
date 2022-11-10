@@ -16,6 +16,7 @@ paths:
     post:
       summary: 'Post an http telemetry'
       parameters:
+        - $ref: '#/parameters/TraceSourceTokenHeader'
         - in: 'body'
           name: 'body'
           required: true
@@ -119,3 +120,11 @@ responses:
     description: 'success message'
     schema:
       $ref: '#/definitions/SuccessResponse'
+
+parameters:
+  TraceSourceTokenHeader:
+    name: 'X-Trace-Source-Token'
+    description: 'Optional header to authenticate the trace source'
+    in: 'header'
+    type: 'string'
+    required: false
