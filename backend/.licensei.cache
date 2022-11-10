@@ -2,6 +2,13 @@
 [[dependencies]]
   confidence = 1.0
   license = "MIT"
+  name = "github.com/getkin/kin-openapi"
+  revision = "v0.97.0"
+  type = "gomod"
+
+[[dependencies]]
+  confidence = 1.0
+  license = "MIT"
   name = "github.com/josharian/intern"
   revision = "v1.0.0"
   type = "gomod"
@@ -10,7 +17,7 @@
   confidence = 1.0
   license = "MIT"
   name = "github.com/mailru/easyjson"
-  revision = "v0.7.7"
+  revision = "v0.7.6"
   type = "gomod"
 
 [[dependencies]]
@@ -24,7 +31,7 @@
   confidence = 1.0
   license = "Apache-2.0"
   name = "github.com/go-openapi/swag"
-  revision = "v0.21.1"
+  revision = "v0.19.15"
   type = "gomod"
 
 [[dependencies]]
@@ -36,44 +43,16 @@
 
 [[dependencies]]
   confidence = 1.0
-  license = "BSD-3-Clause"
-  name = "github.com/PuerkitoBio/urlesc"
-  revision = "v0.0.0-20170810143723-de5bf2ad4578"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
-  license = "BSD-3-Clause"
-  name = "golang.org/x/text"
-  revision = "v0.3.7"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
-  license = "BSD-3-Clause"
-  name = "golang.org/x/net"
-  revision = "v0.0.0-20220513224357-95641704303c"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
-  license = "BSD-3-Clause"
-  name = "github.com/PuerkitoBio/purell"
-  revision = "v1.1.1"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
   license = "Apache-2.0"
-  name = "github.com/go-openapi/jsonreference"
-  revision = "v0.19.6"
+  name = "gopkg.in/yaml.v3"
+  revision = "v3.0.1"
   type = "gomod"
 
 [[dependencies]]
-  confidence = 1.0
-  license = "Apache-2.0"
-  name = "github.com/go-openapi/spec"
-  revision = "v0.20.4"
+  confidence = 0.0
+  license = ""
+  name = "github.com/invopop/yaml"
+  revision = "v0.1.0"
   type = "gomod"
 
 [[dependencies]]
@@ -141,6 +120,48 @@
 
 [[dependencies]]
   confidence = 1.0
+  license = "BSD-3-Clause"
+  name = "github.com/PuerkitoBio/urlesc"
+  revision = "v0.0.0-20170810143723-de5bf2ad4578"
+  type = "gomod"
+
+[[dependencies]]
+  confidence = 1.0
+  license = "BSD-3-Clause"
+  name = "golang.org/x/text"
+  revision = "v0.3.7"
+  type = "gomod"
+
+[[dependencies]]
+  confidence = 1.0
+  license = "BSD-3-Clause"
+  name = "golang.org/x/net"
+  revision = "v0.0.0-20211209124913-491a49abca63"
+  type = "gomod"
+
+[[dependencies]]
+  confidence = 1.0
+  license = "BSD-3-Clause"
+  name = "github.com/PuerkitoBio/purell"
+  revision = "v1.1.1"
+  type = "gomod"
+
+[[dependencies]]
+  confidence = 1.0
+  license = "Apache-2.0"
+  name = "github.com/go-openapi/jsonreference"
+  revision = "v0.19.6"
+  type = "gomod"
+
+[[dependencies]]
+  confidence = 1.0
+  license = "Apache-2.0"
+  name = "github.com/go-openapi/spec"
+  revision = "v0.20.4"
+  type = "gomod"
+
+[[dependencies]]
+  confidence = 1.0
   license = "Apache-2.0"
   name = "github.com/go-openapi/loads"
   revision = "v0.21.0"
@@ -185,7 +206,7 @@
   confidence = 1.0
   license = "Apache-2.0"
   name = "github.com/openclarity/speculator"
-  revision = "v0.0.5"
+  revision = "v0.2.0"
   type = "gomod"
 
 [[dependencies]]
@@ -199,7 +220,7 @@
   confidence = 1.0
   license = "BSD-3-Clause"
   name = "golang.org/x/sys"
-  revision = "v0.0.0-20220513210249-45d2b4557a2a"
+  revision = "v0.0.0-20211103235746-7861aae1554b"
   type = "gomod"
 
 [[dependencies]]
@@ -262,7 +283,7 @@
   confidence = 1.0
   license = "BSD-3-Clause"
   name = "github.com/google/go-cmp"
-  revision = "v0.5.6"
+  revision = "v0.5.5"
   type = "gomod"
 
 [[dependencies]]
@@ -409,7 +430,7 @@
   confidence = 1.0
   license = "BSD-3-Clause"
   name = "golang.org/x/crypto"
-  revision = "v0.0.0-20220513210258-46612604a0f9"
+  revision = "v0.0.0-20210921155107-089bfa567519"
   type = "gomod"
 
 [[dependencies]]
@@ -493,14 +514,14 @@
   confidence = 1.0
   license = "Apache-2.0"
   name = "github.com/google/gofuzz"
-  revision = "v1.2.0"
+  revision = "v1.1.0"
   type = "gomod"
 
 [[dependencies]]
   confidence = 1.0
   license = "Apache-2.0"
   name = "github.com/go-logr/logr"
-  revision = "v1.2.2"
+  revision = "v1.2.0"
   type = "gomod"
 
 [[dependencies]]
@@ -556,7 +577,7 @@
   confidence = 0.0
   license = ""
   name = "google.golang.org/protobuf"
-  revision = "v1.28.0"
+  revision = "v1.27.1"
   type = "gomod"
 
 [[dependencies]]
@@ -571,13 +592,6 @@
   license = "Apache-2.0"
   name = "github.com/googleapis/gnostic"
   revision = "v0.5.5"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
-  license = "Apache-2.0"
-  name = "gopkg.in/yaml.v3"
-  revision = "v3.0.1"
   type = "gomod"
 
 [[dependencies]]
@@ -605,7 +619,7 @@
   confidence = 1.0
   license = "BSD-3-Clause"
   name = "golang.org/x/term"
-  revision = "v0.0.0-20210927222741-03fcf44c2211"
+  revision = "v0.0.0-20210615171337-6886f2dfbf5b"
   type = "gomod"
 
 [[dependencies]]
@@ -619,7 +633,7 @@
   confidence = 1.0
   license = "BSD-3-Clause"
   name = "golang.org/x/time"
-  revision = "v0.0.0-20220411224347-583f2d630306"
+  revision = "v0.0.0-20210723032227-1f47c861a9ac"
   type = "gomod"
 
 [[dependencies]]
@@ -640,49 +654,7 @@
   confidence = 1.0
   license = "BSD-3-Clause"
   name = "github.com/imdario/mergo"
-  revision = "v0.3.12"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
-  license = "BSD-3-Clause"
-  name = "github.com/google/uuid"
-  revision = "v1.3.0"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
-  license = "Apache-2.0"
-  name = "github.com/deepmap/oapi-codegen"
-  revision = "v1.11.1-0.20220609223533-7da811e1cf30"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
-  license = "MIT"
-  name = "github.com/getkin/kin-openapi"
-  revision = "v0.97.0"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 0.0
-  license = ""
-  name = "github.com/invopop/yaml"
-  revision = "v0.1.0"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
-  license = "MIT"
-  name = "github.com/go-chi/chi/v5"
-  revision = "v5.0.7"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
-  license = "Apache-2.0"
-  name = "github.com/openclarity/apiclarity/api3"
-  revision = "v0.0.0"
+  revision = "v0.3.5"
   type = "gomod"
 
 [[dependencies]]
@@ -695,99 +667,15 @@
 [[dependencies]]
   confidence = 1.0
   license = "Apache-2.0"
-  name = "github.com/Portshift/go-utils"
-  revision = "v0.0.0-20220421083203-89265d8a6487"
+  name = "github.com/deepmap/oapi-codegen"
+  revision = "v1.9.1"
   type = "gomod"
 
 [[dependencies]]
   confidence = 1.0
-  license = "Apache-2.0"
-  name = "google.golang.org/grpc"
-  revision = "v1.43.0"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
-  license = "Apache-2.0"
-  name = "google.golang.org/genproto"
-  revision = "v0.0.0-20211208223120-3a66f561d7aa"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
-  license = "Apache-2.0"
-  name = "github.com/openclarity/trace-sampling-manager/api"
-  revision = "v0.0.0"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
-  license = "Apache-2.0"
-  name = "github.com/openclarity/trace-sampling-manager/manager"
-  revision = "v0.0.0-20220701140339-4cc0ec209fea"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
-  license = "Apache-2.0"
-  name = "github.com/docker/go-units"
-  revision = "v0.4.0"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
-  license = "BSD-3-Clause"
-  name = "github.com/jessevdk/go-flags"
-  revision = "v1.5.0"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
-  license = "Apache-2.0"
-  name = "github.com/docker/docker"
-  revision = "v20.10.14+incompatible"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
-  license = "Apache-2.0"
-  name = "github.com/docker/go-connections"
-  revision = "v0.4.0"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 0.8835616
-  license = "Apache-2.0"
-  name = "github.com/opencontainers/go-digest"
-  revision = "v1.0.0"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
-  license = "Apache-2.0"
-  name = "github.com/opencontainers/image-spec"
-  revision = "v1.0.2"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
-  license = "Apache-2.0"
-  name = "github.com/containerd/containerd"
-  revision = "v1.6.2"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
-  license = "Apache-2.0"
-  name = "github.com/docker/distribution"
-  revision = "v2.8.1+incompatible"
-  type = "gomod"
-
-[[dependencies]]
-  confidence = 1.0
-  license = "BSD-3-Clause"
-  name = "github.com/gorilla/mux"
-  revision = "v1.8.0"
+  license = "MIT"
+  name = "github.com/go-chi/chi/v5"
+  revision = "v5.0.0"
   type = "gomod"
 
 [[dependencies]]
@@ -806,9 +694,58 @@
 
 [[dependencies]]
   confidence = 1.0
+  license = "Apache-2.0"
+  name = "github.com/docker/go-units"
+  revision = "v0.4.0"
+  type = "gomod"
+
+[[dependencies]]
+  confidence = 1.0
+  license = "BSD-3-Clause"
+  name = "github.com/jessevdk/go-flags"
+  revision = "v1.5.0"
+  type = "gomod"
+
+[[dependencies]]
+  confidence = 1.0
   license = "MIT"
   name = "github.com/rs/cors"
-  revision = "v1.8.0"
+  revision = "v1.8.2"
+  type = "gomod"
+
+[[dependencies]]
+  confidence = 1.0
+  license = "Apache-2.0"
+  name = "github.com/Portshift/go-utils"
+  revision = "v0.0.0-20220421083203-89265d8a6487"
+  type = "gomod"
+
+[[dependencies]]
+  confidence = 1.0
+  license = "Apache-2.0"
+  name = "google.golang.org/grpc"
+  revision = "v1.42.0"
+  type = "gomod"
+
+[[dependencies]]
+  confidence = 1.0
+  license = "Apache-2.0"
+  name = "google.golang.org/genproto"
+  revision = "v0.0.0-20210602131652-f16073e35f0c"
+  type = "gomod"
+
+[[dependencies]]
+  confidence = 1.0
+  license = "Apache-2.0"
+  name = "github.com/openclarity/trace-sampling-manager/api"
+  revision = "v0.0.0"
+  type = "gomod"
+
+[[dependencies]]
+  confidence = 1.0
+  license = "Apache-2.0"
+  name = "github.com/openclarity/trace-sampling-manager/manager"
+  revision = "v0.0.0-20220503091058-2730f5ebad2c"
   type = "gomod"
 
 [[dependencies]]
