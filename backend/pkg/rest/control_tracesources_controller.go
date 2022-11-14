@@ -122,7 +122,7 @@ func (s *Server) CheckTraceSourceAuth(token []byte) (*uint, error) {
 
 	traceSource, err := s.dbHandler.TraceSourcesTable().GetTraceSourceFromToken(token)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to Trace Source: %v", err)
+		return nil, fmt.Errorf("unable to authenticate Trace Source: %v", err)
 	}
 	traceSourceID := traceSource.ID
 

@@ -13,6 +13,7 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/validate"
 
 	"github.com/openclarity/apiclarity/plugins/api/server/models"
@@ -35,6 +36,10 @@ type PostTelemetryParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
+	/*Optional header to authenticate the trace source
+	  In: header
+	*/
+	XTraceSourceToken *string
 	/*
 	  Required: true
 	  In: body
@@ -50,6 +55,10 @@ func (o *PostTelemetryParams) BindRequest(r *http.Request, route *middleware.Mat
 	var res []error
 
 	o.HTTPRequest = r
+
+	if err := o.bindXTraceSourceToken(r.Header[http.CanonicalHeaderKey("X-Trace-Source-Token")], true, route.Formats); err != nil {
+		res = append(res, err)
+	}
 
 	if runtime.HasBody(r) {
 		defer r.Body.Close()
@@ -81,5 +90,22 @@ func (o *PostTelemetryParams) BindRequest(r *http.Request, route *middleware.Mat
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+// bindXTraceSourceToken binds and validates parameter XTraceSourceToken from header.
+func (o *PostTelemetryParams) bindXTraceSourceToken(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+	o.XTraceSourceToken = &raw
+
 	return nil
 }

@@ -61,6 +61,12 @@ func NewPostTelemetryParamsWithHTTPClient(client *http.Client) *PostTelemetryPar
 */
 type PostTelemetryParams struct {
 
+	/* XTraceSourceToken.
+
+	   Optional header to authenticate the trace source
+	*/
+	XTraceSourceToken *string
+
 	// Body.
 	Body *models.Telemetry
 
@@ -117,6 +123,17 @@ func (o *PostTelemetryParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithXTraceSourceToken adds the xTraceSourceToken to the post telemetry params
+func (o *PostTelemetryParams) WithXTraceSourceToken(xTraceSourceToken *string) *PostTelemetryParams {
+	o.SetXTraceSourceToken(xTraceSourceToken)
+	return o
+}
+
+// SetXTraceSourceToken adds the xTraceSourceToken to the post telemetry params
+func (o *PostTelemetryParams) SetXTraceSourceToken(xTraceSourceToken *string) {
+	o.XTraceSourceToken = xTraceSourceToken
+}
+
 // WithBody adds the body to the post telemetry params
 func (o *PostTelemetryParams) WithBody(body *models.Telemetry) *PostTelemetryParams {
 	o.SetBody(body)
@@ -135,6 +152,14 @@ func (o *PostTelemetryParams) WriteToRequest(r runtime.ClientRequest, reg strfmt
 		return err
 	}
 	var res []error
+
+	if o.XTraceSourceToken != nil {
+
+		// header param X-Trace-Source-Token
+		if err := r.SetHeaderParam("X-Trace-Source-Token", *o.XTraceSourceToken); err != nil {
+			return err
+		}
+	}
 	if o.Body != nil {
 		if err := r.SetBodyParam(o.Body); err != nil {
 			return err
