@@ -14,7 +14,7 @@ DOCKER_TAG ?= ${VERSION}
 
 # Dependency versions
 GOLANGCI_VERSION = 1.42.0
-LICENSEI_VERSION = 0.3.1
+LICENSEI_VERSION = 0.6.1
 
 # HELP
 # This will output the help for each task
@@ -29,7 +29,7 @@ help: ## This help.
 ui: ## Build UI
 	@(echo "Building UI ..." )
 	@(cd ui; npm i ; npm run build; )
-	@ls -l ui/build  
+	@ls -l ui/build
 
 .PHONY: backend
 backend: ## Build Backend
@@ -96,11 +96,11 @@ test: ## Run Unit Tests
 clean: clean-ui clean-backend ## Clean all build artifacts
 
 .PHONY: clean-ui
-clean-ui: 
+clean-ui:
 	@(rm -rf ui/build ; echo "UI cleanup done" )
 
 .PHONY: clean-backend
-clean-backend: 
+clean-backend:
 	@(rm -rf bin ; echo "Backend cleanup done" )
 
 bin/golangci-lint: bin/golangci-lint-${GOLANGCI_VERSION}
@@ -142,7 +142,10 @@ license-check: bin/licensei ## Run license check
 
 .PHONY: license-cache
 license-cache: bin/licensei ## Generate license cache
-	bin/licensei cache
+	cd backend && ../bin/licensei cache --config=../.licensei.toml
+	cd plugins/gateway/kong && ../../../bin/licensei cache --config=../../../.licensei.toml
+	cd plugins/gateway/tyk/v3.2.2 && ../../../../bin/licensei cache --config=../../../../.licensei.toml
+	cd plugins/taper && ../../bin/licensei cache --config=../../.licensei.toml
 
 .PHONY: check
 check: lint test ## Run tests and linters
