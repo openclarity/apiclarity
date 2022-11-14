@@ -33,7 +33,7 @@ docker-otelcollector: Dockerfile.otel-collector
 	@DOCKER_BUILDKIT=1 docker build \
 	  --file Dockerfile.otel-collector \
 	  --build-arg OTEL_COLLECTOR_VERSION=${OTEL_COLLECTOR_VERSION} \
-	  -t otel-apiclarityexporter:${DOCKER_TAG} .
+	  -t ${DOCKER_REGISTRY}/otel-apiclarityexporter:${DOCKER_TAG} .
 
 .PHONY: push-docker
 push-docker: push-docker-kong push-docker-tyk push-docker-taper push-docker-otelcollector
