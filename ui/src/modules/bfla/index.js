@@ -1,17 +1,17 @@
-import React, {useState} from 'react';
-import {useFetch} from 'hooks';
+import React, { useState } from 'react';
+import { useFetch } from 'hooks';
 import Loader from 'components/Loader';
 import Button from 'components/Button';
 import TitleValueDisplay, { TitleValueDisplayRow } from 'components/TitleValueDisplay';
-import BflaStatusIcon, {BFLA_STATUS_TYPES_MAP} from './BflaStatusIcon';
-import BflaModal, {MODAL_ACTION_TYPE} from './BflaModal';
-import MODULE_TYPES from '../MODULE_TYPES.js';
+import BflaStatusIcon, { BFLA_STATUS_TYPES_MAP } from './BflaStatusIcon';
+import BflaModal, { MODAL_ACTION_TYPE } from './BflaModal';
+import { MODULE_TYPES } from '../MODULE_TYPES.js';
 import bflaApiInventory from './BflaApiInventory';
 
 import './bfla.scss';
 
 const BflaPlugin = (props) => {
-    const {eventId} = props;
+    const { eventId } = props;
     const [{ loading, data: bflaData }, updateBflaEvent] = useFetch(`modules/bfla/event/${eventId}`);
     const [showBflaModal, setShowBflaModal] = useState();
 
@@ -23,7 +23,7 @@ const BflaPlugin = (props) => {
         return <div>No BFLA data found</div>;
     }
 
-    const {bflaStatus, sourceK8sObject, destinationK8sObject, external} = bflaData;
+    const { bflaStatus, sourceK8sObject, destinationK8sObject, external } = bflaData;
     const sourceName = external ? 'EXTERNAL' : sourceK8sObject.name;
     const sourceKind = sourceK8sObject ? sourceK8sObject.kind : '';
     const destinationName = destinationK8sObject ? destinationK8sObject.name : '';
@@ -53,15 +53,15 @@ const BflaPlugin = (props) => {
                     eventId={eventId}
                     type={bflaStatus === BFLA_STATUS_TYPES_MAP.LEGITIMATE.value ? MODAL_ACTION_TYPE.DENY : MODAL_ACTION_TYPE.APPROVE}
                     onClose={() => setShowBflaModal(false)}
-                    onSuccess={() => updateBflaEvent()}/>
+                    onSuccess={() => updateBflaEvent()} />
             }
         </div>
     );
 };
 
-const BflaStatus = ({bflaStatus, sourceName}) => {
-    const {SUSPICIOUS_HIGH, SUSPICIOUS_MEDIUM, LEGITIMATE, LEARNING, NO_SPEC} = BFLA_STATUS_TYPES_MAP;
-    const {value} = BFLA_STATUS_TYPES_MAP[bflaStatus] || {};
+const BflaStatus = ({ bflaStatus, sourceName }) => {
+    const { SUSPICIOUS_HIGH, SUSPICIOUS_MEDIUM, LEGITIMATE, LEARNING, NO_SPEC } = BFLA_STATUS_TYPES_MAP;
+    const { value } = BFLA_STATUS_TYPES_MAP[bflaStatus] || {};
 
     let statusText;
     switch (value) {
@@ -69,10 +69,10 @@ const BflaStatus = ({bflaStatus, sourceName}) => {
             statusText = 'This API call seems legitimate.';
             break;
         case SUSPICIOUS_HIGH.value:
-            statusText = `The pod ${sourceName} made this call to the API. This looks suspicious, as it would represent a violation of the current authorization model.  The API server correctly rejected the call`;
+            statusText = `The pod ${sourceName} made this call to the API. This looks suspicious, as it represents a violation of the current authorization model. Moreover, the API server accepted the call, which implies a possible Broken Function Level Authorisation. Please verify authorisation implementation in the API server.`;
             break;
         case SUSPICIOUS_MEDIUM.value:
-            statusText = `The pod ${sourceName} made this call to the API. This looks suspicious, as it represents a violation of the current authorization model. Moreover, the API server accepted the call, which implies a possible Broken Function Level Authorisation. Please verify authorisation implementation in the API server.`;
+            statusText = `The pod ${sourceName} made this call to the API. This looks suspicious, as it would represent a violation of the current authorization model.  The API server correctly rejected the call`;
             break;
         case LEARNING.value:
             statusText = 'Data collection in progress.';

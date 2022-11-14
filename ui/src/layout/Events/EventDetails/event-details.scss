@@ -9,6 +9,25 @@
                 height: 100%;
             }
         }
+        .module-tab-title-wrapper {
+            display: flex;
+            // align-items: center;
+            .module-tab-title {
+                margin-right: 5px;
+            }
+            .module-status-icon {
+                .round-icon-container {
+                    width: 18px;
+                    height: 18px;
+                    min-height: 0;
+                    min-width: 0;
+                }
+            }
+
+            .icon {
+                height: 15px;
+            }
+        }
     }
     .title-value-display-wrapper {
         &.spec-display {

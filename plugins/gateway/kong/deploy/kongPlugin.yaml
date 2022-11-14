@@ -4,6 +4,7 @@ metadata:
   name: apiclarity-plugin
 plugin: kong-plugin
 config:
-  host: {{UPSTREAM_TELEMETRY_HOST_NAME}}
+  host: {{UPSTREAM_TELEMETRY_HOST}}
   trace_sampling_host: {{TRACE_SAMPLING_HOST_NAME}}
   trace_sampling_enabled: {{TRACE_SAMPLING_ENABLED}}
+  enable_tls: {{ENABLE_TLS}}

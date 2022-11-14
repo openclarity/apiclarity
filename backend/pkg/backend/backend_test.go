@@ -20,13 +20,10 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/getkin/kin-openapi/openapi2"
 	spec "github.com/getkin/kin-openapi/openapi3"
 	"github.com/golang/mock/gomock"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"gotest.tools/assert"
 
-	"github.com/openclarity/apiclarity/api/server/models"
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/k8smonitor"
 	"github.com/openclarity/apiclarity/backend/pkg/modules"
@@ -181,112 +178,6 @@ func Test_getHostname(t *testing.T) {
 	}
 }
 
-func Test_convertAPIDiffType(t *testing.T) {
-	type args struct {
-		diffType _spec.DiffType
-	}
-	tests := []struct {
-		name string
-		args args
-		want models.DiffType
-	}{
-		{
-			name: "unknown type - default DiffTypeNODIFF",
-			args: args{
-				diffType: "unknown type",
-			},
-			want: models.DiffTypeNODIFF,
-		},
-		{
-			name: "DiffTypeNoDiff",
-			args: args{
-				diffType: _spec.DiffTypeNoDiff,
-			},
-			want: models.DiffTypeNODIFF,
-		},
-		{
-			name: "DiffTypeZombieDiff",
-			args: args{
-				diffType: _spec.DiffTypeZombieDiff,
-			},
-			want: models.DiffTypeZOMBIEDIFF,
-		},
-		{
-			name: "DiffTypeShadowDiff",
-			args: args{
-				diffType: _spec.DiffTypeShadowDiff,
-			},
-			want: models.DiffTypeSHADOWDIFF,
-		},
-		{
-			name: "DiffTypeGeneralDiff",
-			args: args{
-				diffType: _spec.DiffTypeGeneralDiff,
-			},
-			want: models.DiffTypeGENERALDIFF,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := convertAPIDiffType(tt.args.diffType); got != tt.want {
-				t.Errorf("convertAPIDiffType() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_getHighestPrioritySpecDiffType(t *testing.T) {
-	type args struct {
-		providedDiff      models.DiffType
-		reconstructedDiff models.DiffType
-	}
-	tests := []struct {
-		name string
-		args args
-		want models.DiffType
-	}{
-		{
-			name: "Zombie over Shadow",
-			args: args{
-				providedDiff:      models.DiffTypeZOMBIEDIFF,
-				reconstructedDiff: models.DiffTypeSHADOWDIFF,
-			},
-			want: models.DiffTypeZOMBIEDIFF,
-		},
-		{
-			name: "Same type",
-			args: args{
-				providedDiff:      models.DiffTypeGENERALDIFF,
-				reconstructedDiff: models.DiffTypeGENERALDIFF,
-			},
-			want: models.DiffTypeGENERALDIFF,
-		},
-		{
-			name: "reconstructed unknown type",
-			args: args{
-				providedDiff:      models.DiffTypeNODIFF,
-				reconstructedDiff: "unknown type",
-			},
-			want: models.DiffTypeNODIFF,
-		},
-		{
-			name: "provided unknown type",
-			args: args{
-				providedDiff:      "unknown type",
-				reconstructedDiff: models.DiffTypeNODIFF,
-			},
-			want: models.DiffTypeNODIFF,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := getHighestPrioritySpecDiffType(tt.args.providedDiff, tt.args.reconstructedDiff); got != tt.want {
-				t.Errorf("getHighestPrioritySpecDiffType() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestBackend_handleHTTPTrace(t *testing.T) {
 	mockCtrlDatabase := gomock.NewController(t)
 	defer mockCtrlDatabase.Finish()
@@ -302,7 +193,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 
 	mockCtrlModules := gomock.NewController(t)
 	defer mockCtrlModules.Finish()
-	mockModules := modules.NewMockModule(mockCtrlModules)
+	mockModulesManager := modules.NewMockModulesManager(mockCtrlModules)
 
 	op := spec.NewOperation()
 	op.Responses = spec.NewResponses()
@@ -649,7 +540,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 					apiInventoryTable.EXPECT().FirstOrCreate(gomock.Any())
 				},
 				expectAPIEventTable: func(apiEventTable *_database.MockAPIEventsTable) {
-					apiEventTable.EXPECT().CreateAPIEvent(NewEventMatcher(createDefaultTestEvent().WithHasProvidedSpecDiff(true).WithSpecDiffType(models.DiffTypeSHADOWDIFF).event))
+					apiEventTable.EXPECT().CreateAPIEvent(NewEventMatcher(createDefaultTestEvent().event))
 				},
 			},
 			args: args{
@@ -699,7 +590,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 					apiInventoryTable.EXPECT().FirstOrCreate(gomock.Any())
 				},
 				expectAPIEventTable: func(apiEventTable *_database.MockAPIEventsTable) {
-					apiEventTable.EXPECT().CreateAPIEvent(NewEventMatcher(createDefaultTestEvent().WithHasReconstructedSpecDiff(true).WithSpecDiffType(models.DiffTypeSHADOWDIFF).event))
+					apiEventTable.EXPECT().CreateAPIEvent(NewEventMatcher(createDefaultTestEvent().event))
 				},
 			},
 			args: args{
@@ -742,139 +633,17 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 		tt.fields.expectDatabase(mockDatabase)
 		tt.fields.expectAPIInventoryTable(mockAPIInventoryTable)
 		tt.fields.expectAPIEventTable(mockAPIEventTable)
-		mockModules.EXPECT().EventNotify(ctx, gomock.Any()).AnyTimes()
+		mockModulesManager.EXPECT().EventNotify(ctx, gomock.Any()).AnyTimes()
 		t.Run(tt.name, func(t *testing.T) {
 			b := &Backend{
-				speculator: tt.fields.speculator,
-				monitor:    tt.fields.monitor,
-				dbHandler:  tt.fields.dbHandler,
-				modules:    mockModules,
+				speculator:     tt.fields.speculator,
+				monitor:        tt.fields.monitor,
+				dbHandler:      tt.fields.dbHandler,
+				modulesManager: mockModulesManager,
 			}
 			if err := b.handleHTTPTrace(ctx, tt.args.trace); (err != nil) != tt.wantErr {
 				t.Errorf("handleHTTPTrace() error = %v, wantErr %v", err, tt.wantErr)
 			}
-		})
-	}
-}
-
-func Test_getPathItemForVersionOrOriginal(t *testing.T) {
-	var nilPathItem *spec.PathItem
-	type args struct {
-		v3PathItem *spec.PathItem
-		version    _spec.OASVersion
-	}
-	tests := []struct {
-		name string
-		args args
-		want interface{}
-	}{
-		{
-			name: "v2",
-			args: args{
-				v3PathItem: &spec.PathItem{
-					Get: &spec.Operation{
-						Responses: spec.Responses{
-							"200": &spec.ResponseRef{
-								Value: spec.NewResponse().
-									WithJSONSchemaRef(&spec.SchemaRef{
-										Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
-									},
-									),
-							},
-						},
-					},
-				},
-				version: _spec.OASv2,
-			},
-			want: &openapi2.PathItem{
-				Get: &openapi2.Operation{
-					Responses: map[string]*openapi2.Response{
-						"200": {
-							Schema: &spec.SchemaRef{
-								Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
-							},
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "v3",
-			args: args{
-				v3PathItem: &spec.PathItem{
-					Get: &spec.Operation{
-						Responses: spec.Responses{
-							"200": &spec.ResponseRef{
-								Value: spec.NewResponse().
-									WithJSONSchemaRef(&spec.SchemaRef{
-										Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
-									},
-									),
-							},
-						},
-					},
-				},
-				version: _spec.OASv3,
-			},
-			want: &spec.PathItem{
-				Get: &spec.Operation{
-					Responses: spec.Responses{
-						"200": &spec.ResponseRef{
-							Value: spec.NewResponse().
-								WithJSONSchemaRef(&spec.SchemaRef{
-									Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
-								},
-								),
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "unknown",
-			args: args{
-				v3PathItem: &spec.PathItem{
-					Get: &spec.Operation{
-						Responses: spec.Responses{
-							"200": &spec.ResponseRef{
-								Value: spec.NewResponse().
-									WithJSONSchemaRef(&spec.SchemaRef{
-										Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
-									},
-									),
-							},
-						},
-					},
-				},
-				version: _spec.Unknown,
-			},
-			want: &spec.PathItem{
-				Get: &spec.Operation{
-					Responses: spec.Responses{
-						"200": &spec.ResponseRef{
-							Value: spec.NewResponse().
-								WithJSONSchemaRef(&spec.SchemaRef{
-									Value: spec.NewObjectSchema().WithProperty("test", spec.NewInt64Schema()),
-								},
-								),
-						},
-					},
-				},
-			},
-		},
-		{
-			name: "nil input",
-			args: args{
-				v3PathItem: nilPathItem,
-				version:    _spec.OASv3,
-			},
-			want: nilPathItem,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := getPathItemForVersionOrOriginal(tt.args.v3PathItem, tt.args.version)
-			assert.DeepEqual(t, got, tt.want, cmpopts.IgnoreUnexported(spec.Schema{}))
 		})
 	}
 }

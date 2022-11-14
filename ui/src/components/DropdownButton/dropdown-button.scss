@@ -1,0 +1,49 @@
+@import 'utils/scss_variables.module.scss';
+
+.ps-dropdown,
+.ps-dropdown:active,
+.ps-dropdown:disabled,
+.ps-dropdown:hover,
+.ps-dropdown:focus {
+    cursor: pointer;
+
+    .dropdown-menu {
+        cursor: default;
+    }
+    .dropdown-toggle {
+        background: none !important;
+        border: none !important;
+        color: $color-grey-black !important;
+        box-shadow: none !important;
+        font-weight: bold;
+        font-size: 10px;
+        padding: 0;
+
+        &::after {
+            display: none;
+        }
+
+        &::before {
+            content: "";
+            border: 1px solid $color-main;
+            border-width: 0 2px 2px 0;
+            display: inline-block;
+            padding: 4px;
+            transform: rotate(45deg);
+            vertical-align: text-top;
+            margin-right: 10px;
+            margin-top: -2px;
+        }
+    }
+}
+
+.ps-dropdown.disabled {
+    .dropdown-toggle {
+        color: $color-grey !important;
+        cursor: not-allowed;
+
+        &::before {
+            border-color: $color-grey;
+        }
+    }
+}

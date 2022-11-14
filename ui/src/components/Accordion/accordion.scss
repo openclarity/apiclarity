@@ -1,0 +1,27 @@
+@import 'utils/scss_variables.module.scss';
+
+.accordion-wrapper {
+    .accordion-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 0;
+        border-bottom: 1px solid $color-grey-light;
+        font-size: 11px;
+
+        &:not(.is-empty) {
+            cursor: pointer;
+        }
+        .accordion-title {
+            display: flex;
+            align-items: center;
+
+            .icon {
+                margin-right: 5px;
+            }
+            > span {
+                padding-top: 2px;
+            }
+        }
+    }
+}

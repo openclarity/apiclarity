@@ -14,7 +14,8 @@ const EventsTable = ({filters, refreshTimestamp}) => {
             Header: 'Time',
             id: "time",
             accessor: original => formatDate(original.time),
-            width: 70
+            width: 70,
+            alwaysShow: true
         },
         {
             Header: 'Method',
@@ -27,12 +28,15 @@ const EventsTable = ({filters, refreshTimestamp}) => {
                 )
             },
             canSort: true,
-            width: 40
+            width: 40,
+            alwaysShow: true
         },
         {
             Header: 'Path',
             id: "path",
-            accessor: "path"
+            accessor: "path",
+
+            alwaysShow: true
         },
         {
             Header: 'Status Code',
@@ -45,7 +49,8 @@ const EventsTable = ({filters, refreshTimestamp}) => {
                 )
             },
             canSort: true,
-            width: 40
+            width: 40,
+            alwaysShow: true
         },
         {
             Header: 'Source',
@@ -122,6 +127,7 @@ const EventsTable = ({filters, refreshTimestamp}) => {
 
     return (
         <Table
+            hideColumnControl={false}
             columns={columns}
             paginationItemsName="APIs"
             url="apiEvents"

@@ -1,0 +1,986 @@
+{
+    "swagger": "2.0",
+    "info": {
+      "contact": {
+        "email": "ataldir@cisco.com",
+        "name": "Axel Taldir"
+      },
+      "description": "Simple flask-backed API showing some example API endpoints for debugging features.",
+      "license": {
+        "name": "Apache 2.0",
+        "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+      },
+      "title": "Planets Demo API",
+      "version": "0.0.1"
+    },
+    "host": "localhost:5001",
+    "basePath": "/",
+    "schemes": [
+      "http"
+    ],
+    "paths": {
+      "/": {
+        "get": {
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": "Hello words",
+              "schema": {
+                "$ref": "#/definitions/message"
+              }
+            }
+          },
+          "tags": [],
+          "description": "Hello word!",
+          "operationId": "hello",
+          "summary": "Hello word!"
+        }
+      },
+      "/planet/{id}": {
+        "delete": {
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "format": "uuid",
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Planets in a list"
+            },
+            "500": {
+              "description": "the planet at position can't be deleted",
+              "schema": {
+                "$ref": "#/definitions/message"
+              }
+            }
+          },
+          "tags": [
+            "planets"
+          ],
+          "description": "delete one planet",
+          "operationId": "planet.delete_planet",
+          "summary": "delete one planet at position",
+          "x-scn-model": [
+            {
+              "description": "This method deletes object 'planet' with parameter 'petId'",
+              "last_modification": "2021-10-20T14:29:46.492385",
+              "review": {
+                "last_reviewed_at": null,
+                "question": "Is it correct ?",
+                "state": "NOT_REVIEWED"
+              },
+              "type": "CRUD_DELETE",
+              "value": [
+                "components",
+                "schemas",
+                "planet"
+              ],
+              "version": "0.0.1"
+            }
+          ]
+        },
+        "get": {
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "format": "uuid",
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Planets in a list",
+              "schema": {
+                "$ref": "#/definitions/planet"
+              }
+            },
+            "204": {
+              "description": "No planet at position",
+              "schema": {
+                "$ref": "#/definitions/message"
+              }
+            }
+          },
+          "tags": [
+            "planets"
+          ],
+          "description": "Get the data relating to one planet",
+          "operationId": "planet.get_planet",
+          "summary": "Fetch one planet by id",
+          "x-scn-model": [
+            {
+              "description": "This method retreives object 'planet' with parameter 'planetPos'",
+              "last_modification": "2021-10-20T14:29:46.492130",
+              "review": {
+                "last_reviewed_at": null,
+                "question": "Is it correct ?",
+                "state": "NOT_REVIEWED"
+              },
+              "type": "CRUD_READ",
+              "value": [
+                "components",
+                "schemas",
+                "planet"
+              ],
+              "version": "0.0.1"
+            }
+          ]
+        },
+        "put": {
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "format": "uuid",
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "body",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/planet"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "The planets that has been updated",
+              "schema": {
+                "$ref": "#/definitions/planet"
+              }
+            },
+            "204": {
+              "description": "No planet at position",
+              "schema": {
+                "$ref": "#/definitions/message"
+              }
+            }
+          },
+          "tags": [
+            "planets"
+          ],
+          "description": "The data relating to one planet",
+          "operationId": "planet.update_planet",
+          "summary": "Update a planet identified by its position",
+          "x-scn-model": [
+            {
+              "description": "This method update object 'planet' with parameter 'planetPos'",
+              "last_modification": "2021-10-20T14:29:46.492130",
+              "review": {
+                "last_reviewed_at": null,
+                "question": "Is it correct ?",
+                "state": "NOT_REVIEWED"
+              },
+              "type": "CRUD_UPDATE",
+              "value": [
+                "components",
+                "schemas",
+                "planet"
+              ],
+              "version": "0.0.1"
+            }
+          ]
+        }
+      },
+      "/planets": {
+        "get": {
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": "Planets in a list",
+              "schema": {
+                "items": {
+                  "$ref": "#/definitions/planet"
+                },
+                "type": "array"
+              }
+            }
+          },
+          "tags": [
+            "planets"
+          ],
+          "description": "Returns a list of all the planets that are stored in the system.",
+          "operationId": "planet.get_planet_list",
+          "summary": "List all planets"
+        },
+        "post": {
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/planet"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "planet creation response",
+              "schema": {
+                "$ref": "#/definitions/planet"
+              }
+            },
+            "default": {
+              "description": "unexpected error",
+              "schema": {
+                "$ref": "#/definitions/error"
+              }
+            }
+          },
+          "tags": [
+            "planets"
+          ],
+          "description": "Creates a new planet",
+          "operationId": "planet.add_planet",
+          "summary": "Creates a new planet",
+          "x-scn-model": [
+            {
+              "description": "This method creates object 'planet'",
+              "last_modification": "2021-10-20T14:29:46.491807",
+              "review": {
+                "last_reviewed_at": null,
+                "question": "Is it correct ?",
+                "state": "NOT_REVIEWED"
+              },
+              "type": "CRUD_CREATE",
+              "value": [
+                "components",
+                "schemas",
+                "planet"
+              ],
+              "version": "0.0.1"
+            }
+          ]
+        }
+      },
+      "/solarsys": {
+        "get": {
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": "list of solar system",
+              "schema": {
+                "items": {
+                  "$ref": "#/definitions/solarsys"
+                },
+                "type": "array"
+              }
+            }
+          },
+          "tags": [
+            "solarsys"
+          ],
+          "description": "Returns a list of all solar systems that are stored in the system.",
+          "operationId": "solarsys.get_solar_system_list",
+          "summary": "List all solar systems"
+        },
+        "post": {
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/solarsys"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Solar system creation response",
+              "schema": {
+                "$ref": "#/definitions/solarsys"
+              }
+            },
+            "default": {
+              "description": "unexpected error",
+              "schema": {
+                "$ref": "#/definitions/error"
+              }
+            }
+          },
+          "tags": [
+            "solarsys"
+          ],
+          "description": "Creates a new solar system",
+          "operationId": "solarsys.add_solar_system",
+          "summary": "Creates a new solar system",
+          "x-scn-model": [
+            {
+              "description": "This method creates object 'solarSys'",
+              "last_modification": "2021-10-20T14:29:46.491807",
+              "review": {
+                "last_reviewed_at": null,
+                "question": "Is it correct ?",
+                "state": "NOT_REVIEWED"
+              },
+              "type": "CRUD_CREATE",
+              "value": [
+                "components",
+                "schemas",
+                "solarSys"
+              ],
+              "version": "0.0.1"
+            }
+          ]
+        }
+      },
+      "/solarsys/{id}": {
+        "delete": {
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "format": "uuid",
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Succeded to delete the solar system "
+            },
+            "404": {
+              "description": "No solar system with this id",
+              "schema": {
+                "$ref": "#/definitions/message"
+              }
+            },
+            "500": {
+              "description": "the solar system at position can't be deleted",
+              "schema": {
+                "$ref": "#/definitions/message"
+              }
+            }
+          },
+          "tags": [
+            "solarsys"
+          ],
+          "description": "delete one solar system",
+          "operationId": "solarsys.delete_solar_system",
+          "summary": "delete one solar system",
+          "x-scn-model": [
+            {
+              "description": "This method deletes object 'solarSys' with parameter 'id'",
+              "last_modification": "2021-10-20T14:29:46.492385",
+              "review": {
+                "last_reviewed_at": null,
+                "question": "Is it correct ?",
+                "state": "NOT_REVIEWED"
+              },
+              "type": "CRUD_DELETE",
+              "value": [
+                "components",
+                "schemas",
+                "solarSys"
+              ],
+              "version": "0.0.1"
+            }
+          ]
+        },
+        "get": {
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "format": "uuid",
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Solar system object",
+              "schema": {
+                "$ref": "#/definitions/solarsys"
+              }
+            },
+            "204": {
+              "description": "No solar system with this id",
+              "schema": {
+                "$ref": "#/definitions/message"
+              }
+            }
+          },
+          "tags": [
+            "solarsys"
+          ],
+          "description": "Get the data relating to one solar system",
+          "operationId": "solarsys.get_solar_system",
+          "summary": "Fetch one solar system by id",
+          "x-scn-model": [
+            {
+              "description": "This method retreives object 'solarSys' with parameter 'id'",
+              "last_modification": "2021-10-20T14:29:46.492130",
+              "review": {
+                "last_reviewed_at": null,
+                "question": "Is it correct ?",
+                "state": "NOT_REVIEWED"
+              },
+              "type": "CRUD_READ",
+              "value": [
+                "components",
+                "schemas",
+                "solarSys"
+              ],
+              "version": "0.0.1"
+            }
+          ]
+        },
+        "put": {
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "format": "uuid",
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "body",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/solarsys"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "The solar system object that has been updated",
+              "schema": {
+                "$ref": "#/definitions/solarsys"
+              }
+            },
+            "204": {
+              "description": "No solar system with this id",
+              "schema": {
+                "$ref": "#/definitions/message"
+              }
+            }
+          },
+          "tags": [
+            "solarsys"
+          ],
+          "description": "The data relating to one solar system",
+          "operationId": "solarsys.update_solar_system",
+          "summary": "Update a solar system",
+          "x-scn-model": [
+            {
+              "description": "This method update object 'solarSys' with parameter 'id'",
+              "last_modification": "2021-10-20T14:29:46.492130",
+              "review": {
+                "last_reviewed_at": null,
+                "question": "Is it correct ?",
+                "state": "NOT_REVIEWED"
+              },
+              "type": "CRUD_UPDATE",
+              "value": [
+                "components",
+                "schemas",
+                "solarSys"
+              ],
+              "version": "0.0.1"
+            }
+          ]
+        }
+      },
+      "/star/{id}": {
+        "delete": {
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "format": "uuid",
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Planets in a list"
+            },
+            "500": {
+              "description": "the planet at position can't be deleted",
+              "schema": {
+                "$ref": "#/definitions/message"
+              }
+            }
+          },
+          "tags": [
+            "planets"
+          ],
+          "description": "delete one planet",
+          "operationId": "star.delete_star",
+          "summary": "delete one planet at position",
+          "x-scn-model": [
+            {
+              "description": "This method deletes object 'planet' with parameter 'petId'",
+              "last_modification": "2021-10-20T14:29:46.492385",
+              "review": {
+                "last_reviewed_at": null,
+                "question": "Is it correct ?",
+                "state": "NOT_REVIEWED"
+              },
+              "type": "CRUD_DELETE",
+              "value": [
+                "components",
+                "schemas",
+                "planet"
+              ],
+              "version": "0.0.1"
+            }
+          ]
+        },
+        "get": {
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "format": "uuid",
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Planets in a list",
+              "schema": {
+                "$ref": "#/definitions/planet"
+              }
+            },
+            "404": {
+              "description": "No planet at position",
+              "schema": {
+                "$ref": "#/definitions/message"
+              }
+            }
+          },
+          "tags": [
+            "stars"
+          ],
+          "description": "Get the data relating to one planet",
+          "operationId": "star.get_star",
+          "summary": "Fetch one planet by position",
+          "x-scn-model": [
+            {
+              "description": "This method retreives object 'planet' with parameter 'planetPos'",
+              "last_modification": "2021-10-20T14:29:46.492130",
+              "review": {
+                "last_reviewed_at": null,
+                "question": "Is it correct ?",
+                "state": "NOT_REVIEWED"
+              },
+              "type": "CRUD_READ",
+              "value": [
+                "components",
+                "schemas",
+                "star"
+              ],
+              "version": "0.0.1"
+            }
+          ]
+        },
+        "put": {
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "format": "uuid",
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "type": "string"
+            },
+            {
+              "in": "body",
+              "name": "body",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/star"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "The star that has been updated",
+              "schema": {
+                "$ref": "#/definitions/star"
+              }
+            },
+            "204": {
+              "description": "No planet at position",
+              "schema": {
+                "$ref": "#/definitions/message"
+              }
+            }
+          },
+          "tags": [
+            "stars"
+          ],
+          "description": "The data relating to one planet",
+          "operationId": "star.update_star",
+          "summary": "Update a planet identified by its position",
+          "x-scn-model": [
+            {
+              "description": "This method update object 'planet' with parameter 'planetPos'",
+              "last_modification": "2021-10-20T14:29:46.492130",
+              "review": {
+                "last_reviewed_at": null,
+                "question": "Is it correct ?",
+                "state": "NOT_REVIEWED"
+              },
+              "type": "CRUD_UPDATE",
+              "value": [
+                "components",
+                "schemas",
+                "planet"
+              ],
+              "version": "0.0.1"
+            }
+          ]
+        }
+      },
+      "/stars": {
+        "get": {
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": "Planets in a list",
+              "schema": {
+                "items": {
+                  "$ref": "#/definitions/star"
+                },
+                "type": "array"
+              }
+            }
+          },
+          "tags": [
+            "stars"
+          ],
+          "description": "Returns a list of all the planets that are stored in the system.",
+          "operationId": "star.get_star_list",
+          "summary": "List all planets"
+        },
+        "post": {
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "parameters": [
+            {
+              "in": "body",
+              "name": "body",
+              "required": true,
+              "schema": {
+                "$ref": "#/definitions/star"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "planet creation response",
+              "schema": {
+                "$ref": "#/definitions/star"
+              }
+            },
+            "default": {
+              "description": "unexpected error",
+              "schema": {
+                "$ref": "#/definitions/error"
+              }
+            }
+          },
+          "tags": [
+            "stars"
+          ],
+          "description": "Creates a new planet",
+          "operationId": "star.add_star",
+          "summary": "Creates a new planet",
+          "x-scn-model": [
+            {
+              "description": "This method creates object 'star'",
+              "last_modification": "2021-10-20T14:29:46.491807",
+              "review": {
+                "last_reviewed_at": null,
+                "question": "Is it correct ?",
+                "state": "NOT_REVIEWED"
+              },
+              "type": "CRUD_CREATE",
+              "value": [
+                "components",
+                "schemas",
+                "planet"
+              ],
+              "version": "0.0.1"
+            }
+          ]
+        }
+      }
+    },
+    "definitions": {
+      "error": {
+        "properties": {
+          "message": {
+            "description": "description of the error",
+            "example": "Id already exists",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "message": {
+        "properties": {
+          "message": {
+            "description": "description of the message",
+            "example": "Hello words!",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "planet": {
+        "description": "Formal description of a Planet in a SolarSys",
+        "properties": {
+          "id": {
+            "description": "Unique Indentifier of the planet",
+            "example": "Saturn",
+            "format": "uuid",
+            "type": "string"
+          },
+          "moons": {
+            "description": "Number of moons, according to NASA",
+            "example": 1,
+            "type": "number"
+          },
+          "name": {
+            "description": "Name of the planet",
+            "example": "Saturn",
+            "type": "string"
+          },
+          "orbital_radius": {
+            "description": "Orbital radius from the sun in UA",
+            "example": 1.2,
+            "type": "number"
+          },
+          "star_id": {
+            "description": "Reference to the Star",
+            "format": "uuid",
+            "title": "Star Identifier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "orbital_radius",
+          "moons",
+          "star_id"
+        ],
+        "type": "object",
+        "x-scn-model": [
+          {
+            "description": "The probable identifier of this Object is 'id'",
+            "last_modification": "2021-10-20T14:29:46.492385",
+            "review": {
+              "last_reviewed_at": null,
+              "question": "Is it correct ?",
+              "state": "NOT_REVIEWED"
+            },
+            "type": "IDENTIFIER",
+            "value": "id",
+            "version": "0.0.1"
+          }
+        ]
+      },
+      "solarsys": {
+        "description": "Formal description of a Solar system object",
+        "properties": {
+          "identifier": {
+            "description": "Unique Solar system identifier",
+            "format": "uuid",
+            "title": "Solar system Identifier",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the solar system",
+            "example": "Sol",
+            "title": "Name",
+            "type": "string"
+          },
+          "x": {
+            "description": "Polar to cartesian coordinates in AL",
+            "example": 62,
+            "title": "Coordinates",
+            "type": "number"
+          },
+          "y": {
+            "description": "Polar to cartesian coordinates in AL",
+            "example": 62,
+            "title": "Coordinates",
+            "type": "number"
+          },
+          "z": {
+            "description": "Polar to cartesian coordinates in AL",
+            "example": 62,
+            "title": "Coordinates",
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "x",
+          "y",
+          "z"
+        ],
+        "type": "object",
+        "x-scn-model": [
+          {
+            "description": "The probable identifier of this Object is 'identifier'",
+            "last_modification": "2021-10-20T14:29:46.492385",
+            "review": {
+              "last_reviewed_at": null,
+              "question": "Is it correct ?",
+              "state": "NOT_REVIEWED"
+            },
+            "type": "IDENTIFIER",
+            "value": "identifier",
+            "version": "0.0.1"
+          }
+        ]
+      },
+      "star": {
+        "description": "Formal description of a Star object",
+        "properties": {
+          "id": {
+            "description": "Unique Star Identifier",
+            "format": "uuid",
+            "title": "Star Identifier",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the star",
+            "example": "Saturn",
+            "title": "Name",
+            "type": "string"
+          },
+          "orbital_radius": {
+            "description": "Orbital radius from the system centroid",
+            "example": 1.2,
+            "type": "number"
+          },
+          "solarsys_id": {
+            "description": "Reference to the Solar system",
+            "format": "uuid",
+            "title": "Solar system Identifier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "solarsys_id",
+          "orbital_radius"
+        ],
+        "type": "object",
+        "x-scn-model": [
+          {
+            "description": "The probable identifier of this Object is 'id'",
+            "last_modification": "2021-10-20T14:29:46.492385",
+            "review": {
+              "last_reviewed_at": null,
+              "question": "Is it correct ?",
+              "state": "NOT_REVIEWED"
+            },
+            "type": "IDENTIFIER",
+            "value": "id",
+            "version": "0.0.1"
+          }
+        ]
+      }
+    },
+    "tags": [
+      {
+        "description": "Manage planets in solar sys",
+        "name": "planets"
+      },
+      {
+        "description": "Manage solar system",
+        "name": "solarsys"
+      },
+      {
+        "description": "Manage stars in a solar system",
+        "name": "stars"
+      }
+    ],
+    "x-components": {
+      "requestBodies": {}
+    }
+  }

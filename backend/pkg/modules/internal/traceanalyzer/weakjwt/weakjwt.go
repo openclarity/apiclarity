@@ -25,7 +25,6 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	ahocorasick "github.com/petar-dambovaliev/aho-corasick"
 
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
 	"github.com/openclarity/apiclarity/plugins/api/server/models"
 )
@@ -36,26 +35,14 @@ const (
 	MaxTokenAge         = 5 * 24 * time.Hour
 )
 
-const (
-	JWTNoAlgField        = "JWT_NO_ALG_FIELD"
-	JWTAlgFieldNone      = "JWT_ALG_FIELD_NONE"
-	JWTNotRecommendedAlg = "JWT_NOT_RECOMMENDED_ALG"
-	JWTNoExpireClaim     = "JWT_NO_EXPIRE_CLAIM"
-	JWTExpTooFar         = "JWT_EXP_TOO_FAR"
-	//nolint:gosec
-	JWTWeakSymetricSecret        = "JWT_WEAK_SYMETRIC_SECRET"
-	JWTSensitiveContentInHeaders = "JWT_SENSITIVE_CONTENT_IN_HEADERS"
-	JWTSensitiveContentInClaims  = "JWT_SENSITIVE_CONTENT_IN_CLAIMS"
-)
-
 type WeakJWT struct {
 	knownWeakKeys     []string
 	sensitiveKeywords ahocorasick.AhoCorasick
 	maxTokenAge       time.Duration
 }
 
-func findJWTToken(trace *models.Telemetry) (*jwt.Token, []core.Annotation) {
-	anns := []core.Annotation{}
+func findJWTToken(trace *models.Telemetry) (*jwt.Token, []utils.TraceAnalyzerAnnotation) {
+	anns := []utils.TraceAnalyzerAnnotation{}
 
 	index, found := utils.FindHeader(trace.Request.Common.Headers, AuthorizationHeader)
 	if !found {
@@ -74,7 +61,7 @@ func findJWTToken(trace *models.Telemetry) (*jwt.Token, []core.Annotation) {
 		if err != nil {
 			var verr *jwt.ValidationError
 			if errors.As(err, &verr) && verr.Errors&jwt.ValidationErrorUnverifiable != 0 {
-				anns = append(anns, core.Annotation{Name: JWTNoAlgField})
+				anns = append(anns, NewAnnotationNoAlgField())
 			}
 			return nil, anns
 		}
@@ -99,19 +86,13 @@ func NewWeakJWT(weakKeyList []string, sensitiveKeywords []string) *WeakJWT {
 	}
 }
 
-func (w *WeakJWT) analyzeAlg(token *jwt.Token) []core.Annotation {
-	anns := []core.Annotation{}
+func (w *WeakJWT) analyzeAlg(token *jwt.Token) []utils.TraceAnalyzerAnnotation {
+	anns := []utils.TraceAnalyzerAnnotation{}
 
 	if token.Method == nil {
-		a := core.Annotation{
-			Name: JWTNoAlgField,
-		}
-		anns = append(anns, a)
+		anns = append(anns, NewAnnotationNoAlgField())
 	} else if token.Method == jwt.SigningMethodNone {
-		a := core.Annotation{
-			Name: JWTAlgFieldNone,
-		}
-		anns = append(anns, a)
+		anns = append(anns, NewAnnotationAlgFieldNone())
 	} else {
 		alg := token.Method.Alg()
 		recommended := []string{
@@ -127,19 +108,15 @@ func (w *WeakJWT) analyzeAlg(token *jwt.Token) []core.Annotation {
 			}
 		}
 		if !haveRecommended {
-			a := core.Annotation{
-				Name:       JWTNotRecommendedAlg,
-				Annotation: []byte(alg),
-			}
-			anns = append(anns, a)
+			anns = append(anns, NewAnnotationNotRecommendedAlg(alg, recommended))
 		}
 	}
 
 	return anns
 }
 
-func (w *WeakJWT) analyzeExpireClaims(token *jwt.Token) []core.Annotation {
-	anns := []core.Annotation{}
+func (w *WeakJWT) analyzeExpireClaims(token *jwt.Token) []utils.TraceAnalyzerAnnotation {
+	anns := []utils.TraceAnalyzerAnnotation{}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
@@ -150,10 +127,7 @@ func (w *WeakJWT) analyzeExpireClaims(token *jwt.Token) []core.Annotation {
 	nbf := claims["nbf"]
 	iat := claims["iat"]
 	if exp == nil && nbf == nil && iat == nil {
-		a := core.Annotation{
-			Name: JWTNoExpireClaim,
-		}
-		anns = append(anns, a)
+		anns = append(anns, NewAnnotationNoExpireClaim())
 	} else if exp != nil {
 		// There are Claims that allow for token expiration.
 		// Check that this token is not expiring too far in the future
@@ -167,19 +141,15 @@ func (w *WeakJWT) analyzeExpireClaims(token *jwt.Token) []core.Annotation {
 		}
 
 		if time.Until(expireAt) >= w.maxTokenAge {
-			a := core.Annotation{
-				Name:       JWTExpTooFar,
-				Annotation: []byte(expireAt.UTC().String()),
-			}
-			anns = append(anns, a)
+			anns = append(anns, NewAnnotationExpTooFar(expireAt))
 		}
 	}
 
 	return anns
 }
 
-func (w *WeakJWT) analyzeSig(token *jwt.Token) []core.Annotation {
-	anns := []core.Annotation{}
+func (w *WeakJWT) analyzeSig(token *jwt.Token) []utils.TraceAnalyzerAnnotation {
+	anns := []utils.TraceAnalyzerAnnotation{}
 
 	if token.Method == nil || !strings.HasPrefix(token.Method.Alg(), "HS") {
 		return anns
@@ -197,11 +167,7 @@ func (w *WeakJWT) analyzeSig(token *jwt.Token) []core.Annotation {
 	for _, secret := range w.knownWeakKeys {
 		sig, err := signMethod.Sign(signingString, []byte(secret))
 		if err == nil && sig == parts[2] { // We found the secret signing key !
-			a := core.Annotation{
-				Name:       JWTWeakSymetricSecret,
-				Annotation: []byte(secret),
-			}
-			anns = append(anns, a)
+			anns = append(anns, NewAnnotationWeakSymetricSecret([]byte(secret)))
 			break
 		}
 	}
@@ -209,8 +175,8 @@ func (w *WeakJWT) analyzeSig(token *jwt.Token) []core.Annotation {
 	return anns
 }
 
-func (w *WeakJWT) analyzeSensitive(token *jwt.Token) []core.Annotation {
-	anns := []core.Annotation{}
+func (w *WeakJWT) analyzeSensitive(token *jwt.Token) []utils.TraceAnalyzerAnnotation {
+	anns := []utils.TraceAnalyzerAnnotation{}
 	sensitiveHeader := make([]string, 0)
 	sensitiveClaims := make([]string, 0)
 
@@ -220,14 +186,7 @@ func (w *WeakJWT) analyzeSensitive(token *jwt.Token) []core.Annotation {
 			sensitiveHeader = append(sensitiveHeader, headerK)
 		}
 	}
-	if len(sensitiveHeader) > 0 {
-		sort.Strings(sensitiveHeader)
-		a := core.Annotation{
-			Name:       JWTSensitiveContentInHeaders,
-			Annotation: []byte(strings.Join(sensitiveHeader, ",")),
-		}
-		anns = append(anns, a)
-	}
+	sort.Strings(sensitiveHeader)
 
 	for claimK := range token.Claims.(jwt.MapClaims) {
 		matches := w.sensitiveKeywords.FindAll(claimK)
@@ -235,18 +194,16 @@ func (w *WeakJWT) analyzeSensitive(token *jwt.Token) []core.Annotation {
 			sensitiveClaims = append(sensitiveClaims, claimK)
 		}
 	}
-	if len(sensitiveClaims) > 0 {
-		sort.Strings(sensitiveClaims)
-		a := core.Annotation{
-			Name:       JWTSensitiveContentInClaims,
-			Annotation: []byte(strings.Join(sensitiveClaims, ",")),
-		}
-		anns = append(anns, a)
+	sort.Strings(sensitiveClaims)
+
+	if len(sensitiveHeader) > 0 || len(sensitiveClaims) > 0 {
+		anns = append(anns, NewAnnotationSensitiveContent(sensitiveHeader, sensitiveClaims))
 	}
+
 	return anns
 }
 
-func (w *WeakJWT) Analyze(trace *models.Telemetry) (eventAnns []core.Annotation, apiAnns []core.Annotation) {
+func (w *WeakJWT) Analyze(trace *models.Telemetry) (eventAnns []utils.TraceAnalyzerAnnotation) {
 	JWTToken, eventAnns := findJWTToken(trace)
 	if JWTToken != nil {
 		eventAnns = append(eventAnns, w.analyzeAlg(JWTToken)...)
@@ -255,5 +212,5 @@ func (w *WeakJWT) Analyze(trace *models.Telemetry) (eventAnns []core.Annotation,
 		eventAnns = append(eventAnns, w.analyzeSensitive(JWTToken)...)
 	}
 
-	return eventAnns, apiAnns
+	return eventAnns
 }

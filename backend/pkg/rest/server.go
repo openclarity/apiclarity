@@ -21,6 +21,7 @@ import (
 
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/jessevdk/go-flags"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/apiclarity/api/server/restapi"
@@ -29,18 +30,38 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules"
 	_speculator "github.com/openclarity/speculator/pkg/speculator"
+	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
 )
 
 type Server struct {
-	server     *restapi.Server
-	dbHandler  database.Database
-	speculator *_speculator.Speculator
+	server          *restapi.Server
+	dbHandler       database.Database
+	speculator      *_speculator.Speculator
+	modulesManager  modules.ModulesManager
+	samplingManager *manager.Manager
+	features        []modules.ModuleInfo
 }
 
-func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *database.Handler, modules modules.Module) (*Server, error) {
+type ServerConfig struct {
+	EnableTLS             bool
+	Port                  int
+	TLSPort               int
+	TLSServerCertFilePath string
+	TLSServerKeyFilePath  string
+	Speculator            *_speculator.Speculator
+	DBHandler             *database.Handler
+	ModulesManager        modules.ModulesManager
+	SamplingManager       *manager.Manager
+	Features              []modules.ModuleInfo
+}
+
+func CreateRESTServer(config *ServerConfig) (*Server, error) {
 	s := &Server{
-		speculator: speculator,
-		dbHandler:  dbHandler,
+		speculator:      config.Speculator,
+		dbHandler:       config.DBHandler,
+		modulesManager:  config.ModulesManager,
+		samplingManager: config.SamplingManager,
+		features:        config.Features,
 	}
 
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)
@@ -134,17 +155,49 @@ func CreateRESTServer(port int, speculator *_speculator.Speculator, dbHandler *d
 		return s.DeleteAPIInventoryAPIIDSpecsReconstructedSpec(params)
 	})
 
+	api.GetFeaturesHandler = operations.GetFeaturesHandlerFunc(func(params operations.GetFeaturesParams) middleware.Responder {
+		return s.GetFeatures(params)
+	})
+
+	api.PostControlNewDiscoveredAPIsHandler = operations.PostControlNewDiscoveredAPIsHandlerFunc(func(params operations.PostControlNewDiscoveredAPIsParams) middleware.Responder {
+		return s.PostControlNewDiscoveredAPIs(params)
+	})
+
+	api.GetControlGatewaysHandler = operations.GetControlGatewaysHandlerFunc(func(params operations.GetControlGatewaysParams) middleware.Responder {
+		return s.GetControlAPIGateways(params)
+	})
+
+	api.PostControlGatewaysHandler = operations.PostControlGatewaysHandlerFunc(func(params operations.PostControlGatewaysParams) middleware.Responder {
+		return s.PostControlAPIGateways(params)
+	})
+
+	api.GetControlGatewaysGatewayIDHandler = operations.GetControlGatewaysGatewayIDHandlerFunc(func(params operations.GetControlGatewaysGatewayIDParams) middleware.Responder {
+		return s.GetControlAPIGatewaysGatewayID(params)
+	})
+
+	api.DeleteControlGatewaysGatewayIDHandler = operations.DeleteControlGatewaysGatewayIDHandlerFunc(func(params operations.DeleteControlGatewaysGatewayIDParams) middleware.Responder {
+		return s.DeleteControlAPIGatewaysGatewayID(params)
+	})
+
 	server := restapi.NewServer(api)
 
 	server.ConfigureFlags()
 	server.ConfigureAPI()
-	server.Port = port
+	server.Port = config.Port
+
+	// We want to serve both http and https
+	if config.EnableTLS {
+		server.EnabledListeners = []string{"https", "http"}
+		server.TLSCertificate = flags.Filename(config.TLSServerCertFilePath)
+		server.TLSCertificateKey = flags.Filename(config.TLSServerKeyFilePath)
+		server.TLSPort = config.TLSPort
+	}
 
 	origHandler := server.GetHandler()
 	newHandler := http.NewServeMux()
 
 	// Enhance the default handler with modules apis handlers
-	newHandler.Handle("/api/modules/", modules.HTTPHandler())
+	newHandler.Handle("/api/modules/", config.ModulesManager.HTTPHandler())
 	newHandler.Handle("/", origHandler)
 	server.SetHandler(newHandler)
 	s.server = server

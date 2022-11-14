@@ -1,0 +1,53 @@
+@import 'utils/scss_variables.module.scss';
+
+$icon-size: 18px;
+$container-size: 24px;
+$container-size-small: 18px;
+$icon-size-small: 16px;
+
+.round-icon-container {
+    width: $container-size;
+    height: $container-size;
+    min-width: $container-size;
+    min-height: $container-size;
+    background-color: $color-main;
+    border-radius: 50px;
+    position: relative;
+
+    .icon {
+        color: $color-white;
+        position: absolute;
+        width: $icon-size;
+        height: $icon-size;
+        min-width: $icon-size;
+        min-height: $icon-size;
+        top: calc(50% - #{$icon-size} / 2);
+        left: calc(50% - #{$icon-size} / 2);
+    }
+
+    &.disabled {
+        background-color: $color-grey;
+    }
+    &.clickable {
+        cursor: pointer;
+
+        &.disabled {
+            cursor: not-allowed;
+        }
+    }
+    &.small {
+        width: $container-size-small;
+        height: $container-size-small;
+        min-width: $container-size-small;
+        min-height: $container-size-small;
+
+        .icon {
+            width: $icon-size-small;
+            height: $icon-size-small;
+            min-width: $icon-size-small;
+            min-height: $icon-size-small;
+            top: calc(50% - #{$icon-size-small} / 2);
+            left: calc(50% - #{$icon-size-small} / 2);
+        }
+    }
+}

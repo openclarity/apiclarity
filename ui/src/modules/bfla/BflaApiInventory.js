@@ -1,251 +1,183 @@
-import React, {useState, useEffect} from 'react';
-import {useFetch, usePrevious} from 'hooks';
+import React, { useEffect, useState } from 'react';
+import { useFetch } from 'hooks';
+import { has, isEmpty } from 'lodash';
 import Loader from 'components/Loader';
-import ListDisplay from 'components/ListDisplay';
-import Tag from 'components/Tag';
-import Table from 'components/Table';
-import Arrow, { ARROW_NAMES } from 'components/Arrow';
-import Button from 'components/Button';
-import MODULE_TYPES from '../MODULE_TYPES.js';
-import BflaInventoryModal from './BflaInventoryModal';
-import emptySelectImage from 'utils/images/select.svg';
+import { MODULE_TYPES } from '../MODULE_TYPES.js';
+import NoSpecScreen from './NoSpecsScreen';
+import DataCollectionScreen from './DataCollectionScreen';
+import DataCollectionInProgressScreen from './DataCollectionInProgressScreen';
+import DataCollectedScreen from './DataCollectedScreen';
 
-import collectionProgress from './collection.svg';
+import BFLA_ACTIONS from './actions';
+import BFLA_UTILS from './utils.js';
 
 import './bfla.scss';
 
-const DATA_COLLECTION_IN_PROGRESS_TITLE = 'Data collection in progress...';
-const CLIENT_TYPE_EXTERNAL = 'EXTERNAL';
-
-const NotSelected = ({title}) => (
-    <div className="not-selected-wrapper">
-        <div className="not-selected-title">{title}</div>
-        <img src={emptySelectImage} alt="no path selected" />
-    </div>
-);
-
-const BackHeader = ({title, onBack}) => (
-    <div className="selected-back-header">
-        <Arrow name={ARROW_NAMES.LEFT} onClick={onBack} />
-        <div>{title}</div>
-    </div>
-);
-
-const MethodTitle = ({method, path}) => (
-    <div className="method-item-title"><Tag>{method}</Tag><span>{path}</span></div>
-);
-
-const SelectedAuthClientDisplay = ({client, onBack, authorizeClient}) => {
-    const {external, k8s_object, end_users} = client || {};
-    const name = external ? CLIENT_TYPE_EXTERNAL : k8s_object.name || {};
-    const endUsers = end_users || [];
-
-    const columns = [
-        {
-            Header: 'Type',
-            id: 'type',
-            Cell: ({row}) => {
-                const {source} = row.original;
-                return <Tag>{source}</Tag>;
-            },
-            width: 30
-        },
-        { Header: 'Name', id: 'name', accessor: 'id', width: 50 },
-        { Header: 'IP', id: 'ip', accessor: 'ip_address' }
-    ];
-
-    const BackButtonTitle = `authorized clients/${name}`;
-
-    return (
-        <React.Fragment>
-            <div className="client-action-wrapper">
-                <BackHeader title={BackButtonTitle} onBack={onBack} />
-                <Button className="button-add" onClick={() => authorizeClient(client)}>MARK AS ILLEGITIMATE</Button>
-            </div>
-                <div className="authorized-clients">
-                    <Table
-                        noResultsTitle="this event"
-                        columns={columns}
-                        data={{items: endUsers, total: endUsers.length}}
-                        withPagination={false}
-                    />
-                </div>
-        </React.Fragment>
-    );
-};
-
-const SelectedPathDisplay = ({data, url, onBack, refresh }) => {
-    const [selectedClient, setSelectedClient] = useState();
-    const [selectedAuthClient, setSelectedAuthClient] = useState();
-    const {id, method, path, audience} = data;
-    let authorizedClients = [];
-    let violatingClients = [];
-
-    const prevId = usePrevious(id);
-
-    useEffect(() => {
-        if (id !== prevId) {
-            setSelectedAuthClient(null);
-        }
-    }, [id, prevId, selectedAuthClient]);
-
-    audience.forEach((a, idx) => {
-        a.authorized ? authorizedClients.push({ ...a, id: idx }) : violatingClients.push(a);
-    });
-
-    const authorizeClient = (client) => {
-        setSelectedClient(client);
-    };
-
-    const displayTitle = method && path;
-
-    return (
-        <div className="tag-selected-wrapper">
-            {selectedAuthClient ? <SelectedAuthClientDisplay client={selectedAuthClient} onBack={() => setSelectedAuthClient(null)} authorizeClient={authorizeClient}/> :
-                <React.Fragment>
-                    <BackHeader title={displayTitle && <MethodTitle method={method} path={path} />} onBack={onBack} />
-                    <div className="tag-selected-methods-list">
-                        <div className="authorized-clients">
-                            <div className="clients-list-title">List of authorized clients</div>
-                            <ListDisplay
-                                items={authorizedClients}
-                                itemDisplay={({ k8s_object, external }) => <div className="client-list-item-title">{
-                                    external? CLIENT_TYPE_EXTERNAL :k8s_object.name
-                                }</div>}
-                                selectedId={!!selectedAuthClient ? selectedAuthClient.id : null}
-                                onSelect={(client) => setSelectedAuthClient(client)}
-                            />
-
-                        </div>
-
-                        <div className="violating-clients">
-                            <div className="clients-list-title">List of violating clients</div>
-                            {violatingClients.map((c) => {
-                                return <div className="client-list-item-wrapper" key={c.external ? CLIENT_TYPE_EXTERNAL: c.k8s_object.name}>
-                                    <div className="client-list-item-title">{c.external ? CLIENT_TYPE_EXTERNAL: c.k8s_object.name}</div>
-                                    <Button className="button-add" onClick={() => authorizeClient(c)}>Authorize</Button>
-                                </div>;
-                            })}
-                        </div>
-                    </div>
-                </React.Fragment>
-            }
-
-            {selectedClient &&
-                <BflaInventoryModal
-                    url={url}
-                    client={selectedClient}
-                    method={method}
-                    path={path}
-                    onClose={() => setSelectedClient(null)}
-                    onSuccess={() => refresh()}/>
-            }
-        </div>
-    );
-};
-
-const DataCollectionInProgress = ({title}) => (
-        <div className="in-progress-wrapper">
-            <div className="in-progress-title">{title}</div>
-            <img src={collectionProgress} alt={DATA_COLLECTION_IN_PROGRESS_TITLE} />
-        </div>
-);
-
-const BflaTab = ({data, url, loading, refresh}) => {
-    const [selectedPathData, setSelectedPathData] = useState(null);
-    const {operations} = data || [];
-    const methodPathList = operations ? operations.map((x, idx) => ({ id: idx, ...x })) : [];
-
-    return (
-        <div className="bfla-tab-wrapper">
-            {loading ? <Loader /> :
-
-                <div className="spec-display-wrapper">
-                    <div className="select-pane">
-                        <ListDisplay
-                            items={methodPathList}
-                            itemDisplay={({ method, path }) => <MethodTitle method={method} path={path} />}
-                            selectedId={!!selectedPathData ? selectedPathData.id : null}
-                            onSelect={selected => setSelectedPathData(selected)}
-                        />
-                    </div>
-                    <div className="display-pane">
-                        {!selectedPathData ? <NotSelected title="Select a path to see details." /> :
-                         <SelectedPathDisplay data={selectedPathData} refresh={refresh} url={url} onBack={() => setSelectedPathData(null)} />}
-                    </div>
-             </div>
-            }
-        </div>
-    );
-
-};
-
-const EMPTY_CLIENT_ITEM = {
-    authorized: true,
-    k8s_object: {
-        name: 'TBD'
-    },
-    method: '',
-    path: ''
-};
-
-const COLLECTION_IN_PROGRESS = {
-    audience: [
-        EMPTY_CLIENT_ITEM,
-        {
-            ...EMPTY_CLIENT_ITEM,
-            ...{ authorized: false }
-        }
-    ]
-};
-
-const NoSpec = () => {
-    return (
-        <NotSelected title="Upload a spec or reconstruct one in order to enable BFLA detection for this API."/>
-    );
-};
-
-const Learning = () => {
-    return (
-        <div className="spec-display-wrapper">
-            <div className="select-pane">
-                <DataCollectionInProgress title={DATA_COLLECTION_IN_PROGRESS_TITLE} />
-            </div>
-            <div className="display-pane">
-                <div className="in-progress-overlay">
-                    <SelectedPathDisplay data={COLLECTION_IN_PROGRESS} />
-                </div>
-            </div>
-        </div>
-    );
-};
+const SPEC_TYPE = {
+    NONE: 'NONE',
+    RECONSTRUCTED: 'RECONSTRUCTED',
+    PROVIDED: 'PROVIDED'
+}
 
 const BflaApiInventory = (props) => {
-    const {id: apiId } = props;
+    const { id: apiId } = props;
     const authModelURL = `modules/bfla/authorizationModel/${apiId}`;
-    const [{loading, data}, updateAuthModel] = useFetch(authModelURL);
+    const stateURL = `modules/bfla/authorizationModel/${apiId}/state`;
+    const [{ loading, data }, updateAuthModel] = useFetch(authModelURL);
+    const [{ loading: isLoadingCheck, data: checkStateData }, checkStateBFLA] = useFetch(stateURL);
+    const [isLoading, setIsLoading] = useState(false);
+    const [bflaTabStatus, setBflaTabStatus] = useState(BFLA_UTILS.BFLA_TAB_STATUS.NO_SPEC);
 
-    if (loading) {
+
+    const handleStartModelLearning = () => {
+        setIsLoading(true)
+        BFLA_ACTIONS.putBflaApiAuthModelStartLearning(apiId)
+            .then((data) => {
+                setIsLoading(false)
+                setBflaTabStatus(BFLA_UTILS.BFLA_TAB_STATUS.LEARNING)
+            })
+            .catch(err => {
+                setIsLoading(false)
+                setBflaTabStatus(BFLA_UTILS.BFLA_TAB_STATUS.DATA_COLLECTION)
+            })
+    }
+
+    const handleStopModelLearning = () => {
+        setIsLoading(true)
+        BFLA_ACTIONS.putBflaApiAuthModelStopLearning(apiId)
+            .then((data) => {
+                setIsLoading(false)
+                updateAuthModel()
+                checkStateBFLA()
+            })
+            .catch(err => {
+                setIsLoading(false)
+                setBflaTabStatus(BFLA_UTILS.BFLA_TAB_STATUS.DATA_COLLECTION)
+            })
+    }
+
+    const handleReset = () => {
+        setIsLoading(true)
+        BFLA_ACTIONS.postBflaApiAuthModelReset(apiId).then(({ data }) => {
+            setIsLoading(false)
+            setBflaTabStatus(BFLA_UTILS.BFLA_TAB_STATUS.DATA_COLLECTION)
+        }).catch(err => {
+            setIsLoading(false)
+            setBflaTabStatus(BFLA_UTILS.BFLA_TAB_STATUS.DATA_COLLECTION)
+        })
+    }
+
+    const handleMarkAsLegitimate = (method, path, k8sClientUid) => {
+        setIsLoading(true)
+        BFLA_ACTIONS.putBflaApiAuthModelApprove(apiId, method, path, k8sClientUid).then(({ data }) => {
+            setIsLoading(false)
+            updateAuthModel()
+        }).catch(err => {
+            setIsLoading(false)
+        })
+    }
+
+    const handleMarkAsIlegitimate = (method, path, k8sClientUid) => {
+        setIsLoading(true)
+        BFLA_ACTIONS.putBflaApiAuthModelDeny(apiId, method, path, k8sClientUid).then(({ data }) => {
+            setIsLoading(false)
+            updateAuthModel()
+        }).catch(err => {
+            setIsLoading(false)
+        })
+    }
+
+    const handleStartDetection = () => {
+        setIsLoading(true)
+        BFLA_ACTIONS.putBflaApiAuthModelStartDetection(apiId)
+            .then((data) => {
+                setIsLoading(false)
+                checkStateBFLA()
+            })
+            .catch(err => {
+                setIsLoading(false)
+            })
+    }
+
+    const handleStopModelDetecting = () => {
+        setIsLoading(true)
+        BFLA_ACTIONS.putBflaApiAuthModelStopDetection(apiId)
+            .then((data) => {
+                setIsLoading(false)
+                updateAuthModel()
+                checkStateBFLA()
+            })
+            .catch(err => {
+                setIsLoading(false)
+                setBflaTabStatus(BFLA_UTILS.BFLA_TAB_STATUS.DATA_COLLECTION)
+            })
+    }
+
+    useEffect(() => {
+        const isLearningOrDetecting = checkStateData === BFLA_UTILS.BFLAState.BFLA_DETECTING || checkStateData === BFLA_UTILS.BFLAState.BFLA_LEARNING
+
+        if (isLearningOrDetecting) {
+            if (checkStateData === BFLA_UTILS.BFLAState.BFLA_DETECTING) {
+                setBflaTabStatus(BFLA_UTILS.BFLA_TAB_STATUS.DETECTING)
+            } else {
+                setBflaTabStatus(BFLA_UTILS.BFLA_TAB_STATUS.LEARNING)
+            }
+        }
+
+        if (has(data, "specType") && data.specType === SPEC_TYPE.NONE) {
+            setBflaTabStatus(BFLA_UTILS.BFLA_TAB_STATUS.NO_SPEC)
+        }
+
+        if (has(data, "specType") &&
+            (
+                data.specType === SPEC_TYPE.RECONSTRUCTED ||
+                data.specType === SPEC_TYPE.PROVIDED
+            ) &&
+            isEmpty(data.operations)
+        ) {
+            setBflaTabStatus(BFLA_UTILS.BFLA_TAB_STATUS.DATA_COLLECTION)
+        }
+
+        if (has(data, 'operations') && !isEmpty(data.operations) && !isLearningOrDetecting) {
+            setBflaTabStatus(BFLA_UTILS.BFLA_TAB_STATUS.DATA_AVAILABLE)
+        }
+    }, [data, checkStateData])
+
+    if (loading || isLoading || isLoadingCheck) {
         return <Loader />;
     }
-    const {specType, learning} = data || {};
 
-    let specTab;
-    if (specType === 'NONE' || !specType) {
-        specTab = <NoSpec />;
+    switch (bflaTabStatus) {
+        case BFLA_UTILS.BFLA_TAB_STATUS.NO_SPEC:
+            return <NoSpecScreen id={apiId} />
+        case BFLA_UTILS.BFLA_TAB_STATUS.DATA_COLLECTION:
+            return <DataCollectionScreen
+                handleStartModelLearning={handleStartModelLearning}
+                id={apiId}
+            />
+        case BFLA_UTILS.BFLA_TAB_STATUS.DETECTING:
+            return <DataCollectionInProgressScreen
+                isLearning={false}
+                handleStop={handleStopModelDetecting}
+            />
+        case BFLA_UTILS.BFLA_TAB_STATUS.LEARNING:
+            return <DataCollectionInProgressScreen
+                isLearning={true}
+                handleStop={handleStopModelLearning}
+            />
+        case BFLA_UTILS.BFLA_TAB_STATUS.DATA_AVAILABLE:
+            return <DataCollectedScreen
+                data={data}
+                handleReset={handleReset}
+                handleMarkAsLegitimate={handleMarkAsLegitimate}
+                handleMarkAsIlegitimate={handleMarkAsIlegitimate}
+                handleStartDetection={handleStartDetection}
+                handleStartLearning={handleStartModelLearning}
+            />
+        default:
+            return <></>;
+
     }
-
-    if (learning) {
-        specTab = <Learning />;
-    }
-
-    return (
-        <div className="bfla-inventory-wrapper">
-            {specTab ||
-                <BflaTab data={data} url={authModelURL} loading={loading} refresh={updateAuthModel} />
-            }
-        </div>
-    );
 };
 
 const bflaApiInventory = {

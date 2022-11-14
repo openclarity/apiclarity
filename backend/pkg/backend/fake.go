@@ -55,6 +55,7 @@ func (b *Backend) startSendingFakeTraces() {
 			log.Errorf("Failed to handle http trace from file: %v. %v", file, err)
 		}
 	}
+	time.Sleep(2 * time.Second)
 	// upload provided spec
 	putProvidedSpecLocally(root)
 	time.Sleep(2 * time.Second)
@@ -97,6 +98,8 @@ func putProvidedSpecLocally(root string) {
 	putProvidedSpecLocallyImp(root, "provided_spec.json", 1)
 	putProvidedSpecLocallyImp(root, "petstorev2.json", 2)
 	putProvidedSpecLocallyImp(root, "petstorev2.json", 3)
+	putProvidedSpecLocallyImp(root, "solarsys.json", 5)
+	putProvidedSpecLocallyImp(root, "payment.json", 4)
 }
 
 func putProvidedSpecLocallyImp(root string, specfile string, apiID int) {

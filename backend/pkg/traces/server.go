@@ -22,6 +22,7 @@ import (
 
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/jessevdk/go-flags"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/apiclarity/backend/pkg/common"
@@ -37,7 +38,16 @@ type HTTPTracesServer struct {
 	server          *restapi.Server
 }
 
-func CreateHTTPTracesServer(port int, traceHandleFunc HandleTraceFunc) (*HTTPTracesServer, error) {
+type HTTPTracesServerConfig struct {
+	EnableTLS             bool
+	Port                  int
+	TLSPort               int
+	TLSServerCertFilePath string
+	TLSServerKeyFilePath  string
+	TraceHandleFunc       HandleTraceFunc
+}
+
+func CreateHTTPTracesServer(config *HTTPTracesServerConfig) (*HTTPTracesServer, error) {
 	s := &HTTPTracesServer{}
 
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)
@@ -55,10 +65,19 @@ func CreateHTTPTracesServer(port int, traceHandleFunc HandleTraceFunc) (*HTTPTra
 
 	server.ConfigureFlags()
 	server.ConfigureAPI()
+	server.Port = config.Port
 
-	server.Port = port
+	// We want to serve both http and https
+	// TODO: need to use istio to secure the http port when the wasm is sending traces
+	if config.EnableTLS {
+		server.EnabledListeners = []string{"https", "http"}
+		server.TLSCertificate = flags.Filename(config.TLSServerCertFilePath)
+		server.TLSCertificateKey = flags.Filename(config.TLSServerKeyFilePath)
+		server.TLSPort = config.TLSPort
+	}
+
 	s.server = server
-	s.traceHandleFunc = traceHandleFunc
+	s.traceHandleFunc = config.TraceHandleFunc
 
 	return s, nil
 }

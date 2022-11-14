@@ -19,6 +19,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/go-openapi/strfmt"
+
 	"github.com/openclarity/apiclarity/api/server/models"
 )
 
@@ -67,7 +69,7 @@ func (a *APIInventoryTableHandler) GetAPISpecsInfo(apiID uint32) (*models.OpenAP
 	return specsInfo, nil
 }
 
-func (a *APIInventoryTableHandler) PutAPISpec(apiID uint, spec string, specInfo *models.SpecInfo, specType specType) error {
+func (a *APIInventoryTableHandler) PutAPISpec(apiID uint, spec string, specInfo *models.SpecInfo, specType specType, createdAt strfmt.DateTime) error {
 	specInfoB, err := json.Marshal(specInfo)
 	if err != nil {
 		return fmt.Errorf("failed to marshal spec info. info=%+v: %v", specInfo, err)
@@ -78,15 +80,17 @@ func (a *APIInventoryTableHandler) PutAPISpec(apiID uint, spec string, specInfo 
 	switch specType {
 	case ReconstructedSpecType:
 		valuesToUpdate = map[string]interface{}{
-			reconstructedSpecColumnName:     spec,
-			reconstructedSpecInfoColumnName: string(specInfoB),
-			hasReconstructedSpecColumnName:  true,
+			reconstructedSpecColumnName:          spec,
+			reconstructedSpecInfoColumnName:      string(specInfoB),
+			hasReconstructedSpecColumnName:       true,
+			reconstructedSpecCreatedAtColumnName: createdAt,
 		}
 	case ProvidedSpecType:
 		valuesToUpdate = map[string]interface{}{
-			providedSpecColumnName:     spec,
-			providedSpecInfoColumnName: string(specInfoB),
-			hasProvidedSpecColumnName:  true,
+			providedSpecColumnName:          spec,
+			providedSpecInfoColumnName:      string(specInfoB),
+			hasProvidedSpecColumnName:       true,
+			providedSpecCreatedAtColumnName: createdAt,
 		}
 	}
 

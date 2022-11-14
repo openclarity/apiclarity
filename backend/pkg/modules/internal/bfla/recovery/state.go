@@ -37,6 +37,7 @@ type SetState func(state interface{})
 
 type StatePersister interface {
 	UseState(apiID uint, name string, val interface{}) (setFn SetState, found bool, err error)
+	Keys(name string) []uint
 	Persist(ctx context.Context) error
 	AckSubmit(eventID uint)
 }
@@ -44,7 +45,7 @@ type StatePersister interface {
 func NewStatePersister(ctx context.Context, accessor core.BackendAccessor, modName string, persistInterval time.Duration) StatePersister {
 	p := &persister{
 		statesMu: &sync.RWMutex{},
-		states:   map[stateKey]map[string]*stateValue{},
+		states:   map[uint]map[string]*stateValue{},
 		eventsMu: &sync.RWMutex{},
 		accessor: accessor,
 		modName:  modName,
@@ -75,7 +76,7 @@ func NewStatePersister(ctx context.Context, accessor core.BackendAccessor, modNa
 type persister struct {
 	modName  string
 	statesMu *sync.RWMutex
-	states   map[stateKey]map[string]*stateValue
+	states   map[uint]map[string]*stateValue
 	eventsMu *sync.RWMutex
 	events   []uint
 	accessor core.BackendAccessor
@@ -84,11 +85,6 @@ type persister struct {
 type stateValue struct {
 	stateChanged bool
 	val          interface{}
-}
-
-type stateKey struct {
-	modName string
-	apiID   uint
 }
 
 type Errors []error
@@ -159,11 +155,11 @@ func (p *persister) persistAPIInfoAnnotations(ctx context.Context) error {
 			})
 		}
 		if len(anns) == 0 {
-			log.Debugf("nothing to update for module=%s; apiID=%d", key.modName, key.apiID)
+			log.Debugf("nothing to update for module=%s; apiID=%d", p.modName, key)
 			continue
 		}
-		log.Debugf("store api info moduleName=%s apiID=%d", key.modName, key.apiID)
-		err := p.accessor.StoreAPIInfoAnnotations(ctx, key.modName, key.apiID, anns...)
+		log.Debugf("store api info moduleName=%s apiID=%d", p.modName, key)
+		err := p.accessor.StoreAPIInfoAnnotations(ctx, p.modName, key, anns...)
 		if err != nil {
 			errs = append(errs, err)
 			continue
@@ -181,29 +177,38 @@ func (p *persister) persistAPIInfoAnnotations(ctx context.Context) error {
 	return nil
 }
 
-func (p *persister) UseState(apiID uint, name string, val interface{}) (setFn SetState, found bool, err error) {
-	key := stateKey{
-		modName: p.modName,
-		apiID:   apiID,
+func (p *persister) Keys(name string) (keys []uint) {
+	p.statesMu.RLock()
+	defer p.statesMu.RUnlock()
+	for key, annNameAndValue := range p.states {
+		for annName := range annNameAndValue {
+			if name == annName {
+				keys = append(keys, key)
+			}
+		}
 	}
+	return keys
+}
+
+func (p *persister) UseState(apiID uint, name string, val interface{}) (setFn SetState, found bool, err error) {
 	rv := reflect.ValueOf(val)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return nil, false, errors.New("val is not a pointer or is nil")
 	}
 	setFn = func(state interface{}) {
-		log.Debugf("set new state moduleName=%s apiID=%d", key.modName, key.apiID)
+		log.Debugf("set new state moduleName=%s apiID=%d", p.modName, apiID)
 		// set the new state
 		p.statesMu.Lock()
-		p.states[key][name] = &stateValue{stateChanged: true, val: state}
+		p.states[apiID][name] = &stateValue{stateChanged: true, val: state}
 		p.statesMu.Unlock()
 	}
 	p.statesMu.Lock()
 	defer p.statesMu.Unlock()
-	_, ok := p.states[key]
+	_, ok := p.states[apiID]
 	if !ok {
-		p.states[key] = map[string]*stateValue{}
+		p.states[apiID] = map[string]*stateValue{}
 	}
-	_, ok = p.states[key][name]
+	_, ok = p.states[apiID][name]
 	if !ok {
 		ann, err := p.accessor.GetAPIInfoAnnotation(context.TODO(), p.modName, apiID, name)
 		if err != nil {
@@ -213,11 +218,11 @@ func (p *persister) UseState(apiID uint, name string, val interface{}) (setFn Se
 			if err := json.Unmarshal(ann.Annotation, val); err != nil {
 				return setFn, false, fmt.Errorf("unable to unmarshal json: %w", err)
 			}
-			p.states[key][name] = &stateValue{val: rv.Elem().Interface()}
+			p.states[apiID][name] = &stateValue{val: rv.Elem().Interface()}
 		}
 		return setFn, true, nil
 	}
-	st, ok := p.states[key][name]
+	st, ok := p.states[apiID][name]
 	rv.Elem().Set(reflect.ValueOf(st.val))
 	return setFn, ok, nil
 }
@@ -233,6 +238,7 @@ type T = interface{}
 
 type PersistedMap interface {
 	Get(apiID uint) (PersistedValue, error)
+	Keys() []uint
 }
 
 type PersistedValue interface {
@@ -249,6 +255,10 @@ type persistedMap struct {
 	valType reflect.Type
 	sp      StatePersister
 	name    string
+}
+
+func (p *persistedMap) Keys() []uint {
+	return p.sp.Keys(p.name)
 }
 
 func (p *persistedMap) Get(apiID uint) (PersistedValue, error) {

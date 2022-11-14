@@ -44,6 +44,7 @@ type APIAnnotationsTable interface {
 	Get(ctx context.Context, modName string, apiID uint, name string) (*APIInfoAnnotation, error)
 	List(ctx context.Context, modName string, apiID uint) ([]*APIInfoAnnotation, error)
 	Delete(ctx context.Context, modName string, apiID uint, names ...string) error
+	DeleteAll(ctx context.Context, modName string, apiID uint) error
 }
 
 type APIInfoAnnotationsTableHandler struct {
@@ -94,6 +95,13 @@ func (am *APIInfoAnnotationsTableHandler) List(ctx context.Context, modName stri
 func (am *APIInfoAnnotationsTableHandler) Delete(ctx context.Context, modName string, apiID uint, names ...string) error {
 	return am.tx.Where(fmt.Sprintf("%s = ? AND %s = ? AND %s IN ?",
 		moduleNameColumnName, apiIDColumnName, nameColumnName), modName, apiID, names).
+		WithContext(ctx).
+		Delete(&APIInfoAnnotation{}).
+		Error
+}
+
+func (am *APIInfoAnnotationsTableHandler) DeleteAll(ctx context.Context, modName string, apiID uint) error {
+	return am.tx.Where(fmt.Sprintf("%s = ? AND %s = ?", moduleNameColumnName, apiIDColumnName), modName, apiID).
 		WithContext(ctx).
 		Delete(&APIInfoAnnotation{}).
 		Error

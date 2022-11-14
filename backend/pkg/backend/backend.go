@@ -28,27 +28,30 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/getkin/kin-openapi/openapi2conv"
-	spec "github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-openapi/strfmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/kubernetes"
-	"sigs.k8s.io/yaml"
 
 	"github.com/openclarity/apiclarity/api/server/models"
+	"github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
 	_config "github.com/openclarity/apiclarity/backend/pkg/config"
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/healthz"
 	"github.com/openclarity/apiclarity/backend/pkg/k8smonitor"
 	"github.com/openclarity/apiclarity/backend/pkg/modules"
+	_notifier "github.com/openclarity/apiclarity/backend/pkg/notifier"
 	"github.com/openclarity/apiclarity/backend/pkg/rest"
 	"github.com/openclarity/apiclarity/backend/pkg/traces"
+	speculatorutils "github.com/openclarity/apiclarity/backend/pkg/utils/speculator"
+	tls "github.com/openclarity/apiclarity/backend/pkg/utils/tls"
 	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
 	_spec "github.com/openclarity/speculator/pkg/spec"
 	_speculator "github.com/openclarity/speculator/pkg/speculator"
 	_mimeutils "github.com/openclarity/speculator/pkg/utils"
 	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
+	interfacemanager "github.com/openclarity/trace-sampling-manager/manager/pkg/manager/interface"
+	restmanager "github.com/openclarity/trace-sampling-manager/manager/pkg/rest"
 )
 
 type Backend struct {
@@ -58,17 +61,19 @@ type Backend struct {
 	monitor             *k8smonitor.Monitor
 	apiInventoryLock    sync.RWMutex
 	dbHandler           _database.Database
-	modules             modules.Module
+	modulesManager      modules.ModulesManager
+	notifier            *_notifier.Notifier
 }
 
-func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, dbHandler *_database.Handler, modules modules.Module) *Backend {
+func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, dbHandler *_database.Handler, modulesManager modules.ModulesManager, notifier *_notifier.Notifier) *Backend {
 	return &Backend{
 		speculator:          speculator,
 		stateBackupInterval: time.Second * time.Duration(config.StateBackupIntervalSec),
 		stateBackupFileName: config.StateBackupFileName,
 		monitor:             monitor,
 		dbHandler:           dbHandler,
-		modules:             modules,
+		modulesManager:      modulesManager,
+		notifier:            notifier,
 	}
 }
 
@@ -85,6 +90,16 @@ func createDatabaseConfig(config *_config.Config) *_database.DBConfig {
 }
 
 const defaultChanSize = 100
+
+func getCoreFeatures() []modules.ModuleInfo {
+	features := []modules.ModuleInfo{
+		{
+			Name:        string(models.APIClarityFeatureEnumSpecreconstructor),
+			Description: "Reconstructs OAPI specifications from traces",
+		},
+	}
+	return features
+}
 
 func Run() {
 	config, err := _config.LoadConfig()
@@ -113,7 +128,7 @@ func Run() {
 		if err != nil {
 			log.Fatalf("failed to create K8s clientset: %v", err)
 		}
-	} else if !viper.GetBool(_database.FakeTracesEnvVar) && !viper.GetBool(_database.FakeDataEnvVar) {
+	} else {
 		clientset, err = k8smonitor.CreateK8sClientset()
 		if err != nil {
 			log.Fatalf("failed to create K8s clientset: %v", err)
@@ -122,7 +137,29 @@ func Run() {
 
 	var monitor *k8smonitor.Monitor
 	var samplingManager *manager.Manager
-	if !viper.GetBool(_config.NoMonitorEnvVar) && !viper.GetBool(_database.FakeTracesEnvVar) && !viper.GetBool(_database.FakeDataEnvVar) {
+
+	samplingManager, err = manager.Create(clientset, &restmanager.Config{
+		RestServerPort:             config.HTTPTraceSamplingManagerPort,
+		GRPCServerPort:             config.GRPCTraceSamplingManagerPort,
+		HostToTraceSecretName:      config.HostToTraceSecretName,
+		HostToTraceSecretNamespace: config.HostToTraceSecretNamespace,
+		HostToTraceSecretOwnerName: config.HostToTraceSecretOwnerName,
+		EnableTLS:                  config.EnableTLS,
+		TLSServerCertFilePath:      config.TLSServerCertFilePath,
+		TLSServerKeyFilePath:       config.TLSServerKeyFilePath,
+		RootCertFilePath:           config.RootCertFilePath,
+		RestServerTLSPort:          config.HTTPSTraceSamplingManagerPort,
+	})
+	if err != nil {
+		log.Errorf("Failed to create a trace sampling manager: %v", err)
+		return
+	}
+	if err := samplingManager.Start(errChan); err != nil {
+		log.Errorf("Failed to start trace sampling manager: %v", err)
+		return
+	}
+
+	if !config.K8sLocal && !viper.GetBool(_config.NoMonitorEnvVar) {
 		monitor, err = k8smonitor.CreateMonitor(clientset)
 		if err != nil {
 			log.Errorf("Failed to create a monitor: %v", err)
@@ -130,22 +167,9 @@ func Run() {
 		}
 		monitor.Start()
 		defer monitor.Stop()
+	}
 
-		if config.TraceSamplingEnabled {
-			samplingManager, err = manager.Create(clientset, &manager.Config{
-				RestServerPort: config.HTTPTraceSamplingManagerPort,
-				GRPCServerPort: config.GRPCTraceSamplingManagerPort,
-			})
-			if err != nil {
-				log.Errorf("Failed to create a trace sampling manager: %v", err)
-				return
-			}
-			if err := samplingManager.Start(errChan); err != nil {
-				log.Errorf("Failed to start trace sampling manager: %v", err)
-				return
-			}
-		}
-	} else if viper.GetBool(_database.FakeDataEnvVar) {
+	if viper.GetBool(_database.FakeTracesEnvVar) || viper.GetBool(_database.FakeDataEnvVar) {
 		go dbHandler.CreateFakeData()
 	}
 
@@ -157,17 +181,64 @@ func Run() {
 		log.Infof("Using encoded speculator state")
 	}
 
-	module := modules.New(globalCtx, dbHandler, clientset)
-	backend := CreateBackend(config, monitor, speculator, dbHandler, module)
+	var notifier *_notifier.Notifier
+	if config.NotificationPrefix != "" {
+		tlsOptions, err := tls.CreateClientTLSOptions(config)
+		if err != nil {
+			log.Errorf("failed to create client tls options: %v", err)
+			return
+		}
 
-	restServer, err := rest.CreateRESTServer(config.BackendRestPort, speculator, dbHandler, module)
+		notifier = _notifier.NewNotifier(config.NotificationPrefix, _notifier.NotificationMaxQueueSize, _notifier.NotificationWorkers, tlsOptions)
+		notifier.Start(context.Background())
+	}
+
+	modulesWrapper, modInfos, err := modules.New(globalCtx, dbHandler, clientset, samplingManager, speculatoraccessor.NewSpeculatorAccessor(speculator), notifier, config)
+	if err != nil {
+		log.Errorf("Failed to create module wrapper and info: %v", err)
+		return
+	}
+
+	features := append(modInfos, getCoreFeatures()...)
+	if !config.TraceSamplingEnabled {
+		for _, f := range features {
+			samplingManager.AddHostsToTrace(&interfacemanager.HostsByComponentID{
+				Hosts:       []string{"*"},
+				ComponentID: f.Name,
+			})
+		}
+	}
+
+	backend := CreateBackend(config, monitor, speculator, dbHandler, modulesWrapper, notifier)
+
+	serverConfig := &rest.ServerConfig{
+		EnableTLS:             config.EnableTLS,
+		Port:                  config.BackendRestPort,
+		TLSPort:               config.BackendRestTLSPort,
+		TLSServerCertFilePath: config.TLSServerCertFilePath,
+		TLSServerKeyFilePath:  config.TLSServerKeyFilePath,
+		Speculator:            speculator,
+		DBHandler:             dbHandler,
+		ModulesManager:        modulesWrapper,
+		SamplingManager:       samplingManager,
+		Features:              features,
+	}
+	restServer, err := rest.CreateRESTServer(serverConfig)
 	if err != nil {
 		log.Fatalf("Failed to create REST server: %v", err)
 	}
 	restServer.Start(errChan)
 	defer restServer.Stop()
 
-	tracesServer, err := traces.CreateHTTPTracesServer(config.HTTPTracesPort, backend.handleHTTPTrace)
+	httpTracesServerConfig := &traces.HTTPTracesServerConfig{
+		EnableTLS:             config.EnableTLS,
+		Port:                  config.HTTPTracesPort,
+		TLSPort:               config.HTTPTracesTLSPort,
+		TLSServerCertFilePath: config.TLSServerCertFilePath,
+		TLSServerKeyFilePath:  config.TLSServerKeyFilePath,
+		TraceHandleFunc:       backend.handleHTTPTrace,
+	}
+	tracesServer, err := traces.CreateHTTPTracesServer(httpTracesServerConfig)
 	if err != nil {
 		log.Fatalf("Failed to create trace server: %v", err)
 	}
@@ -195,78 +266,29 @@ func Run() {
 	}
 }
 
-type eventDiff struct {
-	Path     string
-	PathItem interface{}
-}
-
-func convertSpecDiffToEventDiff(diff *_spec.APIDiff, version _spec.OASVersion) (originalRet, modifiedRet []byte, err error) {
-	original := eventDiff{
-		Path:     diff.Path,
-		PathItem: getPathItemForVersionOrOriginal(diff.OriginalPathItem, version),
-	}
-	modified := eventDiff{
-		Path:     diff.Path,
-		PathItem: getPathItemForVersionOrOriginal(diff.ModifiedPathItem, version),
-	}
-	originalRet, err = yaml.Marshal(original)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed marshal original: %v", err)
-	}
-	modifiedRet, err = yaml.Marshal(modified)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed marshal modified: %v", err)
-	}
-
-	return originalRet, modifiedRet, nil
-}
-
-func getPathItemForVersionOrOriginal(v3PathItem *spec.PathItem, version _spec.OASVersion) interface{} {
-	if v3PathItem == nil {
-		return v3PathItem
-	}
-
-	switch version {
-	case _spec.OASv2:
-		log.Errorf("Converting to OASv2 path item")
-		v2PathItem, err := openapi2conv.FromV3PathItem(&spec.T{Components: spec.Components{}}, v3PathItem)
-		if err != nil {
-			log.Errorf("Failed to convert v3 path item to v2, keeping v3: %v", err)
-			return v3PathItem
-		}
-
-		return v2PathItem
-	case _spec.OASv3:
-		return v3PathItem
-	case _spec.Unknown:
-		log.Warnf("Unknown spec version, using v3. version=%v", version)
-	default:
-		log.Warnf("Unknown spec version, using v3. version=%v", version)
-	}
-
-	return v3PathItem
-}
-
 func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Telemetry) error {
 	var err error
 
 	log.Debugf("Handling telemetry: %+v", trace)
 
-	// we need to convert the trace to speculator trace format in order to call speculator methods on that trace.
-	// from here on, we work only with speculator telemetry
-	telemetry := ConvertModelsToSpeculatorTelemetry(trace)
+	// TODO: Selective tracing for spec diffs and spec reconstruction
 
-	if telemetry.Request.Host == "" {
-		headers := _spec.ConvertHeadersToMap(telemetry.Request.Common.Headers)
+	// get host name first from headers if not exist
+	if trace.Request.Host == "" {
+		headers := convertHeadersToMap(trace.Request.Common.Headers)
 		if host, ok := headers["host"]; ok {
-			telemetry.Request.Host = host
+			trace.Request.Host = host
 		}
 	}
 
-	telemetry.Request.Host, err = getHostname(telemetry.Request.Host)
+	trace.Request.Host, err = getHostname(trace.Request.Host)
 	if err != nil {
 		return fmt.Errorf("failed to get hostname from host: %v", err)
 	}
+
+	// we need to convert the trace to speculator trace format in order to call speculator methods on that trace.
+	// from here on, we work only with speculator telemetry
+	telemetry := speculatorutils.ConvertModelsToSpeculatorTelemetry(trace)
 
 	destInfo, err := _speculator.GetAddressInfoFromAddress(telemetry.DestinationAddress)
 	if err != nil {
@@ -280,13 +302,14 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 	if err != nil {
 		return fmt.Errorf("failed to get source info: %v", err)
 	}
-
 	specKey := _speculator.GetSpecKey(telemetry.Request.Host, destInfo.Port)
 
 	// Initialize API info
 	apiInfo := _database.APIInfo{
 		Name: telemetry.Request.Host,
 		Port: int64(destPort),
+
+		DestinationNamespace: trace.DestinationNamespace,
 	}
 
 	// Set API Info type
@@ -298,34 +321,23 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 
 	isNonAPI := isNonAPI(telemetry)
 
-	var reconstructedDiff, providedDiff *_spec.APIDiff
-	var reconstructedSpecVersion, providedSpecVersion _spec.OASVersion
 	// Don't link non APIs to an API in the inventory
 	if !isNonAPI {
 		// lock the API inventory to avoid creating API entries twice on trace handling races
 		b.apiInventoryLock.Lock()
-		if err := b.dbHandler.APIInventoryTable().FirstOrCreate(&apiInfo); err != nil {
+		created, err := b.dbHandler.APIInventoryTable().FirstOrCreate(&apiInfo)
+		if err != nil {
 			b.apiInventoryLock.Unlock()
 			return fmt.Errorf("failed to get or create API info: %v", err)
 		}
 		b.apiInventoryLock.Unlock()
 		log.Infof("API Info in DB: %+v", apiInfo)
+		if created {
+			log.Infof("Sending notification for new created API %+v", apiInfo)
+		}
 
 		// Handle trace telemetry by Speculator
-		if b.speculator.HasProvidedSpec(specKey) {
-			providedDiff, err = b.speculator.DiffTelemetry(telemetry, _spec.SpecSourceProvided)
-			if err != nil {
-				return fmt.Errorf("failed to diff telemetry against provided spec: %v", err)
-			}
-			providedSpecVersion = b.speculator.GetProvidedSpecVersion(specKey)
-		}
-		if b.speculator.HasApprovedSpec(specKey) {
-			reconstructedDiff, err = b.speculator.DiffTelemetry(telemetry, _spec.SpecSourceReconstructed)
-			if err != nil {
-				return fmt.Errorf("failed to diff telemetry against approved spec: %v", err)
-			}
-			reconstructedSpecVersion = b.speculator.GetApprovedSpecVersion(specKey)
-		} else {
+		if !b.speculator.HasApprovedSpec(specKey) {
 			err := b.speculator.LearnTelemetry(telemetry)
 			if err != nil {
 				return fmt.Errorf("failed to learn telemetry: %v", err)
@@ -374,80 +386,19 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 		ReconstructedPathID: reconstructedPathID,
 	}
 
-	reconstructedDiffType := models.DiffTypeNODIFF
-	if reconstructedDiff != nil {
-		if reconstructedDiff.Type != _spec.DiffTypeNoDiff {
-			log.Debugf("Creating event diff for approved spec version %q", reconstructedSpecVersion)
-			original, modified, err := convertSpecDiffToEventDiff(reconstructedDiff, reconstructedSpecVersion)
-			if err != nil {
-				return fmt.Errorf("failed to convert spec diff to event diff: %v", err)
-			}
-			event.HasReconstructedSpecDiff = true
-			event.HasSpecDiff = true
-			event.OldReconstructedSpec = string(original)
-			event.NewReconstructedSpec = string(modified)
-		}
-		reconstructedDiffType = convertAPIDiffType(reconstructedDiff.Type)
-	}
-
-	providedDiffType := models.DiffTypeNODIFF
-	if providedDiff != nil {
-		if providedDiff.Type != _spec.DiffTypeNoDiff {
-			log.Debugf("Creating event diff for provided spec version %q", providedSpecVersion)
-			original, modified, err := convertSpecDiffToEventDiff(providedDiff, providedSpecVersion)
-			if err != nil {
-				return fmt.Errorf("failed to convert spec diff to event diff: %v", err)
-			}
-			event.HasProvidedSpecDiff = true
-			event.HasSpecDiff = true
-			event.OldProvidedSpec = string(original)
-			event.NewProvidedSpec = string(modified)
-		}
-		providedDiffType = convertAPIDiffType(providedDiff.Type)
-	}
-
-	event.SpecDiffType = getHighestPrioritySpecDiffType(providedDiffType, reconstructedDiffType)
-
 	b.dbHandler.APIEventsTable().CreateAPIEvent(event)
 
-	b.modules.EventNotify(ctx, &modules.Event{APIEvent: event, Telemetry: trace})
+	b.modulesManager.EventNotify(ctx, &modules.Event{APIEvent: event, Telemetry: trace})
 
 	return nil
 }
 
-func convertAPIDiffType(diffType _spec.DiffType) models.DiffType {
-	switch diffType {
-	case _spec.DiffTypeNoDiff:
-		return models.DiffTypeNODIFF
-	case _spec.DiffTypeShadowDiff:
-		return models.DiffTypeSHADOWDIFF
-	case _spec.DiffTypeZombieDiff:
-		return models.DiffTypeZOMBIEDIFF
-	case _spec.DiffTypeGeneralDiff:
-		return models.DiffTypeGENERALDIFF
-	default:
-		log.Warnf("Unknown diff type: %v", diffType)
+func convertHeadersToMap(headers []*pluginsmodels.Header) map[string]string {
+	ret := make(map[string]string)
+	for _, header := range headers {
+		ret[header.Key] = header.Value
 	}
-
-	return models.DiffTypeNODIFF
-}
-
-//nolint:gomnd
-var diffTypePriority = map[models.DiffType]int{
-	// starting from 1 since unknown type will return 0
-	models.DiffTypeNODIFF:      1,
-	models.DiffTypeGENERALDIFF: 2,
-	models.DiffTypeSHADOWDIFF:  3,
-	models.DiffTypeZOMBIEDIFF:  4,
-}
-
-// getHighestPrioritySpecDiffType will return the type with the highest priority.
-func getHighestPrioritySpecDiffType(providedDiffType, reconstructedDiffType models.DiffType) models.DiffType {
-	if diffTypePriority[providedDiffType] > diffTypePriority[reconstructedDiffType] {
-		return providedDiffType
-	}
-
-	return reconstructedDiffType
+	return ret
 }
 
 // getHostname will return only hostname without scheme and port

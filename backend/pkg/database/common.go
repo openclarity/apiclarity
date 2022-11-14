@@ -94,6 +94,13 @@ func FilterIsBool(db *gorm.DB, column string, value *bool) *gorm.DB {
 	return db.Where(fmt.Sprintf("%s = ?", column), *value)
 }
 
+func FilterIsUint32(db *gorm.DB, column string, value *uint32) *gorm.DB {
+	if value == nil {
+		return db
+	}
+	return db.Where(fmt.Sprintf("%s = ?", column), *value)
+}
+
 func FilterIs(db *gorm.DB, column string, values []string) *gorm.DB {
 	if len(values) == 0 {
 		return db

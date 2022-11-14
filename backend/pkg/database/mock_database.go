@@ -61,6 +61,20 @@ func (mr *MockDatabaseMockRecorder) APIEventsTable() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "APIEventsTable", reflect.TypeOf((*MockDatabase)(nil).APIEventsTable))
 }
 
+// APIGatewaysTable mocks base method.
+func (m *MockDatabase) APIGatewaysTable() APIGatewaysTable {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "APIGatewaysTable")
+	ret0, _ := ret[0].(APIGatewaysTable)
+	return ret0
+}
+
+// APIGatewaysTable indicates an expected call of APIGatewaysTable.
+func (mr *MockDatabaseMockRecorder) APIGatewaysTable() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "APIGatewaysTable", reflect.TypeOf((*MockDatabase)(nil).APIGatewaysTable))
+}
+
 // APIInfoAnnotationsTable mocks base method.
 func (m *MockDatabase) APIInfoAnnotationsTable() APIAnnotationsTable {
 	m.ctrl.T.Helper()

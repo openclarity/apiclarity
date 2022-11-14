@@ -18,14 +18,11 @@ package weakbasicauth
 import (
 	"bytes"
 	"encoding/base64"
-	"fmt"
 	"sort"
-	"strconv"
 	"strings"
 
 	ahocorasick "github.com/petar-dambovaliev/aho-corasick"
 
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer/utils"
 	"github.com/openclarity/apiclarity/plugins/api/server/models"
 )
@@ -34,15 +31,6 @@ const (
 	AuthorizationHeader = "authorization"
 	BasicAuth           = "Basic"
 	ShortPasswordLen    = 8
-)
-
-const (
-	//nolint:gosec
-	KindShortPassword = "BASIC_AUTH_SHORT_PASSWORD"
-	//nolint:gosec
-	KindKnownPassword = "BASIC_AUTH_KNOWN_PASSWORD"
-	//nolint:gosec
-	KindSamePassword = "BASIC_AUTH_SAME_PASSWORD"
 )
 
 // Extracts the Basic Authentication token from the Query.
@@ -97,30 +85,25 @@ func NewWeakBasicAuth(knownPasswords []string) *WeakBasicAuth {
 	}
 }
 
-func (w *WeakBasicAuth) analyzeShortPassword(password string) (anns []core.Annotation) {
+func (w *WeakBasicAuth) analyzeShortPassword(password string) (anns []utils.TraceAnalyzerAnnotation) {
 	if len(password) <= w.shortPasswordLen {
-		anns = append(anns, core.Annotation{
-			Name:       KindShortPassword,
-			Annotation: []byte(strconv.Itoa(len(password))),
-		})
+		a := NewAnnotationShortPassword(password, w.shortPasswordLen)
+		anns = append(anns, a)
 	}
 
 	return anns
 }
 
-func (w *WeakBasicAuth) analyzeKnownPassword(password string) (anns []core.Annotation) {
+func (w *WeakBasicAuth) analyzeKnownPassword(password string) (anns []utils.TraceAnalyzerAnnotation) {
 	matches := w.knownPasswordsAC.FindAll(password)
 	if len(matches) > 0 {
-		anns = append(anns, core.Annotation{
-			Name:       KindKnownPassword,
-			Annotation: []byte(password),
-		})
+		anns = append(anns, NewAnnotationKnownPassword(password))
 	}
 
 	return anns
 }
 
-func (w *WeakBasicAuth) analyzeSameCreds(api utils.API, user string, password string) (anns []core.Annotation) {
+func (w *WeakBasicAuth) analyzeSameCreds(api utils.API, user string, password string) (anns []utils.TraceAnalyzerAnnotation) {
 	up := userPassword{user, password}
 
 	apis, ok := w.usedCredentials[up]
@@ -136,17 +119,14 @@ func (w *WeakBasicAuth) analyzeSameCreds(api utils.API, user string, password st
 			listOfAPIs = append(listOfAPIs, sameAPI)
 		}
 		sort.Strings(listOfAPIs)
-		anns = append(anns, core.Annotation{
-			Name:       KindSamePassword,
-			Annotation: []byte(fmt.Sprintf("%s:%s,%s", user, password, strings.Join(listOfAPIs, ","))),
-		})
+		anns = append(anns, NewAnnotationSamePassword(user, password, listOfAPIs))
 	}
 	// Else this api was already added here, no need to report an observation.
 
 	return anns
 }
 
-func (w *WeakBasicAuth) Analyze(trace *models.Telemetry) (eventAnns []core.Annotation, apiAnns []core.Annotation) {
+func (w *WeakBasicAuth) Analyze(trace *models.Telemetry) (eventAnns []utils.TraceAnalyzerAnnotation) {
 	api := trace.Request.Host
 
 	user, password, found := findBasicAuthToken(trace)
@@ -156,5 +136,5 @@ func (w *WeakBasicAuth) Analyze(trace *models.Telemetry) (eventAnns []core.Annot
 		eventAnns = append(eventAnns, w.analyzeSameCreds(api, user, password)...)
 	}
 
-	return eventAnns, apiAnns
+	return eventAnns
 }

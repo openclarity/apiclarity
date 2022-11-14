@@ -1,0 +1,22 @@
+- id: core-001
+  description: "'password' keyword in flow data"
+  regex: '(?i)password'
+  searchIn:   # Allowed values: RequestBody, ResponseBody, RequestHeaders, ResponseHeaders
+    - RequestBody
+    - ResponseBody
+    - RequestHeaders
+    - ResponseHeaders
+
+- id: core-002
+  description: HTTP Headers contains information about backend
+  regex: '(?i)x-powered-by'
+  searchIn:
+    - RequestHeaders
+    - ResponseHeaders
+
+- id: core-003
+  description: HTTP Headers contains information about running server
+  regex: '(?i)server'
+  searchIn:
+    - RequestHeaders
+    - ResponseHeaders

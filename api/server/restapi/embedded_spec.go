@@ -60,6 +60,9 @@ func init() {
             "$ref": "#/parameters/showNonApi"
           },
           {
+            "$ref": "#/parameters/apiInfoIdIsFilter"
+          },
+          {
             "$ref": "#/parameters/methodIsFilter"
           },
           {
@@ -130,6 +133,9 @@ func init() {
           },
           {
             "$ref": "#/parameters/alertIsFilter"
+          },
+          {
+            "$ref": "#/parameters/alertIsType"
           }
         ],
         "responses": {
@@ -361,6 +367,12 @@ func init() {
               "format": "uint32"
             }
           },
+          "404": {
+            "description": "API ID Not Found",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
           "default": {
             "$ref": "#/responses/UnknownError"
           }
@@ -369,7 +381,7 @@ func init() {
     },
     "/apiInventory/{apiId}/apiInfo": {
       "get": {
-        "summary": "Get api info from api id",
+        "summary": "Get api info from apiId",
         "parameters": [
           {
             "$ref": "#/parameters/apiId"
@@ -379,7 +391,7 @@ func init() {
           "200": {
             "description": "Success",
             "schema": {
-              "$ref": "#/definitions/ApiInfo"
+              "$ref": "#/definitions/ApiInfoWithType"
             }
           },
           "default": {
@@ -685,6 +697,152 @@ func init() {
         }
       }
     },
+    "/control/gateways": {
+      "get": {
+        "summary": "List of configured gateways",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "required": [
+                "gateways"
+              ],
+              "properties": {
+                "gateways": {
+                  "description": "List of gateways",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/APIGateway"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new gateway",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "description": "Create a new gateway",
+              "$ref": "#/definitions/APIGateway"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/APIGateway"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/control/gateways/{gatewayId}": {
+      "get": {
+        "summary": "Get gateway information",
+        "parameters": [
+          {
+            "$ref": "#/parameters/gatewayId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Gateway information",
+            "schema": {
+              "$ref": "#/definitions/APIGateway"
+            }
+          },
+          "404": {
+            "description": "API Gateway not found",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a gateway",
+        "parameters": [
+          {
+            "$ref": "#/parameters/gatewayId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "404": {
+            "description": "API Gateway not found",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/control/newDiscoveredAPIs": {
+      "post": {
+        "description": "This allows a client (a gateway for example) to notify APIclarity about newly discovered APIs. If one of the APIs already exists, it is ignored.",
+        "summary": "Allows a client to notify APIClarity about new APIs.",
+        "parameters": [
+          {
+            "description": "List of new discovered APIs",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "hosts"
+              ],
+              "properties": {
+                "hosts": {
+                  "description": "List of discovered APIs, format of hostname:port",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "source": {
+                  "description": "Optional name identifying the entity sending this notification.",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/responses/Success"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
     "/dashboard/apiUsage": {
       "get": {
         "summary": "Get API usage",
@@ -746,9 +904,103 @@ func init() {
           }
         }
       }
+    },
+    "/features": {
+      "get": {
+        "summary": "Get the list of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/APIClarityFeatureList"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
+    "APIClarityFeature": {
+      "description": "Description of APIClarity feature and the list of API hosts (in the form 'host:port') the feature requires to get trace for",
+      "type": "object",
+      "required": [
+        "featureName"
+      ],
+      "properties": {
+        "featureDescription": {
+          "description": "Short human readable description of the feature",
+          "type": "string"
+        },
+        "featureName": {
+          "$ref": "#/definitions/APIClarityFeatureEnum"
+        },
+        "hostsToTrace": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "APIClarityFeatureEnum": {
+      "description": "APIClarity Feature Name",
+      "type": "string",
+      "enum": [
+        "specreconstructor",
+        "specdiffs",
+        "traceanalyzer",
+        "bfla",
+        "spec_differ",
+        "fuzzer"
+      ]
+    },
+    "APIClarityFeatureList": {
+      "description": "List of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for",
+      "type": "object",
+      "properties": {
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/APIClarityFeature"
+          }
+        }
+      }
+    },
+    "APIGateway": {
+      "description": "Gateway which is externally exposing APIs",
+      "type": "object",
+      "required": [
+        "name",
+        "type"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "description": "Unique name identifying a gateway",
+          "type": "string"
+        },
+        "token": {
+          "type": "string",
+          "format": "byte"
+        },
+        "type": {
+          "$ref": "#/definitions/APIGatewayType"
+        }
+      }
+    },
+    "APIGatewayType": {
+      "type": "string",
+      "enum": [
+        "TYK",
+        "KONG",
+        "APIGEEX"
+      ]
+    },
     "AlertSeverityEnum": {
       "description": "Level of alert",
       "type": "string",
@@ -898,6 +1150,14 @@ func init() {
     "ApiInfo": {
       "type": "object",
       "properties": {
+        "createdBy": {
+          "description": "String representing the entity which created this API. APICLARITY means it has been created by APIClarity on first trace",
+          "type": "string",
+          "default": "APICLARITY"
+        },
+        "destinationNamespace": {
+          "type": "string"
+        },
         "hasProvidedSpec": {
           "type": "boolean",
           "default": false
@@ -999,7 +1259,7 @@ func init() {
       "type": "object",
       "properties": {
         "oasVersion": {
-          "description": "OpenAPI version to use when saving the approved spec",
+          "description": "OpenAPI specification version to use when saving the approved spec",
           "type": "string",
           "enum": [
             "OASv2.0",
@@ -1084,7 +1344,7 @@ func init() {
       }
     },
     "OASVersion": {
-      "description": "OpenAPI version",
+      "description": "OpenAPI specification version",
       "type": "string",
       "enum": [
         "OASv2.0",
@@ -1196,6 +1456,10 @@ func init() {
       "description": "spec in json or yaml format",
       "type": "object",
       "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
         "rawSpec": {
           "description": "spec in json or yaml format",
           "type": "string"
@@ -1216,6 +1480,14 @@ func init() {
       },
       "description": "Alert Kind [ALERT_INFO or ALERT_WARN]",
       "name": "alert[is]",
+      "in": "query"
+    },
+    "alertIsType": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "name": "alertType[is]",
       "in": "query"
     },
     "apiEventSortKey": {
@@ -1248,6 +1520,12 @@ func init() {
       "type": "string",
       "description": "api id to return",
       "name": "apiId",
+      "in": "query"
+    },
+    "apiInfoIdIsFilter": {
+      "type": "integer",
+      "format": "uint32",
+      "name": "apiInfoId[is]",
       "in": "query"
     },
     "apiInventorySortKey": {
@@ -1346,6 +1624,13 @@ func init() {
       "description": "End time of the query",
       "name": "endTime",
       "in": "query",
+      "required": true
+    },
+    "gatewayId": {
+      "type": "integer",
+      "description": "Gateway ID",
+      "name": "gatewayId",
+      "in": "path",
       "required": true
     },
     "hasProvidedSpecFilter": {
@@ -1708,6 +1993,12 @@ func init() {
             "required": true
           },
           {
+            "type": "integer",
+            "format": "uint32",
+            "name": "apiInfoId[is]",
+            "in": "query"
+          },
+          {
             "type": "array",
             "items": {
               "enum": [
@@ -1901,6 +2192,14 @@ func init() {
             },
             "description": "Alert Kind [ALERT_INFO or ALERT_WARN]",
             "name": "alert[is]",
+            "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "name": "alertType[is]",
             "in": "query"
           }
         ],
@@ -2231,6 +2530,12 @@ func init() {
               "format": "uint32"
             }
           },
+          "404": {
+            "description": "API ID Not Found",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
           "default": {
             "description": "unknown error",
             "schema": {
@@ -2242,7 +2547,7 @@ func init() {
     },
     "/apiInventory/{apiId}/apiInfo": {
       "get": {
-        "summary": "Get api info from api id",
+        "summary": "Get api info from apiId",
         "parameters": [
           {
             "type": "integer",
@@ -2256,7 +2561,7 @@ func init() {
           "200": {
             "description": "Success",
             "schema": {
-              "$ref": "#/definitions/ApiInfo"
+              "$ref": "#/definitions/ApiInfoWithType"
             }
           },
           "default": {
@@ -2769,6 +3074,178 @@ func init() {
         }
       }
     },
+    "/control/gateways": {
+      "get": {
+        "summary": "List of configured gateways",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "required": [
+                "gateways"
+              ],
+              "properties": {
+                "gateways": {
+                  "description": "List of gateways",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/APIGateway"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new gateway",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "description": "Create a new gateway",
+              "$ref": "#/definitions/APIGateway"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/APIGateway"
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/control/gateways/{gatewayId}": {
+      "get": {
+        "summary": "Get gateway information",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "Gateway ID",
+            "name": "gatewayId",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Gateway information",
+            "schema": {
+              "$ref": "#/definitions/APIGateway"
+            }
+          },
+          "404": {
+            "description": "API Gateway not found",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a gateway",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "Gateway ID",
+            "name": "gatewayId",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Success"
+          },
+          "404": {
+            "description": "API Gateway not found",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/control/newDiscoveredAPIs": {
+      "post": {
+        "description": "This allows a client (a gateway for example) to notify APIclarity about newly discovered APIs. If one of the APIs already exists, it is ignored.",
+        "summary": "Allows a client to notify APIClarity about new APIs.",
+        "parameters": [
+          {
+            "description": "List of new discovered APIs",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "hosts"
+              ],
+              "properties": {
+                "hosts": {
+                  "description": "List of discovered APIs, format of hostname:port",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "source": {
+                  "description": "Optional name identifying the entity sending this notification.",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "description": "success message",
+              "schema": {
+                "$ref": "#/definitions/SuccessResponse"
+              }
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
     "/dashboard/apiUsage": {
       "get": {
         "summary": "Get API usage",
@@ -2849,9 +3326,103 @@ func init() {
           }
         }
       }
+    },
+    "/features": {
+      "get": {
+        "summary": "Get the list of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/APIClarityFeatureList"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
+    "APIClarityFeature": {
+      "description": "Description of APIClarity feature and the list of API hosts (in the form 'host:port') the feature requires to get trace for",
+      "type": "object",
+      "required": [
+        "featureName"
+      ],
+      "properties": {
+        "featureDescription": {
+          "description": "Short human readable description of the feature",
+          "type": "string"
+        },
+        "featureName": {
+          "$ref": "#/definitions/APIClarityFeatureEnum"
+        },
+        "hostsToTrace": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "APIClarityFeatureEnum": {
+      "description": "APIClarity Feature Name",
+      "type": "string",
+      "enum": [
+        "specreconstructor",
+        "specdiffs",
+        "traceanalyzer",
+        "bfla",
+        "spec_differ",
+        "fuzzer"
+      ]
+    },
+    "APIClarityFeatureList": {
+      "description": "List of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for",
+      "type": "object",
+      "properties": {
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/APIClarityFeature"
+          }
+        }
+      }
+    },
+    "APIGateway": {
+      "description": "Gateway which is externally exposing APIs",
+      "type": "object",
+      "required": [
+        "name",
+        "type"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "description": "Unique name identifying a gateway",
+          "type": "string"
+        },
+        "token": {
+          "type": "string",
+          "format": "byte"
+        },
+        "type": {
+          "$ref": "#/definitions/APIGatewayType"
+        }
+      }
+    },
+    "APIGatewayType": {
+      "type": "string",
+      "enum": [
+        "TYK",
+        "KONG",
+        "APIGEEX"
+      ]
+    },
     "AlertSeverityEnum": {
       "description": "Level of alert",
       "type": "string",
@@ -3001,6 +3572,14 @@ func init() {
     "ApiInfo": {
       "type": "object",
       "properties": {
+        "createdBy": {
+          "description": "String representing the entity which created this API. APICLARITY means it has been created by APIClarity on first trace",
+          "type": "string",
+          "default": "APICLARITY"
+        },
+        "destinationNamespace": {
+          "type": "string"
+        },
         "hasProvidedSpec": {
           "type": "boolean",
           "default": false
@@ -3102,7 +3681,7 @@ func init() {
       "type": "object",
       "properties": {
         "oasVersion": {
-          "description": "OpenAPI version to use when saving the approved spec",
+          "description": "OpenAPI specification version to use when saving the approved spec",
           "type": "string",
           "enum": [
             "OASv2.0",
@@ -3187,7 +3766,7 @@ func init() {
       }
     },
     "OASVersion": {
-      "description": "OpenAPI version",
+      "description": "OpenAPI specification version",
       "type": "string",
       "enum": [
         "OASv2.0",
@@ -3299,6 +3878,10 @@ func init() {
       "description": "spec in json or yaml format",
       "type": "object",
       "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
         "rawSpec": {
           "description": "spec in json or yaml format",
           "type": "string"
@@ -3319,6 +3902,14 @@ func init() {
       },
       "description": "Alert Kind [ALERT_INFO or ALERT_WARN]",
       "name": "alert[is]",
+      "in": "query"
+    },
+    "alertIsType": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "name": "alertType[is]",
       "in": "query"
     },
     "apiEventSortKey": {
@@ -3351,6 +3942,12 @@ func init() {
       "type": "string",
       "description": "api id to return",
       "name": "apiId",
+      "in": "query"
+    },
+    "apiInfoIdIsFilter": {
+      "type": "integer",
+      "format": "uint32",
+      "name": "apiInfoId[is]",
       "in": "query"
     },
     "apiInventorySortKey": {
@@ -3449,6 +4046,13 @@ func init() {
       "description": "End time of the query",
       "name": "endTime",
       "in": "query",
+      "required": true
+    },
+    "gatewayId": {
+      "type": "integer",
+      "description": "Gateway ID",
+      "name": "gatewayId",
+      "in": "path",
       "required": true
     },
     "hasProvidedSpecFilter": {

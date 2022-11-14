@@ -1,0 +1,11 @@
+@import 'utils/scss_variables.module.scss';
+
+.fuzzing-test-display-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    font-size: 11px;
+    line-height: 16px;
+    color: $color-main;
+}

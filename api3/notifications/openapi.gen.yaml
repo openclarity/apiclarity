@@ -1,0 +1,157 @@
+components:
+  schemas:
+    APIClarityNotification:
+      discriminator:
+        mapping:
+          ApiFindingsNotification: '#/components/schemas/ApiFindingsNotification'
+          AuthorizationModelNotification: '#/components/schemas/AuthorizationModelNotification'
+          SpecDiffsNotification: '#/components/schemas/SpecDiffsNotification'
+          TestProgressNotification: '#/components/schemas/TestProgressNotification'
+          TestReportNotification: '#/components/schemas/TestReportNotification'
+        propertyName: notificationType
+      oneOf:
+      - $ref: '#/components/schemas/ApiFindingsNotification'
+      - $ref: '#/components/schemas/AuthorizationModelNotification'
+      - $ref: '#/components/schemas/SpecDiffsNotification'
+      - $ref: '#/components/schemas/TestProgressNotification'
+      - $ref: '#/components/schemas/TestReportNotification'
+    APIFindings:
+      description: A group of findings
+      properties:
+        items:
+          description: A list of findings
+          items:
+            $ref: ../common/openapi.yaml#/components/schemas/APIFinding
+          type: array
+      type: object
+    ApiFindingsNotification:
+      allOf:
+      - $ref: '#/components/schemas/BaseNotification'
+      - $ref: '#/components/schemas/APIFindings'
+    AuthorizationModel:
+      properties:
+        learning:
+          type: boolean
+        operations:
+          items:
+            $ref: ../global/openapi.gen.yaml#/components/schemas/AuthorizationModelOperation
+          type: array
+        specType:
+          $ref: ../global/openapi.gen.yaml#/components/schemas/SpecType
+      required:
+      - specType
+      - operations
+      - learning
+      type: object
+    AuthorizationModelNotification:
+      allOf:
+      - $ref: '#/components/schemas/BaseNotification'
+      - $ref: '#/components/schemas/AuthorizationModel'
+    BaseNotification:
+      description: Base Notification all APIClarity notifications must extend
+      properties:
+        notificationType:
+          type: string
+      required:
+      - notificationType
+      type: object
+    ShortTestProgress:
+      description: Describes the progress of an ongoing test
+      properties:
+        apiID:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+        progress:
+          description: Progress of the test
+          maximum: 100
+          minimum: 0
+          title: Description
+          type: integer
+        starttime:
+          description: Timestamp of the start of the test
+          format: int64
+          title: Start time
+          type: integer
+      required:
+      - starttime
+      - progress
+      title: Short Test Progress Report
+      type: object
+    ShortTestReport:
+      description: Short Test Report
+      properties:
+        apiID:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+        highestSeverity:
+          $ref: ../common/openapi.yaml#/components/schemas/Severity
+        starttime:
+          description: Timestamp of the start of the test
+          format: int64
+          title: Start time
+          type: integer
+        status:
+          $ref: ../global/openapi.gen.yaml#/components/schemas/FuzzingStatusEnum
+        statusMessage:
+          description: Message for status details, if any
+          title: Status message details
+          type: string
+        tags:
+          items:
+            $ref: ../global/openapi.gen.yaml#/components/schemas/FuzzingReportTag
+          title: Tags list
+          type: array
+      required:
+      - starttime
+      - status
+      title: Short Test Report
+      type: object
+    SpecDiffs:
+      properties:
+        diffs:
+          $ref: ../global/openapi.gen.yaml#/components/schemas/APIDiffs
+      required:
+      - diffs
+      type: object
+    SpecDiffsNotification:
+      allOf:
+      - $ref: '#/components/schemas/BaseNotification'
+      - $ref: '#/components/schemas/SpecDiffs'
+    TestProgressNotification:
+      allOf:
+      - $ref: '#/components/schemas/BaseNotification'
+      - $ref: '#/components/schemas/ShortTestProgress'
+    TestReportNotification:
+      allOf:
+      - $ref: '#/components/schemas/BaseNotification'
+      - $ref: '#/components/schemas/ShortTestReport'
+info:
+  title: Core OAPI for APIClarity Notification
+  version: "1.0"
+openapi: 3.0.2
+paths:
+  /notification/{apiID}:
+    post:
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/APIClarityNotification'
+        description: Notification
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: string
+          description: Success
+      summary: Provide to Apiclarity list of raw input for a given API ID associated
+        with a given timestamp
+servers:
+- url: /

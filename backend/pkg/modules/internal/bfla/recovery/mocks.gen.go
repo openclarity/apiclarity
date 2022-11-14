@@ -46,6 +46,20 @@ func (mr *MockStatePersisterMockRecorder) AckSubmit(arg0 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AckSubmit", reflect.TypeOf((*MockStatePersister)(nil).AckSubmit), arg0)
 }
 
+// Keys mocks base method.
+func (m *MockStatePersister) Keys(arg0 string) []uint {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Keys", arg0)
+	ret0, _ := ret[0].([]uint)
+	return ret0
+}
+
+// Keys indicates an expected call of Keys.
+func (mr *MockStatePersisterMockRecorder) Keys(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Keys", reflect.TypeOf((*MockStatePersister)(nil).Keys), arg0)
+}
+
 // Persist mocks base method.
 func (m *MockStatePersister) Persist(arg0 context.Context) error {
 	m.ctrl.T.Helper()

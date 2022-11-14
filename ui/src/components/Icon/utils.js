@@ -1,7 +1,10 @@
 export const ICON_NAMES = {
+    ADD: "add",
+    COLUMNS: "columns",
     DASHBOARD: "dashboard",
     INVENTORY: "inventory",
     EVENTS: "events",
+    EXCLAMATION_MARK_ROUND: "exclamation-mark-round",
     X_MARK: "x-mark",
     CHECK_MARK: "check-mark",
     STROKE: "stroke",
@@ -22,5 +25,10 @@ export const ICON_NAMES = {
     UNMERGE: "unmerge",
     ZOMBIE: "zombie",
     SHADOW: "shadow",
-    BEETLE_ROUND: "beetle-round"
+    BEETLE_ROUND: "beetle-round",
+    INFO: "info",
+    SHIELD_CHECK: "shield-check",
+    SHIELD_CROSS: "shield-cross",
+    SMALL_ARROW_LEFT: "small-arrow-left",
+    ERROR: 'error',
 }

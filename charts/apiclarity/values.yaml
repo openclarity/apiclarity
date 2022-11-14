@@ -31,6 +31,9 @@ global:
   traceSampling:
     enable: false
 
+  bflaAutomaticLearningAndDetection:
+    enable: false
+
 ## End of Global Values
 #######################################################################################
 
@@ -39,10 +42,27 @@ global:
 
 apiclarity:
 
+  # Send APIClarity notifications to this backend
+  # notificationURLPrefix: example.local:8888/
+
+  tls:
+    enabled: false
+    # Secret that contains server tls key and cert
+    tlsServerCertsSecretName: "apiclarity-tls"
+    # TLS secret (tlsServerCertsSecretName) cert field name
+    tlsServerCertFileName: "server.crt"
+    # TLS secret (tlsServerCertsSecretName) key field name
+    tlsServerKeyFileName: "server.key"
+    # ConfigMap that contains the root cert
+    rootCACertConfigMapName: "apiclarity-root-ca.crt"
+    # Root cert ConfigMap (rootCACertConfigMapName) cert field name
+    rootCertFileName: "ca.crt"
+
   # Defines env variables for apiclarity pod
   env:
     plugins:
       ## ENV_1: example123
+      FUZZER_DEPLOYMENT_TYPE: "configmap"
 
   ## Docker Image values.
   docker:
@@ -207,4 +227,43 @@ trafficSource:
     deploymentNamespace: ""
 
 # End of APIClarity Traffic Source Values
+#######################################################################################
+
+#######################################################################################
+## APIClarity Runtime Fuzzing Values
+
+APIClarityRuntimeFuzzing:
+
+  ## Fuzzer jobs and pods labels.
+  ##
+  labels:
+    app: apiclarity-fuzzer
+
+  docker:
+    ## Fuzzer docker image to load
+    ##
+    image: gcr.io/eticloud/k8sec/scn-dast:f425b0aefe272d6707649c0a9845eabceade7f91
+
+  ## Fuzzing methods (scn-fuzzer, restler, crud). It is a comma separated list.
+  ##
+  methods: "scn-fuzzer,restler,crud"
+  ## Internal use only, do not change
+  ##
+  restlerRootPath: "/tmp"
+  ## Internal use only, do not change
+  ##
+  restlerTokenInjPath: "/app/"
+  debug: false
+
+  ## Resource limits for Fuzzer deployment
+  ##
+  resources:
+    requests:
+      memory: "200Mi"
+      cpu: "100m"
+    limits:
+      memory: "1000Mi"
+      cpu: "200m"
+
+# End of APIClarity Runtime Fuzzing Values
 #######################################################################################

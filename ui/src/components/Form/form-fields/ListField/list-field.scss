@@ -1,0 +1,34 @@
+@import 'utils/scss_variables.module.scss';
+
+$action-buttons-width: 50px;
+
+.ps-field-wrapper.ps-list-field-wrapper {
+    margin-bottom: 0 !important;
+
+    .field-wrapper {
+        display: flex;
+
+        .input-wrapper {
+            width: calc(100% - #{$action-buttons-width});
+            display: flex;
+
+            .ps-field-wrapper {
+                width: 100%;
+                margin-right: 10px;
+            }
+        }
+        .actions-wrapper {
+            width: $action-buttons-width;
+            display: flex;
+            padding-top: 10px;
+            
+            > .round-icon-container {
+                margin-right: 5px;
+
+                &:not(.disabled) {
+                    background-color: $color-main;
+                }
+            }
+        }
+    }
+}

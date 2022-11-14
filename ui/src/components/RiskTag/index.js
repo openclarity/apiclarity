@@ -4,7 +4,11 @@ import './risk-tag.scss';
 
 const ALERT_RISKS = {
     INFO: {value: "INFO", label: "Info"},
-    WARN: {value: "WARN", label: "Warn"}
+    WARN: {value: "WARN", label: "Warn"},
+    LOW: {value: "LOW", label: "Low"},
+    MEDIUM: {value: "MEDIUM", label: "Medium"},
+    HIGH: {value: "HIGH", label: "High"},
+    CRITICAL: {value: "CRITICAL", label: "Critical"}
 }
 
 const RiskTag = ({risk, label}) => {

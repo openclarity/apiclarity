@@ -1,5 +1,5 @@
 import React from 'react';
-import MODULE_TYPES from '../MODULE_TYPES.js';
+import { MODULE_TYPES } from '../MODULE_TYPES.js';
 
 const DemoModule = () => {
     return (

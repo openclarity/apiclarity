@@ -41,10 +41,18 @@ type GetAPIEventsParams struct {
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
 
+	/*
+	  In: query
+	*/
+	AlertTypeIs []string
 	/*Alert Kind [ALERT_INFO or ALERT_WARN]
 	  In: query
 	*/
 	AlertIs []string
+	/*
+	  In: query
+	*/
+	APIInfoIDIs *uint32
 	/*
 	  In: query
 	*/
@@ -187,8 +195,18 @@ func (o *GetAPIEventsParams) BindRequest(r *http.Request, route *middleware.Matc
 
 	qs := runtime.Values(r.URL.Query())
 
+	qAlertTypeIs, qhkAlertTypeIs, _ := qs.GetOK("alertType[is]")
+	if err := o.bindAlertTypeIs(qAlertTypeIs, qhkAlertTypeIs, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
 	qAlertIs, qhkAlertIs, _ := qs.GetOK("alert[is]")
 	if err := o.bindAlertIs(qAlertIs, qhkAlertIs, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
+	qAPIInfoIDIs, qhkAPIInfoIDIs, _ := qs.GetOK("apiInfoId[is]")
+	if err := o.bindAPIInfoIDIs(qAPIInfoIDIs, qhkAPIInfoIDIs, route.Formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -347,6 +365,33 @@ func (o *GetAPIEventsParams) BindRequest(r *http.Request, route *middleware.Matc
 	return nil
 }
 
+// bindAlertTypeIs binds and validates array parameter AlertTypeIs from query.
+//
+// Arrays are parsed according to CollectionFormat: "" (defaults to "csv" when empty).
+func (o *GetAPIEventsParams) bindAlertTypeIs(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var qvAlertTypeIs string
+	if len(rawData) > 0 {
+		qvAlertTypeIs = rawData[len(rawData)-1]
+	}
+
+	// CollectionFormat:
+	alertTypeIsIC := swag.SplitByFormat(qvAlertTypeIs, "")
+	if len(alertTypeIsIC) == 0 {
+		return nil
+	}
+
+	var alertTypeIsIR []string
+	for _, alertTypeIsIV := range alertTypeIsIC {
+		alertTypeIsI := alertTypeIsIV
+
+		alertTypeIsIR = append(alertTypeIsIR, alertTypeIsI)
+	}
+
+	o.AlertTypeIs = alertTypeIsIR
+
+	return nil
+}
+
 // bindAlertIs binds and validates array parameter AlertIs from query.
 //
 // Arrays are parsed according to CollectionFormat: "" (defaults to "csv" when empty).
@@ -374,6 +419,29 @@ func (o *GetAPIEventsParams) bindAlertIs(rawData []string, hasKey bool, formats 
 	}
 
 	o.AlertIs = alertIsIR
+
+	return nil
+}
+
+// bindAPIInfoIDIs binds and validates parameter APIInfoIDIs from query.
+func (o *GetAPIEventsParams) bindAPIInfoIDIs(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+
+	// Required: false
+	// AllowEmptyValue: false
+
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+
+	value, err := swag.ConvertUint32(raw)
+	if err != nil {
+		return errors.InvalidType("apiInfoId[is]", "query", "uint32", raw)
+	}
+	o.APIInfoIDIs = &value
 
 	return nil
 }

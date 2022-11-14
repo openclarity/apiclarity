@@ -35,6 +35,13 @@ func isPathParam(segment string) bool {
 	return strings.HasPrefix(segment, paramPrefix) && strings.HasSuffix(segment, paramSuffix)
 }
 
+func Min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
+}
+
 func GetPathParams(specPath string, opPath string) map[string]string {
 	result := make(map[string]string)
 

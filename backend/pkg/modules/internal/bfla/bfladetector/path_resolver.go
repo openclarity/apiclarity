@@ -17,6 +17,7 @@ package bfladetector
 
 import (
 	"encoding/json"
+	"fmt"
 
 	log "github.com/sirupsen/logrus"
 
@@ -24,33 +25,62 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 )
 
-func ResolvePath(apiInfo *database.APIInfo, event *database.APIEvent) (urlpath string) {
-	if event.ProvidedPathID != "" && apiInfo.ProvidedSpecInfo != "" {
+func ParseSpecInfo(apiInfo *database.APIInfo) ([]*models.SpecTag, error) {
+	if apiInfo.ProvidedSpecInfo != "" {
 		info := &models.SpecInfo{}
 		if err := json.Unmarshal([]byte(apiInfo.ProvidedSpecInfo), info); err != nil {
-			log.Errorf("unable to unmarshal spec tags: %s", err)
-			return ""
+			return nil, fmt.Errorf("unable to unmarshal spec tags: %s", err)
 		}
-		return resolvePathFromTags(info.Tags, event.ProvidedPathID)
+		return info.Tags, nil
 	}
-	if event.ReconstructedPathID != "" && apiInfo.ReconstructedSpecInfo != "" {
+	if apiInfo.ReconstructedSpecInfo != "" {
 		info := &models.SpecInfo{}
 		if err := json.Unmarshal([]byte(apiInfo.ReconstructedSpecInfo), info); err != nil {
 			log.Errorf("unable to unmarshal spec tags: %s", err)
-			return ""
+			return nil, fmt.Errorf("unable to unmarshal spec tags: %s", err)
 		}
-		return resolvePathFromTags(info.Tags, event.ReconstructedPathID)
+		return info.Tags, nil
 	}
-	return ""
+	return nil, nil
 }
 
-func resolvePathFromTags(tags []*models.SpecTag, pathID string) string {
+func ResolvePath(tags []*models.SpecTag, event *database.APIEvent) (path string, tagNames []string, err error) {
+	if event.ProvidedPathID != "" {
+		path, tagNames, err = resolvePathFromPathIDAndMethod(tags, event.ProvidedPathID, string(event.Method))
+	} else if event.ReconstructedPathID != "" {
+		path, tagNames, err = resolvePathFromPathIDAndMethod(tags, event.ReconstructedPathID, string(event.Method))
+	} else {
+		err = fmt.Errorf("event %v cannot resolve to a spec path", event.ID)
+	}
+	return path, tagNames, err
+}
+
+func resolvePathFromPathIDAndMethod(tags []*models.SpecTag, pathID string, method string) (path string, tagNames []string, err error) {
 	for _, tag := range tags {
 		for _, methodAndPath := range tag.MethodAndPathList {
-			if pathID == string(methodAndPath.PathID) {
-				return methodAndPath.Path
+			if pathID == string(methodAndPath.PathID) && string(methodAndPath.Method) == method {
+				path = methodAndPath.Path
+				tagNames = append(tagNames, tag.Name)
 			}
 		}
 	}
-	return ""
+	if path == "" {
+		err = fmt.Errorf("unable to resolve pathId %v  / method %v", pathID, method)
+	}
+	return path, tagNames, err
+}
+
+func resolveTagsFromPathAndMethod(tags []*models.SpecTag, path, method string) (tagNames []string, err error) {
+	for _, tag := range tags {
+		for _, methodAndPath := range tag.MethodAndPathList {
+			if path == methodAndPath.Path && string(methodAndPath.Method) == method {
+				tagNames = append(tagNames, tag.Name)
+			}
+		}
+	}
+	if len(tagNames) == 0 {
+		err = fmt.Errorf("unable to resolve path %v / method %v", path, method)
+	}
+
+	return tagNames, err
 }

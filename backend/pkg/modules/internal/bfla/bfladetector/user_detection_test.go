@@ -19,6 +19,8 @@ import (
 	"net/http"
 	"reflect"
 	"testing"
+
+	"github.com/golang-jwt/jwt/v4"
 )
 
 func TestGetUserID(t *testing.T) {
@@ -40,6 +42,11 @@ func TestGetUserID(t *testing.T) {
 		want: &DetectedUser{
 			Source: DetectedUserSourceJWT,
 			ID:     "test0",
+			JWTClaims: &JWTClaimsWithScopes{
+				RegisteredClaims: &jwt.RegisteredClaims{
+					Subject: "test0",
+				},
+			},
 		},
 		wantErr: false,
 	}, {

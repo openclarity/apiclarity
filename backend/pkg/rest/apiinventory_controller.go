@@ -16,12 +16,14 @@
 package rest
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/go-openapi/runtime/middleware"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
@@ -39,17 +41,23 @@ func (s *Server) PostAPIInventory(params operations.PostAPIInventoryParams) midd
 			Message: "please provide name",
 		})
 	}
+	if params.Body.APIType == models.APITypeINTERNAL && params.Body.DestinationNamespace == "" {
+		return operations.NewPostAPIInventoryDefault(http.StatusBadRequest).WithPayload(&models.APIResponse{
+			Message: "please provide destinationNamespace for internal apis",
+		})
+	}
 	if params.Body.Port < 1 {
 		return operations.NewPostAPIInventoryDefault(http.StatusBadRequest).WithPayload(&models.APIResponse{
 			Message: "please provide a valid port",
 		})
 	}
 	apiInfo := &_database.APIInfo{
-		Type: params.Body.APIType,
-		Name: params.Body.Name,
-		Port: params.Body.Port,
+		Type:                 params.Body.APIType,
+		Name:                 params.Body.Name,
+		Port:                 params.Body.Port,
+		DestinationNamespace: params.Body.DestinationNamespace,
 	}
-	if err := s.dbHandler.APIInventoryTable().FirstOrCreate(apiInfo); err != nil {
+	if _, err := s.dbHandler.APIInventoryTable().FirstOrCreate(apiInfo); err != nil {
 		log.Error(err)
 		return operations.NewPostAPIInventoryDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
 			Message: "Oops",
@@ -91,6 +99,10 @@ func (s *Server) GetAPIInventoryAPIIDFromHostAndPort(params operations.GetAPIInv
 	apiID, err := s.dbHandler.APIInventoryTable().GetAPIID(params.Host, params.Port)
 	if err != nil {
 		log.Errorf("Failed to get API ID: %v", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return operations.NewGetAPIInventoryAPIIDFromHostAndPortNotFound().WithPayload(&models.APIResponse{Message: err.Error()})
+		}
+
 		return operations.NewGetAPIInventoryAPIIDFromHostAndPortDefault(http.StatusInternalServerError)
 	}
 
@@ -98,17 +110,20 @@ func (s *Server) GetAPIInventoryAPIIDFromHostAndPort(params operations.GetAPIInv
 }
 
 func (s *Server) GetAPIInventoryAPIIDAPIInfo(params operations.GetAPIInventoryAPIIDAPIInfoParams) middleware.Responder {
-	apiInfo, err := s.dbHandler.APIInventoryTable().GetAPISpecs(params.APIID)
-	if err != nil {
-		log.Errorf("Failed to get API specs: %v", err)
+	apiInfo := &_database.APIInfo{}
+	if err := s.dbHandler.APIInventoryTable().First(apiInfo, params.APIID); err != nil {
+		log.Errorf("Failed to retrieve API info for apiID=%v: %v", params.APIID, err)
 		return operations.NewGetAPIInventoryAPIIDAPIInfoDefault(http.StatusInternalServerError)
 	}
 
-	return operations.NewGetAPIInventoryAPIIDAPIInfoOK().WithPayload(&models.APIInfo{
-		HasProvidedSpec:      &apiInfo.HasProvidedSpec,
-		HasReconstructedSpec: &apiInfo.HasReconstructedSpec,
-		ID:                   uint32(apiInfo.ID),
-		Name:                 apiInfo.Name,
-		Port:                 apiInfo.Port,
+	return operations.NewGetAPIInventoryAPIIDAPIInfoOK().WithPayload(&models.APIInfoWithType{
+		APIInfo: models.APIInfo{
+			HasProvidedSpec:      &apiInfo.HasProvidedSpec,
+			HasReconstructedSpec: &apiInfo.HasReconstructedSpec,
+			ID:                   uint32(apiInfo.ID),
+			Name:                 apiInfo.Name,
+			Port:                 apiInfo.Port,
+		},
+		APIType: apiInfo.Type,
 	})
 }

@@ -22,8 +22,14 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/openclarity/apiclarity/api3/notifications"
+	"github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
+	"github.com/openclarity/apiclarity/backend/pkg/config"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
+	"github.com/openclarity/apiclarity/backend/pkg/notifier"
 	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
+	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
+	interfacemanager "github.com/openclarity/trace-sampling-manager/manager/pkg/manager/interface"
 )
 
 type Annotation struct {
@@ -31,16 +37,19 @@ type Annotation struct {
 	Annotation []byte
 }
 
+type ModuleInfo struct {
+	Name        string
+	Description string
+}
+
 type Event struct {
 	APIEvent  *database.APIEvent
 	Telemetry *pluginsmodels.Telemetry
 }
 
-//go:generate $GOPATH/bin/mockgen -destination=./mock_modules.go -package=core github.com/openclarity/apiclarity/backend/pkg/modules/internal/core Module,BackendAccessor
-
 // Module each APIClarity module needs to implement this interface.
 type Module interface {
-	Name() string
+	Info() ModuleInfo
 
 	// EventNotify called when a new API Request/reply is received by APIClarity.
 	EventNotify(ctx context.Context, event *Event)
@@ -51,9 +60,11 @@ type Module interface {
 
 type BackendAccessor interface {
 	K8SClient() kubernetes.Interface
+	GetSpeculatorAccessor() speculatoraccessor.SpeculatorAccessor
 
 	GetAPIInfo(ctx context.Context, apiID uint) (*database.APIInfo, error)
 	GetAPIEvents(ctx context.Context, filter database.GetAPIEventsQuery) ([]*database.APIEvent, error)
+	UpdateAPIEvent(ctx context.Context, event *database.APIEvent) error
 
 	GetAPIEventAnnotation(ctx context.Context, modName string, eventID uint, name string) (*Annotation, error)
 	ListAPIEventAnnotations(ctx context.Context, modName string, eventID uint) ([]*Annotation, error)
@@ -63,19 +74,38 @@ type BackendAccessor interface {
 	ListAPIInfoAnnotations(ctx context.Context, modName string, apiID uint) ([]*Annotation, error)
 	StoreAPIInfoAnnotations(ctx context.Context, modName string, apiID uint, annotations ...Annotation) error
 	DeleteAPIInfoAnnotations(ctx context.Context, modName string, apiID uint, name ...string) error
+	DeleteAllAPIInfoAnnotations(ctx context.Context, modName string, apiID uint) error
+
+	EnableTraces(ctx context.Context, modName string, apiID uint) error
+	DisableTraces(ctx context.Context, modName string, apiID uint) error
+
+	Notify(ctx context.Context, modName string, apiID uint, notification notifications.APIClarityNotification) error
 }
 
-func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface) BackendAccessor {
-	return &accessor{dbHandler, clientset}
+func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager, speculatorAccessor speculatoraccessor.SpeculatorAccessor, notifier *notifier.Notifier, conf *config.Config) (BackendAccessor, error) {
+	return &accessor{
+		dbHandler:          dbHandler,
+		clientset:          clientset,
+		samplingManager:    samplingManager,
+		speculatorAccessor: speculatorAccessor,
+		notifier:           notifier,
+	}, nil
 }
 
 type accessor struct {
-	dbHandler *database.Handler
-	clientset kubernetes.Interface
+	dbHandler          *database.Handler
+	clientset          kubernetes.Interface
+	samplingManager    *manager.Manager
+	speculatorAccessor speculatoraccessor.SpeculatorAccessor
+	notifier           *notifier.Notifier
 }
 
 func (b *accessor) K8SClient() kubernetes.Interface {
 	return b.clientset
+}
+
+func (b *accessor) GetSpeculatorAccessor() speculatoraccessor.SpeculatorAccessor {
+	return b.speculatorAccessor
 }
 
 func (b *accessor) GetAPIInfo(ctx context.Context, apiID uint) (*database.APIInfo, error) {
@@ -84,6 +114,11 @@ func (b *accessor) GetAPIInfo(ctx context.Context, apiID uint) (*database.APIInf
 		return nil, fmt.Errorf("failed to retrieve API info for apiID=%v: %v", apiID, err)
 	}
 	return apiInfo, nil
+}
+
+func (b *accessor) UpdateAPIEvent(ctx context.Context, event *database.APIEvent) error {
+	//nolint: wrapcheck
+	return b.dbHandler.APIEventsTable().UpdateAPIEvent(event)
 }
 
 func (b *accessor) GetAPIEvents(ctx context.Context, filter database.GetAPIEventsQuery) ([]*database.APIEvent, error) {
@@ -176,5 +211,52 @@ func (b *accessor) DeleteAPIInfoAnnotations(ctx context.Context, modName string,
 	if err := b.dbHandler.APIInfoAnnotationsTable().Delete(ctx, modName, apiID, name...); err != nil {
 		return fmt.Errorf("unable to delete the apiinfo annotation: %w", err)
 	}
+	return nil
+}
+
+func (b *accessor) DeleteAllAPIInfoAnnotations(ctx context.Context, modName string, apiID uint) error {
+	if err := b.dbHandler.APIInfoAnnotationsTable().DeleteAll(ctx, modName, apiID); err != nil {
+		return fmt.Errorf("unable to delete the apiinfo annotation: %w", err)
+	}
+	return nil
+}
+
+func (b *accessor) Notify(ctx context.Context, modName string, apiID uint, n notifications.APIClarityNotification) error {
+	if b.notifier == nil {
+		return nil
+	}
+	if err := b.notifier.Notify(apiID, n); err != nil {
+		return fmt.Errorf("unable to send notification: %w", err)
+	}
+	return nil
+}
+
+func (b *accessor) EnableTraces(ctx context.Context, modName string, apiID uint) error {
+	apiInfo := &database.APIInfo{}
+	if err := b.dbHandler.APIInventoryTable().First(apiInfo, apiID); err != nil {
+		return fmt.Errorf("failed to retrieve API info for apiID=%v: %v", apiID, err)
+	}
+
+	b.samplingManager.AddHostsToTrace(
+		&interfacemanager.HostsByComponentID{
+			Hosts:       []string{fmt.Sprintf("%s:%d", apiInfo.Name, apiInfo.Port)},
+			ComponentID: modName,
+		},
+	)
+	return nil
+}
+
+func (b *accessor) DisableTraces(ctx context.Context, modName string, apiID uint) error {
+	apiInfo := &database.APIInfo{}
+	if err := b.dbHandler.APIInventoryTable().First(apiInfo, apiID); err != nil {
+		return fmt.Errorf("failed to retrieve API info for apiID=%v: %v", apiID, err)
+	}
+
+	b.samplingManager.RemoveHostsToTrace(
+		&interfacemanager.HostsByComponentID{
+			Hosts:       []string{fmt.Sprintf("%s:%d", apiInfo.Name, apiInfo.Port)},
+			ComponentID: modName,
+		},
+	)
 	return nil
 }

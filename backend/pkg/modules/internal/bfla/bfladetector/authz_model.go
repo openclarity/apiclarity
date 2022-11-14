@@ -18,27 +18,68 @@ package bfladetector
 import (
 	"bytes"
 	"fmt"
+	"regexp"
+	"time"
+
+	"github.com/go-openapi/spec"
 
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/k8straceannotator"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla/restapi"
 )
+
+var spaceRegex = regexp.MustCompile(`\s+`)
 
 type Operation struct {
 	Method   string   `json:"method"`
 	Path     string   `json:"path"`
+	Tags     []string `json:"tags"`
 	Audience Audience `json:"audience"`
 }
 
 type SourceObject struct {
-	K8sObject  *k8straceannotator.K8sObjectRef `json:"k8s_object"`
-	External   bool                            `json:"external"`
-	EndUsers   EndUsers                        `json:"end_users,omitempty"`
-	Authorized bool                            `json:"authorized"`
+	K8sObject     *k8straceannotator.K8sObjectRef `json:"k8s_object"`
+	External      bool                            `json:"external"`
+	EndUsers      EndUsers                        `json:"end_users,omitempty"`
+	LastTime      time.Time                       `json:"last_time"`
+	StatusCode    int64                           `json:"status_code"`
+	WarningStatus restapi.BFLAStatus              `json:"warning_status"`
+	Authorized    bool                            `json:"authorized"`
+}
+
+func (u *DetectedUser) IsMismatchedScopes(op *spec.Operation) bool {
+	if u.Source != DetectedUserSourceJWT || u.JWTClaims == nil {
+		return false
+	}
+	if u.JWTClaims.Scope == nil {
+		return false
+	}
+	for _, secItem := range op.Security {
+		for _, scopes := range secItem {
+			if !ContainsAll(scopes, spaceRegex.Split(*u.JWTClaims.Scope, -1)) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func DetectedUserSourceFromString(s string) DetectedUserSource {
+	switch s {
+	case "JWT":
+		return DetectedUserSourceJWT
+	case "BASIC":
+		return DetectedUserSourceBasic
+	case "KONG_X_CONSUMER_ID":
+		return DetectedUserSourceXConsumerIDHeader
+	}
+	return DetectedUserSourceUnknown
 }
 
 type DetectedUserSource int32
 
 const (
-	DetectedUserSourceJWT = iota
+	DetectedUserSourceUnknown DetectedUserSource = iota
+	DetectedUserSourceJWT
 	DetectedUserSourceBasic
 	DetectedUserSourceXConsumerIDHeader
 )
@@ -47,14 +88,7 @@ func (d *DetectedUserSource) UnmarshalJSON(b []byte) error {
 	buff := bytes.NewBuffer(b)
 	srcName := ""
 	fmt.Fscanf(buff, "%q", &srcName)
-	switch srcName {
-	case "JWT":
-		*d = DetectedUserSourceJWT
-	case "BASIC":
-		*d = DetectedUserSourceBasic
-	case "KONG_X_CONSUMER_ID":
-		*d = DetectedUserSourceXConsumerIDHeader
-	}
+	*d = DetectedUserSourceFromString(srcName)
 	return nil
 }
 
@@ -72,8 +106,11 @@ func (d DetectedUserSource) String() string {
 		return "BASIC"
 	case DetectedUserSourceXConsumerIDHeader:
 		return "KONG_X_CONSUMER_ID"
+	case DetectedUserSourceUnknown:
+		return ""
+	default:
+		return ""
 	}
-	return ""
 }
 
 type EndUsers []*DetectedUser
@@ -91,6 +128,9 @@ type DetectedUser struct {
 	Source    DetectedUserSource `json:"source"`
 	ID        string             `json:"id"`
 	IPAddress string             `json:"ip_address"`
+
+	// Present if the source is JWT.
+	JWTClaims *JWTClaimsWithScopes `json:"jwt_claims"`
 }
 
 type AuthorizationModel struct {
@@ -117,4 +157,16 @@ func (aud Audience) Find(fn func(sa *SourceObject) bool) (int, *SourceObject) {
 		}
 	}
 	return 0, nil
+}
+
+func ToRestapiSpecType(specType SpecType) restapi.SpecType {
+	switch specType {
+	case SpecTypeNone:
+		return restapi.NONE
+	case SpecTypeProvided:
+		return restapi.PROVIDED
+	case SpecTypeReconstructed:
+		return restapi.RECONSTRUCTED
+	}
+	return restapi.NONE
 }

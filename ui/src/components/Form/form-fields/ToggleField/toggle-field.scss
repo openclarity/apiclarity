@@ -1,0 +1,10 @@
+@import 'utils/scss_variables.module.scss';
+
+.ps-field-wrapper.ps-toogle-field-wrapper {
+    display: flex;
+    align-items: center;
+
+    label {
+        margin: 0;
+    }
+}

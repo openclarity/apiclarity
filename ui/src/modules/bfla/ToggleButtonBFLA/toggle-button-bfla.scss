@@ -1,0 +1,74 @@
+@import 'utils/scss_variables.module.scss';
+
+.toggle-container {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+
+    &.disabled {
+        cursor: not-allowed;
+    }
+    &.full-width {
+        width: 100%;
+    }
+    &.small {
+        color: $color-grey-black;
+        font-size: 9px;
+        font-weight: bold;
+    }
+    .toggle-title {
+        margin-right: 10px;
+
+        &.with-bold-text {
+            font-weight: bold;
+        }
+
+        &.with-left-margin {
+            margin-left: 10px;
+            margin-right: 0;
+        }
+    }
+    .react-toggle {
+        border-radius: 50px;
+        vertical-align: text-bottom;
+
+        &:hover {
+            .react-toggle-track {
+                background-color: $color-grey;
+            }
+        }
+        &.react-toggle--checked {
+            .react-toggle-track {
+                background-color: $color-main;
+            }
+        }
+        .react-toggle-thumb {
+            box-shadow: none !important;
+            outline: none;
+            border-color: transparent;
+            width: 14px;
+            height: 14px;
+        }
+        .react-toggle-track {
+            background-color: $color-grey;
+            width: 36px;
+            height: 16px;
+        }
+        &.react-toggle--checked .react-toggle-thumb {
+            left: 21px;
+        }
+    }
+    &.with-secondary {
+        .react-toggle {
+            .react-toggle-track {
+                background-color: $color-main;
+            }
+            &.react-toggle--checked {
+                .react-toggle-track {
+                    background-color: $color-main-light;
+                }
+            }
+        }
+    }
+}
