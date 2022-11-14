@@ -647,6 +647,13 @@ components:
       - specType
       - specTimestamp
       type: object
+    FeatureEnable:
+      description: Enable/disable a feature
+      properties:
+        enable:
+          description: enable flag
+          type: boolean
+      type: object
     Finding:
       properties:
         description:
@@ -2396,6 +2403,39 @@ paths:
                 $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
           description: Error response
       summary: Stop Differ for an API
+  /modules/spec_reconstruction/{apiId}/start:
+    post:
+      parameters:
+      - $ref: '#/components/parameters/apiId'
+      responses:
+        "204":
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Start the spec reconstruction for this API.
+  /modules/spec_reconstruction/{apiId}/stop:
+    post:
+      parameters:
+      - $ref: '#/components/parameters/apiId'
+      responses:
+        "204":
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Stop the spec reconstruction for this API.
+  /modules/spec_reconstruction/enable:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeatureEnable'
+      responses:
+        "204":
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: enable/disable the spec reconstruction
   /modules/traceanalyzer/{apiID}/start:
     post:
       description: Start Trace Analysis for an API.

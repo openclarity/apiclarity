@@ -117,6 +117,15 @@ func NewAPIClarityAPIsAPI(spec *loads.Document) *APIClarityAPIsAPI {
 		PostControlTraceSourcesHandler: PostControlTraceSourcesHandlerFunc(func(params PostControlTraceSourcesParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostControlTraceSources has not yet been implemented")
 		}),
+		PostModulesSpecReconstructionAPIIDStartHandler: PostModulesSpecReconstructionAPIIDStartHandlerFunc(func(params PostModulesSpecReconstructionAPIIDStartParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostModulesSpecReconstructionAPIIDStart has not yet been implemented")
+		}),
+		PostModulesSpecReconstructionAPIIDStopHandler: PostModulesSpecReconstructionAPIIDStopHandlerFunc(func(params PostModulesSpecReconstructionAPIIDStopParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostModulesSpecReconstructionAPIIDStop has not yet been implemented")
+		}),
+		PostModulesSpecReconstructionEnableHandler: PostModulesSpecReconstructionEnableHandlerFunc(func(params PostModulesSpecReconstructionEnableParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostModulesSpecReconstructionEnable has not yet been implemented")
+		}),
 		PutAPIInventoryAPIIDSpecsProvidedSpecHandler: PutAPIInventoryAPIIDSpecsProvidedSpecHandlerFunc(func(params PutAPIInventoryAPIIDSpecsProvidedSpecParams) middleware.Responder {
 			return middleware.NotImplemented("operation PutAPIInventoryAPIIDSpecsProvidedSpec has not yet been implemented")
 		}),
@@ -206,6 +215,12 @@ type APIClarityAPIsAPI struct {
 	PostControlNewDiscoveredAPIsHandler PostControlNewDiscoveredAPIsHandler
 	// PostControlTraceSourcesHandler sets the operation handler for the post control trace sources operation
 	PostControlTraceSourcesHandler PostControlTraceSourcesHandler
+	// PostModulesSpecReconstructionAPIIDStartHandler sets the operation handler for the post modules spec reconstruction API ID start operation
+	PostModulesSpecReconstructionAPIIDStartHandler PostModulesSpecReconstructionAPIIDStartHandler
+	// PostModulesSpecReconstructionAPIIDStopHandler sets the operation handler for the post modules spec reconstruction API ID stop operation
+	PostModulesSpecReconstructionAPIIDStopHandler PostModulesSpecReconstructionAPIIDStopHandler
+	// PostModulesSpecReconstructionEnableHandler sets the operation handler for the post modules spec reconstruction enable operation
+	PostModulesSpecReconstructionEnableHandler PostModulesSpecReconstructionEnableHandler
 	// PutAPIInventoryAPIIDSpecsProvidedSpecHandler sets the operation handler for the put API inventory API ID specs provided spec operation
 	PutAPIInventoryAPIIDSpecsProvidedSpecHandler PutAPIInventoryAPIIDSpecsProvidedSpecHandler
 
@@ -359,6 +374,15 @@ func (o *APIClarityAPIsAPI) Validate() error {
 	}
 	if o.PostControlTraceSourcesHandler == nil {
 		unregistered = append(unregistered, "PostControlTraceSourcesHandler")
+	}
+	if o.PostModulesSpecReconstructionAPIIDStartHandler == nil {
+		unregistered = append(unregistered, "PostModulesSpecReconstructionAPIIDStartHandler")
+	}
+	if o.PostModulesSpecReconstructionAPIIDStopHandler == nil {
+		unregistered = append(unregistered, "PostModulesSpecReconstructionAPIIDStopHandler")
+	}
+	if o.PostModulesSpecReconstructionEnableHandler == nil {
+		unregistered = append(unregistered, "PostModulesSpecReconstructionEnableHandler")
 	}
 	if o.PutAPIInventoryAPIIDSpecsProvidedSpecHandler == nil {
 		unregistered = append(unregistered, "PutAPIInventoryAPIIDSpecsProvidedSpecHandler")
@@ -551,6 +575,18 @@ func (o *APIClarityAPIsAPI) initHandlerCache() {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/control/traceSources"] = NewPostControlTraceSources(o.context, o.PostControlTraceSourcesHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/modules/spec_reconstruction/{apiId}/start"] = NewPostModulesSpecReconstructionAPIIDStart(o.context, o.PostModulesSpecReconstructionAPIIDStartHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/modules/spec_reconstruction/{apiId}/stop"] = NewPostModulesSpecReconstructionAPIIDStop(o.context, o.PostModulesSpecReconstructionAPIIDStopHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/modules/spec_reconstruction/enable"] = NewPostModulesSpecReconstructionEnable(o.context, o.PostModulesSpecReconstructionEnableHandler)
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}

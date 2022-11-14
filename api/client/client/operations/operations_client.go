@@ -80,6 +80,12 @@ type ClientService interface {
 
 	PostControlTraceSources(params *PostControlTraceSourcesParams, opts ...ClientOption) (*PostControlTraceSourcesCreated, error)
 
+	PostModulesSpecReconstructionAPIIDStart(params *PostModulesSpecReconstructionAPIIDStartParams, opts ...ClientOption) (*PostModulesSpecReconstructionAPIIDStartNoContent, error)
+
+	PostModulesSpecReconstructionAPIIDStop(params *PostModulesSpecReconstructionAPIIDStopParams, opts ...ClientOption) (*PostModulesSpecReconstructionAPIIDStopNoContent, error)
+
+	PostModulesSpecReconstructionEnable(params *PostModulesSpecReconstructionEnableParams, opts ...ClientOption) (*PostModulesSpecReconstructionEnableNoContent, error)
+
 	PutAPIInventoryAPIIDSpecsProvidedSpec(params *PutAPIInventoryAPIIDSpecsProvidedSpecParams, opts ...ClientOption) (*PutAPIInventoryAPIIDSpecsProvidedSpecCreated, error)
 
 	SetTransport(transport runtime.ClientTransport)
@@ -1010,6 +1016,123 @@ func (a *Client) PostControlTraceSources(params *PostControlTraceSourcesParams, 
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*PostControlTraceSourcesDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  PostModulesSpecReconstructionAPIIDStart starts the spec reconstruction for this API
+
+  Start the spec reconstruction for this API.
+*/
+func (a *Client) PostModulesSpecReconstructionAPIIDStart(params *PostModulesSpecReconstructionAPIIDStartParams, opts ...ClientOption) (*PostModulesSpecReconstructionAPIIDStartNoContent, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewPostModulesSpecReconstructionAPIIDStartParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "PostModulesSpecReconstructionAPIIDStart",
+		Method:             "POST",
+		PathPattern:        "/modules/spec_reconstruction/{apiId}/start",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostModulesSpecReconstructionAPIIDStartReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*PostModulesSpecReconstructionAPIIDStartNoContent)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*PostModulesSpecReconstructionAPIIDStartDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  PostModulesSpecReconstructionAPIIDStop stops the spec reconstruction for this API
+
+  Stop the spec reconstruction for this API.
+*/
+func (a *Client) PostModulesSpecReconstructionAPIIDStop(params *PostModulesSpecReconstructionAPIIDStopParams, opts ...ClientOption) (*PostModulesSpecReconstructionAPIIDStopNoContent, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewPostModulesSpecReconstructionAPIIDStopParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "PostModulesSpecReconstructionAPIIDStop",
+		Method:             "POST",
+		PathPattern:        "/modules/spec_reconstruction/{apiId}/stop",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostModulesSpecReconstructionAPIIDStopReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*PostModulesSpecReconstructionAPIIDStopNoContent)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*PostModulesSpecReconstructionAPIIDStopDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  PostModulesSpecReconstructionEnable enables disable the spec reconstruction
+
+  enable/disable the spec reconstruction.
+*/
+func (a *Client) PostModulesSpecReconstructionEnable(params *PostModulesSpecReconstructionEnableParams, opts ...ClientOption) (*PostModulesSpecReconstructionEnableNoContent, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewPostModulesSpecReconstructionEnableParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "PostModulesSpecReconstructionEnable",
+		Method:             "POST",
+		PathPattern:        "/modules/spec_reconstruction/enable",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostModulesSpecReconstructionEnableReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*PostModulesSpecReconstructionEnableNoContent)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*PostModulesSpecReconstructionEnableDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

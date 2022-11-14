@@ -186,6 +186,18 @@ func CreateRESTServer(config *ServerConfig) (*Server, error) {
 		return s.DeleteControlTraceSourcesTraceSourceID(params)
 	})
 
+	api.PostModulesSpecReconstructionAPIIDStartHandler = operations.PostModulesSpecReconstructionAPIIDStartHandlerFunc(func(params operations.PostModulesSpecReconstructionAPIIDStartParams) middleware.Responder {
+		return s.PostModulesSpecReconstructionAPIIDStart(params)
+	})
+
+	api.PostModulesSpecReconstructionAPIIDStopHandler = operations.PostModulesSpecReconstructionAPIIDStopHandlerFunc(func(params operations.PostModulesSpecReconstructionAPIIDStopParams) middleware.Responder {
+		return s.PostModulesSpecReconstructionAPIIDStop(params)
+	})
+
+	api.PostModulesSpecReconstructionEnableHandler = operations.PostModulesSpecReconstructionEnableHandlerFunc(func(params operations.PostModulesSpecReconstructionEnableParams) middleware.Responder {
+		return s.PostModulesSpecReconstructionEnable(params)
+	})
+
 	server := restapi.NewServer(api)
 
 	server.ConfigureFlags()
