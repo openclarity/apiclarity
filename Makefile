@@ -47,13 +47,13 @@ backend_test: ## Build Backend test
 	@(cd backend && go build --tags=json1 -o bin/backend_test cmd/test/main.go && ls -l bin/)
 
 .PHONY: api3-verify
-api3-verify: 
+api3-verify:
 	@(echo "Checking if api3 code was generated")
-	@(cd api3; ./generate.sh --verify) 
+	@(cd api3; ./generate.sh --verify)
 
 .PHONY: api3
-api3: 
-	@(cd api3; ./generate.sh) 
+api3:
+	@(cd api3; ./generate.sh)
 
 .PHONY: api
 api: api3 ## Generating API code
@@ -91,6 +91,7 @@ test: ## Run Unit Tests
 	cd plugins/gateway/kong && go test ./...
 	cd plugins/gateway/tyk/v3.2.2 && go test ./...
 	cd plugins/taper && go test ./...
+	cd plugins/otel-collector/apiclarityexporter && go test ./...
 
 .PHONY: clean
 clean: clean-ui clean-backend ## Clean all build artifacts
@@ -110,12 +111,15 @@ bin/golangci-lint-${GOLANGCI_VERSION}:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | bash -s -- -b ./bin/ v${GOLANGCI_VERSION}
 	@mv bin/golangci-lint $@
 
+# TODO: remove temporarily exempted package from typecheck linter
 .PHONY: lint
 lint: bin/golangci-lint ## Run linter
 	cd backend && ../bin/golangci-lint run
 	cd plugins/gateway/kong && ../../../bin/golangci-lint run
 	cd plugins/gateway/tyk/v3.2.2 && ../../../../bin/golangci-lint run
 	cd plugins/taper && ../../bin/golangci-lint run
+	cd plugins/otel-collector/apiclarityexporter && ../../../bin/golangci-lint run \
+	  --skip-files '../../../../../../go/pkg/mod/github.com/klauspost/compress'
 
 
 .PHONY: fix
@@ -124,6 +128,7 @@ fix: bin/golangci-lint ## Fix lint violations
 	cd plugins/gateway/kong && ../../../bin/golangci-lint run --fix
 	cd plugins/gateway/tyk/v3.2.2 && ../../../../bin/golangci-lint run --fix
 	cd plugins/taper && ../../bin/golangci-lint run --fix
+	cd plugins/otel-collector/apiclarityexporter && ../../../bin/golangci-lint run --fix
 
 bin/licensei: bin/licensei-${LICENSEI_VERSION}
 	@ln -sf licensei-${LICENSEI_VERSION} bin/licensei
@@ -139,6 +144,7 @@ license-check: bin/licensei ## Run license check
 	cd plugins/gateway/kong && ../../../bin/licensei check --config=../../../.licensei.toml
 	cd plugins/gateway/tyk/v3.2.2 && ../../../../bin/licensei check --config=../../../../.licensei.toml
 	cd plugins/taper && ../../bin/licensei check --config=../../.licensei.toml
+	cd plugins/otel-collector/apiclarityexporter && ../../../bin/licensei check --config=../../../.licensei.toml
 
 .PHONY: license-cache
 license-cache: bin/licensei ## Generate license cache
@@ -146,6 +152,7 @@ license-cache: bin/licensei ## Generate license cache
 	cd plugins/gateway/kong && ../../../bin/licensei cache --config=../../../.licensei.toml
 	cd plugins/gateway/tyk/v3.2.2 && ../../../../bin/licensei cache --config=../../../../.licensei.toml
 	cd plugins/taper && ../../bin/licensei cache --config=../../.licensei.toml
+	cd plugins/otel-collector/apiclarityexporter && ../../../bin/licensei cache --config=../../../.licensei.toml
 
 .PHONY: check
 check: lint test ## Run tests and linters
