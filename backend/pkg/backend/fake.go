@@ -88,7 +88,7 @@ func (b *Backend) handleHTTPTraceFromFile(fileName string) error {
 	if trace.Request == nil || trace.Request.Common == nil || trace.Response == nil || trace.Response.Common == nil {
 		return fmt.Errorf("failed to handle trace for file: %v. Bad format", fileName)
 	}
-	if err := b.handleHTTPTrace(ctx, &trace); err != nil {
+	if err := b.handleHTTPTrace(ctx, &trace, nil); err != nil {
 		return fmt.Errorf("failed to handle trace for file: %v. %v", fileName, err)
 	}
 	return nil

@@ -39,6 +39,9 @@ func init() {
         "summary": "Post an http telemetry",
         "parameters": [
           {
+            "$ref": "#/parameters/TraceSourceTokenHeader"
+          },
+          {
             "name": "body",
             "in": "body",
             "required": true,
@@ -89,6 +92,7 @@ func init() {
           }
         },
         "time": {
+          "description": "Time since epoch (milliseconds)",
           "type": "integer",
           "format": "int64"
         },
@@ -172,6 +176,14 @@ func init() {
       }
     }
   },
+  "parameters": {
+    "TraceSourceTokenHeader": {
+      "type": "string",
+      "description": "Optional header to authenticate the trace source",
+      "name": "X-Trace-Source-Token",
+      "in": "header"
+    }
+  },
   "responses": {
     "Success": {
       "description": "success message",
@@ -208,6 +220,12 @@ func init() {
       "post": {
         "summary": "Post an http telemetry",
         "parameters": [
+          {
+            "type": "string",
+            "description": "Optional header to authenticate the trace source",
+            "name": "X-Trace-Source-Token",
+            "in": "header"
+          },
           {
             "name": "body",
             "in": "body",
@@ -265,6 +283,7 @@ func init() {
           }
         },
         "time": {
+          "description": "Time since epoch (milliseconds)",
           "type": "integer",
           "format": "int64"
         },
@@ -346,6 +365,14 @@ func init() {
           "type": "string"
         }
       }
+    }
+  },
+  "parameters": {
+    "TraceSourceTokenHeader": {
+      "type": "string",
+      "description": "Optional header to authenticate the trace source",
+      "name": "X-Trace-Source-Token",
+      "in": "header"
     }
   },
   "responses": {

@@ -239,6 +239,7 @@ func Run() {
 		TLSServerCertFilePath: config.TLSServerCertFilePath,
 		TLSServerKeyFilePath:  config.TLSServerKeyFilePath,
 		TraceHandleFunc:       backend.handleHTTPTrace,
+		TraceSourceAuthFunc:   nil,
 	}
 	tracesServer, err := traces.CreateHTTPTracesServer(httpTracesServerConfig)
 	if err != nil {
@@ -246,6 +247,25 @@ func Run() {
 	}
 	tracesServer.Start(errChan)
 	defer tracesServer.Stop()
+
+	if config.EnableTLS {
+		httpExternalTracesServerConfig := &traces.HTTPTracesServerConfig{
+			EnableTLS:             true,
+			TLSPort:               config.ExternalHTTPTracesTLSPort,
+			TLSServerCertFilePath: config.TLSServerCertFilePath,
+			TLSServerKeyFilePath:  config.TLSServerKeyFilePath,
+			TraceHandleFunc:       backend.handleHTTPTrace,
+			TraceSourceAuthFunc:   backend.traceSourceAuth,
+		}
+		externalTracesServer, err := traces.CreateHTTPTracesServer(httpExternalTracesServerConfig)
+		if err != nil {
+			log.Fatalf("Failed to create external trace server: %v", err)
+		}
+		externalTracesServer.Start(errChan)
+		defer externalTracesServer.Stop()
+	} else {
+		log.Warningf("External trace server not started because TLS is not enabled")
+	}
 
 	backend.startStateBackup(globalCtx)
 
@@ -268,7 +288,7 @@ func Run() {
 	}
 }
 
-func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Telemetry) error {
+func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Telemetry, traceSource *models.TraceSource) error {
 	var err error
 
 	log.Debugf("Handling telemetry: %+v", trace)
@@ -393,6 +413,20 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 	b.modulesManager.EventNotify(ctx, &modules.Event{APIEvent: event, Telemetry: trace})
 
 	return nil
+}
+
+func (b *Backend) traceSourceAuth(ctx context.Context, token []byte) (*models.TraceSource, error) {
+	traceSourceDB, err := b.dbHandler.TraceSourcesTable().GetTraceSourceFromToken(token)
+	if err != nil {
+		return nil, fmt.Errorf("no trace source found: %v", err)
+	}
+
+	traceSource := models.TraceSource{
+		Description: traceSourceDB.Description,
+		ID:          int64(traceSourceDB.ID),
+		Name:        &traceSourceDB.Name,
+	}
+	return &traceSource, nil
 }
 
 func convertHeadersToMap(headers []*pluginsmodels.Header) map[string]string {

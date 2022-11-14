@@ -29,7 +29,7 @@ type Common struct {
 	// headers
 	Headers []*Header `json:"headers"`
 
-	// time
+	// Time since epoch (milliseconds)
 	Time int64 `json:"time,omitempty"`
 
 	// version
