@@ -126,6 +126,21 @@ func (mr *MockAPIEventsTableMockRecorder) GetAPIEventsLatestDiffs(arg0 interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAPIEventsLatestDiffs", reflect.TypeOf((*MockAPIEventsTable)(nil).GetAPIEventsLatestDiffs), arg0)
 }
 
+// GetAPIEventsTotal mocks base method.
+func (m *MockAPIEventsTable) GetAPIEventsTotal(arg0 operations.GetAPIEventsParams) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAPIEventsTotal", arg0)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAPIEventsTotal indicates an expected call of GetAPIEventsTotal.
+func (mr *MockAPIEventsTableMockRecorder) GetAPIEventsTotal(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAPIEventsTotal", reflect.TypeOf((*MockAPIEventsTable)(nil).GetAPIEventsTotal), arg0)
+}
+
 // GetAPIEventsWithAnnotations mocks base method.
 func (m *MockAPIEventsTable) GetAPIEventsWithAnnotations(arg0 context.Context, arg1 GetAPIEventsQuery) ([]*APIEvent, error) {
 	m.ctrl.T.Helper()
