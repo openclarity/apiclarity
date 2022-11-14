@@ -47,13 +47,13 @@ backend_test: ## Build Backend test
 	@(cd backend && go build --tags=json1 -o bin/backend_test cmd/test/main.go && ls -l bin/)
 
 .PHONY: api3-verify
-api3-verify: 
+api3-verify:
 	@(echo "Checking if api3 code was generated")
-	@(cd api3; ./generate.sh --verify) 
+	@(cd api3; ./generate.sh --verify)
 
 .PHONY: api3
-api3: 
-	@(cd api3; ./generate.sh) 
+api3:
+	@(cd api3; ./generate.sh)
 
 .PHONY: api
 api: api3 ## Generating API code
@@ -152,6 +152,7 @@ license-cache: bin/licensei ## Generate license cache
 	cd plugins/gateway/kong && ../../../bin/licensei cache --config=../../../.licensei.toml
 	cd plugins/gateway/tyk/v3.2.2 && ../../../../bin/licensei cache --config=../../../../.licensei.toml
 	cd plugins/taper && ../../bin/licensei cache --config=../../.licensei.toml
+	cd plugins/otel-collector/apiclarityexporter && ../../../bin/licensei cache --config=../../../.licensei.toml
 
 .PHONY: check
 check: lint test ## Run tests and linters
