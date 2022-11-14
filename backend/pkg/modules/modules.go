@@ -25,6 +25,9 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/config"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 
+	// Enables analytics core preprocess
+	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/tracepreprocess"
+
 	// Enables the bfla module.
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/bfla"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
@@ -61,7 +64,6 @@ func New(ctx context.Context, dbHandler *database.Handler, clientset kubernetes.
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create backend accessor: %v", err)
 	}
-
 	module, infos := core.New(ctx, backendAccessor, samplingManager)
 
 	return module, infos, nil

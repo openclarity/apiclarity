@@ -18,6 +18,7 @@ package analyticscore
 import (
 	"context"
 	"fmt"
+	"hash/crc32"
 	"net/http"
 	"sort"
 	"time"
@@ -133,6 +134,14 @@ func (p *AnalyticsCore) getDataFramesShardsForFunc(function AnalyticsModuleProcc
 	return dfShards
 }
 
+var traceAnalyticsModules = map[string]TraceAnalyticsModuleFactory{}
+
+func RegisterTraceAnalyticsModule(m TraceAnalyticsModuleFactory, name string) {
+	traceAnalyticsModules[name] = m
+}
+
+type TraceAnalyticsModuleFactory func(analyticsCore *AnalyticsCore)
+
 //nolint:unparam
 func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Module, err error) {
 	p := &AnalyticsCore{
@@ -159,6 +168,10 @@ func newModule(ctx context.Context, accessor core.BackendAccessor) (_ core.Modul
 	p.InitTopic(APIEndpointTopicName)
 	p.InitTopic(ObjectTopicName)
 	p.InitTopic(EntityTopicName)
+
+	for _, moduleFactory := range traceAnalyticsModules {
+		moduleFactory(p)
+	}
 
 	return p, nil
 }
@@ -236,6 +249,15 @@ func (p *AnalyticsCore) EventNotify(ctx context.Context, event *core.Event) {
 	if err := p.eventNotify(ctx, event); err != nil {
 		log.Errorf("[Analytics-Core] EventNotify: %s", err)
 	}
+
+}
+
+type TraceMessageForBroker struct {
+	Event *core.Event
+}
+
+func (p TraceMessageForBroker) GetPartitionKey() int64 {
+	return int64(crc32.ChecksumIEEE([]byte(p.Event.Telemetry.RequestID)))
 }
 
 //nolint:unparam
@@ -244,6 +266,12 @@ func (p *AnalyticsCore) eventNotify(ctx context.Context, event *core.Event) (err
 	log.Errorf("[Analytics-Core] received a new event for API(%v) Event(%v) ", event.APIEvent.APIInfoID, event.APIEvent.ID)
 	if ctx == nil {
 		log.Errorf("[Analytics-Core] No context")
+	}
+	messageToSend := &TraceMessageForBroker{
+		Event: event,
+	}
+	if err := p.PublishMessage(TraceTopicName, messageToSend); err != nil {
+		return err
 	}
 	return nil
 }
@@ -263,6 +291,7 @@ func httpResponse(w http.ResponseWriter, code int, v interface{}) {
 }
 */
 //nolint:gochecknoinits
+
 func init() {
 	core.RegisterModule(newModule)
 }
