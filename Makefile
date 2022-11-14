@@ -14,7 +14,7 @@ DOCKER_TAG ?= ${VERSION}
 
 # Dependency versions
 GOLANGCI_VERSION = 1.42.0
-LICENSEI_VERSION = 0.3.1
+LICENSEI_VERSION = 0.6.1
 
 # HELP
 # This will output the help for each task
@@ -148,7 +148,10 @@ license-check: bin/licensei ## Run license check
 
 .PHONY: license-cache
 license-cache: bin/licensei ## Generate license cache
-	bin/licensei cache
+	cd backend && ../bin/licensei cache --config=../.licensei.toml
+	cd plugins/gateway/kong && ../../../bin/licensei cache --config=../../../.licensei.toml
+	cd plugins/gateway/tyk/v3.2.2 && ../../../../bin/licensei cache --config=../../../../.licensei.toml
+	cd plugins/taper && ../../bin/licensei cache --config=../../.licensei.toml
 
 .PHONY: check
 check: lint test ## Run tests and linters
