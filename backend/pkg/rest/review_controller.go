@@ -35,6 +35,63 @@ import (
 	"github.com/openclarity/speculator/pkg/speculator"
 )
 
+func ApproveReview(spectr *speculator.Speculator, dbHandler database.Database, specKey speculator.SpecKey, oasVersion string, approvedReview *speculatorspec.ApprovedSpecReview) error {
+	specVersion := getReviewSpecVersion(oasVersion)
+
+	// apply approved review to the speculator
+	if err := spectr.ApplyApprovedReview(specKey, approvedReview, specVersion); err != nil {
+		errMsg := fmt.Sprintf("Failed to apply the approved review. %v", err)
+		log.Error(errMsg)
+		return err
+	}
+
+	// generate reconstructed spec and save it to db
+	reviewSpec, ok := spectr.Specs[specKey]
+	if !ok {
+		errMsg := fmt.Sprintf("Failed to find spec with specKey: %v", specKey)
+		log.Error(errMsg)
+		return fmt.Errorf(errMsg)
+	}
+	oapSpec, err := reviewSpec.GenerateOASJson(specVersion)
+	if err != nil {
+		log.Errorf("Failed to generate Open API Spec. %v", err)
+		return err
+	}
+
+	host, port, err := speculator.GetHostAndPortFromSpecKey(specKey)
+	if err != nil {
+		log.Errorf("Failed to parse spec key %v. %v", specKey, err)
+		return err
+	}
+
+	// TODO: Update PostAPIInventoryReviewIDApprovedReview params to include api ID AND review ID
+	apiID, err := dbHandler.APIInventoryTable().GetAPIID(host, port)
+	if err != nil {
+		log.Errorf("Failed to get API ID: %v", err)
+		return err
+	}
+
+	specInfo, err := createSpecInfo(string(oapSpec), getPathToPathIDMap(approvedReview))
+	if err != nil {
+		log.Errorf("Failed to create spec info: %v", err)
+		return err
+	}
+
+	if err := dbHandler.APIInventoryTable().PutAPISpec(apiID, string(oapSpec), specInfo, database.ReconstructedSpecType, strfmt.DateTime(time.Now())); err != nil {
+		log.Errorf("Failed to save reconstructed API spec to db: %v", err)
+		return err
+	}
+
+	// update all the API events corresponding to the APIEventsPaths in the approved review
+	go func() {
+		if err := dbHandler.APIEventsTable().SetAPIEventsReconstructedPathID(approvedReview.PathItemsReview, host, port); err != nil {
+			log.Errorf("Failed to set path ID on API events: %v", err)
+		}
+	}()
+
+	return nil
+}
+
 func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAPIInventoryReviewIDApprovedReviewParams) middleware.Responder {
 	review := database.Review{}
 	pathToPathItem := map[string]*spec.PathItem{}
@@ -63,53 +120,15 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 		})
 	}
 
+	if err := ApproveReview(s.speculator, s.dbHandler, speculator.SpecKey(review.SpecKey), params.Body.OasVersion, approvedReview); err != nil {
+		//Don't return internal error to client
+		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
+	}
+
 	// mark review as approved for later deletion
 	if err := s.dbHandler.ReviewTable().UpdateApprovedReview(true, params.ReviewID); err != nil {
 		log.Errorf("Failed to update approve in review table. %v", err)
 	}
-
-	// generate reconstructed spec and save it to db
-	reviewSpec, ok := s.speculator.Specs[speculator.SpecKey(review.SpecKey)]
-	if !ok {
-		log.Errorf("Failed to find spec with specKey: %v", review.SpecKey)
-		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
-	}
-	oapSpec, err := reviewSpec.GenerateOASJson(specVersion)
-	if err != nil {
-		log.Errorf("Failed to generate Open API Spec. %v", err)
-		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
-	}
-
-	host, port, err := speculator.GetHostAndPortFromSpecKey(speculator.SpecKey(review.SpecKey))
-	if err != nil {
-		log.Errorf("Failed to parse spec key %v. %v", review.SpecKey, err)
-		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
-	}
-
-	// TODO: Update PostAPIInventoryReviewIDApprovedReview params to include api ID AND review ID
-	apiID, err := s.dbHandler.APIInventoryTable().GetAPIID(host, port)
-	if err != nil {
-		log.Errorf("Failed to get API ID: %v", err)
-		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
-	}
-
-	specInfo, err := createSpecInfo(string(oapSpec), getPathToPathIDMap(approvedReview))
-	if err != nil {
-		log.Errorf("Failed to create spec info: %v", err)
-		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
-	}
-
-	if err := s.dbHandler.APIInventoryTable().PutAPISpec(apiID, string(oapSpec), specInfo, database.ReconstructedSpecType, strfmt.DateTime(time.Now())); err != nil {
-		log.Errorf("Failed to save reconstructed API spec to db: %v", err)
-		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
-	}
-
-	// update all the API events corresponding to the APIEventsPaths in the approved review
-	go func() {
-		if err := s.dbHandler.APIEventsTable().SetAPIEventsReconstructedPathID(approvedReview.PathItemsReview, host, port); err != nil {
-			log.Errorf("Failed to set path ID on API events: %v", err)
-		}
-	}()
 
 	return operations.NewPostAPIInventoryReviewIDApprovedReviewOK().WithPayload(&models.SuccessResponse{
 		Message: "Success",

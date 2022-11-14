@@ -110,6 +110,7 @@ type APIEvent struct {
 type APIEventsTable interface {
 	GetAPIEventsWithAnnotations(ctx context.Context, filters GetAPIEventsQuery) ([]*APIEvent, error)
 	GetAPIEventsAndTotal(params operations.GetAPIEventsParams) ([]APIEvent, int64, error)
+	GetAPIEventsTotal(params operations.GetAPIEventsParams) (int64, error)
 	GetAPIEvent(eventID uint32) (*APIEvent, error)
 	GetAPIEventReconstructedSpecDiff(eventID uint32) (*APIEvent, error)
 	GetAPIEventProvidedSpecDiff(eventID uint32) (*APIEvent, error)
@@ -361,6 +362,18 @@ func (a *APIEventsTableHandler) CreateAPIEvent(event *APIEvent) {
 	}
 }
 
+func (a *APIEventsTableHandler) GetAPIEventsTotal(params operations.GetAPIEventsParams) (int64, error) {
+	var count int64
+
+	tx := a.setAPIEventsFilters(getAPIEventsParamsToFilters(params))
+
+	// get total count item with the current filters
+	if err := tx.Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 func (a *APIEventsTableHandler) GetAPIEventsAndTotal(params operations.GetAPIEventsParams) ([]APIEvent, int64, error) {
 	var apiEvents []APIEvent
 	var count int64
@@ -452,10 +465,10 @@ func (a *APIEventsTableHandler) GetAPIEventsLatestDiffs(latestDiffsNum int) ([]A
 
 func (a *APIEventsTableHandler) setAPIEventsFilters(filters *APIEventsFilters) *gorm.DB {
 	tx := a.tx
-	if filters.StartTime != nil && filters.EndTime != nil {
+	if filters.StartTime != nil && filters.EndTime != nil && *filters.EndTime != strfmt.NewDateTime() {
 		tx = tx.Where(CreateTimeFilter(timeColumnName, *filters.StartTime, *filters.EndTime))
 	}
-	if filters.RequestStartTime != nil && filters.RequestEndTime != nil {
+	if filters.RequestStartTime != nil && filters.RequestEndTime != nil && *filters.RequestEndTime != strfmt.NewDateTime() {
 		tx = tx.Where(CreateTimeFilter(requestTimeColumnName, *filters.RequestStartTime, *filters.RequestEndTime))
 	}
 

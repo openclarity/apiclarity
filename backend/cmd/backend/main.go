@@ -59,6 +59,7 @@ func main() {
 	viper.SetDefault(config.TLSServerCertFilePath, "/etc/certs/server.crt")
 	viper.SetDefault(config.TLSServerKeyFilePath, "/etc/certs/server.key")
 	viper.SetDefault(config.RootCertFilePath, "/etc/root-ca/ca.crt")
+	viper.SetDefault(config.AutoApproveTraceCountEnvVar, "0")
 	viper.AutomaticEnv()
 	app := cli.NewApp()
 	app.Usage = ""
