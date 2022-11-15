@@ -442,7 +442,6 @@ paths:
                 $ref: "../common/openapi.yaml#/components/schemas/SuccessResponse"
         default:
           $ref: "#/components/responses/UnknownError"
-
   /control/newDiscoveredAPIs:
     post:
       summary: 'Allows a client to notify APIClarity about new APIs.'
@@ -469,7 +468,6 @@ paths:
                 $ref: "../common/openapi.yaml#/components/schemas/SuccessResponse"
         default:
           $ref: "#/components/responses/UnknownError"
-
   /control/traceSources:
     get:
       summary: 'List of configured trace sources'
@@ -540,6 +538,41 @@ paths:
                 $ref: "../common/openapi.yaml#/components/schemas/ApiResponse"
         default:
           $ref: "#/components/responses/UnknownError"
+  /modules/spec_reconstruction/{apiId}/start:
+    post:
+      summary: 'Start the spec reconstruction for this API.'
+      parameters:
+        - $ref: "#/components/parameters/apiId"
+      responses:
+        '204':
+          description: 'Success'
+        default:
+          $ref: "#/components/responses/UnknownError"
+
+  /modules/spec_reconstruction/{apiId}/stop:
+    post:
+      summary: 'Stop the spec reconstruction for this API.'
+      parameters:
+        - $ref: "#/components/parameters/apiId"
+      responses:
+        '204':
+          description: 'Success'
+        default:
+          $ref: "#/components/responses/UnknownError"
+
+  /modules/spec_reconstruction/enable:
+    post:
+      summary: 'enable/disable the spec reconstruction'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeatureEnable"
+      responses:
+        '204':
+          description: 'Success'
+        default:
+          $ref: '#/components/responses/UnknownError'
 
 servers:
   - url: /api
@@ -996,3 +1029,13 @@ components:
         - TYK
         - KONG
         - APIGEEX
+
+    FeatureEnable:
+      description: 'Enable/disable a feature'
+      type: 'object'
+      properties:
+        enable:
+          description: 'enable flag'
+          type: 'boolean'
+
+

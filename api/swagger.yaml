@@ -394,6 +394,7 @@ definitions:
       - bfla
       - spec_differ
       - fuzzer
+
   TraceSource:
     description: 'A Source which is sending traces to APIClarity'
     type: 'object'
@@ -420,6 +421,14 @@ definitions:
       - TYK
       - KONG
       - APIGEEX
+
+  FeatureEnable:
+    description: 'Enable/disable a feature'
+    type: 'object'
+    properties:
+      enable:
+        description: 'enable flag'
+        type: 'boolean'
 
 paths:
   /apiEvents:
@@ -890,6 +899,7 @@ paths:
             $ref: '#/definitions/TraceSource'
         default:
           $ref: '#/responses/UnknownError'
+  
   /control/traceSources/{traceSourceId}:
     get:
       summary: 'Get Trace Source information'
@@ -917,6 +927,47 @@ paths:
           description: 'Trace Source not found'
           schema:
             $ref: '#/definitions/ApiResponse'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /modules/spec_reconstruction/{apiId}/start:
+    post:
+      summary: 'Start the spec reconstruction for this API.'
+      description: 'Start the spec reconstruction for this API.'
+      parameters:
+        - $ref: '#/parameters/apiId'
+      responses:
+        '204':
+          description: 'Success'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /modules/spec_reconstruction/{apiId}/stop:
+    post:
+      summary: 'Stop the spec reconstruction for this API.'
+      description: 'Stop the spec reconstruction for this API.'
+      parameters:
+        - $ref: '#/parameters/apiId'
+      responses:
+        '204':
+          description: 'Success'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /modules/spec_reconstruction/enable:
+    post:
+      summary: 'enable/disable the spec reconstruction'
+      description: 'enable/disable the spec reconstruction.'
+      parameters:
+        - in: 'body'
+          name: 'body'
+          required: true
+          schema:
+            description: 'enabled state'
+            $ref: '#/definitions/FeatureEnable'
+      responses:
+        '204':
+          description: 'Success'
         default:
           $ref: '#/responses/UnknownError'
 
