@@ -87,12 +87,12 @@ func (s *Server) PutAPIInventoryAPIIDSpecsProvidedSpec(params operations.PutAPII
 }
 
 func (s *Server) loadProvidedSpec(apiID uint32, jsonSpec []byte, pathToPathID map[string]string) error {
-	specKey, err := s.getSpecKey(apiID)
+	speculator, specKey, err := s.getSpeculatorAndKey(apiID)
 	if err != nil {
 		return fmt.Errorf("failed to get spec key: %v", err)
 	}
 
-	if err := s.speculator.LoadProvidedSpec(specKey, jsonSpec, pathToPathID); err != nil {
+	if err := speculator.LoadProvidedSpec(specKey, jsonSpec, pathToPathID); err != nil {
 		return fmt.Errorf("failed to load provided spec: %v", err)
 	}
 
@@ -100,24 +100,24 @@ func (s *Server) loadProvidedSpec(apiID uint32, jsonSpec []byte, pathToPathID ma
 }
 
 func (s *Server) unsetProvidedSpec(apiID uint32) error {
-	specKey, err := s.getSpecKey(apiID)
+	speculator, specKey, err := s.getSpeculatorAndKey(apiID)
 	if err != nil {
 		return fmt.Errorf("failed to get spec key: %v", err)
 	}
 
-	if err := s.speculator.UnsetProvidedSpec(specKey); err != nil {
+	if err := speculator.UnsetProvidedSpec(specKey); err != nil {
 		return fmt.Errorf("failed to unset provided spec: %w", err)
 	}
 
 	return nil
 }
 
-func (s *Server) getSpecKey(apiID uint32) (speculator.SpecKey, error) {
+func (s *Server) getSpeculatorAndKey(apiID uint32) (*speculator.Speculator, speculator.SpecKey, error) {
 	apiInfo := &database.APIInfo{}
 
 	if err := s.dbHandler.APIInventoryTable().First(apiInfo, apiID); err != nil {
-		return "", fmt.Errorf("failed to get API Info from DB. id=%v: %v", apiID, err)
+		return nil, "", fmt.Errorf("failed to get API Info from DB. id=%v: %v", apiID, err)
 	}
 
-	return speculator.GetSpecKey(apiInfo.Name, strconv.Itoa(int(apiInfo.Port))), nil
+	return s.speculators.Get(apiInfo.TraceSourceID), speculator.GetSpecKey(apiInfo.Name, strconv.Itoa(int(apiInfo.Port))), nil
 }

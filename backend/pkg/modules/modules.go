@@ -56,7 +56,7 @@ var (
 	NewMockBackendAccessor = core.NewMockBackendAccessor
 )
 
-func New(ctx context.Context, dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager, speculatorAccessor speculatoraccessor.SpeculatorAccessor, notifier *notifier.Notifier, config *config.Config) (ModulesManager, []ModuleInfo, error) {
+func New(ctx context.Context, dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager, speculatorAccessor speculatoraccessor.SpeculatorsAccessor, notifier *notifier.Notifier, config *config.Config) (ModulesManager, []ModuleInfo, error) {
 	backendAccessor, err := core.NewAccessor(dbHandler, clientset, samplingManager, speculatorAccessor, notifier, config)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create backend accessor: %v", err)

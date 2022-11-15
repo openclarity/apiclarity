@@ -51,7 +51,7 @@ type APIInfo struct {
 	Type                       models.APIType  `json:"type,omitempty" gorm:"column:type;uniqueIndex:api_info_idx_model" faker:"oneof: INTERNAL, EXTERNAL"`
 	Name                       string          `json:"name,omitempty" gorm:"column:name;uniqueIndex:api_info_idx_model" faker:"oneof: test.com, example.com, kaki.org"`
 	Port                       int64           `json:"port,omitempty" gorm:"column:port;uniqueIndex:api_info_idx_model" faker:"oneof: 80, 443"`
-	TraceSourceID              *uint           `json:"traceSourceID,omitempty" gorm:"column:trace_source_id;default:NULL;uniqueIndex:api_info_idx_model" faker:"-"` // This is the name of the Trace Source which notified of this API. Empty means it was auto discovered by APIClarity on first.
+	TraceSourceID              uint            `json:"traceSourceID,omitempty" gorm:"column:trace_source_id;default:0;uniqueIndex:api_info_idx_model" faker:"-"` // This is the name of the Trace Source which notified of this API. Empty means it was auto discovered by APIClarity on first.
 	HasProvidedSpec            bool            `json:"hasProvidedSpec,omitempty" gorm:"column:has_provided_spec"`
 	HasReconstructedSpec       bool            `json:"hasReconstructedSpec,omitempty" gorm:"column:has_reconstructed_spec"`
 	ReconstructedSpec          string          `json:"reconstructedSpec,omitempty" gorm:"column:reconstructed_spec" faker:"-"`

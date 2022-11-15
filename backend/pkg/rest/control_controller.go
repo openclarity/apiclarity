@@ -67,15 +67,12 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 		}
 		if created {
 			log.Infof("New API '%s' managed by source '%v' was added to inventory", h, traceSourceID)
-			_ = s.speculator.InitSpec(host, strconv.Itoa(port))
+			_ = s.speculators.Get(traceSourceID).InitSpec(host, strconv.Itoa(port))
 
 			if s.notifier != nil {
 				apiID := uint32(apiInfo.ID)
 				port := int(apiInfo.Port)
-				traceSource := ""
-				if traceSourceID != nil {
-					traceSource = strconv.FormatUint(uint64(*traceSourceID), 10) //nolint:gomnd
-				}
+				traceSource := strconv.FormatUint(uint64(traceSourceID), 10) //nolint:gomnd
 				newDiscoveredAPINotification := notifications.NewDiscoveredAPINotification{
 					Id:                   &apiID,
 					Name:                 &apiInfo.Name,

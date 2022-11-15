@@ -64,7 +64,7 @@ func (s *Server) PostAPIInventory(params operations.PostAPIInventoryParams) midd
 		})
 	}
 
-	_ = s.speculator.InitSpec(params.Body.Name, strconv.Itoa(int(params.Body.Port)))
+	_ = s.speculators.Get(apiInfo.TraceSourceID).InitSpec(params.Body.Name, strconv.Itoa(int(params.Body.Port)))
 
 	return operations.NewPostAPIInventoryOK().WithPayload(_database.APIInfoFromDB(apiInfo))
 }

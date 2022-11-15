@@ -36,7 +36,7 @@ func (s *Server) DeleteAPIInventoryAPIIDSpecsProvidedSpec(params operations.Dele
 		return operations.NewDeleteAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
 	}
 
-	if err := s.speculator.UnsetProvidedSpec(speculator.GetSpecKey(apiInfo.Name, strconv.Itoa(int(apiInfo.Port)))); err != nil {
+	if err := s.speculators.Get(apiInfo.TraceSourceID).UnsetProvidedSpec(speculator.GetSpecKey(apiInfo.Name, strconv.Itoa(int(apiInfo.Port)))); err != nil {
 		log.Errorf("Failed to unset provided spec. %v", err)
 		return operations.NewDeleteAPIInventoryAPIIDSpecsProvidedSpecDefault(http.StatusInternalServerError)
 	}
@@ -58,7 +58,7 @@ func (s *Server) DeleteAPIInventoryAPIIDSpecsReconstructedSpec(params operations
 		return operations.NewDeleteAPIInventoryAPIIDSpecsReconstructedSpecDefault(http.StatusInternalServerError)
 	}
 
-	if err := s.speculator.UnsetApprovedSpec(speculator.GetSpecKey(apiInfo.Name, strconv.Itoa(int(apiInfo.Port)))); err != nil {
+	if err := s.speculators.Get(apiInfo.TraceSourceID).UnsetApprovedSpec(speculator.GetSpecKey(apiInfo.Name, strconv.Itoa(int(apiInfo.Port)))); err != nil {
 		log.Errorf("Failed to unset reconstructed spec. %v", err)
 		return operations.NewDeleteAPIInventoryAPIIDSpecsReconstructedSpecDefault(http.StatusInternalServerError)
 	}

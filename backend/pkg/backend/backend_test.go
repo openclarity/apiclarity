@@ -27,6 +27,7 @@ import (
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/k8smonitor"
 	"github.com/openclarity/apiclarity/backend/pkg/modules"
+	speculator_repo "github.com/openclarity/apiclarity/backend/pkg/speculator"
 	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
 	_spec "github.com/openclarity/speculator/pkg/spec"
 	_speculator "github.com/openclarity/speculator/pkg/speculator"
@@ -199,13 +200,13 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 	op.Responses = spec.NewResponses()
 	op.Responses["202"] = &spec.ResponseRef{Value: spec.NewResponse().WithDescription("response")}
 
-	speculatorWithProvidedSpec := _speculator.CreateSpeculator(_speculator.Config{})
-	speculatorWithProvidedSpec.Specs[testSpecKey] = _spec.CreateDefaultSpec(host, port, _spec.OperationGeneratorConfig{})
-	err := speculatorWithProvidedSpec.LoadProvidedSpec(testSpecKey, []byte(providedSpecV3), map[string]string{})
+	speculatorsWithProvidedSpec := speculator_repo.NewSpeculatorRepository(_speculator.Config{})
+	speculatorsWithProvidedSpec.Get(0).Specs[testSpecKey] = _spec.CreateDefaultSpec(host, port, _spec.OperationGeneratorConfig{})
+	err := speculatorsWithProvidedSpec.Get(0).LoadProvidedSpec(testSpecKey, []byte(providedSpecV3), map[string]string{})
 	assert.NilError(t, err)
 
-	speculatorWithApprovedSpec := _speculator.CreateSpeculator(_speculator.Config{})
-	speculatorWithApprovedSpec.Specs[testSpecKey] = _spec.CreateDefaultSpec(host, port, _spec.OperationGeneratorConfig{})
+	speculatorsWithApprovedSpec := speculator_repo.NewSpeculatorRepository(_speculator.Config{})
+	speculatorsWithApprovedSpec.Get(0).Specs[testSpecKey] = _spec.CreateDefaultSpec(host, port, _spec.OperationGeneratorConfig{})
 	ApprovedSpecReview := &_spec.ApprovedSpecReview{
 		PathToPathItem: map[string]*spec.PathItem{
 			"/api/1/foo": &_spec.NewTestPathItem().WithOperation(http.MethodPost, op).PathItem,
@@ -220,11 +221,11 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 			},
 		},
 	}
-	err = speculatorWithApprovedSpec.ApplyApprovedReview(testSpecKey, ApprovedSpecReview, _spec.OASv2)
+	err = speculatorsWithApprovedSpec.Get(0).ApplyApprovedReview(testSpecKey, ApprovedSpecReview, _spec.OASv2)
 	assert.NilError(t, err)
 
 	type fields struct {
-		speculator              *_speculator.Speculator
+		speculators             *speculator_repo.SpeculatorRepository
 		monitor                 *k8smonitor.Monitor
 		dbHandler               _database.Database
 		expectDatabase          func(database *_database.MockDatabase)
@@ -243,9 +244,9 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 		{
 			name: "good run",
 			fields: fields{
-				speculator: _speculator.CreateSpeculator(_speculator.Config{}),
-				monitor:    nil, // TODO turn monitor into interface so we can use it in tests. for now we assume to run locally (no monitor)
-				dbHandler:  mockDatabase,
+				speculators: speculator_repo.NewSpeculatorRepository(_speculator.Config{}),
+				monitor:     nil, // TODO turn monitor into interface so we can use it in tests. for now we assume to run locally (no monitor)
+				dbHandler:   mockDatabase,
 				expectDatabase: func(database *_database.MockDatabase) {
 					database.EXPECT().APIInventoryTable().Return(mockAPIInventoryTable)
 					database.EXPECT().APIEventsTable().Return(mockAPIEventTable)
@@ -293,9 +294,9 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 		{
 			name: "Host field is empty, get host from headers",
 			fields: fields{
-				speculator: _speculator.CreateSpeculator(_speculator.Config{}),
-				monitor:    nil,
-				dbHandler:  mockDatabase,
+				speculators: speculator_repo.NewSpeculatorRepository(_speculator.Config{}),
+				monitor:     nil,
+				dbHandler:   mockDatabase,
 				expectDatabase: func(database *_database.MockDatabase) {
 					database.EXPECT().APIInventoryTable().Return(mockAPIInventoryTable)
 					database.EXPECT().APIEventsTable().Return(mockAPIEventTable)
@@ -348,7 +349,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 		{
 			name: "no host name found",
 			fields: fields{
-				speculator:              _speculator.CreateSpeculator(_speculator.Config{}),
+				speculators:             speculator_repo.NewSpeculatorRepository(_speculator.Config{}),
 				monitor:                 nil,
 				dbHandler:               mockDatabase,
 				expectDatabase:          func(database *_database.MockDatabase) {},
@@ -391,7 +392,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 		{
 			name: "invalid destination address",
 			fields: fields{
-				speculator:              _speculator.CreateSpeculator(_speculator.Config{}),
+				speculators:             speculator_repo.NewSpeculatorRepository(_speculator.Config{}),
 				monitor:                 nil,
 				dbHandler:               mockDatabase,
 				expectDatabase:          func(database *_database.MockDatabase) {},
@@ -434,7 +435,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 		{
 			name: "invalid source address",
 			fields: fields{
-				speculator:              _speculator.CreateSpeculator(_speculator.Config{}),
+				speculators:             speculator_repo.NewSpeculatorRepository(_speculator.Config{}),
 				monitor:                 nil,
 				dbHandler:               mockDatabase,
 				expectDatabase:          func(database *_database.MockDatabase) {},
@@ -477,9 +478,9 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 		{
 			name: "non api",
 			fields: fields{
-				speculator: _speculator.CreateSpeculator(_speculator.Config{}),
-				monitor:    nil,
-				dbHandler:  mockDatabase,
+				speculators: speculator_repo.NewSpeculatorRepository(_speculator.Config{}),
+				monitor:     nil,
+				dbHandler:   mockDatabase,
 				expectDatabase: func(database *_database.MockDatabase) {
 					database.EXPECT().APIEventsTable().Return(mockAPIEventTable)
 				},
@@ -529,9 +530,9 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 		{
 			name: "has provided spec diff",
 			fields: fields{
-				speculator: speculatorWithProvidedSpec,
-				monitor:    nil,
-				dbHandler:  mockDatabase,
+				speculators: speculatorsWithProvidedSpec,
+				monitor:     nil,
+				dbHandler:   mockDatabase,
 				expectDatabase: func(database *_database.MockDatabase) {
 					database.EXPECT().APIInventoryTable().Return(mockAPIInventoryTable)
 					database.EXPECT().APIEventsTable().Return(mockAPIEventTable)
@@ -579,7 +580,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 		{
 			name: "has reconstructed spec diff",
 			fields: fields{
-				speculator: speculatorWithApprovedSpec,
+				speculators: speculatorsWithApprovedSpec,
 				monitor:    nil,
 				dbHandler:  mockDatabase,
 				expectDatabase: func(database *_database.MockDatabase) {
@@ -636,7 +637,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 		mockModulesManager.EXPECT().EventNotify(ctx, gomock.Any()).AnyTimes()
 		t.Run(tt.name, func(t *testing.T) {
 			b := &Backend{
-				speculator:     tt.fields.speculator,
+				speculators:    tt.fields.speculators,
 				monitor:        tt.fields.monitor,
 				dbHandler:      tt.fields.dbHandler,
 				modulesManager: mockModulesManager,

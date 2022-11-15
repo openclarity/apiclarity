@@ -11,7 +11,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	notifications "github.com/openclarity/apiclarity/api3/notifications"
-	speculatorAccessor "github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
+	speculatoraccessor "github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
 	database "github.com/openclarity/apiclarity/backend/pkg/database"
 	kubernetes "k8s.io/client-go/kubernetes"
 )
@@ -243,10 +243,10 @@ func (mr *MockBackendAccessorMockRecorder) GetAPIInfoAnnotation(arg0, arg1, arg2
 }
 
 // GetSpeculatorAccessor mocks base method.
-func (m *MockBackendAccessor) GetSpeculatorAccessor() speculatorAccessor.SpeculatorAccessor {
+func (m *MockBackendAccessor) GetSpeculatorAccessor() speculatoraccessor.SpeculatorsAccessor {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSpeculatorAccessor")
-	ret0, _ := ret[0].(speculatorAccessor.SpeculatorAccessor)
+	ret0, _ := ret[0].(speculatoraccessor.SpeculatorsAccessor)
 	return ret0
 }
 
