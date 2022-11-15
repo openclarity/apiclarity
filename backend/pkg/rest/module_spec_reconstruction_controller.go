@@ -20,10 +20,11 @@ import (
 	"net/http"
 
 	"github.com/go-openapi/runtime/middleware"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	interfacemanager "github.com/openclarity/trace-sampling-manager/manager/pkg/manager/interface"
-	log "github.com/sirupsen/logrus"
 )
 
 func (s *Server) PostModulesSpecReconstructionAPIIDStart(params operations.PostModulesSpecReconstructionAPIIDStartParams) middleware.Responder {
