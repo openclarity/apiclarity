@@ -61,10 +61,11 @@ func RegisterModule(m ModuleFactory) {
 
 type ModuleFactory func(ctx context.Context, accessor BackendAccessor) (Module, error)
 
-func New(ctx context.Context, accessor BackendAccessor, samplingManager *manager.Manager) (Module, []ModuleInfo) {
+func New(ctx context.Context, accessor BackendAccessor, samplingManager *manager.Manager, traceSamplingEnabled bool) (Module, []ModuleInfo) {
 	c := &Core{}
 	c.Modules = map[string]Module{}
 	c.samplingManager = samplingManager
+	c.traceSamplingEnabled = traceSamplingEnabled
 
 	modInfos := []ModuleInfo{}
 	for moduleFolderName, moduleFactory := range modules {
@@ -84,8 +85,9 @@ func New(ctx context.Context, accessor BackendAccessor, samplingManager *manager
 }
 
 type Core struct {
-	Modules         map[string]Module
-	samplingManager *manager.Manager
+	Modules              map[string]Module
+	samplingManager      *manager.Manager
+	traceSamplingEnabled bool
 }
 
 func (c *Core) Info() ModuleInfo {
@@ -118,6 +120,9 @@ func shouldTrace(host string, port int64, hosts []string) bool {
 }
 
 func (c *Core) EventNotify(ctx context.Context, event *Event) {
+	if !c.traceSamplingEnabled {
+		return
+	}
 	host := event.APIEvent.HostSpecName
 	port := event.APIEvent.DestinationPort
 

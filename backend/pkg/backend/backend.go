@@ -123,50 +123,51 @@ func Run() {
 	dbHandler := _database.Init(dbConfig)
 	dbHandler.StartReviewTableCleaner(globalCtx, time.Duration(config.DatabaseCleanerIntervalSec)*time.Second)
 	var clientset kubernetes.Interface
-	if config.K8sLocal {
-		clientset, err = k8smonitor.CreateLocalK8sClientset()
-		if err != nil {
-			log.Fatalf("failed to create K8s clientset: %v", err)
-		}
-	} else {
-		clientset, err = k8smonitor.CreateK8sClientset()
-		if err != nil {
-			log.Fatalf("failed to create K8s clientset: %v", err)
-		}
-	}
-
 	var monitor *k8smonitor.Monitor
-	var samplingManager *manager.Manager
+	var samplingManager *manager.Manager = nil
+	if config.EnableK8s {
+		if config.K8sLocal {
+			clientset, err = k8smonitor.CreateLocalK8sClientset()
+			if err != nil {
+				log.Fatalf("failed to create K8s clientset: %v", err)
+			}
+		} else {
+			clientset, err = k8smonitor.CreateK8sClientset()
+			if err != nil {
+				log.Fatalf("failed to create K8s clientset: %v", err)
+			}
+		}
 
-	samplingManager, err = manager.Create(clientset, &restmanager.Config{
-		RestServerPort:             config.HTTPTraceSamplingManagerPort,
-		GRPCServerPort:             config.GRPCTraceSamplingManagerPort,
-		HostToTraceSecretName:      config.HostToTraceSecretName,
-		HostToTraceSecretNamespace: config.HostToTraceSecretNamespace,
-		HostToTraceSecretOwnerName: config.HostToTraceSecretOwnerName,
-		EnableTLS:                  config.EnableTLS,
-		TLSServerCertFilePath:      config.TLSServerCertFilePath,
-		TLSServerKeyFilePath:       config.TLSServerKeyFilePath,
-		RootCertFilePath:           config.RootCertFilePath,
-		RestServerTLSPort:          config.HTTPSTraceSamplingManagerPort,
-	})
-	if err != nil {
-		log.Errorf("Failed to create a trace sampling manager: %v", err)
-		return
-	}
-	if err := samplingManager.Start(errChan); err != nil {
-		log.Errorf("Failed to start trace sampling manager: %v", err)
-		return
-	}
-
-	if !config.K8sLocal && !viper.GetBool(_config.NoMonitorEnvVar) {
-		monitor, err = k8smonitor.CreateMonitor(clientset)
+		samplingManager, err = manager.Create(clientset, &restmanager.Config{
+			RestServerPort:             config.HTTPTraceSamplingManagerPort,
+			GRPCServerPort:             config.GRPCTraceSamplingManagerPort,
+			HostToTraceSecretName:      config.HostToTraceSecretName,
+			HostToTraceSecretNamespace: config.HostToTraceSecretNamespace,
+			HostToTraceSecretOwnerName: config.HostToTraceSecretOwnerName,
+			EnableTLS:                  config.EnableTLS,
+			TLSServerCertFilePath:      config.TLSServerCertFilePath,
+			TLSServerKeyFilePath:       config.TLSServerKeyFilePath,
+			RootCertFilePath:           config.RootCertFilePath,
+			RestServerTLSPort:          config.HTTPSTraceSamplingManagerPort,
+		})
 		if err != nil {
-			log.Errorf("Failed to create a monitor: %v", err)
+			log.Errorf("Failed to create a trace sampling manager: %v", err)
 			return
 		}
-		monitor.Start()
-		defer monitor.Stop()
+		if err := samplingManager.Start(errChan); err != nil {
+			log.Errorf("Failed to start trace sampling manager: %v", err)
+			return
+		}
+
+		if !config.K8sLocal && !viper.GetBool(_config.NoMonitorEnvVar) {
+			monitor, err = k8smonitor.CreateMonitor(clientset)
+			if err != nil {
+				log.Errorf("Failed to create a monitor: %v", err)
+				return
+			}
+			monitor.Start()
+			defer monitor.Stop()
+		}
 	}
 
 	if viper.GetBool(_database.FakeTracesEnvVar) || viper.GetBool(_database.FakeDataEnvVar) {
@@ -200,7 +201,7 @@ func Run() {
 	}
 
 	features := append(modInfos, getCoreFeatures()...)
-	if !config.TraceSamplingEnabled {
+	if config.EnableK8s && !config.TraceSamplingEnabled {
 		for _, f := range features {
 			samplingManager.AddHostsToTrace(&interfacemanager.HostsByComponentID{
 				Hosts:       []string{"*"},

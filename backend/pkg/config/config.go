@@ -43,6 +43,7 @@ const (
 	StateBackupFileName           = "STATE_BACKUP_FILE_NAME"
 	NoMonitorEnvVar               = "NO_K8S_MONITOR"
 	K8sLocalEnvVar                = "K8S_LOCAL"
+	EnableK8s                     = "ENABLE_K8S"
 	EnableTLS                     = "ENABLE_TLS"
 	TLSServerCertFilePath         = "TLS_SERVER_CERT_FILE_PATH"
 	TLSServerKeyFilePath          = "TLS_SERVER_KEY_FILE_PATH"
@@ -75,6 +76,7 @@ type Config struct {
 	StateBackupFileName        string
 	SpeculatorConfig           _speculator.Config
 	K8sLocal                   bool
+	EnableK8s                  bool
 	EnableTLS                  bool
 	TLSServerCertFilePath      string
 	TLSServerKeyFilePath       string
@@ -125,6 +127,7 @@ func LoadConfig() (*Config, error) {
 	config.NotificationPrefix = viper.GetString(NotificationPrefix)
 
 	config.K8sLocal = viper.GetBool(K8sLocalEnvVar)
+	config.EnableK8s = viper.GetBool(EnableK8s)
 	config.EnableTLS = viper.GetBool(EnableTLS)
 	config.DatabaseDriver = viper.GetString(DatabaseDriver)
 	config.DBPassword = viper.GetString(DBPasswordEnvVar)
