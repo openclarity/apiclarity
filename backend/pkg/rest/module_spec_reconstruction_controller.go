@@ -33,7 +33,7 @@ func (s *Server) PostModulesSpecReconstructionAPIIDStart(params operations.PostM
 	apiID := params.APIID
 	apiInfo := &database.APIInfo{}
 	if err := s.dbHandler.APIInventoryTable().First(apiInfo, apiID); err != nil {
-		log.Error("failed to retrieve API info for apiID=%v: %v", apiID, err)
+		log.Errorf("failed to retrieve API info for apiID=%v: %v", apiID, err)
 		return operations.NewPostModulesSpecReconstructionAPIIDStartDefault(http.StatusInternalServerError)
 	}
 
@@ -56,7 +56,7 @@ func (s *Server) PostModulesSpecReconstructionAPIIDStop(params operations.PostMo
 	apiID := params.APIID
 	apiInfo := &database.APIInfo{}
 	if err := s.dbHandler.APIInventoryTable().First(apiInfo, apiID); err != nil {
-		log.Error("failed to retrieve API info for apiID=%v: %v", apiID, err)
+		log.Errorf("failed to retrieve API info for apiID=%v: %v", apiID, err)
 		return operations.NewPostModulesSpecReconstructionAPIIDStartDefault(http.StatusInternalServerError)
 	}
 
