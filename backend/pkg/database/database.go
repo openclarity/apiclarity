@@ -45,6 +45,7 @@ type Database interface {
 	APIEventsAnnotationsTable() APIEventAnnotationTable
 	APIInfoAnnotationsTable() APIAnnotationsTable
 	TraceSourcesTable() TraceSourcesTable
+	TraceSamplingTable() TraceSamplingTable
 }
 
 type Handler struct {
@@ -105,6 +106,12 @@ func (db *Handler) TraceSourcesTable() TraceSourcesTable {
 	}
 }
 
+func (db *Handler) TraceSamplingTable() TraceSamplingTable {
+	return &TraceSamplingTableHandler{
+		tx: db.DB.Table(traceSamplingTableName),
+	}
+}
+
 func cleanLocalDataBase(databasePath string) {
 	if _, err := os.Stat(databasePath); !os.IsNotExist(err) {
 		log.Debug("deleting db...")
@@ -137,7 +144,8 @@ func initDataBase(config *DBConfig) *gorm.DB {
 		&Review{},
 		&APIEventAnnotation{},
 		&APIInfoAnnotation{},
-		&TraceSource{}); err != nil {
+		&TraceSource{},
+		&TraceSampling{}); err != nil {
 		log.Fatalf("Failed to run auto migration: %v", err)
 	}
 
