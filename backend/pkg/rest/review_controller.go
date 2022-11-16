@@ -57,18 +57,11 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
 	}
 
-	// TODO: Update PostAPIInventoryReviewIDApprovedReview params to include api ID AND review ID
-	apiInfo, err := s.dbHandler.APIInventoryTable().GetAPIInfo(host, port)
-	if err != nil {
-		log.Errorf("Failed to get API ID: %v", err)
-		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
-	}
-
 	specVersion := getReviewSpecVersion(params.Body.OasVersion)
 
 	approvedReview := createApprovedReviewForSpeculator(params.Body, pathToPathItem)
 	// apply approved review to the speculator
-	if err := s.speculators.Get(apiInfo.TraceSourceID).ApplyApprovedReview(speculator.SpecKey(review.SpecKey), approvedReview, specVersion); err != nil {
+	if err := s.speculators.Get(review.APIInfo.TraceSourceID).ApplyApprovedReview(speculator.SpecKey(review.SpecKey), approvedReview, specVersion); err != nil {
 		errMsg := fmt.Sprintf("Failed to apply the approved review. %v", err)
 		log.Error(errMsg)
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
@@ -82,7 +75,7 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 	}
 
 	// generate reconstructed spec and save it to db
-	reviewSpec, ok := s.speculators.Get(apiInfo.TraceSourceID).Specs[speculator.SpecKey(review.SpecKey)]
+	reviewSpec, ok := s.speculators.Get(review.APIInfo.TraceSourceID).Specs[speculator.SpecKey(review.SpecKey)]
 	if !ok {
 		log.Errorf("Failed to find spec with specKey: %v", review.SpecKey)
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
@@ -99,7 +92,7 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
 	}
 
-	if err := s.dbHandler.APIInventoryTable().PutAPISpec(apiInfo.ID, string(oapSpec), specInfo, database.ReconstructedSpecType, strfmt.DateTime(time.Now())); err != nil {
+	if err := s.dbHandler.APIInventoryTable().PutAPISpec(review.APIInfoID, string(oapSpec), specInfo, database.ReconstructedSpecType, strfmt.DateTime(time.Now())); err != nil {
 		log.Errorf("Failed to save reconstructed API spec to db: %v", err)
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
 	}
@@ -190,6 +183,7 @@ func (s *Server) GetAPIInventoryAPIIDSuggestedReview(params operations.GetAPIInv
 		SpecKey:           string(specKey),
 		PathToPathItemStr: string(pathToPathItemB),
 		Approved:          false,
+		APIInfoID:         apiInfo.ID,
 	}
 	if err := s.dbHandler.ReviewTable().Create(review); err != nil {
 		log.Errorf("Failed to create review in database: %v. %v", review, err)
