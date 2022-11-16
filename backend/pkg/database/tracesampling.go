@@ -21,6 +21,7 @@ import (
 
 const (
 	traceSamplingTableName = "trace_sampling"
+	externalTraceSourceID  = 0
 )
 
 type TraceSampling struct {
@@ -32,17 +33,19 @@ type TraceSampling struct {
 }
 
 type TraceSamplingTable interface {
-	SetHostToTrace(apiID uint32, traceSourceID uint, component string) error
+	AddHostToTrace(apiID uint32, traceSourceID uint, component string) error
 	GetHostsToTrace(traceSourceID uint, component string) ([]*TraceSampling, error)
 	DeleteHostToTrace(apiID uint32, traceSourceID uint, component string) error
+	DeleteAll() error
 	ResetHostsToTrace(traceSourceID uint, component string) error
+	GetExternalTraceSourceID() (uint, error)
 }
 
 type TraceSamplingTableHandler struct {
 	tx *gorm.DB
 }
 
-func (h *TraceSamplingTableHandler) SetHostToTrace(apiID uint32, traceSourceID uint, component string) error {
+func (h *TraceSamplingTableHandler) AddHostToTrace(apiID uint32, traceSourceID uint, component string) error {
 	sampling := TraceSampling{
 		APIID:         uint(apiID),
 		TraceSourceID: traceSourceID,
@@ -70,8 +73,18 @@ func (h *TraceSamplingTableHandler) DeleteHostToTrace(apiID uint32, traceSourceI
 	}).Error
 }
 
+func (h *TraceSamplingTableHandler) DeleteAll() error {
+	return h.tx.Session(&gorm.Session{AllowGlobalUpdate: true}).
+		Delete(&TraceSampling{}).
+		Error
+}
+
 func (h *TraceSamplingTableHandler) ResetHostsToTrace(traceSourceID uint, component string) error {
 	return h.tx.Where("trace_source_id = ? AND component = ?", traceSourceID, component).
 		Delete(&TraceSampling{}).
 		Error
+}
+
+func (h *TraceSamplingTableHandler) GetExternalTraceSourceID() (uint, error) {
+	return externalTraceSourceID, nil
 }
