@@ -347,7 +347,7 @@ func init() {
         }
       }
     },
-    "/apiInventory/apiId/fromHostAndPort": {
+    "/apiInventory/apiId/fromHostAndPortAndTraceSourceID": {
       "get": {
         "summary": "Get apiId from host and port",
         "parameters": [
@@ -356,6 +356,14 @@ func init() {
           },
           {
             "$ref": "#/parameters/port"
+          },
+          {
+            "type": "integer",
+            "format": "uint32",
+            "description": "Trace Source ID",
+            "name": "traceSourceId",
+            "in": "query",
+            "required": true
           }
         ],
         "responses": {
@@ -2571,7 +2579,7 @@ func init() {
         }
       }
     },
-    "/apiInventory/apiId/fromHostAndPort": {
+    "/apiInventory/apiId/fromHostAndPortAndTraceSourceID": {
       "get": {
         "summary": "Get apiId from host and port",
         "parameters": [
@@ -2586,6 +2594,14 @@ func init() {
             "type": "string",
             "description": "api port",
             "name": "port",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "uint32",
+            "description": "Trace Source ID",
+            "name": "traceSourceId",
             "in": "query",
             "required": true
           }

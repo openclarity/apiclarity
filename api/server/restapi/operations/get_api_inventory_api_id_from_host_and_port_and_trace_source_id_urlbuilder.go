@@ -9,12 +9,15 @@ import (
 	"errors"
 	"net/url"
 	golangswaggerpaths "path"
+
+	"github.com/go-openapi/swag"
 )
 
-// GetAPIInventoryAPIIDFromHostAndPortURL generates an URL for the get API inventory API ID from host and port operation
-type GetAPIInventoryAPIIDFromHostAndPortURL struct {
-	Host string
-	Port string
+// GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDURL generates an URL for the get API inventory API ID from host and port and trace source ID operation
+type GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDURL struct {
+	Host          string
+	Port          string
+	TraceSourceID uint32
 
 	_basePath string
 	// avoid unkeyed usage
@@ -24,7 +27,7 @@ type GetAPIInventoryAPIIDFromHostAndPortURL struct {
 // WithBasePath sets the base path for this url builder, only required when it's different from the
 // base path specified in the swagger spec.
 // When the value of the base path is an empty string
-func (o *GetAPIInventoryAPIIDFromHostAndPortURL) WithBasePath(bp string) *GetAPIInventoryAPIIDFromHostAndPortURL {
+func (o *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDURL) WithBasePath(bp string) *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDURL {
 	o.SetBasePath(bp)
 	return o
 }
@@ -32,15 +35,15 @@ func (o *GetAPIInventoryAPIIDFromHostAndPortURL) WithBasePath(bp string) *GetAPI
 // SetBasePath sets the base path for this url builder, only required when it's different from the
 // base path specified in the swagger spec.
 // When the value of the base path is an empty string
-func (o *GetAPIInventoryAPIIDFromHostAndPortURL) SetBasePath(bp string) {
+func (o *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDURL) SetBasePath(bp string) {
 	o._basePath = bp
 }
 
 // Build a url path and query string
-func (o *GetAPIInventoryAPIIDFromHostAndPortURL) Build() (*url.URL, error) {
+func (o *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/apiInventory/apiId/fromHostAndPort"
+	var _path = "/apiInventory/apiId/fromHostAndPortAndTraceSourceID"
 
 	_basePath := o._basePath
 	if _basePath == "" {
@@ -60,13 +63,18 @@ func (o *GetAPIInventoryAPIIDFromHostAndPortURL) Build() (*url.URL, error) {
 		qs.Set("port", portQ)
 	}
 
+	traceSourceIDQ := swag.FormatUint32(o.TraceSourceID)
+	if traceSourceIDQ != "" {
+		qs.Set("traceSourceId", traceSourceIDQ)
+	}
+
 	_result.RawQuery = qs.Encode()
 
 	return &_result, nil
 }
 
 // Must is a helper function to panic when the url builder returns an error
-func (o *GetAPIInventoryAPIIDFromHostAndPortURL) Must(u *url.URL, err error) *url.URL {
+func (o *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDURL) Must(u *url.URL, err error) *url.URL {
 	if err != nil {
 		panic(err)
 	}
@@ -77,17 +85,17 @@ func (o *GetAPIInventoryAPIIDFromHostAndPortURL) Must(u *url.URL, err error) *ur
 }
 
 // String returns the string representation of the path with query string
-func (o *GetAPIInventoryAPIIDFromHostAndPortURL) String() string {
+func (o *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDURL) String() string {
 	return o.Must(o.Build()).String()
 }
 
 // BuildFull builds a full url with scheme, host, path and query string
-func (o *GetAPIInventoryAPIIDFromHostAndPortURL) BuildFull(scheme, host string) (*url.URL, error) {
+func (o *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDURL) BuildFull(scheme, host string) (*url.URL, error) {
 	if scheme == "" {
-		return nil, errors.New("scheme is required for a full url on GetAPIInventoryAPIIDFromHostAndPortURL")
+		return nil, errors.New("scheme is required for a full url on GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDURL")
 	}
 	if host == "" {
-		return nil, errors.New("host is required for a full url on GetAPIInventoryAPIIDFromHostAndPortURL")
+		return nil, errors.New("host is required for a full url on GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDURL")
 	}
 
 	base, err := o.Build()
@@ -101,6 +109,6 @@ func (o *GetAPIInventoryAPIIDFromHostAndPortURL) BuildFull(scheme, host string) 
 }
 
 // StringFull returns the string representation of a complete url
-func (o *GetAPIInventoryAPIIDFromHostAndPortURL) StringFull(scheme, host string) string {
+func (o *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDURL) StringFull(scheme, host string) string {
 	return o.Must(o.BuildFull(scheme, host)).String()
 }

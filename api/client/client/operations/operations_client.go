@@ -48,7 +48,7 @@ type ClientService interface {
 
 	GetAPIInventoryAPIIDAPIInfo(params *GetAPIInventoryAPIIDAPIInfoParams, opts ...ClientOption) (*GetAPIInventoryAPIIDAPIInfoOK, error)
 
-	GetAPIInventoryAPIIDFromHostAndPort(params *GetAPIInventoryAPIIDFromHostAndPortParams, opts ...ClientOption) (*GetAPIInventoryAPIIDFromHostAndPortOK, error)
+	GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID(params *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams, opts ...ClientOption) (*GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDOK, error)
 
 	GetAPIInventoryAPIIDProvidedSwaggerJSON(params *GetAPIInventoryAPIIDProvidedSwaggerJSONParams, opts ...ClientOption) (*GetAPIInventoryAPIIDProvidedSwaggerJSONOK, error)
 
@@ -425,22 +425,22 @@ func (a *Client) GetAPIInventoryAPIIDAPIInfo(params *GetAPIInventoryAPIIDAPIInfo
 }
 
 /*
-  GetAPIInventoryAPIIDFromHostAndPort gets api Id from host and port
+  GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID gets api Id from host and port
 */
-func (a *Client) GetAPIInventoryAPIIDFromHostAndPort(params *GetAPIInventoryAPIIDFromHostAndPortParams, opts ...ClientOption) (*GetAPIInventoryAPIIDFromHostAndPortOK, error) {
+func (a *Client) GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID(params *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams, opts ...ClientOption) (*GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewGetAPIInventoryAPIIDFromHostAndPortParams()
+		params = NewGetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "GetAPIInventoryAPIIDFromHostAndPort",
+		ID:                 "GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID",
 		Method:             "GET",
-		PathPattern:        "/apiInventory/apiId/fromHostAndPort",
+		PathPattern:        "/apiInventory/apiId/fromHostAndPortAndTraceSourceID",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
-		Reader:             &GetAPIInventoryAPIIDFromHostAndPortReader{formats: a.formats},
+		Reader:             &GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -452,12 +452,12 @@ func (a *Client) GetAPIInventoryAPIIDFromHostAndPort(params *GetAPIInventoryAPII
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*GetAPIInventoryAPIIDFromHostAndPortOK)
+	success, ok := result.(*GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*GetAPIInventoryAPIIDFromHostAndPortDefault)
+	unexpectedSuccess := result.(*GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

@@ -42,6 +42,7 @@ const (
 	providedSpecInfoColumnName           = "provided_spec_info"
 	providedSpecCreatedAtColumnName      = "provided_spec_created_at"
 	reconstructedSpecCreatedAtColumnName = "reconstructed_spec_created_at"
+	traceSourceIDColumnName              = "trace_source_id"
 )
 
 type APIInfo struct {
@@ -74,7 +75,7 @@ type APIInventoryTable interface {
 	PutAPISpec(apiID uint, spec string, specInfo *models.SpecInfo, specType specType, createdAt strfmt.DateTime) error
 	DeleteProvidedAPISpec(apiID uint32) error
 	DeleteApprovedAPISpec(apiID uint32) error
-	GetAPIID(name, port string) (uint, error)
+	GetAPIID(name, port string, traceSourceID uint32) (uint, error)
 	First(dest *APIInfo, conds ...interface{}) error
 	FirstOrCreate(apiInfo *APIInfo) (created bool, err error)
 	CreateAPIInfo(event *APIInfo)
@@ -163,9 +164,9 @@ func (a *APIInventoryTableHandler) setAPIInventoryFilters(params operations.GetA
 	return table
 }
 
-func (a *APIInventoryTableHandler) GetAPIID(name, port string) (uint, error) {
+func (a *APIInventoryTableHandler) GetAPIID(name, port string, traceSourceID uint32) (uint, error) {
 	apiInfo := APIInfo{}
-	if result := a.tx.Where(nameColumnName+" = ?", name).Where(portColumnName+" = ?", port).First(&apiInfo); result.Error != nil {
+	if result := a.tx.Where(nameColumnName+" = ? AND "+portColumnName+" = ? AND "+traceSourceIDColumnName+" = ?", name, port, traceSourceID).First(&apiInfo); result.Error != nil {
 		return 0, result.Error
 	}
 

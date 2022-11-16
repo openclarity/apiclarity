@@ -333,6 +333,13 @@ paths:
       parameters:
         - $ref: "#/components/parameters/host"
         - $ref: "#/components/parameters/port"
+        - name: 'traceSourceId'
+          description: 'Trace Source ID'
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: uint32
       responses:
         "200":
           description: Success

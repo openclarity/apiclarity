@@ -730,12 +730,18 @@ paths:
         default:
           $ref: '#/responses/UnknownError'
 
-  /apiInventory/apiId/fromHostAndPort:
+  /apiInventory/apiId/fromHostAndPortAndTraceSourceID:
     get:
       summary: 'Get apiId from host and port'
       parameters:
         - $ref: '#/parameters/host'
         - $ref: '#/parameters/port'
+        - name: 'traceSourceId'
+          description: 'Trace Source ID'
+          in: 'query'
+          type: 'integer'
+          format: 'uint32'
+          required: true
       responses:
         '200':
           description: 'Success'
