@@ -347,7 +347,7 @@ func init() {
         }
       }
     },
-    "/apiInventory/apiId/fromHostAndPortAndTraceSourceID": {
+    "/apiInventory/apiId/fromHostAndPort": {
       "get": {
         "summary": "Get apiId from host and port",
         "parameters": [
@@ -356,14 +356,41 @@ func init() {
           },
           {
             "$ref": "#/parameters/port"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "description": "api id",
+              "type": "integer",
+              "format": "uint32"
+            }
+          },
+          "404": {
+            "description": "API ID Not Found",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
+    "/apiInventory/apiId/fromHostAndPortAndTraceSourceID": {
+      "get": {
+        "summary": "Get apiId from host and port and Trace Source ID",
+        "parameters": [
+          {
+            "$ref": "#/parameters/host"
           },
           {
-            "type": "integer",
-            "format": "uint32",
-            "description": "Trace Source ID",
-            "name": "traceSourceId",
-            "in": "query",
-            "required": true
+            "$ref": "#/parameters/port"
+          },
+          {
+            "$ref": "#/parameters/traceSourceIdQuery"
           }
         ],
         "responses": {
@@ -1963,6 +1990,14 @@ func init() {
       "name": "traceSourceId",
       "in": "path",
       "required": true
+    },
+    "traceSourceIdQuery": {
+      "type": "integer",
+      "format": "uint32",
+      "description": "Trace Source ID",
+      "name": "traceSourceId",
+      "in": "query",
+      "required": true
     }
   },
   "responses": {
@@ -2579,9 +2614,52 @@ func init() {
         }
       }
     },
-    "/apiInventory/apiId/fromHostAndPortAndTraceSourceID": {
+    "/apiInventory/apiId/fromHostAndPort": {
       "get": {
         "summary": "Get apiId from host and port",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "api host name",
+            "name": "host",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "api port",
+            "name": "port",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "description": "api id",
+              "type": "integer",
+              "format": "uint32"
+            }
+          },
+          "404": {
+            "description": "API ID Not Found",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
+    "/apiInventory/apiId/fromHostAndPortAndTraceSourceID": {
+      "get": {
+        "summary": "Get apiId from host and port and Trace Source ID",
         "parameters": [
           {
             "type": "string",
@@ -4478,6 +4556,14 @@ func init() {
       "description": "Trace Source ID",
       "name": "traceSourceId",
       "in": "path",
+      "required": true
+    },
+    "traceSourceIdQuery": {
+      "type": "integer",
+      "format": "uint32",
+      "description": "Trace Source ID",
+      "name": "traceSourceId",
+      "in": "query",
       "required": true
     }
   },

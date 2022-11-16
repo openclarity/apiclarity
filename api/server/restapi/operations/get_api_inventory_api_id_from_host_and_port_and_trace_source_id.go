@@ -31,7 +31,7 @@ func NewGetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID(ctx *middleware.Cont
 
 /* GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID swagger:route GET /apiInventory/apiId/fromHostAndPortAndTraceSourceID getApiInventoryApiIdFromHostAndPortAndTraceSourceId
 
-Get apiId from host and port
+Get apiId from host and port and Trace Source ID
 
 */
 type GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID struct {

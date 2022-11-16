@@ -333,13 +333,30 @@ paths:
       parameters:
         - $ref: "#/components/parameters/host"
         - $ref: "#/components/parameters/port"
-        - name: 'traceSourceId'
-          description: 'Trace Source ID'
-          in: query
-          required: true
-          schema:
-            type: integer
-            format: uint32
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                description: api id
+                type: integer
+                format: uint32
+        "404":
+          description: API ID Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "../common/openapi.yaml#/components/schemas/ApiResponse"
+        default:
+          $ref: "#/components/responses/UnknownError"
+  "/apiInventory/apiId/fromHostAndPortAndTraceSourceID":
+    get:
+      summary: Get apiId from host and port and Trace Source ID
+      parameters:
+        - $ref: "#/components/parameters/host"
+        - $ref: "#/components/parameters/port"
+        - $ref: "#/components/parameters/traceSourceIdQuery"
       responses:
         "200":
           description: Success
@@ -973,6 +990,15 @@ components:
       required: true
       schema:
         type: integer
+        format: uint32
+    traceSourceIdQuery:
+      name: 'traceSourceId'
+      in: query
+      description: 'Trace Source ID'
+      required: true
+      schema:
+        type: integer
+        format: uint32
   responses:
     UnknownError:
       description: unknown error
