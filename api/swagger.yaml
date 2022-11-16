@@ -750,6 +750,27 @@ paths:
         default:
           $ref: '#/responses/UnknownError'
 
+  /apiInventory/apiId/fromHostAndPortAndTraceSourceID:
+    get:
+      summary: 'Get apiId from host and port and Trace Source ID'
+      parameters:
+        - $ref: '#/parameters/host'
+        - $ref: '#/parameters/port'
+        - $ref: '#/parameters/traceSourceIdQuery'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            description: 'api id'
+            type: 'integer'
+            format: 'uint32'
+        '404':
+          description: 'API ID Not Found'
+          schema:
+            $ref: '#/definitions/ApiResponse'
+        default:
+          $ref: '#/responses/UnknownError'
+
   /apiInventory/{apiId}/provided_swagger.json:
     get:
       summary: 'Get provided API spec json file'
@@ -1365,6 +1386,14 @@ parameters:
     in: path
     description: 'Trace Source ID'
     type: 'integer'
+    required: true
+
+  traceSourceIdQuery:
+    name: 'traceSourceId'
+    description: 'Trace Source ID'
+    in: 'query'
+    type: 'integer'
+    format: 'uint32'
     required: true
 
 responses:

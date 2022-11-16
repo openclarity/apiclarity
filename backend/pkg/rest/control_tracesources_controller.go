@@ -115,16 +115,15 @@ func (s *Server) DeleteControlTraceSourcesTraceSourceID(params operations.Delete
 // Check if Trace Source authentication is needed
 // If not, returns nil, meaning that there is no Trace Source
 // If yes, check that the token is valid and return the corresponding TraceSource ID.
-func (s *Server) CheckTraceSourceAuth(token []byte) (*uint, error) {
+func (s *Server) CheckTraceSourceAuth(token []byte) (uint, error) {
 	if !s.needsTraceSourceAuth {
-		return nil, nil
+		return 0, nil
 	}
 
 	traceSource, err := s.dbHandler.TraceSourcesTable().GetTraceSourceFromToken(token)
 	if err != nil {
-		return nil, fmt.Errorf("unable to authenticate Trace Source: %v", err)
+		return 0, fmt.Errorf("unable to authenticate Trace Source: %v", err)
 	}
-	traceSourceID := traceSource.ID
 
-	return &traceSourceID, nil
+	return traceSource.ID, nil
 }

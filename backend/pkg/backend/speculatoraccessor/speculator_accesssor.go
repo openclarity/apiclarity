@@ -16,43 +16,44 @@
 package speculatoraccessor
 
 import (
+	speculators_repo "github.com/openclarity/apiclarity/backend/pkg/speculators"
 	_spec "github.com/openclarity/speculator/pkg/spec"
 	_speculator "github.com/openclarity/speculator/pkg/speculator"
 )
 
-type SpeculatorAccessor interface {
-	DiffTelemetry(telemetry *_spec.Telemetry, diffSource _spec.SpecSource) (*_spec.APIDiff, error)
-	HasApprovedSpec(specKey _speculator.SpecKey) bool
-	HasProvidedSpec(specKey _speculator.SpecKey) bool
-	GetProvidedSpecVersion(specKey _speculator.SpecKey) _spec.OASVersion
-	GetApprovedSpecVersion(specKey _speculator.SpecKey) _spec.OASVersion
+type SpeculatorsAccessor interface {
+	DiffTelemetry(speculatorID uint, telemetry *_spec.Telemetry, diffSource _spec.SpecSource) (*_spec.APIDiff, error)
+	HasApprovedSpec(speculatorID uint, specKey _speculator.SpecKey) bool
+	HasProvidedSpec(speculatorID uint, specKey _speculator.SpecKey) bool
+	GetProvidedSpecVersion(speculatorID uint, specKey _speculator.SpecKey) _spec.OASVersion
+	GetApprovedSpecVersion(speculatorID uint, specKey _speculator.SpecKey) _spec.OASVersion
 }
 
-func NewSpeculatorAccessor(speculator *_speculator.Speculator) SpeculatorAccessor {
-	return &Impl{speculator: speculator}
+func NewSpeculatorAccessor(speculators *speculators_repo.Repository) SpeculatorsAccessor {
+	return &Impl{speculators: speculators}
 }
 
 type Impl struct {
-	speculator *_speculator.Speculator
+	speculators *speculators_repo.Repository
 }
 
-func (s *Impl) DiffTelemetry(telemetry *_spec.Telemetry, diffSource _spec.SpecSource) (*_spec.APIDiff, error) {
+func (s *Impl) DiffTelemetry(speculatorID uint, telemetry *_spec.Telemetry, diffSource _spec.SpecSource) (*_spec.APIDiff, error) {
 	//nolint: wrapcheck
-	return s.speculator.DiffTelemetry(telemetry, diffSource)
+	return s.speculators.Get(speculatorID).DiffTelemetry(telemetry, diffSource)
 }
 
-func (s *Impl) HasApprovedSpec(specKey _speculator.SpecKey) bool {
-	return s.speculator.HasApprovedSpec(specKey)
+func (s *Impl) HasApprovedSpec(speculatorID uint, specKey _speculator.SpecKey) bool {
+	return s.speculators.Get(speculatorID).HasApprovedSpec(specKey)
 }
 
-func (s *Impl) HasProvidedSpec(specKey _speculator.SpecKey) bool {
-	return s.speculator.HasProvidedSpec(specKey)
+func (s *Impl) HasProvidedSpec(speculatorID uint, specKey _speculator.SpecKey) bool {
+	return s.speculators.Get(speculatorID).HasProvidedSpec(specKey)
 }
 
-func (s *Impl) GetProvidedSpecVersion(specKey _speculator.SpecKey) _spec.OASVersion {
-	return s.speculator.GetProvidedSpecVersion(specKey)
+func (s *Impl) GetProvidedSpecVersion(speculatorID uint, specKey _speculator.SpecKey) _spec.OASVersion {
+	return s.speculators.Get(speculatorID).GetProvidedSpecVersion(specKey)
 }
 
-func (s *Impl) GetApprovedSpecVersion(specKey _speculator.SpecKey) _spec.OASVersion {
-	return s.speculator.GetApprovedSpecVersion(specKey)
+func (s *Impl) GetApprovedSpecVersion(speculatorID uint, specKey _speculator.SpecKey) _spec.OASVersion {
+	return s.speculators.Get(speculatorID).GetApprovedSpecVersion(specKey)
 }

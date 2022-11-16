@@ -51,11 +51,17 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
 	}
 
+	host, port, err := speculator.GetHostAndPortFromSpecKey(speculator.SpecKey(review.SpecKey))
+	if err != nil {
+		log.Errorf("Failed to parse spec key %v. %v", review.SpecKey, err)
+		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
+	}
+
 	specVersion := getReviewSpecVersion(params.Body.OasVersion)
 
 	approvedReview := createApprovedReviewForSpeculator(params.Body, pathToPathItem)
 	// apply approved review to the speculator
-	if err := s.speculator.ApplyApprovedReview(speculator.SpecKey(review.SpecKey), approvedReview, specVersion); err != nil {
+	if err := s.speculators.Get(review.APIInfo.TraceSourceID).ApplyApprovedReview(speculator.SpecKey(review.SpecKey), approvedReview, specVersion); err != nil {
 		errMsg := fmt.Sprintf("Failed to apply the approved review. %v", err)
 		log.Error(errMsg)
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
@@ -69,7 +75,7 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 	}
 
 	// generate reconstructed spec and save it to db
-	reviewSpec, ok := s.speculator.Specs[speculator.SpecKey(review.SpecKey)]
+	reviewSpec, ok := s.speculators.Get(review.APIInfo.TraceSourceID).Specs[speculator.SpecKey(review.SpecKey)]
 	if !ok {
 		log.Errorf("Failed to find spec with specKey: %v", review.SpecKey)
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
@@ -80,26 +86,13 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
 	}
 
-	host, port, err := speculator.GetHostAndPortFromSpecKey(speculator.SpecKey(review.SpecKey))
-	if err != nil {
-		log.Errorf("Failed to parse spec key %v. %v", review.SpecKey, err)
-		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
-	}
-
-	// TODO: Update PostAPIInventoryReviewIDApprovedReview params to include api ID AND review ID
-	apiID, err := s.dbHandler.APIInventoryTable().GetAPIID(host, port)
-	if err != nil {
-		log.Errorf("Failed to get API ID: %v", err)
-		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
-	}
-
 	specInfo, err := createSpecInfo(string(oapSpec), getPathToPathIDMap(approvedReview))
 	if err != nil {
 		log.Errorf("Failed to create spec info: %v", err)
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
 	}
 
-	if err := s.dbHandler.APIInventoryTable().PutAPISpec(apiID, string(oapSpec), specInfo, database.ReconstructedSpecType, strfmt.DateTime(time.Now())); err != nil {
+	if err := s.dbHandler.APIInventoryTable().PutAPISpec(review.APIInfoID, string(oapSpec), specInfo, database.ReconstructedSpecType, strfmt.DateTime(time.Now())); err != nil {
 		log.Errorf("Failed to save reconstructed API spec to db: %v", err)
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
 	}
@@ -168,13 +161,13 @@ func (s *Server) GetAPIInventoryAPIIDSuggestedReview(params operations.GetAPIInv
 	// get api data from db
 	apiInfo := database.APIInfo{}
 	if err := s.dbHandler.APIInventoryTable().First(&apiInfo, params.APIID); err != nil {
-		log.Errorf("Failed to find api with  id %v in db. %v", params.APIID, err)
+		log.Errorf("Failed to find api with id %v in db. %v", params.APIID, err)
 		return operations.NewGetAPIInventoryAPIIDSuggestedReviewDefault(http.StatusInternalServerError)
 	}
 
 	// get suggested review from the engine using the spec key (host + port)
 	specKey := speculator.GetSpecKey(apiInfo.Name, strconv.Itoa(int(apiInfo.Port)))
-	suggestedSpecReview, err := s.speculator.SuggestedReview(specKey)
+	suggestedSpecReview, err := s.speculators.Get(apiInfo.TraceSourceID).SuggestedReview(specKey)
 	if err != nil {
 		log.Errorf("Failed to create suggested review with spec key: %v. %v", specKey, err)
 		return operations.NewGetAPIInventoryAPIIDSuggestedReviewDefault(http.StatusInternalServerError)
@@ -190,6 +183,7 @@ func (s *Server) GetAPIInventoryAPIIDSuggestedReview(params operations.GetAPIInv
 		SpecKey:           string(specKey),
 		PathToPathItemStr: string(pathToPathItemB),
 		Approved:          false,
+		APIInfoID:         apiInfo.ID,
 	}
 	if err := s.dbHandler.ReviewTable().Create(review); err != nil {
 		log.Errorf("Failed to create review in database: %v. %v", review, err)
