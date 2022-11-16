@@ -35,6 +35,7 @@ import (
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
+	"github.com/openclarity/apiclarity/backend/pkg/common"
 	_config "github.com/openclarity/apiclarity/backend/pkg/config"
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/healthz"
@@ -290,9 +291,8 @@ func Run() {
 
 func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Telemetry, traceSource *models.TraceSource) error {
 	var err error
-	const defaultTraceSourceID = 0
 
-	var traceSourceID uint = defaultTraceSourceID
+	var traceSourceID uint = common.DefaultTraceSourceID
 	if traceSource != nil {
 		traceSourceID = uint(traceSource.ID)
 	}

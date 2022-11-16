@@ -24,6 +24,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"gotest.tools/assert"
 
+	"github.com/openclarity/apiclarity/backend/pkg/common"
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/k8smonitor"
 	"github.com/openclarity/apiclarity/backend/pkg/modules"
@@ -201,12 +202,12 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 	op.Responses["202"] = &spec.ResponseRef{Value: spec.NewResponse().WithDescription("response")}
 
 	speculatorsWithProvidedSpec := speculators.NewMapRepository(_speculator.Config{})
-	speculatorsWithProvidedSpec.Get(0).Specs[testSpecKey] = _spec.CreateDefaultSpec(host, port, _spec.OperationGeneratorConfig{})
-	err := speculatorsWithProvidedSpec.Get(0).LoadProvidedSpec(testSpecKey, []byte(providedSpecV3), map[string]string{})
+	speculatorsWithProvidedSpec.Get(common.DefaultTraceSourceID).Specs[testSpecKey] = _spec.CreateDefaultSpec(host, port, _spec.OperationGeneratorConfig{})
+	err := speculatorsWithProvidedSpec.Get(common.DefaultTraceSourceID).LoadProvidedSpec(testSpecKey, []byte(providedSpecV3), map[string]string{})
 	assert.NilError(t, err)
 
 	speculatorsWithApprovedSpec := speculators.NewMapRepository(_speculator.Config{})
-	speculatorsWithApprovedSpec.Get(0).Specs[testSpecKey] = _spec.CreateDefaultSpec(host, port, _spec.OperationGeneratorConfig{})
+	speculatorsWithApprovedSpec.Get(common.DefaultTraceSourceID).Specs[testSpecKey] = _spec.CreateDefaultSpec(host, port, _spec.OperationGeneratorConfig{})
 	ApprovedSpecReview := &_spec.ApprovedSpecReview{
 		PathToPathItem: map[string]*spec.PathItem{
 			"/api/1/foo": &_spec.NewTestPathItem().WithOperation(http.MethodPost, op).PathItem,
@@ -221,7 +222,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 			},
 		},
 	}
-	err = speculatorsWithApprovedSpec.Get(0).ApplyApprovedReview(testSpecKey, ApprovedSpecReview, _spec.OASv2)
+	err = speculatorsWithApprovedSpec.Get(common.DefaultTraceSourceID).ApplyApprovedReview(testSpecKey, ApprovedSpecReview, _spec.OASv2)
 	assert.NilError(t, err)
 
 	type fields struct {
