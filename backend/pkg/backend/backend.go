@@ -35,6 +35,7 @@ import (
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
+	"github.com/openclarity/apiclarity/backend/pkg/common"
 	_config "github.com/openclarity/apiclarity/backend/pkg/config"
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/healthz"
@@ -42,6 +43,7 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules"
 	_notifier "github.com/openclarity/apiclarity/backend/pkg/notifier"
 	"github.com/openclarity/apiclarity/backend/pkg/rest"
+	speculators_repo "github.com/openclarity/apiclarity/backend/pkg/speculators"
 	"github.com/openclarity/apiclarity/backend/pkg/traces"
 	speculatorutils "github.com/openclarity/apiclarity/backend/pkg/utils/speculator"
 	tls "github.com/openclarity/apiclarity/backend/pkg/utils/tls"
@@ -55,7 +57,7 @@ import (
 )
 
 type Backend struct {
-	speculator          *_speculator.Speculator
+	speculators         *speculators_repo.Repository
 	stateBackupInterval time.Duration
 	stateBackupFileName string
 	monitor             *k8smonitor.Monitor
@@ -65,9 +67,9 @@ type Backend struct {
 	notifier            *_notifier.Notifier
 }
 
-func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, dbHandler *_database.Handler, modulesManager modules.ModulesManager, notifier *_notifier.Notifier) *Backend {
+func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculators *speculators_repo.Repository, dbHandler *_database.Handler, modulesManager modules.ModulesManager, notifier *_notifier.Notifier) *Backend {
 	return &Backend{
-		speculator:          speculator,
+		speculators:         speculators,
 		stateBackupInterval: time.Second * time.Duration(config.StateBackupIntervalSec),
 		stateBackupFileName: config.StateBackupFileName,
 		monitor:             monitor,
@@ -174,10 +176,10 @@ func Run() {
 		go dbHandler.CreateFakeData()
 	}
 
-	speculator, err := _speculator.DecodeState(config.StateBackupFileName, config.SpeculatorConfig)
+	speculators, err := speculators_repo.DecodeState(config.StateBackupFileName, config.SpeculatorConfig)
 	if err != nil {
-		log.Infof("No speculator state to decode, creating new: %v", err)
-		speculator = _speculator.CreateSpeculator(config.SpeculatorConfig)
+		log.Infof("No speculators state to decode, creating new: %v", err)
+		speculators = speculators_repo.NewMapRepository(config.SpeculatorConfig)
 	} else {
 		log.Infof("Using encoded speculator state")
 	}
@@ -194,7 +196,7 @@ func Run() {
 		notifier.Start(context.Background())
 	}
 
-	modulesWrapper, modInfos, err := modules.New(globalCtx, dbHandler, clientset, samplingManager, speculatoraccessor.NewSpeculatorAccessor(speculator), notifier, config)
+	modulesWrapper, modInfos, err := modules.New(globalCtx, dbHandler, clientset, samplingManager, speculatoraccessor.NewSpeculatorAccessor(speculators), notifier, config)
 	if err != nil {
 		log.Errorf("Failed to create module wrapper and info: %v", err)
 		return
@@ -210,7 +212,7 @@ func Run() {
 		}
 	}
 
-	backend := CreateBackend(config, monitor, speculator, dbHandler, modulesWrapper, notifier)
+	backend := CreateBackend(config, monitor, speculators, dbHandler, modulesWrapper, notifier)
 
 	serverConfig := &rest.ServerConfig{
 		EnableTLS:             config.EnableTLS,
@@ -218,7 +220,7 @@ func Run() {
 		TLSPort:               config.BackendRestTLSPort,
 		TLSServerCertFilePath: config.TLSServerCertFilePath,
 		TLSServerKeyFilePath:  config.TLSServerKeyFilePath,
-		Speculator:            speculator,
+		Speculators:           speculators,
 		DBHandler:             dbHandler,
 		ModulesManager:        modulesWrapper,
 		SamplingManager:       samplingManager,
@@ -291,6 +293,11 @@ func Run() {
 func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Telemetry, traceSource *models.TraceSource) error {
 	var err error
 
+	traceSourceID := common.DefaultTraceSourceID
+	if traceSource != nil {
+		traceSourceID = uint(traceSource.ID)
+	}
+
 	log.Debugf("Handling telemetry: %+v", trace)
 
 	// TODO: Selective tracing for spec diffs and spec reconstruction
@@ -332,6 +339,8 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 		Port: int64(destPort),
 
 		DestinationNamespace: trace.DestinationNamespace,
+
+		TraceSourceID: traceSourceID,
 	}
 
 	// Set API Info type
@@ -359,8 +368,8 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 		}
 
 		// Handle trace telemetry by Speculator
-		if !b.speculator.HasApprovedSpec(specKey) {
-			err := b.speculator.LearnTelemetry(telemetry)
+		if !b.speculators.Get(traceSourceID).HasApprovedSpec(specKey) {
+			err := b.speculators.Get(traceSourceID).LearnTelemetry(telemetry)
 			if err != nil {
 				return fmt.Errorf("failed to learn telemetry: %v", err)
 			}
@@ -371,14 +380,14 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 
 	var providedPathID string
 	var reconstructedPathID string
-	if b.speculator.HasProvidedSpec(specKey) {
-		providedPathID, err = b.speculator.GetPathID(specKey, path, _spec.SpecSourceProvided)
+	if b.speculators.Get(traceSourceID).HasProvidedSpec(specKey) {
+		providedPathID, err = b.speculators.Get(traceSourceID).GetPathID(specKey, path, _spec.SpecSourceProvided)
 		if err != nil {
 			return fmt.Errorf("failed to get path id of provided spec: %v", err)
 		}
 	}
-	if b.speculator.HasApprovedSpec(specKey) {
-		reconstructedPathID, err = b.speculator.GetPathID(specKey, path, _spec.SpecSourceReconstructed)
+	if b.speculators.Get(traceSourceID).HasApprovedSpec(specKey) {
+		reconstructedPathID, err = b.speculators.Get(traceSourceID).GetPathID(specKey, path, _spec.SpecSourceReconstructed)
 		if err != nil {
 			return fmt.Errorf("failed to get path id of reconstructed spec: %v", err)
 		}
@@ -410,7 +419,7 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 
 	b.dbHandler.APIEventsTable().CreateAPIEvent(event)
 
-	b.modulesManager.EventNotify(ctx, &modules.Event{APIEvent: event, Telemetry: trace})
+	b.modulesManager.EventNotify(ctx, &modules.Event{APIEvent: event, APIInfo: &apiInfo, Telemetry: trace})
 
 	return nil
 }
@@ -490,7 +499,7 @@ func (b *Backend) startStateBackup(ctx context.Context) {
 				log.Debugf("Stopping state backup")
 				return
 			case <-time.After(stateBackupInterval):
-				if err := b.speculator.EncodeState(b.stateBackupFileName); err != nil {
+				if err := b.speculators.EncodeState(b.stateBackupFileName); err != nil {
 					log.Errorf("Failed to encode state: %v", err)
 				}
 			}

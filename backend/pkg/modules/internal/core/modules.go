@@ -45,6 +45,7 @@ type ModuleInfo struct {
 
 type Event struct {
 	APIEvent  *database.APIEvent
+	APIInfo   *database.APIInfo
 	Telemetry *pluginsmodels.Telemetry
 }
 
@@ -61,7 +62,7 @@ type Module interface {
 
 type BackendAccessor interface {
 	K8SClient() kubernetes.Interface
-	GetSpeculatorAccessor() speculatoraccessor.SpeculatorAccessor
+	GetSpeculatorAccessor() speculatoraccessor.SpeculatorsAccessor
 
 	GetAPIInfo(ctx context.Context, apiID uint) (*database.APIInfo, error)
 	GetAPIEvents(ctx context.Context, filter database.GetAPIEventsQuery) ([]*database.APIEvent, error)
@@ -83,7 +84,7 @@ type BackendAccessor interface {
 	Notify(ctx context.Context, modName string, apiID uint, notification notifications.APIClarityNotification) error
 }
 
-func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager, speculatorAccessor speculatoraccessor.SpeculatorAccessor, notifier *notifier.Notifier, conf *config.Config) (BackendAccessor, error) {
+func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager, speculatorAccessor speculatoraccessor.SpeculatorsAccessor, notifier *notifier.Notifier, conf *config.Config) (BackendAccessor, error) {
 	return &accessor{
 		dbHandler:            dbHandler,
 		clientset:            clientset,
@@ -107,7 +108,7 @@ func (b *accessor) K8SClient() kubernetes.Interface {
 	return b.clientset
 }
 
-func (b *accessor) GetSpeculatorAccessor() speculatoraccessor.SpeculatorAccessor {
+func (b *accessor) GetSpeculatorAccessor() speculatoraccessor.SpeculatorsAccessor {
 	return b.speculatorAccessor
 }
 

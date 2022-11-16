@@ -30,14 +30,14 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules"
 	_notifier "github.com/openclarity/apiclarity/backend/pkg/notifier"
-	_speculator "github.com/openclarity/speculator/pkg/speculator"
+	"github.com/openclarity/apiclarity/backend/pkg/speculators"
 	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
 )
 
 type Server struct {
 	server               *restapi.Server
 	dbHandler            database.Database
-	speculator           *_speculator.Speculator
+	speculators          *speculators.Repository
 	modulesManager       modules.ModulesManager
 	samplingManager      *manager.Manager
 	features             []modules.ModuleInfo
@@ -51,7 +51,7 @@ type ServerConfig struct {
 	TLSPort               int
 	TLSServerCertFilePath string
 	TLSServerKeyFilePath  string
-	Speculator            *_speculator.Speculator
+	Speculators           *speculators.Repository
 	DBHandler             *database.Handler
 	ModulesManager        modules.ModulesManager
 	SamplingManager       *manager.Manager
@@ -62,7 +62,7 @@ type ServerConfig struct {
 
 func CreateRESTServer(config *ServerConfig) (*Server, error) {
 	s := &Server{
-		speculator:           config.Speculator,
+		speculators:          config.Speculators,
 		dbHandler:            config.DBHandler,
 		modulesManager:       config.ModulesManager,
 		samplingManager:      config.SamplingManager,
@@ -146,8 +146,8 @@ func CreateRESTServer(config *ServerConfig) (*Server, error) {
 		return s.GetAPIInventoryAPIIDAPIInfo(params)
 	})
 
-	api.GetAPIInventoryAPIIDFromHostAndPortHandler = operations.GetAPIInventoryAPIIDFromHostAndPortHandlerFunc(func(params operations.GetAPIInventoryAPIIDFromHostAndPortParams) middleware.Responder {
-		return s.GetAPIInventoryAPIIDFromHostAndPort(params)
+	api.GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDHandler = operations.GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDHandlerFunc(func(params operations.GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams) middleware.Responder {
+		return s.GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID(params)
 	})
 
 	api.PostAPIInventoryReviewIDApprovedReviewHandler = operations.PostAPIInventoryReviewIDApprovedReviewHandlerFunc(func(params operations.PostAPIInventoryReviewIDApprovedReviewParams) middleware.Responder {

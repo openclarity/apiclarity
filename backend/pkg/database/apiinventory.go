@@ -42,6 +42,7 @@ const (
 	providedSpecInfoColumnName           = "provided_spec_info"
 	providedSpecCreatedAtColumnName      = "provided_spec_created_at"
 	reconstructedSpecCreatedAtColumnName = "reconstructed_spec_created_at"
+	traceSourceIDColumnName              = "trace_source_id"
 )
 
 type APIInfo struct {
@@ -51,7 +52,7 @@ type APIInfo struct {
 	Type                       models.APIType  `json:"type,omitempty" gorm:"column:type;uniqueIndex:api_info_idx_model" faker:"oneof: INTERNAL, EXTERNAL"`
 	Name                       string          `json:"name,omitempty" gorm:"column:name;uniqueIndex:api_info_idx_model" faker:"oneof: test.com, example.com, kaki.org"`
 	Port                       int64           `json:"port,omitempty" gorm:"column:port;uniqueIndex:api_info_idx_model" faker:"oneof: 80, 443"`
-	TraceSourceID              *uint           `json:"traceSourceID,omitempty" gorm:"column:trace_source_id;default:NULL;uniqueIndex:api_info_idx_model" faker:"-"` // This is the name of the Trace Source which notified of this API. Empty means it was auto discovered by APIClarity on first.
+	TraceSourceID              uint            `json:"traceSourceID,omitempty" gorm:"column:trace_source_id;default:0;uniqueIndex:api_info_idx_model" faker:"-"` // This is the name of the Trace Source which notified of this API. Empty means it was auto discovered by APIClarity on first.
 	HasProvidedSpec            bool            `json:"hasProvidedSpec,omitempty" gorm:"column:has_provided_spec"`
 	HasReconstructedSpec       bool            `json:"hasReconstructedSpec,omitempty" gorm:"column:has_reconstructed_spec"`
 	ReconstructedSpec          string          `json:"reconstructedSpec,omitempty" gorm:"column:reconstructed_spec" faker:"-"`
@@ -74,7 +75,7 @@ type APIInventoryTable interface {
 	PutAPISpec(apiID uint, spec string, specInfo *models.SpecInfo, specType specType, createdAt strfmt.DateTime) error
 	DeleteProvidedAPISpec(apiID uint32) error
 	DeleteApprovedAPISpec(apiID uint32) error
-	GetAPIID(name, port string) (uint, error)
+	GetAPIID(name, port string, traceSourceID uint32) (uint, error)
 	First(dest *APIInfo, conds ...interface{}) error
 	FirstOrCreate(apiInfo *APIInfo) (created bool, err error)
 	CreateAPIInfo(event *APIInfo)
@@ -163,9 +164,14 @@ func (a *APIInventoryTableHandler) setAPIInventoryFilters(params operations.GetA
 	return table
 }
 
-func (a *APIInventoryTableHandler) GetAPIID(name, port string) (uint, error) {
+func (a *APIInventoryTableHandler) GetAPIID(name, port string, traceSourceID uint32) (uint, error) {
 	apiInfo := APIInfo{}
-	if result := a.tx.Where(nameColumnName+" = ?", name).Where(portColumnName+" = ?", port).First(&apiInfo); result.Error != nil {
+	cond := map[string]interface{}{
+		nameColumnName:          name,
+		portColumnName:          port,
+		traceSourceIDColumnName: traceSourceID,
+	}
+	if result := a.tx.Where(cond).First(&apiInfo); result.Error != nil {
 		return 0, result.Error
 	}
 
