@@ -166,7 +166,12 @@ func (a *APIInventoryTableHandler) setAPIInventoryFilters(params operations.GetA
 
 func (a *APIInventoryTableHandler) GetAPIID(name, port string, traceSourceID uint32) (uint, error) {
 	apiInfo := APIInfo{}
-	if result := a.tx.Where(nameColumnName+" = ? AND "+portColumnName+" = ? AND "+traceSourceIDColumnName+" = ?", name, port, traceSourceID).First(&apiInfo); result.Error != nil {
+	cond := map[string]interface{}{
+		nameColumnName:          name,
+		portColumnName:          port,
+		traceSourceIDColumnName: traceSourceID,
+	}
+	if result := a.tx.Where(cond).First(&apiInfo); result.Error != nil {
 		return 0, result.Error
 	}
 

@@ -292,7 +292,7 @@ func Run() {
 func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Telemetry, traceSource *models.TraceSource) error {
 	var err error
 
-	var traceSourceID uint = common.DefaultTraceSourceID
+	traceSourceID := common.DefaultTraceSourceID
 	if traceSource != nil {
 		traceSourceID = uint(traceSource.ID)
 	}

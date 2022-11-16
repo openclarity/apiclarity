@@ -16,5 +16,5 @@
 package common
 
 const (
-	DefaultTraceSourceID = 0
+	DefaultTraceSourceID uint = 0
 )
