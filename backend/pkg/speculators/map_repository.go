@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package speculator
+package speculators
 
 import (
 	"encoding/gob"
@@ -26,34 +26,30 @@ import (
 	_speculator "github.com/openclarity/speculator/pkg/speculator"
 )
 
-type SpeculatorRepository struct {
+type Repository struct {
 	Speculators      map[uint]*_speculator.Speculator
 	speculatorConfig _speculator.Config
 
 	lock *sync.RWMutex
 }
 
-func NewSpeculatorRepository(config _speculator.Config) *SpeculatorRepository {
-	return &SpeculatorRepository{
+func NewMapRepository(config _speculator.Config) *Repository {
+	return &Repository{
 		Speculators:      map[uint]*_speculator.Speculator{},
 		speculatorConfig: config,
 		lock:             &sync.RWMutex{},
 	}
 }
 
-func DecodeState(filePath string, config _speculator.Config) (*SpeculatorRepository, error) {
-	r := SpeculatorRepository{}
+func DecodeState(filePath string, config _speculator.Config) (*Repository, error) {
+	r := Repository{}
 
 	const perm = 400
-	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, os.FileMode(perm))
+	file, err := os.OpenFile(filePath, os.O_RDONLY, os.FileMode(perm))
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file (%v): %v", filePath, err)
 	}
-	defer func() {
-		if err := file.Close(); err != nil {
-			log.Errorf("Failed to close file: %v", err)
-		}
-	}()
+	defer closeFile(file)
 
 	decoder := gob.NewDecoder(file)
 	err = decoder.Decode(&r)
@@ -67,10 +63,9 @@ func DecodeState(filePath string, config _speculator.Config) (*SpeculatorReposit
 	// log.Debugf("Speculator Config %+v", config)
 
 	return &r, nil
-
 }
 
-func (r *SpeculatorRepository) Get(speculatorID uint) *_speculator.Speculator {
+func (r *Repository) Get(speculatorID uint) *_speculator.Speculator {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
 
@@ -84,20 +79,25 @@ func (r *SpeculatorRepository) Get(speculatorID uint) *_speculator.Speculator {
 	return speculator
 }
 
-func (r *SpeculatorRepository) EncodeState(filePath string) error {
+func (r *Repository) EncodeState(filePath string) error {
 	const perm = 400
 	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, os.FileMode(perm))
 	if err != nil {
 		return fmt.Errorf("failed to open state file: %v", err)
 	}
+	defer closeFile(file)
+
 	encoder := gob.NewEncoder(file)
 	err = encoder.Encode(r)
 	if err != nil {
 		return fmt.Errorf("failed to encode state: %v", err)
 	}
+
+	return nil
+}
+
+func closeFile(file *os.File) {
 	if err := file.Close(); err != nil {
 		log.Errorf("Failed to close file: %v", err)
 	}
-
-	return nil
 }

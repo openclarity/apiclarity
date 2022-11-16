@@ -16,7 +16,7 @@
 package speculatoraccessor
 
 import (
-	speculator_repo "github.com/openclarity/apiclarity/backend/pkg/speculator"
+	speculators_repo "github.com/openclarity/apiclarity/backend/pkg/speculators"
 	_spec "github.com/openclarity/speculator/pkg/spec"
 	_speculator "github.com/openclarity/speculator/pkg/speculator"
 )
@@ -29,12 +29,12 @@ type SpeculatorsAccessor interface {
 	GetApprovedSpecVersion(speculatorID uint, specKey _speculator.SpecKey) _spec.OASVersion
 }
 
-func NewSpeculatorAccessor(speculators *speculator_repo.SpeculatorRepository) SpeculatorsAccessor {
+func NewSpeculatorAccessor(speculators *speculators_repo.Repository) SpeculatorsAccessor {
 	return &Impl{speculators: speculators}
 }
 
 type Impl struct {
-	speculators *speculator_repo.SpeculatorRepository
+	speculators *speculators_repo.Repository
 }
 
 func (s *Impl) DiffTelemetry(speculatorID uint, telemetry *_spec.Telemetry, diffSource _spec.SpecSource) (*_spec.APIDiff, error) {

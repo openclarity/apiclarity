@@ -30,14 +30,14 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules"
 	_notifier "github.com/openclarity/apiclarity/backend/pkg/notifier"
-	speculator_repo "github.com/openclarity/apiclarity/backend/pkg/speculator"
+	"github.com/openclarity/apiclarity/backend/pkg/speculators"
 	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
 )
 
 type Server struct {
 	server               *restapi.Server
 	dbHandler            database.Database
-	speculators          *speculator_repo.SpeculatorRepository
+	speculators          *speculators.Repository
 	modulesManager       modules.ModulesManager
 	samplingManager      *manager.Manager
 	features             []modules.ModuleInfo
@@ -51,7 +51,7 @@ type ServerConfig struct {
 	TLSPort               int
 	TLSServerCertFilePath string
 	TLSServerKeyFilePath  string
-	Speculators           *speculator_repo.SpeculatorRepository
+	Speculators           *speculators.Repository
 	DBHandler             *database.Handler
 	ModulesManager        modules.ModulesManager
 	SamplingManager       *manager.Manager

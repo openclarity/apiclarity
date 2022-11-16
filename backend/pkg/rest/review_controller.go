@@ -58,12 +58,7 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 	}
 
 	// TODO: Update PostAPIInventoryReviewIDApprovedReview params to include api ID AND review ID
-	apiInfo := database.APIInfo{}
-	convertedPort, err := strconv.ParseInt(port, 10, 64)
-	if err != nil {
-		panic(fmt.Sprintf("Port '%s' is not valid: %v", port, err))
-	}
-	err = s.dbHandler.APIInventoryTable().First(&apiInfo, database.APIInfo{Name: host, Port: convertedPort})
+	apiInfo, err := s.dbHandler.APIInventoryTable().GetAPIInfo(host, port)
 	if err != nil {
 		log.Errorf("Failed to get API ID: %v", err)
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)

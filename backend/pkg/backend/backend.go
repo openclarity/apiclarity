@@ -42,7 +42,7 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules"
 	_notifier "github.com/openclarity/apiclarity/backend/pkg/notifier"
 	"github.com/openclarity/apiclarity/backend/pkg/rest"
-	speculator_repo "github.com/openclarity/apiclarity/backend/pkg/speculator"
+	speculators_repo "github.com/openclarity/apiclarity/backend/pkg/speculators"
 	"github.com/openclarity/apiclarity/backend/pkg/traces"
 	speculatorutils "github.com/openclarity/apiclarity/backend/pkg/utils/speculator"
 	tls "github.com/openclarity/apiclarity/backend/pkg/utils/tls"
@@ -56,7 +56,7 @@ import (
 )
 
 type Backend struct {
-	speculators         *speculator_repo.SpeculatorRepository
+	speculators         *speculators_repo.Repository
 	stateBackupInterval time.Duration
 	stateBackupFileName string
 	monitor             *k8smonitor.Monitor
@@ -66,7 +66,7 @@ type Backend struct {
 	notifier            *_notifier.Notifier
 }
 
-func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculators *speculator_repo.SpeculatorRepository, dbHandler *_database.Handler, modulesManager modules.ModulesManager, notifier *_notifier.Notifier) *Backend {
+func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculators *speculators_repo.Repository, dbHandler *_database.Handler, modulesManager modules.ModulesManager, notifier *_notifier.Notifier) *Backend {
 	return &Backend{
 		speculators:         speculators,
 		stateBackupInterval: time.Second * time.Duration(config.StateBackupIntervalSec),
@@ -174,10 +174,10 @@ func Run() {
 		go dbHandler.CreateFakeData()
 	}
 
-	speculators, err := speculator_repo.DecodeState(config.StateBackupFileName, config.SpeculatorConfig)
+	speculators, err := speculators_repo.DecodeState(config.StateBackupFileName, config.SpeculatorConfig)
 	if err != nil {
 		log.Infof("No speculators state to decode, creating new: %v", err)
-		speculators = speculator_repo.NewSpeculatorRepository(config.SpeculatorConfig)
+		speculators = speculators_repo.NewMapRepository(config.SpeculatorConfig)
 	} else {
 		log.Infof("Using encoded speculator state")
 	}
@@ -290,8 +290,9 @@ func Run() {
 
 func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Telemetry, traceSource *models.TraceSource) error {
 	var err error
+	const defaultTraceSourceID = 0
 
-	var traceSourceID uint = 0
+	var traceSourceID uint = defaultTraceSourceID
 	if traceSource != nil {
 		traceSourceID = uint(traceSource.ID)
 	}

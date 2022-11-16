@@ -27,7 +27,7 @@ import (
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/k8smonitor"
 	"github.com/openclarity/apiclarity/backend/pkg/modules"
-	speculator_repo "github.com/openclarity/apiclarity/backend/pkg/speculator"
+	"github.com/openclarity/apiclarity/backend/pkg/speculators"
 	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
 	_spec "github.com/openclarity/speculator/pkg/spec"
 	_speculator "github.com/openclarity/speculator/pkg/speculator"
@@ -200,12 +200,12 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 	op.Responses = spec.NewResponses()
 	op.Responses["202"] = &spec.ResponseRef{Value: spec.NewResponse().WithDescription("response")}
 
-	speculatorsWithProvidedSpec := speculator_repo.NewSpeculatorRepository(_speculator.Config{})
+	speculatorsWithProvidedSpec := speculators.NewMapRepository(_speculator.Config{})
 	speculatorsWithProvidedSpec.Get(0).Specs[testSpecKey] = _spec.CreateDefaultSpec(host, port, _spec.OperationGeneratorConfig{})
 	err := speculatorsWithProvidedSpec.Get(0).LoadProvidedSpec(testSpecKey, []byte(providedSpecV3), map[string]string{})
 	assert.NilError(t, err)
 
-	speculatorsWithApprovedSpec := speculator_repo.NewSpeculatorRepository(_speculator.Config{})
+	speculatorsWithApprovedSpec := speculators.NewMapRepository(_speculator.Config{})
 	speculatorsWithApprovedSpec.Get(0).Specs[testSpecKey] = _spec.CreateDefaultSpec(host, port, _spec.OperationGeneratorConfig{})
 	ApprovedSpecReview := &_spec.ApprovedSpecReview{
 		PathToPathItem: map[string]*spec.PathItem{
@@ -225,7 +225,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 	assert.NilError(t, err)
 
 	type fields struct {
-		speculators             *speculator_repo.SpeculatorRepository
+		speculators             *speculators.Repository
 		monitor                 *k8smonitor.Monitor
 		dbHandler               _database.Database
 		expectDatabase          func(database *_database.MockDatabase)
@@ -244,7 +244,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 		{
 			name: "good run",
 			fields: fields{
-				speculators: speculator_repo.NewSpeculatorRepository(_speculator.Config{}),
+				speculators: speculators.NewMapRepository(_speculator.Config{}),
 				monitor:     nil, // TODO turn monitor into interface so we can use it in tests. for now we assume to run locally (no monitor)
 				dbHandler:   mockDatabase,
 				expectDatabase: func(database *_database.MockDatabase) {
@@ -294,7 +294,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 		{
 			name: "Host field is empty, get host from headers",
 			fields: fields{
-				speculators: speculator_repo.NewSpeculatorRepository(_speculator.Config{}),
+				speculators: speculators.NewMapRepository(_speculator.Config{}),
 				monitor:     nil,
 				dbHandler:   mockDatabase,
 				expectDatabase: func(database *_database.MockDatabase) {
@@ -349,7 +349,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 		{
 			name: "no host name found",
 			fields: fields{
-				speculators:             speculator_repo.NewSpeculatorRepository(_speculator.Config{}),
+				speculators:             speculators.NewMapRepository(_speculator.Config{}),
 				monitor:                 nil,
 				dbHandler:               mockDatabase,
 				expectDatabase:          func(database *_database.MockDatabase) {},
@@ -392,7 +392,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 		{
 			name: "invalid destination address",
 			fields: fields{
-				speculators:             speculator_repo.NewSpeculatorRepository(_speculator.Config{}),
+				speculators:             speculators.NewMapRepository(_speculator.Config{}),
 				monitor:                 nil,
 				dbHandler:               mockDatabase,
 				expectDatabase:          func(database *_database.MockDatabase) {},
@@ -435,7 +435,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 		{
 			name: "invalid source address",
 			fields: fields{
-				speculators:             speculator_repo.NewSpeculatorRepository(_speculator.Config{}),
+				speculators:             speculators.NewMapRepository(_speculator.Config{}),
 				monitor:                 nil,
 				dbHandler:               mockDatabase,
 				expectDatabase:          func(database *_database.MockDatabase) {},
@@ -478,7 +478,7 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 		{
 			name: "non api",
 			fields: fields{
-				speculators: speculator_repo.NewSpeculatorRepository(_speculator.Config{}),
+				speculators: speculators.NewMapRepository(_speculator.Config{}),
 				monitor:     nil,
 				dbHandler:   mockDatabase,
 				expectDatabase: func(database *_database.MockDatabase) {
@@ -581,8 +581,8 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 			name: "has reconstructed spec diff",
 			fields: fields{
 				speculators: speculatorsWithApprovedSpec,
-				monitor:    nil,
-				dbHandler:  mockDatabase,
+				monitor:     nil,
+				dbHandler:   mockDatabase,
 				expectDatabase: func(database *_database.MockDatabase) {
 					database.EXPECT().APIInventoryTable().Return(mockAPIInventoryTable)
 					database.EXPECT().APIEventsTable().Return(mockAPIEventTable)
