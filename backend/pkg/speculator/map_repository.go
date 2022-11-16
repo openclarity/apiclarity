@@ -62,7 +62,7 @@ func DecodeState(filePath string, config _speculator.Config) (*SpeculatorReposit
 	}
 
 	r.speculatorConfig = config
-
+	r.lock = &sync.RWMutex{}
 	log.Info("Speculator state was decoded")
 	// log.Debugf("Speculator Config %+v", config)
 
@@ -71,6 +71,9 @@ func DecodeState(filePath string, config _speculator.Config) (*SpeculatorReposit
 }
 
 func (r *SpeculatorRepository) Get(speculatorID uint) *_speculator.Speculator {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+
 	speculator, ok := r.Speculators[speculatorID]
 	if !ok {
 		r.Speculators[speculatorID] = _speculator.CreateSpeculator(r.speculatorConfig)
