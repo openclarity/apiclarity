@@ -183,7 +183,7 @@ func (s *specDiffer) addDiffToSend(diff *_spec.APIDiff, modifiedPathItem, origin
 	newSpec := string(newSpecB)
 	oldSpec := string(oldSpecB)
 
-	hash := sha256.Sum256([]byte(newSpec + oldSpec + string(diffType)))
+	hash := sha256.Sum256([]byte(newSpec + oldSpec + string(specType)))
 
 	apiInfo, err := s.accessor.GetAPIInfo(context.TODO(), event.APIInfoID)
 	if err != nil {

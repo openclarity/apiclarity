@@ -157,8 +157,10 @@ func Test_differ_addDiffToSend(t *testing.T) {
 	)
 
 	var (
-		hashV2                = sha256.Sum256([]byte(newSpecV2 + oldSpecV2))
-		hashV3                = sha256.Sum256([]byte(newSpecV3 + oldSpecV3))
+		hashV2Reconstructed = sha256.Sum256([]byte(newSpecV2 + oldSpecV2 + common.RECONSTRUCTED))
+		hashV2Provided      = sha256.Sum256([]byte(newSpecV2 + oldSpecV2 + common.PROVIDED))
+		hashV3Reconstructed = sha256.Sum256([]byte(newSpecV3 + oldSpecV3 + common.RECONSTRUCTED))
+
 		methodGet             = common.GET
 		specTypeReconstructed = common.RECONSTRUCTED
 		specTypeProvided      = common.PROVIDED
@@ -215,7 +217,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 			name: "no diff event - nothing change",
 			fields: fields{
 				apiIDToDiffs: map[uint]map[diffHash]global.Diff{
-					1: {hashV2: global.Diff{
+					1: {hashV2Reconstructed: global.Diff{
 						DiffType:      common.GENERALDIFF,
 						LastSeen:      time.Unix(1234, 0),
 						NewSpec:       newSpecV2,
@@ -233,7 +235,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 				diffType: models.DiffTypeNODIFF,
 			},
 			wantAPIIDToDiffs: map[uint]map[diffHash]global.Diff{
-				1: {hashV2: global.Diff{
+				1: {hashV2Reconstructed: global.Diff{
 					DiffType:      common.GENERALDIFF,
 					LastSeen:      time.Unix(1234, 0),
 					NewSpec:       newSpecV2,
@@ -251,7 +253,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 			name: "event threshold reached - ignoring event",
 			fields: fields{
 				apiIDToDiffs: map[uint]map[diffHash]global.Diff{
-					1: {hashV2: global.Diff{
+					1: {hashV2Reconstructed: global.Diff{
 						DiffType:      common.GENERALDIFF,
 						LastSeen:      time.Unix(1234, 0),
 						NewSpec:       newSpecV2,
@@ -269,7 +271,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 				diffType: models.DiffTypeZOMBIEDIFF,
 			},
 			wantAPIIDToDiffs: map[uint]map[diffHash]global.Diff{
-				1: {hashV2: global.Diff{
+				1: {hashV2Reconstructed: global.Diff{
 					DiffType:      common.GENERALDIFF,
 					LastSeen:      time.Unix(1234, 0),
 					NewSpec:       newSpecV2,
@@ -311,7 +313,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 				}, nil)
 			},
 			wantAPIIDToDiffs: map[uint]map[diffHash]global.Diff{
-				1: {hashV2: global.Diff{
+				1: {hashV2Reconstructed: global.Diff{
 					DiffType:      common.GENERALDIFF,
 					LastSeen:      time.Unix(11, 0),
 					NewSpec:       newSpecV2,
@@ -352,7 +354,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 				}, nil)
 			},
 			wantAPIIDToDiffs: map[uint]map[diffHash]global.Diff{
-				1: {hashV3: global.Diff{
+				1: {hashV3Reconstructed: global.Diff{
 					DiffType:      common.GENERALDIFF,
 					LastSeen:      time.Unix(11, 0),
 					NewSpec:       newSpecV3,
@@ -369,7 +371,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 			name: "event has spec diff - first time for this api id - events map is not empty",
 			fields: fields{
 				apiIDToDiffs: map[uint]map[diffHash]global.Diff{
-					2: {hashV2: global.Diff{
+					2: {hashV2Reconstructed: global.Diff{
 						DiffType:      common.GENERALDIFF,
 						LastSeen:      time.Unix(1234, 0),
 						Method:        methodGet,
@@ -405,7 +407,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 				}, nil)
 			},
 			wantAPIIDToDiffs: map[uint]map[diffHash]global.Diff{
-				1: {hashV2: global.Diff{
+				1: {hashV2Provided: global.Diff{
 					DiffType:      common.GENERALDIFF,
 					LastSeen:      time.Unix(11, 0),
 					NewSpec:       newSpecV2,
@@ -415,7 +417,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 					SpecType:      specTypeProvided,
 					SpecTimestamp: time.Unix(13, 0),
 				}},
-				2: {hashV2: global.Diff{
+				2: {hashV2Reconstructed: global.Diff{
 					DiffType:      common.GENERALDIFF,
 					LastSeen:      time.Unix(1234, 0),
 					NewSpec:       newSpecV2,
@@ -432,7 +434,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 			name: "event has spec diff - already exists for this api id - update last seen - don't increase total",
 			fields: fields{
 				apiIDToDiffs: map[uint]map[diffHash]global.Diff{
-					1: {hashV2: global.Diff{
+					1: {hashV2Provided: global.Diff{
 						DiffType:      common.GENERALDIFF,
 						LastSeen:      time.Unix(11, 0),
 						NewSpec:       newSpecV2,
@@ -468,7 +470,7 @@ func Test_differ_addDiffToSend(t *testing.T) {
 				}, nil)
 			},
 			wantAPIIDToDiffs: map[uint]map[diffHash]global.Diff{
-				1: {hashV2: global.Diff{
+				1: {hashV2Provided: global.Diff{
 					DiffType:      common.GENERALDIFF,
 					LastSeen:      time.Unix(12, 0),
 					NewSpec:       newSpecV2,
