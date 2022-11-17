@@ -16,7 +16,7 @@ import (
 
 // GetControlTraceSourcesTraceSourceIDURL generates an URL for the get control trace sources trace source ID operation
 type GetControlTraceSourcesTraceSourceIDURL struct {
-	TraceSourceID int64
+	TraceSourceID uint32
 
 	_basePath string
 	// avoid unkeyed usage
@@ -44,7 +44,7 @@ func (o *GetControlTraceSourcesTraceSourceIDURL) Build() (*url.URL, error) {
 
 	var _path = "/control/traceSources/{traceSourceId}"
 
-	traceSourceID := swag.FormatInt64(o.TraceSourceID)
+	traceSourceID := swag.FormatUint32(o.TraceSourceID)
 	if traceSourceID != "" {
 		_path = strings.Replace(_path, "{traceSourceId}", traceSourceID, -1)
 	} else {

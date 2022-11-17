@@ -63,8 +63,10 @@ type GetControlTraceSourcesTraceSourceIDParams struct {
 	/* TraceSourceID.
 
 	   Trace Source ID
+
+	   Format: uint32
 	*/
-	TraceSourceID int64
+	TraceSourceID uint32
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +122,13 @@ func (o *GetControlTraceSourcesTraceSourceIDParams) SetHTTPClient(client *http.C
 }
 
 // WithTraceSourceID adds the traceSourceID to the get control trace sources trace source ID params
-func (o *GetControlTraceSourcesTraceSourceIDParams) WithTraceSourceID(traceSourceID int64) *GetControlTraceSourcesTraceSourceIDParams {
+func (o *GetControlTraceSourcesTraceSourceIDParams) WithTraceSourceID(traceSourceID uint32) *GetControlTraceSourcesTraceSourceIDParams {
 	o.SetTraceSourceID(traceSourceID)
 	return o
 }
 
 // SetTraceSourceID adds the traceSourceId to the get control trace sources trace source ID params
-func (o *GetControlTraceSourcesTraceSourceIDParams) SetTraceSourceID(traceSourceID int64) {
+func (o *GetControlTraceSourcesTraceSourceIDParams) SetTraceSourceID(traceSourceID uint32) {
 	o.TraceSourceID = traceSourceID
 }
 
@@ -139,7 +141,7 @@ func (o *GetControlTraceSourcesTraceSourceIDParams) WriteToRequest(r runtime.Cli
 	var res []error
 
 	// path param traceSourceId
-	if err := r.SetPathParam("traceSourceId", swag.FormatInt64(o.TraceSourceID)); err != nil {
+	if err := r.SetPathParam("traceSourceId", swag.FormatUint32(o.TraceSourceID)); err != nil {
 		return err
 	}
 

@@ -35,7 +35,7 @@ type GetControlTraceSourcesTraceSourceIDParams struct {
 	  Required: true
 	  In: path
 	*/
-	TraceSourceID int64
+	TraceSourceID uint32
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -67,9 +67,9 @@ func (o *GetControlTraceSourcesTraceSourceIDParams) bindTraceSourceID(rawData []
 	// Required: true
 	// Parameter is provided by construction from the route
 
-	value, err := swag.ConvertInt64(raw)
+	value, err := swag.ConvertUint32(raw)
 	if err != nil {
-		return errors.InvalidType("traceSourceId", "path", "int64", raw)
+		return errors.InvalidType("traceSourceId", "path", "uint32", raw)
 	}
 	o.TraceSourceID = value
 

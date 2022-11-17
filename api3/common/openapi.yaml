@@ -182,10 +182,11 @@ components:
           default: false
         destinationNamespace:
           type: string
-        traceSource:
-          description: 'String representing the entity which created this API. Empty means it has been created by APIClarity on first trace'
-          type: 'string'
-          default: 'APICLARITY'
+        traceSourceId:
+          description: 'Trace Source ID which created this API. 0 means it has been created by APIClarity (from the UI for example)'
+          type: 'integer'
+          format: 'uint32'
+          default: 0
     ApiInfoWithType:
       type: object
       allOf:

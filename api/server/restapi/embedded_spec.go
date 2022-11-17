@@ -1231,10 +1231,11 @@ func init() {
         "port": {
           "type": "integer"
         },
-        "traceSource": {
-          "description": "String representing the entity which created this API. Empty means it has been created by APIClarity on first trace",
-          "type": "string",
-          "default": "APICLARITY"
+        "traceSourceId": {
+          "description": "Trace Source ID which created this API. 0 means it has been created by APIClarity (from the UI for example)",
+          "type": "integer",
+          "format": "uint32",
+          "default": 0
         }
       }
     },
@@ -1986,6 +1987,7 @@ func init() {
     },
     "traceSourceId": {
       "type": "integer",
+      "format": "uint32",
       "description": "Trace Source ID",
       "name": "traceSourceId",
       "in": "path",
@@ -3348,6 +3350,7 @@ func init() {
         "parameters": [
           {
             "type": "integer",
+            "format": "uint32",
             "description": "Trace Source ID",
             "name": "traceSourceId",
             "in": "path",
@@ -3380,6 +3383,7 @@ func init() {
         "parameters": [
           {
             "type": "integer",
+            "format": "uint32",
             "description": "Trace Source ID",
             "name": "traceSourceId",
             "in": "path",
@@ -3798,10 +3802,11 @@ func init() {
         "port": {
           "type": "integer"
         },
-        "traceSource": {
-          "description": "String representing the entity which created this API. Empty means it has been created by APIClarity on first trace",
-          "type": "string",
-          "default": "APICLARITY"
+        "traceSourceId": {
+          "description": "Trace Source ID which created this API. 0 means it has been created by APIClarity (from the UI for example)",
+          "type": "integer",
+          "format": "uint32",
+          "default": 0
         }
       }
     },
@@ -4553,6 +4558,7 @@ func init() {
     },
     "traceSourceId": {
       "type": "integer",
+      "format": "uint32",
       "description": "Trace Source ID",
       "name": "traceSourceId",
       "in": "path",
