@@ -35,8 +35,8 @@ type APIInfo struct {
 	// port
 	Port int64 `json:"port,omitempty"`
 
-	// String representing the entity which created this API. Empty means it has been created by APIClarity on first trace
-	TraceSource *string `json:"traceSource,omitempty"`
+	// Trace Source ID which created this API. 0 means it has been created by APIClarity (from the UI for example)
+	TraceSourceID uint32 `json:"traceSourceId,omitempty"`
 }
 
 // Validate validates this Api info

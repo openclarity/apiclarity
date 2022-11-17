@@ -72,7 +72,7 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 			if s.notifier != nil {
 				apiID := uint32(apiInfo.ID)
 				port := int(apiInfo.Port)
-				traceSource := strconv.FormatUint(uint64(traceSourceID), 10) //nolint:gomnd
+				traceSource := uint32(apiInfo.TraceSourceID)
 				newDiscoveredAPINotification := notifications.NewDiscoveredAPINotification{
 					Id:                   &apiID,
 					Name:                 &apiInfo.Name,
@@ -80,7 +80,7 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 					HasReconstructedSpec: &apiInfo.HasReconstructedSpec,
 					HasProvidedSpec:      &apiInfo.HasProvidedSpec,
 					DestinationNamespace: &apiInfo.DestinationNamespace,
-					TraceSource:          &traceSource,
+					TraceSourceId:        &traceSource,
 				}
 				notification := notifications.APIClarityNotification{}
 				err := notification.FromNewDiscoveredAPINotification(newDiscoveredAPINotification)

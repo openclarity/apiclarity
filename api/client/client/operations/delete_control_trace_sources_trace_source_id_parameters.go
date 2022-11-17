@@ -63,8 +63,10 @@ type DeleteControlTraceSourcesTraceSourceIDParams struct {
 	/* TraceSourceID.
 
 	   Trace Source ID
+
+	   Format: uint32
 	*/
-	TraceSourceID int64
+	TraceSourceID uint32
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +122,13 @@ func (o *DeleteControlTraceSourcesTraceSourceIDParams) SetHTTPClient(client *htt
 }
 
 // WithTraceSourceID adds the traceSourceID to the delete control trace sources trace source ID params
-func (o *DeleteControlTraceSourcesTraceSourceIDParams) WithTraceSourceID(traceSourceID int64) *DeleteControlTraceSourcesTraceSourceIDParams {
+func (o *DeleteControlTraceSourcesTraceSourceIDParams) WithTraceSourceID(traceSourceID uint32) *DeleteControlTraceSourcesTraceSourceIDParams {
 	o.SetTraceSourceID(traceSourceID)
 	return o
 }
 
 // SetTraceSourceID adds the traceSourceId to the delete control trace sources trace source ID params
-func (o *DeleteControlTraceSourcesTraceSourceIDParams) SetTraceSourceID(traceSourceID int64) {
+func (o *DeleteControlTraceSourcesTraceSourceIDParams) SetTraceSourceID(traceSourceID uint32) {
 	o.TraceSourceID = traceSourceID
 }
 
@@ -139,7 +141,7 @@ func (o *DeleteControlTraceSourcesTraceSourceIDParams) WriteToRequest(r runtime.
 	var res []error
 
 	// path param traceSourceId
-	if err := r.SetPathParam("traceSourceId", swag.FormatInt64(o.TraceSourceID)); err != nil {
+	if err := r.SetPathParam("traceSourceId", swag.FormatUint32(o.TraceSourceID)); err != nil {
 		return err
 	}
 

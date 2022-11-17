@@ -48,11 +48,12 @@ components:
           type: string
         port:
           type: integer
-        traceSource:
-          default: APICLARITY
-          description: String representing the entity which created this API. Empty
-            means it has been created by APIClarity on first trace
-          type: string
+        traceSourceId:
+          default: 0
+          description: Trace Source ID which created this API. 0 means it has been
+            created by APIClarity (from the UI for example)
+          format: uint32
+          type: integer
       type: object
     AuthorizationModel:
       properties:
