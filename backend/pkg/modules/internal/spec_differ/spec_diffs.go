@@ -30,9 +30,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"sigs.k8s.io/yaml"
 
-	_spec "github.com/openclarity/speculator/pkg/spec"
-	_speculator "github.com/openclarity/speculator/pkg/speculator"
-
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/api3/global"
@@ -41,6 +38,8 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/spec_differ/config"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/spec_differ/restapi"
 	speculatorutils "github.com/openclarity/apiclarity/backend/pkg/utils/speculator"
+	_spec "github.com/openclarity/speculator/pkg/spec"
+	_speculator "github.com/openclarity/speculator/pkg/speculator"
 )
 
 type diffHash [32]byte
