@@ -50,10 +50,7 @@ func (m *TraceSamplingManager) AddHostToTrace(modName string, apiID uint32) erro
 		return err
 	}
 
-	traceSourceID := externalTraceSourceId
-	if apiInfo.TraceSourceID != nil {
-		traceSourceID = *apiInfo.TraceSourceID
-	}
+	traceSourceID := apiInfo.TraceSourceID
 	m.dbHandler.TraceSamplingTable().AddHostToTrace(apiID, traceSourceID, modName)
 
 	if traceSourceID == externalTraceSourceId {
@@ -81,10 +78,7 @@ func (m *TraceSamplingManager) RemoveHostToTrace(modName string, apiID uint32) e
 		return err
 	}
 
-	traceSourceID := externalTraceSourceId
-	if apiInfo.TraceSourceID != nil {
-		traceSourceID = *apiInfo.TraceSourceID
-	}
+	traceSourceID := apiInfo.TraceSourceID
 	m.dbHandler.TraceSamplingTable().DeleteHostToTrace(apiID, traceSourceID, modName)
 
 	if traceSourceID == externalTraceSourceId {
@@ -100,5 +94,13 @@ func (m *TraceSamplingManager) RemoveHostToTrace(modName string, apiID uint32) e
 }
 
 func (m *TraceSamplingManager) ResetForComponent(modName string) error {
+	m.dbHandler.TraceSamplingTable().DeleteAll()
+	// Relay it to the TSM
+	m.samplingManager.SetHostsToTrace(
+		&interfacemanager.HostsByComponentID{
+			Hosts:       []string{},
+			ComponentID: modName,
+		},
+	)
 	return nil
 }
