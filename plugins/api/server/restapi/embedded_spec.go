@@ -34,6 +34,27 @@ func init() {
   },
   "basePath": "/api",
   "paths": {
+    "/hostsToTrace": {
+      "get": {
+        "summary": "Get a list of hosts to trace",
+        "parameters": [
+          {
+            "$ref": "#/parameters/TraceSourceTokenHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/HostsToTrace"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
     "/telemetry": {
       "post": {
         "summary": "Post an http telemetry",
@@ -109,6 +130,22 @@ func init() {
         },
         "value": {
           "type": "string"
+        }
+      }
+    },
+    "HostsList": {
+      "description": "List of hosts",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "HostsToTrace": {
+      "description": "List of hosts to trace",
+      "type": "object",
+      "properties": {
+        "hosts": {
+          "$ref": "#/definitions/HostsList"
         }
       }
     },
@@ -216,6 +253,33 @@ func init() {
   },
   "basePath": "/api",
   "paths": {
+    "/hostsToTrace": {
+      "get": {
+        "summary": "Get a list of hosts to trace",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Optional header to authenticate the trace source",
+            "name": "X-Trace-Source-Token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/HostsToTrace"
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
     "/telemetry": {
       "post": {
         "summary": "Post an http telemetry",
@@ -300,6 +364,22 @@ func init() {
         },
         "value": {
           "type": "string"
+        }
+      }
+    },
+    "HostsList": {
+      "description": "List of hosts",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "HostsToTrace": {
+      "description": "List of hosts to trace",
+      "type": "object",
+      "properties": {
+        "hosts": {
+          "$ref": "#/definitions/HostsList"
         }
       }
     },

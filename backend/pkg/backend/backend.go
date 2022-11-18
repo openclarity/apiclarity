@@ -249,6 +249,7 @@ func Run() {
 		TLSServerKeyFilePath:  config.TLSServerKeyFilePath,
 		TraceHandleFunc:       backend.handleHTTPTrace,
 		TraceSourceAuthFunc:   nil,
+		TraceSamplingManager:  traceSamplingManager,
 	}
 	tracesServer, err := traces.CreateHTTPTracesServer(httpTracesServerConfig)
 	if err != nil {
@@ -265,6 +266,7 @@ func Run() {
 			TLSServerKeyFilePath:  config.TLSServerKeyFilePath,
 			TraceHandleFunc:       backend.handleHTTPTrace,
 			TraceSourceAuthFunc:   backend.traceSourceAuth,
+			TraceSamplingManager:  traceSamplingManager,
 		}
 		externalTracesServer, err := traces.CreateHTTPTracesServer(httpExternalTracesServerConfig)
 		if err != nil {

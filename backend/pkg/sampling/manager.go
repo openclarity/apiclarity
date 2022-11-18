@@ -93,6 +93,15 @@ func (m *TraceSamplingManager) RemoveHostToTrace(modName string, apiID uint32) e
 	return nil
 }
 
+func (m *TraceSamplingManager) GetHostsToTrace(modName string, traceSourceID uint) ([]string, error) {
+	hosts, err := m.dbHandler.TraceSamplingTable().HostsToTraceByComponentID(traceSourceID, modName)
+	if err != nil {
+		log.Errorf("failed to retrieve hosts list for modName=%v: %v", modName, err)
+		return nil, err
+	}
+	return hosts, nil
+}
+
 func (m *TraceSamplingManager) ResetForComponent(modName string) error {
 	m.dbHandler.TraceSamplingTable().DeleteAll()
 	// Relay it to the TSM
