@@ -16,12 +16,15 @@
 package database
 
 import (
+	"strconv"
+
 	"gorm.io/gorm"
 )
 
 const (
 	traceSamplingTableName = "trace_sampling"
 	externalTraceSourceID  = 0
+	hostnamePortSeparator  = ":"
 )
 
 type TraceSampling struct {
@@ -32,6 +35,15 @@ type TraceSampling struct {
 	Component     string `json:"component,omitempty" gorm:"column:component" faker:"-"`
 }
 
+type TraceSamplingWithHostAndPort struct {
+	APIID                uint
+	TraceSourceID        uint
+	Component            string
+	Name                 string
+	Port                 uint
+	DestinationNamespace string
+}
+
 type TraceSamplingTable interface {
 	AddHostToTrace(apiID uint32, traceSourceID uint, component string) error
 	GetHostsToTrace(traceSourceID uint, component string) ([]*TraceSampling, error)
@@ -39,6 +51,7 @@ type TraceSamplingTable interface {
 	DeleteAll() error
 	ResetHostsToTrace(traceSourceID uint, component string) error
 	GetExternalTraceSourceID() (uint, error)
+	HostsToTraceByComponentID(traceSourceID uint, component string) ([]string, error)
 }
 
 type TraceSamplingTableHandler struct {
@@ -87,4 +100,38 @@ func (h *TraceSamplingTableHandler) ResetHostsToTrace(traceSourceID uint, compon
 
 func (h *TraceSamplingTableHandler) GetExternalTraceSourceID() (uint, error) {
 	return externalTraceSourceID, nil
+}
+
+// createHostFromTraceSamplingWithHostAndPort will create hosts in the format of `hostname:port` if port exist, otherwise will return only hostname
+// Note: The function will return both `hostname:port` and `hostname` in case port is the default HTTP port (80).
+func createHostFromTraceSamplingWithHostAndPort(sampling *TraceSamplingWithHostAndPort) (ret []string) {
+	// TODO: we might need to create multiple hosts from a single api.Host
+	// example: hostname=foo, port=8080 ==> host=[foo:8080, foo.namespace:8080, ....]
+	if sampling.Port > 0 {
+		ret = append(ret, sampling.Name+hostnamePortSeparator+strconv.Itoa(int(sampling.Port)))
+	}
+
+	if sampling.Port == 0 || sampling.Port == 80 {
+		ret = append(ret, sampling.Name)
+	}
+
+	return ret
+}
+
+func (h *TraceSamplingTableHandler) HostsToTraceByComponentID(traceSourceID uint, component string) ([]string, error) {
+	var hosts []string
+
+	var samplings []*TraceSamplingWithHostAndPort
+	t := h.tx.Select("trace_sampling.api_id, trace_sampling.trace_source_id, trace_sampling.component, api_inventory.name, api_inventory.port, api_inventory.destinationNamespace").
+		Where("trace_sampling.trace_source_id = ? AND trace_sampling.component = ?", traceSourceID, component).
+		Joins("LEFT JOIN api_inventory ON api_inventory.id = trace_sampling.api_id")
+	if err := t.Find(&samplings).Error; err != nil {
+		return nil, err
+	}
+
+	for _, sampling := range samplings {
+		hosts = append(hosts, createHostFromTraceSamplingWithHostAndPort(sampling)...)
+	}
+
+	return hosts, nil
 }

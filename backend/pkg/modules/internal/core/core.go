@@ -27,7 +27,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/apiclarity/backend/pkg/config"
-	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
+	database "github.com/openclarity/apiclarity/backend/pkg/database"
 )
 
 const BaseHTTPPath = "/api/modules"
@@ -61,10 +61,10 @@ func RegisterModule(m ModuleFactory) {
 
 type ModuleFactory func(ctx context.Context, accessor BackendAccessor) (Module, error)
 
-func New(ctx context.Context, accessor BackendAccessor, samplingManager *manager.Manager) (Module, []ModuleInfo) {
+func New(ctx context.Context, accessor BackendAccessor, dbHandler *database.Handler) (Module, []ModuleInfo) {
 	c := &Core{}
 	c.Modules = map[string]Module{}
-	c.samplingManager = samplingManager
+	c.dbHandler = dbHandler
 
 	modInfos := []ModuleInfo{}
 	for moduleFolderName, moduleFactory := range modules {
@@ -84,8 +84,8 @@ func New(ctx context.Context, accessor BackendAccessor, samplingManager *manager
 }
 
 type Core struct {
-	Modules         map[string]Module
-	samplingManager *manager.Manager
+	Modules   map[string]Module
+	dbHandler *database.Handler
 }
 
 func (c *Core) Info() ModuleInfo {
@@ -120,9 +120,15 @@ func shouldTrace(host string, port int64, hosts []string) bool {
 func (c *Core) EventNotify(ctx context.Context, event *Event) {
 	host := event.APIEvent.HostSpecName
 	port := event.APIEvent.DestinationPort
+	traceSourceID := event.APIEvent.TraceSourceID
 
 	for modName, mod := range c.Modules {
-		if !shouldTrace(host, port, c.samplingManager.HostsToTraceByComponentID(modName)) {
+		hosts, err := c.dbHandler.TraceSamplingTable().HostsToTraceByComponentID(traceSourceID, modName)
+		if err != nil {
+			log.Debugf("Failed to retreive hosts for traceSource %v for module %s.", traceSourceID, modName)
+			continue
+		}
+		if !shouldTrace(host, port, hosts) {
 			log.Debugf("Trace of host %s should NOT be sent to module %s.", host, modName)
 			continue
 		}

@@ -30,6 +30,7 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules"
 	_notifier "github.com/openclarity/apiclarity/backend/pkg/notifier"
+	"github.com/openclarity/apiclarity/backend/pkg/sampling"
 	"github.com/openclarity/apiclarity/backend/pkg/speculators"
 	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
 )
@@ -42,6 +43,7 @@ type Server struct {
 	samplingManager      *manager.Manager
 	features             []modules.ModuleInfo
 	notifier             *_notifier.Notifier
+	TraceSamplingManager *sampling.TraceSamplingManager
 	needsTraceSourceAuth bool
 }
 
@@ -58,6 +60,7 @@ type ServerConfig struct {
 	Features              []modules.ModuleInfo
 	NeedsTraceSourceAuth  bool
 	Notifier              *_notifier.Notifier
+	TraceSamplingManager  *sampling.TraceSamplingManager
 }
 
 func CreateRESTServer(config *ServerConfig) (*Server, error) {
@@ -68,6 +71,7 @@ func CreateRESTServer(config *ServerConfig) (*Server, error) {
 		samplingManager:      config.SamplingManager,
 		features:             config.Features,
 		notifier:             config.Notifier,
+		TraceSamplingManager: config.TraceSamplingManager,
 		needsTraceSourceAuth: config.NeedsTraceSourceAuth,
 	}
 

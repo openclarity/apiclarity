@@ -87,6 +87,7 @@ type APIEvent struct {
 	SpecDiffType             models.DiffType   `json:"specDiffType,omitempty" gorm:"column:spec_diff_type" faker:"oneof: ZOMBIE_DIFF, SHADOW_DIFF, GENERAL_DIFF, NO_DIFF"`
 	HostSpecName             string            `json:"hostSpecName,omitempty" gorm:"column:host_spec_name" faker:"oneof: test.com, example.com, kaki.org"`
 	IsNonAPI                 bool              `json:"isNonApi,omitempty" gorm:"column:is_non_api" faker:"-"`
+	TraceSourceID            uint              `json:"trace_source_id,omitempty" gorm:"column:trace_source_id" faker:"-"`
 
 	// Spec diff info
 	// New reconstructed spec json string

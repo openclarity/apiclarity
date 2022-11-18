@@ -43,6 +43,7 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules"
 	_notifier "github.com/openclarity/apiclarity/backend/pkg/notifier"
 	"github.com/openclarity/apiclarity/backend/pkg/rest"
+	"github.com/openclarity/apiclarity/backend/pkg/sampling"
 	speculators_repo "github.com/openclarity/apiclarity/backend/pkg/speculators"
 	"github.com/openclarity/apiclarity/backend/pkg/traces"
 	speculatorutils "github.com/openclarity/apiclarity/backend/pkg/utils/speculator"
@@ -211,6 +212,12 @@ func Run() {
 		}
 	}
 
+	traceSamplingManager, err := sampling.CreateTraceSamplingManager(dbHandler, samplingManager)
+	if err != nil {
+		log.Errorf("Failed to create Trace Sampling Manager: %v", err)
+		return
+	}
+
 	backend := CreateBackend(config, monitor, speculators, dbHandler, modulesWrapper, notifier)
 
 	serverConfig := &rest.ServerConfig{
@@ -225,6 +232,7 @@ func Run() {
 		SamplingManager:       samplingManager,
 		Features:              features,
 		Notifier:              notifier,
+		TraceSamplingManager:  traceSamplingManager,
 	}
 	restServer, err := rest.CreateRESTServer(serverConfig)
 	if err != nil {
