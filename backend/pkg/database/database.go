@@ -66,6 +66,10 @@ func Init(config *DBConfig) *Handler {
 
 	databaseHandler.DB = initDataBase(config)
 
+	if err := databaseHandler.TraceSourcesTable().Prepopulate(); err != nil {
+		log.Fatalf("Unable to prepopulate TraceSource table: %v", err)
+	}
+
 	return &databaseHandler
 }
 
