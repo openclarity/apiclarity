@@ -27,9 +27,8 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/config"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/notifier"
+	"github.com/openclarity/apiclarity/backend/pkg/sampling"
 	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
-	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
-	interfacemanager "github.com/openclarity/trace-sampling-manager/manager/pkg/manager/interface"
 )
 
 type Annotation struct {
@@ -83,7 +82,7 @@ type BackendAccessor interface {
 	Notify(ctx context.Context, modName string, apiID uint, notification notifications.APIClarityNotification) error
 }
 
-func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager, speculatorAccessor speculatoraccessor.SpeculatorsAccessor, notifier *notifier.Notifier, conf *config.Config) (BackendAccessor, error) {
+func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *sampling.TraceSamplingManager, speculatorAccessor speculatoraccessor.SpeculatorsAccessor, notifier *notifier.Notifier, conf *config.Config) (BackendAccessor, error) {
 	return &accessor{
 		dbHandler:          dbHandler,
 		clientset:          clientset,
@@ -96,7 +95,7 @@ func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface, sa
 type accessor struct {
 	dbHandler          *database.Handler
 	clientset          kubernetes.Interface
-	samplingManager    *manager.Manager
+	samplingManager    *sampling.TraceSamplingManager
 	speculatorAccessor speculatoraccessor.SpeculatorsAccessor
 	notifier           *notifier.Notifier
 }
@@ -233,31 +232,15 @@ func (b *accessor) Notify(ctx context.Context, modName string, apiID uint, n not
 }
 
 func (b *accessor) EnableTraces(ctx context.Context, modName string, apiID uint) error {
-	apiInfo := &database.APIInfo{}
-	if err := b.dbHandler.APIInventoryTable().First(apiInfo, apiID); err != nil {
-		return fmt.Errorf("failed to retrieve API info for apiID=%v: %v", apiID, err)
+	if err := b.samplingManager.AddHostToTrace("*", uint32(apiID)); err != nil {
+		return fmt.Errorf("failed to add API %v to trace: %v", apiID, err)
 	}
-
-	b.samplingManager.AddHostsToTrace(
-		&interfacemanager.HostsByComponentID{
-			Hosts:       []string{fmt.Sprintf("%s:%d", apiInfo.Name, apiInfo.Port)},
-			ComponentID: modName,
-		},
-	)
 	return nil
 }
 
 func (b *accessor) DisableTraces(ctx context.Context, modName string, apiID uint) error {
-	apiInfo := &database.APIInfo{}
-	if err := b.dbHandler.APIInventoryTable().First(apiInfo, apiID); err != nil {
-		return fmt.Errorf("failed to retrieve API info for apiID=%v: %v", apiID, err)
+	if err := b.samplingManager.RemoveHostToTrace("*", uint32(apiID)); err != nil {
+		return fmt.Errorf("failed to remove API %v to trace: %v", apiID, err)
 	}
-
-	b.samplingManager.RemoveHostsToTrace(
-		&interfacemanager.HostsByComponentID{
-			Hosts:       []string{fmt.Sprintf("%s:%d", apiInfo.Name, apiInfo.Port)},
-			ComponentID: modName,
-		},
-	)
 	return nil
 }

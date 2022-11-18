@@ -196,7 +196,13 @@ func Run() {
 		notifier.Start(context.Background())
 	}
 
-	modulesWrapper, modInfos, err := modules.New(globalCtx, dbHandler, clientset, samplingManager, speculatoraccessor.NewSpeculatorAccessor(speculators), notifier, config)
+	traceSamplingManager, err := sampling.CreateTraceSamplingManager(dbHandler, samplingManager)
+	if err != nil {
+		log.Errorf("Failed to create Trace Sampling Manager: %v", err)
+		return
+	}
+
+	modulesWrapper, modInfos, err := modules.New(globalCtx, dbHandler, clientset, traceSamplingManager, speculatoraccessor.NewSpeculatorAccessor(speculators), notifier, config)
 	if err != nil {
 		log.Errorf("Failed to create module wrapper and info: %v", err)
 		return
@@ -212,12 +218,6 @@ func Run() {
 		}
 	}
 
-	traceSamplingManager, err := sampling.CreateTraceSamplingManager(dbHandler, samplingManager)
-	if err != nil {
-		log.Errorf("Failed to create Trace Sampling Manager: %v", err)
-		return
-	}
-
 	backend := CreateBackend(config, monitor, speculators, dbHandler, modulesWrapper, notifier)
 
 	serverConfig := &rest.ServerConfig{
@@ -229,7 +229,6 @@ func Run() {
 		Speculators:           speculators,
 		DBHandler:             dbHandler,
 		ModulesManager:        modulesWrapper,
-		SamplingManager:       samplingManager,
 		Features:              features,
 		Notifier:              notifier,
 		TraceSamplingManager:  traceSamplingManager,

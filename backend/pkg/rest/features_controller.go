@@ -31,12 +31,10 @@ func (s *Server) GetFeatures(params operations.GetFeaturesParams) middleware.Res
 	}
 
 	for _, info := range s.features {
-		var hostsToTrace []string
-		if s.samplingManager != nil {
+		hostsToTrace := []string{"*"}
+		/*if s.samplingManager != nil {
 			hostsToTrace = s.samplingManager.HostsToTraceByComponentID(info.Name)
-		} else {
-			hostsToTrace = []string{"*"}
-		}
+		} */
 		featureList.Features = append(featureList.Features,
 			&models.APIClarityFeature{
 				FeatureDescription: info.Description,

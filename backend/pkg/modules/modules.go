@@ -38,7 +38,7 @@ import (
 	// Enables the traceanalyzer module.
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer"
 	"github.com/openclarity/apiclarity/backend/pkg/notifier"
-	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
+	"github.com/openclarity/apiclarity/backend/pkg/sampling"
 )
 
 type (
@@ -56,7 +56,7 @@ var (
 	NewMockBackendAccessor = core.NewMockBackendAccessor
 )
 
-func New(ctx context.Context, dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager, speculatorAccessor speculatoraccessor.SpeculatorsAccessor, notifier *notifier.Notifier, config *config.Config) (ModulesManager, []ModuleInfo, error) {
+func New(ctx context.Context, dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *sampling.TraceSamplingManager, speculatorAccessor speculatoraccessor.SpeculatorsAccessor, notifier *notifier.Notifier, config *config.Config) (ModulesManager, []ModuleInfo, error) {
 	backendAccessor, err := core.NewAccessor(dbHandler, clientset, samplingManager, speculatorAccessor, notifier, config)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create backend accessor: %v", err)
