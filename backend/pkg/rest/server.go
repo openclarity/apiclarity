@@ -41,7 +41,7 @@ type Server struct {
 	modulesManager       modules.ModulesManager
 	features             []modules.ModuleInfo
 	notifier             *_notifier.Notifier
-	TraceSamplingManager *sampling.TraceSamplingManager
+	samplingManager      *sampling.TraceSamplingManager
 	needsTraceSourceAuth bool
 }
 
@@ -57,7 +57,7 @@ type ServerConfig struct {
 	Features              []modules.ModuleInfo
 	NeedsTraceSourceAuth  bool
 	Notifier              *_notifier.Notifier
-	TraceSamplingManager  *sampling.TraceSamplingManager
+	SamplingManager       *sampling.TraceSamplingManager
 }
 
 func CreateRESTServer(config *ServerConfig) (*Server, error) {
@@ -67,7 +67,7 @@ func CreateRESTServer(config *ServerConfig) (*Server, error) {
 		modulesManager:       config.ModulesManager,
 		features:             config.Features,
 		notifier:             config.Notifier,
-		TraceSamplingManager: config.TraceSamplingManager,
+		samplingManager:      config.SamplingManager,
 		needsTraceSourceAuth: config.NeedsTraceSourceAuth,
 	}
 

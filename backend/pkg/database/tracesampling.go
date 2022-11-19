@@ -18,12 +18,13 @@ package database
 import (
 	"strconv"
 
+	"github.com/openclarity/apiclarity/backend/pkg/common"
+
 	"gorm.io/gorm"
 )
 
 const (
 	traceSamplingTableName = "trace_sampling"
-	externalTraceSourceID  = 0
 	hostnamePortSeparator  = ":"
 )
 
@@ -45,20 +46,26 @@ type TraceSamplingWithHostAndPort struct {
 }
 
 type TraceSamplingTable interface {
-	AddHostToTrace(apiID uint32, traceSourceID uint, component string) error
-	GetHostsToTrace(traceSourceID uint, component string) ([]*TraceSampling, error)
-	DeleteHostToTrace(apiID uint32, traceSourceID uint, component string) error
+	AddApiToTrace(component string, traceSourceID uint, apiID uint32) error
+	GetApisToTrace(component string, traceSourceID uint) ([]*TraceSampling, error)
+	DeleteApiToTrace(component string, traceSourceID uint, apiID uint32) error
 	DeleteAll() error
-	ResetHostsToTrace(traceSourceID uint, component string) error
+	ResetApisToTraceByTraceSource(component string, traceSourceID uint) error
+	ResetApisToTraceByComponent(component string) error
 	GetExternalTraceSourceID() (uint, error)
-	HostsToTraceByComponentID(traceSourceID uint, component string) ([]string, error)
+	HostsToTraceByTraceSource(component string, traceSourceID uint) ([]string, error)
+	HostsToTraceByComponent(component string) (map[uint][]string, error)
 }
 
 type TraceSamplingTableHandler struct {
 	tx *gorm.DB
 }
 
-func (h *TraceSamplingTableHandler) AddHostToTrace(apiID uint32, traceSourceID uint, component string) error {
+func (TraceSampling) TableName() string {
+	return traceSamplingTableName
+}
+
+func (h *TraceSamplingTableHandler) AddApiToTrace(component string, traceSourceID uint, apiID uint32) error {
 	sampling := TraceSampling{
 		APIID:         uint(apiID),
 		TraceSourceID: traceSourceID,
@@ -67,7 +74,7 @@ func (h *TraceSamplingTableHandler) AddHostToTrace(apiID uint32, traceSourceID u
 	return h.tx.Where(sampling).FirstOrCreate(sampling).Error
 }
 
-func (h *TraceSamplingTableHandler) GetHostsToTrace(traceSourceID uint, component string) ([]*TraceSampling, error) {
+func (h *TraceSamplingTableHandler) GetApisToTrace(component string, traceSourceID uint) ([]*TraceSampling, error) {
 	var samplings []*TraceSampling
 	t := h.tx.Where("trace_source_id = ? AND component = ?", traceSourceID, component)
 
@@ -78,7 +85,7 @@ func (h *TraceSamplingTableHandler) GetHostsToTrace(traceSourceID uint, componen
 	return samplings, nil
 }
 
-func (h *TraceSamplingTableHandler) DeleteHostToTrace(apiID uint32, traceSourceID uint, component string) error {
+func (h *TraceSamplingTableHandler) DeleteApiToTrace(component string, traceSourceID uint, apiID uint32) error {
 	return h.tx.Unscoped().Delete(&TraceSampling{
 		APIID:         uint(apiID),
 		TraceSourceID: traceSourceID,
@@ -92,14 +99,20 @@ func (h *TraceSamplingTableHandler) DeleteAll() error {
 		Error
 }
 
-func (h *TraceSamplingTableHandler) ResetHostsToTrace(traceSourceID uint, component string) error {
+func (h *TraceSamplingTableHandler) ResetApisToTraceByTraceSource(component string, traceSourceID uint) error {
 	return h.tx.Where("trace_source_id = ? AND component = ?", traceSourceID, component).
 		Delete(&TraceSampling{}).
 		Error
 }
 
+func (h *TraceSamplingTableHandler) ResetApisToTraceByComponent(component string) error {
+	return h.tx.Where("component = ?", component).
+		Delete(&TraceSampling{}).
+		Error
+}
+
 func (h *TraceSamplingTableHandler) GetExternalTraceSourceID() (uint, error) {
-	return externalTraceSourceID, nil
+	return common.DefaultTraceSourceID, nil
 }
 
 // createHostFromTraceSamplingWithHostAndPort will create hosts in the format of `hostname:port` if port exist, otherwise will return only hostname
@@ -118,11 +131,11 @@ func createHostFromTraceSamplingWithHostAndPort(sampling *TraceSamplingWithHostA
 	return ret
 }
 
-func (h *TraceSamplingTableHandler) HostsToTraceByComponentID(traceSourceID uint, component string) ([]string, error) {
+func (h *TraceSamplingTableHandler) HostsToTraceByTraceSource(component string, traceSourceID uint) ([]string, error) {
 	var hosts []string
 
 	var samplings []*TraceSamplingWithHostAndPort
-	t := h.tx.Select("trace_sampling.api_id, trace_sampling.trace_source_id, trace_sampling.component, api_inventory.name, api_inventory.port, api_inventory.destinationNamespace").
+	t := h.tx.Select("trace_sampling.api_id, trace_sampling.trace_source_id, trace_sampling.component, api_inventory.name, api_inventory.port, api_inventory.destination_namespace").
 		Where("trace_sampling.trace_source_id = ? AND trace_sampling.component = ?", traceSourceID, component).
 		Joins("LEFT JOIN api_inventory ON api_inventory.id = trace_sampling.api_id")
 	if err := t.Find(&samplings).Error; err != nil {
@@ -134,4 +147,24 @@ func (h *TraceSamplingTableHandler) HostsToTraceByComponentID(traceSourceID uint
 	}
 
 	return hosts, nil
+}
+
+func (h *TraceSamplingTableHandler) HostsToTraceByComponent(component string) (map[uint][]string, error) {
+	hostsMap := make(map[uint][]string)
+
+	var samplings []*TraceSamplingWithHostAndPort
+	t := h.tx.Select("trace_sampling.api_id, trace_sampling.trace_source_id, trace_sampling.component, api_inventory.name, api_inventory.port, api_inventory.destination_namespace").
+		Where("trace_sampling.component = ?", component).
+		Group("trace_sampling.trace_source_id").
+		Joins("LEFT JOIN api_inventory ON api_inventory.id = trace_sampling.api_id")
+	if err := t.Find(&samplings).Error; err != nil {
+		return nil, err
+	}
+
+	for _, sampling := range samplings {
+		traceSourceHosts := createHostFromTraceSamplingWithHostAndPort(sampling)
+		hostsMap[sampling.TraceSourceID] = append(hostsMap[sampling.TraceSourceID], traceSourceHosts...)
+	}
+
+	return hostsMap, nil
 }

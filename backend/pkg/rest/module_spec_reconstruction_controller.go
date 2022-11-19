@@ -30,7 +30,7 @@ func (s *Server) PostModulesSpecReconstructionAPIIDStart(params operations.PostM
 	apiID := params.APIID
 	modName := "*"
 
-	if err := s.TraceSamplingManager.AddHostToTrace(modName, apiID); err != nil {
+	if err := s.samplingManager.AddHostToTrace(modName, apiID); err != nil {
 		log.Errorf("failed to retrieve API info for apiID=%v: %v", apiID, err)
 		return operations.NewPostModulesSpecReconstructionAPIIDStartDefault(http.StatusInternalServerError)
 	}
@@ -45,7 +45,7 @@ func (s *Server) PostModulesSpecReconstructionAPIIDStop(params operations.PostMo
 	modName := "*"
 	apiID := params.APIID
 
-	if err := s.TraceSamplingManager.RemoveHostToTrace(modName, apiID); err != nil {
+	if err := s.samplingManager.RemoveHostToTrace(modName, apiID); err != nil {
 		log.Errorf("failed to retrieve API info for apiID=%v: %v", apiID, err)
 		return operations.NewPostModulesSpecReconstructionAPIIDStopDefault(http.StatusInternalServerError)
 	}
@@ -60,7 +60,7 @@ func (s *Server) PostModulesSpecReconstructionEnable(params operations.PostModul
 	modName := "*"
 	flag := params.Body.Enable
 	if !flag {
-		if err := s.TraceSamplingManager.ResetForComponent(modName); err != nil {
+		if err := s.samplingManager.ResetForComponent(modName); err != nil {
 			log.Errorf("failed to reset trace sampling manager for module %v: %v", modName, err)
 			return operations.NewPostModulesSpecReconstructionAPIIDStartDefault(http.StatusInternalServerError)
 		}
