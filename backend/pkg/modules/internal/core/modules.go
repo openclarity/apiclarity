@@ -237,14 +237,14 @@ func (b *accessor) Notify(ctx context.Context, modName string, apiID uint, n not
 }
 
 func (b *accessor) EnableTraces(ctx context.Context, modName string, apiID uint) error {
-	if err := b.samplingManager.AddHostToTrace("*", uint32(apiID)); err != nil {
+	if err := b.samplingManager.AddHostToTrace(modName, uint32(apiID)); err != nil {
 		return fmt.Errorf("failed to add API %v to trace: %v", apiID, err)
 	}
 	return nil
 }
 
 func (b *accessor) DisableTraces(ctx context.Context, modName string, apiID uint) error {
-	if err := b.samplingManager.RemoveHostToTrace("*", uint32(apiID)); err != nil {
+	if err := b.samplingManager.RemoveHostToTrace(modName, uint32(apiID)); err != nil {
 		return fmt.Errorf("failed to remove API %v to trace: %v", apiID, err)
 	}
 	return nil
