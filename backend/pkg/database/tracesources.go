@@ -21,6 +21,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 const (
@@ -41,6 +42,7 @@ type TraceSource struct {
 }
 
 type TraceSourcesTable interface {
+	Prepopulate() error
 	CreateTraceSource(source *TraceSource) error
 	GetTraceSource(ID uint) (*TraceSource, error)
 	GetTraceSourceFromToken(token []byte) (*TraceSource, error)
@@ -50,6 +52,16 @@ type TraceSourcesTable interface {
 
 type TraceSourcesTableHandler struct {
 	tx *gorm.DB
+}
+
+func (h *TraceSourcesTableHandler) Prepopulate() error {
+	defaultTraceSources := []map[string]interface{}{
+		{"ID": 0, "Name": "Default Trace Source"},
+	}
+
+	return h.tx.Model(&TraceSource{}).Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Create(&defaultTraceSources).Error
 }
 
 func (h *TraceSourcesTableHandler) CreateTraceSource(source *TraceSource) error {
