@@ -1399,11 +1399,11 @@ type ClientInterface interface {
 	// SpecreconstructorgetVersion request
 	SpecreconstructorgetVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostModulesSpecreconstructorApiIdStart request
-	PostModulesSpecreconstructorApiIdStart(ctx context.Context, apiId externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// SpecreconstructorPostAPIIDStart request
+	SpecreconstructorPostAPIIDStart(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostModulesSpecreconstructorApiIdStop request
-	PostModulesSpecreconstructorApiIdStop(ctx context.Context, apiId externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// SpecreconstructorPostAPIIDStop request
+	SpecreconstructorPostAPIIDStop(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// TraceanalyzerGetApiFindings request
 	TraceanalyzerGetApiFindings(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerGetApiFindingsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2225,8 +2225,8 @@ func (c *Client) SpecreconstructorgetVersion(ctx context.Context, reqEditors ...
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostModulesSpecreconstructorApiIdStart(ctx context.Context, apiId externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostModulesSpecreconstructorApiIdStartRequest(c.Server, apiId)
+func (c *Client) SpecreconstructorPostAPIIDStart(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSpecreconstructorPostAPIIDStartRequest(c.Server, apiID)
 	if err != nil {
 		return nil, err
 	}
@@ -2237,8 +2237,8 @@ func (c *Client) PostModulesSpecreconstructorApiIdStart(ctx context.Context, api
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostModulesSpecreconstructorApiIdStop(ctx context.Context, apiId externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostModulesSpecreconstructorApiIdStopRequest(c.Server, apiId)
+func (c *Client) SpecreconstructorPostAPIIDStop(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSpecreconstructorPostAPIIDStopRequest(c.Server, apiID)
 	if err != nil {
 		return nil, err
 	}
@@ -5705,13 +5705,13 @@ func NewSpecreconstructorgetVersionRequest(server string) (*http.Request, error)
 	return req, nil
 }
 
-// NewPostModulesSpecreconstructorApiIdStartRequest generates requests for PostModulesSpecreconstructorApiIdStart
-func NewPostModulesSpecreconstructorApiIdStartRequest(server string, apiId externalRef0.ApiID) (*http.Request, error) {
+// NewSpecreconstructorPostAPIIDStartRequest generates requests for SpecreconstructorPostAPIIDStart
+func NewSpecreconstructorPostAPIIDStartRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiId", runtime.ParamLocationPath, apiId)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
 	if err != nil {
 		return nil, err
 	}
@@ -5739,13 +5739,13 @@ func NewPostModulesSpecreconstructorApiIdStartRequest(server string, apiId exter
 	return req, nil
 }
 
-// NewPostModulesSpecreconstructorApiIdStopRequest generates requests for PostModulesSpecreconstructorApiIdStop
-func NewPostModulesSpecreconstructorApiIdStopRequest(server string, apiId externalRef0.ApiID) (*http.Request, error) {
+// NewSpecreconstructorPostAPIIDStopRequest generates requests for SpecreconstructorPostAPIIDStop
+func NewSpecreconstructorPostAPIIDStopRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
 
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiId", runtime.ParamLocationPath, apiId)
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
 	if err != nil {
 		return nil, err
 	}
@@ -6218,11 +6218,11 @@ type ClientWithResponsesInterface interface {
 	// SpecreconstructorgetVersion request
 	SpecreconstructorgetVersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*SpecreconstructorgetVersionResponse, error)
 
-	// PostModulesSpecreconstructorApiIdStart request
-	PostModulesSpecreconstructorApiIdStartWithResponse(ctx context.Context, apiId externalRef0.ApiID, reqEditors ...RequestEditorFn) (*PostModulesSpecreconstructorApiIdStartResponse, error)
+	// SpecreconstructorPostAPIIDStart request
+	SpecreconstructorPostAPIIDStartWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*SpecreconstructorPostAPIIDStartResponse, error)
 
-	// PostModulesSpecreconstructorApiIdStop request
-	PostModulesSpecreconstructorApiIdStopWithResponse(ctx context.Context, apiId externalRef0.ApiID, reqEditors ...RequestEditorFn) (*PostModulesSpecreconstructorApiIdStopResponse, error)
+	// SpecreconstructorPostAPIIDStop request
+	SpecreconstructorPostAPIIDStopWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*SpecreconstructorPostAPIIDStopResponse, error)
 
 	// TraceanalyzerGetApiFindings request
 	TraceanalyzerGetApiFindingsWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *TraceanalyzerGetApiFindingsParams, reqEditors ...RequestEditorFn) (*TraceanalyzerGetApiFindingsResponse, error)
@@ -7585,14 +7585,14 @@ func (r SpecreconstructorgetVersionResponse) StatusCode() int {
 	return 0
 }
 
-type PostModulesSpecreconstructorApiIdStartResponse struct {
+type SpecreconstructorPostAPIIDStartResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSONDefault  *externalRef0.ApiResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r PostModulesSpecreconstructorApiIdStartResponse) Status() string {
+func (r SpecreconstructorPostAPIIDStartResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7600,21 +7600,21 @@ func (r PostModulesSpecreconstructorApiIdStartResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostModulesSpecreconstructorApiIdStartResponse) StatusCode() int {
+func (r SpecreconstructorPostAPIIDStartResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PostModulesSpecreconstructorApiIdStopResponse struct {
+type SpecreconstructorPostAPIIDStopResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSONDefault  *externalRef0.ApiResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r PostModulesSpecreconstructorApiIdStopResponse) Status() string {
+func (r SpecreconstructorPostAPIIDStopResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7622,7 +7622,7 @@ func (r PostModulesSpecreconstructorApiIdStopResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostModulesSpecreconstructorApiIdStopResponse) StatusCode() int {
+func (r SpecreconstructorPostAPIIDStopResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8336,22 +8336,22 @@ func (c *ClientWithResponses) SpecreconstructorgetVersionWithResponse(ctx contex
 	return ParseSpecreconstructorgetVersionResponse(rsp)
 }
 
-// PostModulesSpecreconstructorApiIdStartWithResponse request returning *PostModulesSpecreconstructorApiIdStartResponse
-func (c *ClientWithResponses) PostModulesSpecreconstructorApiIdStartWithResponse(ctx context.Context, apiId externalRef0.ApiID, reqEditors ...RequestEditorFn) (*PostModulesSpecreconstructorApiIdStartResponse, error) {
-	rsp, err := c.PostModulesSpecreconstructorApiIdStart(ctx, apiId, reqEditors...)
+// SpecreconstructorPostAPIIDStartWithResponse request returning *SpecreconstructorPostAPIIDStartResponse
+func (c *ClientWithResponses) SpecreconstructorPostAPIIDStartWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*SpecreconstructorPostAPIIDStartResponse, error) {
+	rsp, err := c.SpecreconstructorPostAPIIDStart(ctx, apiID, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostModulesSpecreconstructorApiIdStartResponse(rsp)
+	return ParseSpecreconstructorPostAPIIDStartResponse(rsp)
 }
 
-// PostModulesSpecreconstructorApiIdStopWithResponse request returning *PostModulesSpecreconstructorApiIdStopResponse
-func (c *ClientWithResponses) PostModulesSpecreconstructorApiIdStopWithResponse(ctx context.Context, apiId externalRef0.ApiID, reqEditors ...RequestEditorFn) (*PostModulesSpecreconstructorApiIdStopResponse, error) {
-	rsp, err := c.PostModulesSpecreconstructorApiIdStop(ctx, apiId, reqEditors...)
+// SpecreconstructorPostAPIIDStopWithResponse request returning *SpecreconstructorPostAPIIDStopResponse
+func (c *ClientWithResponses) SpecreconstructorPostAPIIDStopWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*SpecreconstructorPostAPIIDStopResponse, error) {
+	rsp, err := c.SpecreconstructorPostAPIIDStop(ctx, apiID, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostModulesSpecreconstructorApiIdStopResponse(rsp)
+	return ParseSpecreconstructorPostAPIIDStopResponse(rsp)
 }
 
 // TraceanalyzerGetApiFindingsWithResponse request returning *TraceanalyzerGetApiFindingsResponse
@@ -10297,15 +10297,15 @@ func ParseSpecreconstructorgetVersionResponse(rsp *http.Response) (*Specreconstr
 	return response, nil
 }
 
-// ParsePostModulesSpecreconstructorApiIdStartResponse parses an HTTP response from a PostModulesSpecreconstructorApiIdStartWithResponse call
-func ParsePostModulesSpecreconstructorApiIdStartResponse(rsp *http.Response) (*PostModulesSpecreconstructorApiIdStartResponse, error) {
+// ParseSpecreconstructorPostAPIIDStartResponse parses an HTTP response from a SpecreconstructorPostAPIIDStartWithResponse call
+func ParseSpecreconstructorPostAPIIDStartResponse(rsp *http.Response) (*SpecreconstructorPostAPIIDStartResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostModulesSpecreconstructorApiIdStartResponse{
+	response := &SpecreconstructorPostAPIIDStartResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10323,15 +10323,15 @@ func ParsePostModulesSpecreconstructorApiIdStartResponse(rsp *http.Response) (*P
 	return response, nil
 }
 
-// ParsePostModulesSpecreconstructorApiIdStopResponse parses an HTTP response from a PostModulesSpecreconstructorApiIdStopWithResponse call
-func ParsePostModulesSpecreconstructorApiIdStopResponse(rsp *http.Response) (*PostModulesSpecreconstructorApiIdStopResponse, error) {
+// ParseSpecreconstructorPostAPIIDStopResponse parses an HTTP response from a SpecreconstructorPostAPIIDStopWithResponse call
+func ParseSpecreconstructorPostAPIIDStopResponse(rsp *http.Response) (*SpecreconstructorPostAPIIDStopResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostModulesSpecreconstructorApiIdStopResponse{
+	response := &SpecreconstructorPostAPIIDStopResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10677,11 +10677,11 @@ type ServerInterface interface {
 	// (GET /modules/specreconstructor/version)
 	SpecreconstructorgetVersion(w http.ResponseWriter, r *http.Request)
 	// Start the spec reconstruction for this API.
-	// (POST /modules/specreconstructor/{apiId}/start)
-	PostModulesSpecreconstructorApiIdStart(w http.ResponseWriter, r *http.Request, apiId externalRef0.ApiID)
+	// (POST /modules/specreconstructor/{apiID}/start)
+	SpecreconstructorPostAPIIDStart(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 	// Stop the spec reconstruction for this API.
-	// (POST /modules/specreconstructor/{apiId}/stop)
-	PostModulesSpecreconstructorApiIdStop(w http.ResponseWriter, r *http.Request, apiId externalRef0.ApiID)
+	// (POST /modules/specreconstructor/{apiID}/stop)
+	SpecreconstructorPostAPIIDStop(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 	// Get findings for an API and module
 	// (GET /modules/traceanalyzer/apiFindings/{apiID})
 	TraceanalyzerGetApiFindings(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params TraceanalyzerGetApiFindingsParams)
@@ -13180,23 +13180,23 @@ func (siw *ServerInterfaceWrapper) SpecreconstructorgetVersion(w http.ResponseWr
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// PostModulesSpecreconstructorApiIdStart operation middleware
-func (siw *ServerInterfaceWrapper) PostModulesSpecreconstructorApiIdStart(w http.ResponseWriter, r *http.Request) {
+// SpecreconstructorPostAPIIDStart operation middleware
+func (siw *ServerInterfaceWrapper) SpecreconstructorPostAPIIDStart(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var err error
 
-	// ------------- Path parameter "apiId" -------------
-	var apiId externalRef0.ApiID
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
 
-	err = runtime.BindStyledParameterWithLocation("simple", false, "apiId", runtime.ParamLocationPath, chi.URLParam(r, "apiId"), &apiId)
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiId", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
 		return
 	}
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostModulesSpecreconstructorApiIdStart(w, r, apiId)
+		siw.Handler.SpecreconstructorPostAPIIDStart(w, r, apiID)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -13206,23 +13206,23 @@ func (siw *ServerInterfaceWrapper) PostModulesSpecreconstructorApiIdStart(w http
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// PostModulesSpecreconstructorApiIdStop operation middleware
-func (siw *ServerInterfaceWrapper) PostModulesSpecreconstructorApiIdStop(w http.ResponseWriter, r *http.Request) {
+// SpecreconstructorPostAPIIDStop operation middleware
+func (siw *ServerInterfaceWrapper) SpecreconstructorPostAPIIDStop(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var err error
 
-	// ------------- Path parameter "apiId" -------------
-	var apiId externalRef0.ApiID
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
 
-	err = runtime.BindStyledParameterWithLocation("simple", false, "apiId", runtime.ParamLocationPath, chi.URLParam(r, "apiId"), &apiId)
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiId", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
 		return
 	}
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostModulesSpecreconstructorApiIdStop(w, r, apiId)
+		siw.Handler.SpecreconstructorPostAPIIDStop(w, r, apiID)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -13678,10 +13678,10 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/modules/specreconstructor/version", wrapper.SpecreconstructorgetVersion)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/modules/specreconstructor/{apiId}/start", wrapper.PostModulesSpecreconstructorApiIdStart)
+		r.Post(options.BaseURL+"/modules/specreconstructor/{apiID}/start", wrapper.SpecreconstructorPostAPIIDStart)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/modules/specreconstructor/{apiId}/stop", wrapper.PostModulesSpecreconstructorApiIdStop)
+		r.Post(options.BaseURL+"/modules/specreconstructor/{apiID}/stop", wrapper.SpecreconstructorPostAPIIDStop)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/modules/traceanalyzer/apiFindings/{apiID}", wrapper.TraceanalyzerGetApiFindings)
@@ -13823,11 +13823,11 @@ var swaggerSpec = []string{
 	"GVM/5uY6l4DIifokqJdyM3ivQ9xZhNuugbshoIYcL4C/7V6YqhwuuOzqECpPI1ol8/EjGk0Ubqse6+qY",
 	"FUsxH0h5y0Y88hl6pruOe4puRf/jnpQXkMUNiZsAr1Yo6Rb9G4o+BqmqBe90SQ4VApT/PaUvfodZK+XA",
 	"VYX4LkzVGqbqyFJRfOKoV8FRNtJXGcqoER0lPUTgbYicEqrn5c4j2feRVKesraLmsB4INBeOe/kUk7jv",
-	"BZjyf6XzHqOlWT1daq9GCu6rn6dhusbEKhkKE3xPCW9qTW5q3GjcgN7scYqyMnffJ/KBik5XpoIXEP//",
-	"nhRpzd5RBZIxlVrQmdRFFduZ0h2uJZ0I3Um/7UFncRcQEhjuXliO4MIE7FSH65QqeMRUwVamb7tIV2BO",
-	"cV/uJbGnk3STt/y+C/LqKsBhKM8mqpRuIi8q3fjpfRO/NIm2vF5tX40CjAHKhyNI3YVqll+Vi0cuXKIg",
-	"PfAQyuVlnAAuGTreE192Hmi5dpV9thWWLeOfKLw3UL5TpMmgN8W0MTxQIK3MO+O/6L6nSMEriD3VsoMb",
-	"w7VGofZntyg+cdsri0s1MRtvjZI7Tdw0Cb0z8VSc93D98H8BAAD//26qzNU78gAA",
+	"BZjyf6XzHqOlWT1daq9GCu6rn6dhusbEKhkKE3xPCW9qTW5q3GjcgN5aZd6CNvH8wXQsksaT7yvw/z1p",
+	"0JpNoyojYyrVnzONi7rVncQv8iLS90/hKN6HwOL2HyQw3L2wrMCFCdip8tYpOfCIyYGtTN92da7AnOKG",
+	"3EtiTyfpJu/1fRfk1XV/w1CeRlQp3UReVLrj0/smfmkSbXmF2r4aBRgDlI9DkLr91Cy/KleNXLhEQXrg",
+	"sZPLWzgBXDJ0vEe97DzQctEq+2wrJVvGP1F4b6B8p9iSQW+KaWNAoEBamWnGf9F9T7GBVxBtqmUHN4Zr",
+	"jTvtz25RfOK2VxaJamI23hold5q4aRJ6Z+JxOO/h+uH/AgAA//9pPkHCLfIAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -17,11 +17,12 @@ paths:
               schema:
                 $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ModuleVersion
 
-  /{apiId}/start:
+  /{apiID}/start:
     post:
       summary: 'Start the spec reconstruction for this API.'
+      operationId: PostAPIIDStart
       parameters:
-        - name: apiId
+        - name: apiID
           in: path
           required: true
           schema:
@@ -36,11 +37,12 @@ paths:
               schema:
                 $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
 
-  /{apiId}/stop:
+  /{apiID}/stop:
     post:
       summary: 'Stop the spec reconstruction for this API.'
+      operationId: PostAPIIDStop
       parameters:
-        - name: apiId
+        - name: apiID
           in: path
           required: true
           schema:

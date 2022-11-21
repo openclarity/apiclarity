@@ -125,7 +125,7 @@ func (c *Core) EventNotify(ctx context.Context, event *Event) {
 	for modName, mod := range c.Modules {
 		hosts, err := c.samplingManager.GetHostsToTrace(modName, traceSourceID)
 		if err != nil {
-			log.Debugf("Failed to retreive hosts for traceSource %v for module %s.", traceSourceID, modName)
+			log.Debugf("Failed to retrieve hosts for traceSource %v for module %s.", traceSourceID, modName)
 			continue
 		}
 		if !shouldTrace(host, port, hosts) {

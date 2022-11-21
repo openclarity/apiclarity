@@ -61,11 +61,11 @@ func CreateTraceSamplingManager(dbHandler *database.Handler, config *_globalConf
 	})
 	if err != nil {
 		log.Errorf("Failed to create a trace sampling manager: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to create a trace sampling manager: %v", err)
 	}
-	if err := samplingManager.Start(errChan); err != nil {
+	if err = samplingManager.Start(errChan); err != nil {
 		log.Errorf("Failed to start trace sampling manager: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to start trace sampling manager: %v", err)
 	}
 	s.samplingManager = samplingManager
 	/*
@@ -80,22 +80,25 @@ func (m *TraceSamplingManager) AddHostToTrace(component string, apiID uint32) er
 		return nil
 	}
 
-	externalTraceSourceId, err := m.dbHandler.TraceSamplingTable().GetExternalTraceSourceID()
+	externalTraceSourceID, err := m.dbHandler.TraceSamplingTable().GetExternalTraceSourceID()
 	if err != nil {
 		log.Errorf("Failed to retrieve external source ID: %v", err)
-		return err
+		return fmt.Errorf("failed to retrieve external source ID: %v", err)
 	}
 
 	apiInfo := &database.APIInfo{}
-	if err := m.dbHandler.APIInventoryTable().First(apiInfo, apiID); err != nil {
+	if err = m.dbHandler.APIInventoryTable().First(apiInfo, apiID); err != nil {
 		log.Errorf("Failed to retrieve API info for apiID=%v: %v", apiID, err)
-		return err
+		return fmt.Errorf("failed to retrieve API info for apiID=%v: %v", apiID, err)
 	}
 
 	traceSourceID := apiInfo.TraceSourceID
-	m.dbHandler.TraceSamplingTable().AddApiToTrace(component, traceSourceID, apiID)
+	if err = m.dbHandler.TraceSamplingTable().AddAPIToTrace(component, traceSourceID, apiID); err != nil {
+		log.Errorf("Failed to enable traces for API %v: %v", apiID, err)
+		return fmt.Errorf("failed to enable traces for API %v: %v", apiID, err)
+	}
 
-	if traceSourceID == externalTraceSourceId && m.samplingManager != nil {
+	if traceSourceID == externalTraceSourceID && m.samplingManager != nil {
 		// Relay it to the TSM
 		m.samplingManager.AddHostsToTrace(
 			&interfacemanager.HostsByComponentID{
@@ -112,22 +115,25 @@ func (m *TraceSamplingManager) RemoveHostToTrace(component string, apiID uint32)
 		return nil
 	}
 
-	externalTraceSourceId, err := m.dbHandler.TraceSamplingTable().GetExternalTraceSourceID()
+	externalTraceSourceID, err := m.dbHandler.TraceSamplingTable().GetExternalTraceSourceID()
 	if err != nil {
 		log.Errorf("Failed to retrieve external source ID: %v", err)
-		return err
+		return fmt.Errorf("failed to retrieve external source ID: %v", err)
 	}
 
 	apiInfo := &database.APIInfo{}
-	if err := m.dbHandler.APIInventoryTable().First(apiInfo, apiID); err != nil {
+	if err = m.dbHandler.APIInventoryTable().First(apiInfo, apiID); err != nil {
 		log.Errorf("Failed to retrieve API info for apiID=%v: %v", apiID, err)
-		return err
+		return fmt.Errorf("failed to retrieve API info for apiID=%v: %v", apiID, err)
 	}
 
 	traceSourceID := apiInfo.TraceSourceID
-	m.dbHandler.TraceSamplingTable().DeleteApiToTrace(component, traceSourceID, apiID)
+	if err = m.dbHandler.TraceSamplingTable().DeleteAPIToTrace(component, traceSourceID, apiID); err != nil {
+		log.Errorf("Failed to disable traces for API %v: %v", apiID, err)
+		return fmt.Errorf("failed to disable traces for API %v: %v", apiID, err)
+	}
 
-	if traceSourceID == externalTraceSourceId && m.samplingManager != nil {
+	if traceSourceID == externalTraceSourceID && m.samplingManager != nil {
 		// Relay it to the TSM
 		m.samplingManager.RemoveHostsToTrace(
 			&interfacemanager.HostsByComponentID{
@@ -153,7 +159,7 @@ func (m *TraceSamplingManager) GetHostsToTraceByComponent(component string) (map
 	hostsMap, err := m.dbHandler.TraceSamplingTable().HostsToTraceByComponent(component)
 	if err != nil {
 		log.Errorf("Failed to retrieve hosts list for component=%v: %v", component, err)
-		return nil, err
+		return nil, fmt.Errorf("failed to retrieve hosts list for component=%v: %v", component, err)
 	}
 	return hostsMap, nil
 }
@@ -166,13 +172,17 @@ func (m *TraceSamplingManager) GetHostsToTraceByTraceSource(component string, tr
 	hosts, err := m.dbHandler.TraceSamplingTable().HostsToTraceByTraceSource(component, traceSourceID)
 	if err != nil {
 		log.Errorf("Failed to retrieve hosts list for component=%v: %v", component, err)
-		return nil, err
+		return nil, fmt.Errorf("failed to retrieve hosts list for component=%v: %v", component, err)
 	}
 	return hosts, nil
 }
 
 func (m *TraceSamplingManager) ResetForComponent(component string) error {
-	m.dbHandler.TraceSamplingTable().DeleteAll()
+	if err := m.dbHandler.TraceSamplingTable().DeleteAll(); err != nil {
+		log.Errorf("Failed to delete traces: %v", err)
+		return fmt.Errorf("failed to delete traces: %v", err)
+	}
+
 	if m.samplingManager != nil {
 		// Relay it to the TSM
 		m.samplingManager.SetHostsToTrace(

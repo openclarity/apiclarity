@@ -2462,11 +2462,12 @@ paths:
                 $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
           description: Error response
       summary: Stop Differ for an API
-  /modules/specreconstructor/{apiId}/start:
+  /modules/specreconstructor/{apiID}/start:
     post:
+      operationId: specreconstructorPostAPIIDStart
       parameters:
       - in: path
-        name: apiId
+        name: apiID
         required: true
         schema:
           $ref: ../common/openapi.yaml#/components/schemas/ApiID
@@ -2480,11 +2481,12 @@ paths:
                 $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
           description: Error response
       summary: Start the spec reconstruction for this API.
-  /modules/specreconstructor/{apiId}/stop:
+  /modules/specreconstructor/{apiID}/stop:
     post:
+      operationId: specreconstructorPostAPIIDStop
       parameters:
       - in: path
-        name: apiId
+        name: apiID
         required: true
         schema:
           $ref: ../common/openapi.yaml#/components/schemas/ApiID

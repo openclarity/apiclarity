@@ -18,9 +18,9 @@ package database
 import (
 	"strconv"
 
-	"github.com/openclarity/apiclarity/backend/pkg/common"
-
 	"gorm.io/gorm"
+
+	"github.com/openclarity/apiclarity/backend/pkg/common"
 )
 
 const (
@@ -46,12 +46,12 @@ type TraceSamplingWithHostAndPort struct {
 }
 
 type TraceSamplingTable interface {
-	AddApiToTrace(component string, traceSourceID uint, apiID uint32) error
-	GetApisToTrace(component string, traceSourceID uint) ([]*TraceSampling, error)
-	DeleteApiToTrace(component string, traceSourceID uint, apiID uint32) error
+	AddAPIToTrace(component string, traceSourceID uint, apiID uint32) error
+	GetAPIsToTrace(component string, traceSourceID uint) ([]*TraceSampling, error)
+	DeleteAPIToTrace(component string, traceSourceID uint, apiID uint32) error
 	DeleteAll() error
-	ResetApisToTraceByTraceSource(component string, traceSourceID uint) error
-	ResetApisToTraceByComponent(component string) error
+	ResetAPIsToTraceByTraceSource(component string, traceSourceID uint) error
+	ResetAPIsToTraceByComponent(component string) error
 	GetExternalTraceSourceID() (uint, error)
 	HostsToTraceByTraceSource(component string, traceSourceID uint) ([]string, error)
 	HostsToTraceByComponent(component string) (map[uint][]string, error)
@@ -65,7 +65,7 @@ func (TraceSampling) TableName() string {
 	return traceSamplingTableName
 }
 
-func (h *TraceSamplingTableHandler) AddApiToTrace(component string, traceSourceID uint, apiID uint32) error {
+func (h *TraceSamplingTableHandler) AddAPIToTrace(component string, traceSourceID uint, apiID uint32) error {
 	sampling := TraceSampling{
 		APIID:         uint(apiID),
 		TraceSourceID: traceSourceID,
@@ -74,7 +74,7 @@ func (h *TraceSamplingTableHandler) AddApiToTrace(component string, traceSourceI
 	return h.tx.Where(sampling).FirstOrCreate(&sampling).Error
 }
 
-func (h *TraceSamplingTableHandler) GetApisToTrace(component string, traceSourceID uint) ([]*TraceSampling, error) {
+func (h *TraceSamplingTableHandler) GetAPIsToTrace(component string, traceSourceID uint) ([]*TraceSampling, error) {
 	var samplings []*TraceSampling
 	t := h.tx.Where("trace_source_id = ? AND component = ?", traceSourceID, component)
 
@@ -85,7 +85,7 @@ func (h *TraceSamplingTableHandler) GetApisToTrace(component string, traceSource
 	return samplings, nil
 }
 
-func (h *TraceSamplingTableHandler) DeleteApiToTrace(component string, traceSourceID uint, apiID uint32) error {
+func (h *TraceSamplingTableHandler) DeleteAPIToTrace(component string, traceSourceID uint, apiID uint32) error {
 	return h.tx.Unscoped().
 		Where("trace_source_id = ? AND component = ? AND api_id = ?", traceSourceID, component, apiID).
 		Delete(&TraceSampling{}).
@@ -98,13 +98,13 @@ func (h *TraceSamplingTableHandler) DeleteAll() error {
 		Error
 }
 
-func (h *TraceSamplingTableHandler) ResetApisToTraceByTraceSource(component string, traceSourceID uint) error {
+func (h *TraceSamplingTableHandler) ResetAPIsToTraceByTraceSource(component string, traceSourceID uint) error {
 	return h.tx.Where("trace_source_id = ? AND component = ?", traceSourceID, component).
 		Delete(&TraceSampling{}).
 		Error
 }
 
-func (h *TraceSamplingTableHandler) ResetApisToTraceByComponent(component string) error {
+func (h *TraceSamplingTableHandler) ResetAPIsToTraceByComponent(component string) error {
 	return h.tx.Where("component = ?", component).
 		Delete(&TraceSampling{}).
 		Error

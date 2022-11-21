@@ -40,11 +40,11 @@ type ServerInterface interface {
 	// (GET /version)
 	GetVersion(w http.ResponseWriter, r *http.Request)
 	// Start the spec reconstruction for this API.
-	// (POST /{apiId}/start)
-	PostApiIdStart(w http.ResponseWriter, r *http.Request, apiId externalRef0.ApiID)
+	// (POST /{apiID}/start)
+	PostAPIIDStart(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 	// Stop the spec reconstruction for this API.
-	// (POST /{apiId}/stop)
-	PostApiIdStop(w http.ResponseWriter, r *http.Request, apiId externalRef0.ApiID)
+	// (POST /{apiID}/stop)
+	PostAPIIDStop(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -86,23 +86,23 @@ func (siw *ServerInterfaceWrapper) GetVersion(w http.ResponseWriter, r *http.Req
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// PostApiIdStart operation middleware
-func (siw *ServerInterfaceWrapper) PostApiIdStart(w http.ResponseWriter, r *http.Request) {
+// PostAPIIDStart operation middleware
+func (siw *ServerInterfaceWrapper) PostAPIIDStart(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var err error
 
-	// ------------- Path parameter "apiId" -------------
-	var apiId externalRef0.ApiID
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
 
-	err = runtime.BindStyledParameterWithLocation("simple", false, "apiId", runtime.ParamLocationPath, chi.URLParam(r, "apiId"), &apiId)
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiId", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
 		return
 	}
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostApiIdStart(w, r, apiId)
+		siw.Handler.PostAPIIDStart(w, r, apiID)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -112,23 +112,23 @@ func (siw *ServerInterfaceWrapper) PostApiIdStart(w http.ResponseWriter, r *http
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
-// PostApiIdStop operation middleware
-func (siw *ServerInterfaceWrapper) PostApiIdStop(w http.ResponseWriter, r *http.Request) {
+// PostAPIIDStop operation middleware
+func (siw *ServerInterfaceWrapper) PostAPIIDStop(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var err error
 
-	// ------------- Path parameter "apiId" -------------
-	var apiId externalRef0.ApiID
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
 
-	err = runtime.BindStyledParameterWithLocation("simple", false, "apiId", runtime.ParamLocationPath, chi.URLParam(r, "apiId"), &apiId)
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
 	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiId", Err: err})
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
 		return
 	}
 
 	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostApiIdStop(w, r, apiId)
+		siw.Handler.PostAPIIDStop(w, r, apiID)
 	})
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -258,10 +258,10 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/version", wrapper.GetVersion)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/{apiId}/start", wrapper.PostApiIdStart)
+		r.Post(options.BaseURL+"/{apiID}/start", wrapper.PostAPIIDStart)
 	})
 	r.Group(func(r chi.Router) {
-		r.Post(options.BaseURL+"/{apiId}/stop", wrapper.PostApiIdStop)
+		r.Post(options.BaseURL+"/{apiID}/stop", wrapper.PostAPIIDStop)
 	})
 
 	return r
@@ -270,15 +270,15 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+yTz4rbQAzGX2VQezR22vTkW/pv8aEQNrCX0sPElpNZ7NFUIxdC8LsX2U7STXbbUCh7",
-	"6ILBg9BoPn0/aQ8ltYE8eomQ7yGWW2ztcPyMVjrGT96uG9RAhbFkF8SRhxzGeFa5qH9jTT3mQwKBKSCL",
-	"w6EOPlFgjJu6sRtIQHYBIYc1UYPWQ98fQ7S+x1Kg15DzNV1WWiyLD41lJzuzCliaWyzJR+GuFGLzhaqu",
-	"QbNYFvqME9Vy1RVI4AdyHN+YpbP0DfQJUEBvg4Mc5uksnWu7VrZDp9mp1UBR9K9GWJVZVJDDkqJMfibA",
-	"+L3DKO+p2mlmSV7QD5dsCI0rh2vZfdTnD2D09JqxhhxeZSdy2YQte8isHzxjjIF8HGG8nb279G/VlSXG",
-	"qN1VWNuukb8RlKbZ2WeDm6vKlnw22ZbubNs8Kn0R3O2kdGR9Nm7MxIZPGQnErm0t746jdJxF2aKJSpVP",
-	"VLWKXsqOSPewQbk04wZlKDDlGaqNbF00y6bbOA/JGdIblLup4oXVs2ewcRzdg6RHjLz7tS88tPXQzz94",
-	"MPi4t8EVVZ9FsSy/H/mFZq6GPN0Wti0KcoT86x6catINggS8bXU3h8LTgjjGCnLhDpN/MXHFR+j7b//F",
-	"jgz+P7UapiYeES+WRXoOmMJVfCm84H1GvBSuptv3PwMAAP//KUvRDPgHAAA=",
+	"H4sIAAAAAAAC/+yTwYrbMBCGX0VMezR22u3Jt7TbLj4UzC7spfSgyONEi61RR+NCCH73ItlJusluGwpl",
+	"Dy0YLIbR6J//m9mBod6TQycByh0Es8Fep+Mn1DIwfnR61WEMNBgMWy+WHJQwxYvGhvhXWrVTPmTgmTyy",
+	"WEx18JkCU1y1nV5DBrL1CCWsiDrUDsbxEKLVAxqBMYasa+m80rKuPnSarWzVnUejbtGQC8KDEWL1mZqh",
+	"Q7Wsq/iMlajloiuQwXfkML2xyBf5GxgzII9OewslXOWL/Cq2q2WTOi2OrXoKEv/RCB1lVg2UUFOQ2c8M",
+	"GL8NGOQ9NduYacgJunRJe99Zk64VDyE+vwcTT68ZWyjhVXEkV8zYisfMxuQZY/DkwgTj7eLduX93gzEY",
+	"QuyuwVYPnfyJoDwvTj7t7VVU2ZMrZtvyre67J6Uvvb2dlU6sT8aNmVjxMSODMPS95u1hlA6zKBtUIVLl",
+	"I9VYJV4qDkh3sEY5N+MGJRWY8xS1SjY2qLob1tZBdoL0BuV+rnhm9eIFbJxGdy/pCSPvf+4L92099vM3",
+	"HiQfd9rb6nosgmiWX4/8sq6q67uUF7eFdY+CHKD8sgMbNcUNggyc7uNupsLzgljGBkrhAbO/MXHVNYzj",
+	"139iR5L/z62GaoknxMu6yk8Bk7+IL/n/eF8QL/mL6Y7jjwAAAP//4fv0N/gHAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

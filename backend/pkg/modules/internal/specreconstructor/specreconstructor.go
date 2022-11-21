@@ -76,53 +76,49 @@ type specReconstructorPluginHTTPHandler struct {
 	plugin *specReconstructorPlugin
 }
 
-func httpError(w http.ResponseWriter, err error) {
-	w.WriteHeader(http.StatusBadRequest)
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": err.Error()})
+func httpError(w http.ResponseWriter, statusCode int, err error) {
+	w.WriteHeader(statusCode)
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{"message": err.Error()})
 }
 
 func httpResponse(writer http.ResponseWriter, statusCode int, data interface{}) {
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(statusCode)
 	if err := json.NewEncoder(writer).Encode(data); err != nil {
-		httpError(writer, err)
+		httpError(writer, http.StatusInternalServerError, err)
 	}
 }
 
-func (c *specReconstructorPluginHTTPHandler) PostApiIdStart(w http.ResponseWriter, r *http.Request, apiId int64) {
-	log.Debugf("PostApiIdStart(%v): --> <--", apiId)
+func (c *specReconstructorPluginHTTPHandler) PostAPIIDStart(w http.ResponseWriter, r *http.Request, apiID int64) {
+	log.Debugf("PostApiIdStart(%v): --> <--", apiID)
 
-	apiID := uint32(apiId)
 	component := "*"
 
-	if err := c.plugin.accessor.GetTraceSamplingAccessor().AddHostToTrace(component, apiID); err != nil {
+	if err := c.plugin.accessor.GetTraceSamplingAccessor().AddHostToTrace(component, uint32(apiID)); err != nil {
 		log.Errorf("Failed to add API %v in APIs to trace: %v", apiID, err)
-		httpResponse(w, http.StatusInternalServerError, EmptyJSON)
+		httpError(w, http.StatusInternalServerError, err)
 		return
 	}
 	log.Infof("Tracing successfully started for api=%d", apiID)
 
 	// Success...
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusNoContent)
+	httpResponse(w, http.StatusNoContent, EmptyJSON)
 }
 
-func (c *specReconstructorPluginHTTPHandler) PostApiIdStop(w http.ResponseWriter, r *http.Request, apiId int64) {
-	log.Debugf("PostApiIdStop(%v): --> <--", apiId)
+func (c *specReconstructorPluginHTTPHandler) PostAPIIDStop(w http.ResponseWriter, r *http.Request, apiID int64) {
+	log.Debugf("PostApiIdStop(%v): --> <--", apiID)
 
-	apiID := uint32(apiId)
 	component := "*"
 
-	if err := c.plugin.accessor.GetTraceSamplingAccessor().RemoveHostToTrace(component, apiID); err != nil {
+	if err := c.plugin.accessor.GetTraceSamplingAccessor().RemoveHostToTrace(component, uint32(apiID)); err != nil {
 		log.Errorf("Failed to remove API %v from APIs to trace: %v", apiID, err)
-		httpResponse(w, http.StatusInternalServerError, EmptyJSON)
+		httpError(w, http.StatusInternalServerError, err)
 		return
 	}
 	log.Infof("Tracing successfully stoped for api=%d", apiID)
 
 	// Success...
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusNoContent)
+	httpResponse(w, http.StatusNoContent, EmptyJSON)
 }
 
 func (c *specReconstructorPluginHTTPHandler) PostEnable(w http.ResponseWriter, r *http.Request) {
@@ -132,7 +128,7 @@ func (c *specReconstructorPluginHTTPHandler) PostEnable(w http.ResponseWriter, r
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Errorf("Can't read body content, error=(%v)", err)
-		httpResponse(w, http.StatusBadRequest, EmptyJSON)
+		httpError(w, http.StatusBadRequest, err)
 		return
 	}
 	log.Debugf(string(body))
@@ -140,7 +136,7 @@ func (c *specReconstructorPluginHTTPHandler) PostEnable(w http.ResponseWriter, r
 	err = json.Unmarshal(body, &enable)
 	if err != nil {
 		logging.Errorf("Failed to decode the request body, error=(%v)", err)
-		httpResponse(w, http.StatusInternalServerError, EmptyJSON)
+		httpError(w, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -149,17 +145,17 @@ func (c *specReconstructorPluginHTTPHandler) PostEnable(w http.ResponseWriter, r
 	if !*flag {
 		if err := c.plugin.accessor.GetTraceSamplingAccessor().ResetForComponent(component); err != nil {
 			log.Errorf("Failed to reset trace sampling for module %v: %v", component, err)
-			httpResponse(w, http.StatusInternalServerError, EmptyJSON)
+			httpError(w, http.StatusInternalServerError, err)
+			return
 		}
 	}
 
 	// Success...
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusNoContent)
+	httpResponse(w, http.StatusNoContent, EmptyJSON)
 }
 
 func (c *specReconstructorPluginHTTPHandler) GetVersion(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(oapicommon.ModuleVersion{Version: ModuleVersion}); err != nil {
-		httpError(w, err)
+		httpError(w, http.StatusInternalServerError, err)
 	}
 }
