@@ -103,6 +103,20 @@ func (mr *MockDatabaseMockRecorder) ReviewTable() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReviewTable", reflect.TypeOf((*MockDatabase)(nil).ReviewTable))
 }
 
+// TraceSamplingTable mocks base method.
+func (m *MockDatabase) TraceSamplingTable() TraceSamplingTable {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TraceSamplingTable")
+	ret0, _ := ret[0].(TraceSamplingTable)
+	return ret0
+}
+
+// TraceSamplingTable indicates an expected call of TraceSamplingTable.
+func (mr *MockDatabaseMockRecorder) TraceSamplingTable() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TraceSamplingTable", reflect.TypeOf((*MockDatabase)(nil).TraceSamplingTable))
+}
+
 // TraceSourcesTable mocks base method.
 func (m *MockDatabase) TraceSourcesTable() TraceSourcesTable {
 	m.ctrl.T.Helper()
