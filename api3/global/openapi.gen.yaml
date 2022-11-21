@@ -395,6 +395,7 @@ components:
       - spec_differ
       - specdiffs
       - specreconstructor
+      - specreconstructor
       - traceanalyzer
       type: string
     APIClarityFeatureList:
@@ -2461,27 +2462,43 @@ paths:
                 $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
           description: Error response
       summary: Stop Differ for an API
-  /modules/spec_reconstruction/{apiId}/start:
+  /modules/specreconstructor/{apiId}/start:
     post:
       parameters:
-      - $ref: '#/components/parameters/apiId'
+      - in: path
+        name: apiId
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
       responses:
         "204":
           description: Success
         default:
-          $ref: '#/components/responses/UnknownError'
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
       summary: Start the spec reconstruction for this API.
-  /modules/spec_reconstruction/{apiId}/stop:
+  /modules/specreconstructor/{apiId}/stop:
     post:
       parameters:
-      - $ref: '#/components/parameters/apiId'
+      - in: path
+        name: apiId
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
       responses:
         "204":
           description: Success
         default:
-          $ref: '#/components/responses/UnknownError'
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
       summary: Stop the spec reconstruction for this API.
-  /modules/spec_reconstruction/enable:
+  /modules/specreconstructor/enable:
     post:
       requestBody:
         content:
@@ -2492,8 +2509,24 @@ paths:
         "204":
           description: Success
         default:
-          $ref: '#/components/responses/UnknownError'
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
       summary: enable/disable the spec reconstruction
+  /modules/specreconstructor/version:
+    get:
+      description: Get the version of this Plugin
+      operationId: specreconstructorgetVersion
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ModuleVersion
+          description: Version of the Plugin
+      summary: Get the version of this Plugin
   /modules/traceanalyzer/{apiID}/start:
     post:
       description: Start Trace Analysis for an API.

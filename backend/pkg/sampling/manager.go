@@ -76,15 +76,19 @@ func CreateTraceSamplingManager(dbHandler *database.Handler, config *_globalConf
 }
 
 func (m *TraceSamplingManager) AddHostToTrace(component string, apiID uint32) error {
+	if !m.traceSamplingEnabled {
+		return nil
+	}
+
 	externalTraceSourceId, err := m.dbHandler.TraceSamplingTable().GetExternalTraceSourceID()
 	if err != nil {
-		log.Errorf("failed to retrieve external source ID: %v", err)
+		log.Errorf("Failed to retrieve external source ID: %v", err)
 		return err
 	}
 
 	apiInfo := &database.APIInfo{}
 	if err := m.dbHandler.APIInventoryTable().First(apiInfo, apiID); err != nil {
-		log.Errorf("failed to retrieve API info for apiID=%v: %v", apiID, err)
+		log.Errorf("Failed to retrieve API info for apiID=%v: %v", apiID, err)
 		return err
 	}
 
@@ -104,15 +108,19 @@ func (m *TraceSamplingManager) AddHostToTrace(component string, apiID uint32) er
 }
 
 func (m *TraceSamplingManager) RemoveHostToTrace(component string, apiID uint32) error {
+	if !m.traceSamplingEnabled {
+		return nil
+	}
+
 	externalTraceSourceId, err := m.dbHandler.TraceSamplingTable().GetExternalTraceSourceID()
 	if err != nil {
-		log.Errorf("failed to retrieve external source ID: %v", err)
+		log.Errorf("Failed to retrieve external source ID: %v", err)
 		return err
 	}
 
 	apiInfo := &database.APIInfo{}
 	if err := m.dbHandler.APIInventoryTable().First(apiInfo, apiID); err != nil {
-		log.Errorf("failed to retrieve API info for apiID=%v: %v", apiID, err)
+		log.Errorf("Failed to retrieve API info for apiID=%v: %v", apiID, err)
 		return err
 	}
 
@@ -136,9 +144,15 @@ func (m *TraceSamplingManager) GetHostsToTrace(component string, traceSourceID u
 }
 
 func (m *TraceSamplingManager) GetHostsToTraceByComponent(component string) (map[uint][]string, error) {
+	if !m.traceSamplingEnabled {
+		return map[uint][]string{
+			0: {"*"},
+		}, nil
+	}
+
 	hostsMap, err := m.dbHandler.TraceSamplingTable().HostsToTraceByComponent(component)
 	if err != nil {
-		log.Errorf("failed to retrieve hosts list for component=%v: %v", component, err)
+		log.Errorf("Failed to retrieve hosts list for component=%v: %v", component, err)
 		return nil, err
 	}
 	return hostsMap, nil
@@ -151,7 +165,7 @@ func (m *TraceSamplingManager) GetHostsToTraceByTraceSource(component string, tr
 
 	hosts, err := m.dbHandler.TraceSamplingTable().HostsToTraceByTraceSource(component, traceSourceID)
 	if err != nil {
-		log.Errorf("failed to retrieve hosts list for component=%v: %v", component, err)
+		log.Errorf("Failed to retrieve hosts list for component=%v: %v", component, err)
 		return nil, err
 	}
 	return hosts, nil

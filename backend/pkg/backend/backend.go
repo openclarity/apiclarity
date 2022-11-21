@@ -92,12 +92,7 @@ func createDatabaseConfig(config *_config.Config) *_database.DBConfig {
 const defaultChanSize = 100
 
 func getCoreFeatures() []modules.ModuleInfo {
-	features := []modules.ModuleInfo{
-		{
-			Name:        string(models.APIClarityFeatureEnumSpecreconstructor),
-			Description: "Reconstructs OAPI specifications from traces",
-		},
-	}
+	features := []modules.ModuleInfo{}
 	return features
 }
 
@@ -183,14 +178,6 @@ func Run() {
 	}
 
 	features := append(modInfos, getCoreFeatures()...)
-	/*if !config.TraceSamplingEnabled {
-		for _, f := range features {
-			samplingManager.AddHostsToTrace(&interfacemanager.HostsByComponentID{
-				Hosts:       []string{"*"},
-				ComponentID: f.Name,
-			})
-		}
-	}*/
 
 	backend := CreateBackend(config, monitor, speculators, dbHandler, modulesWrapper, notifier)
 

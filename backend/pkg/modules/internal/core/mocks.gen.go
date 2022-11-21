@@ -13,6 +13,7 @@ import (
 	notifications "github.com/openclarity/apiclarity/api3/notifications"
 	speculatoraccessor "github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
 	database "github.com/openclarity/apiclarity/backend/pkg/database"
+	sampling "github.com/openclarity/apiclarity/backend/pkg/sampling"
 	kubernetes "k8s.io/client-go/kubernetes"
 )
 
@@ -254,6 +255,20 @@ func (m *MockBackendAccessor) GetSpeculatorAccessor() speculatoraccessor.Specula
 func (mr *MockBackendAccessorMockRecorder) GetSpeculatorAccessor() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpeculatorAccessor", reflect.TypeOf((*MockBackendAccessor)(nil).GetSpeculatorAccessor))
+}
+
+// GetTraceSamplingAccessor mocks base method.
+func (m *MockBackendAccessor) GetTraceSamplingAccessor() *sampling.TraceSamplingManager {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTraceSamplingAccessor")
+	ret0, _ := ret[0].(*sampling.TraceSamplingManager)
+	return ret0
+}
+
+// GetTraceSamplingAccessor indicates an expected call of GetTraceSamplingAccessor.
+func (mr *MockBackendAccessorMockRecorder) GetTraceSamplingAccessor() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTraceSamplingAccessor", reflect.TypeOf((*MockBackendAccessor)(nil).GetTraceSamplingAccessor))
 }
 
 // K8SClient mocks base method.

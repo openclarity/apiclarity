@@ -61,6 +61,7 @@ type Module interface {
 type BackendAccessor interface {
 	K8SClient() kubernetes.Interface
 	GetSpeculatorAccessor() speculatoraccessor.SpeculatorsAccessor
+	GetTraceSamplingAccessor() *sampling.TraceSamplingManager
 
 	GetAPIInfo(ctx context.Context, apiID uint) (*database.APIInfo, error)
 	GetAPIEvents(ctx context.Context, filter database.GetAPIEventsQuery) ([]*database.APIEvent, error)
@@ -106,6 +107,10 @@ func (b *accessor) K8SClient() kubernetes.Interface {
 
 func (b *accessor) GetSpeculatorAccessor() speculatoraccessor.SpeculatorsAccessor {
 	return b.speculatorAccessor
+}
+
+func (b *accessor) GetTraceSamplingAccessor() *sampling.TraceSamplingManager {
+	return b.samplingManager
 }
 
 func (b *accessor) GetAPIInfo(ctx context.Context, apiID uint) (*database.APIInfo, error) {

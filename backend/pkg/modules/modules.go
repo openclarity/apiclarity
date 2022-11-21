@@ -35,6 +35,9 @@ import (
 	// Enables the spec differ module.
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/spec_differ"
 
+	// Enables the spec reconstructor module.
+	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/specreconstructor"
+
 	// Enables the traceanalyzer module.
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer"
 	"github.com/openclarity/apiclarity/backend/pkg/notifier"

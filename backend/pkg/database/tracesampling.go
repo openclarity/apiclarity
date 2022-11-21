@@ -71,7 +71,7 @@ func (h *TraceSamplingTableHandler) AddApiToTrace(component string, traceSourceI
 		TraceSourceID: traceSourceID,
 		Component:     component,
 	}
-	return h.tx.Where(sampling).FirstOrCreate(sampling).Error
+	return h.tx.Where(sampling).FirstOrCreate(&sampling).Error
 }
 
 func (h *TraceSamplingTableHandler) GetApisToTrace(component string, traceSourceID uint) ([]*TraceSampling, error) {
@@ -86,11 +86,10 @@ func (h *TraceSamplingTableHandler) GetApisToTrace(component string, traceSource
 }
 
 func (h *TraceSamplingTableHandler) DeleteApiToTrace(component string, traceSourceID uint, apiID uint32) error {
-	return h.tx.Unscoped().Delete(&TraceSampling{
-		APIID:         uint(apiID),
-		TraceSourceID: traceSourceID,
-		Component:     component,
-	}).Error
+	return h.tx.Unscoped().
+		Where("trace_source_id = ? AND component = ? AND api_id = ?", traceSourceID, component, apiID).
+		Delete(&TraceSampling{}).
+		Error
 }
 
 func (h *TraceSamplingTableHandler) DeleteAll() error {
@@ -154,13 +153,12 @@ func (h *TraceSamplingTableHandler) HostsToTraceByComponent(component string) (m
 
 	var samplings []*TraceSamplingWithHostAndPort
 	t := h.tx.Select("trace_sampling.api_id, trace_sampling.trace_source_id, trace_sampling.component, api_inventory.name, api_inventory.port, api_inventory.destination_namespace").
-		Where("trace_sampling.component = ?", component).
+		Where("trace_sampling.component = ? OR trace_sampling.component = \"*\"", component).
 		Group("trace_sampling.trace_source_id").
 		Joins("LEFT JOIN api_inventory ON api_inventory.id = trace_sampling.api_id")
 	if err := t.Find(&samplings).Error; err != nil {
 		return nil, err
 	}
-
 	for _, sampling := range samplings {
 		traceSourceHosts := createHostFromTraceSamplingWithHostAndPort(sampling)
 		hostsMap[sampling.TraceSourceID] = append(hostsMap[sampling.TraceSourceID], traceSourceHosts...)

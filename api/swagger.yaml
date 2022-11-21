@@ -446,14 +446,6 @@ definitions:
       - KONG
       - APIGEEX
 
-  FeatureEnable:
-    description: 'Enable/disable a feature'
-    type: 'object'
-    properties:
-      enable:
-        description: 'enable flag'
-        type: 'boolean'
-
 paths:
   /apiEvents:
     get:
@@ -972,47 +964,6 @@ paths:
           description: 'Trace Source not found'
           schema:
             $ref: '#/definitions/ApiResponse'
-        default:
-          $ref: '#/responses/UnknownError'
-
-  /modules/spec_reconstruction/{apiId}/start:
-    post:
-      summary: 'Start the spec reconstruction for this API.'
-      description: 'Start the spec reconstruction for this API.'
-      parameters:
-        - $ref: '#/parameters/apiId'
-      responses:
-        '204':
-          description: 'Success'
-        default:
-          $ref: '#/responses/UnknownError'
-
-  /modules/spec_reconstruction/{apiId}/stop:
-    post:
-      summary: 'Stop the spec reconstruction for this API.'
-      description: 'Stop the spec reconstruction for this API.'
-      parameters:
-        - $ref: '#/parameters/apiId'
-      responses:
-        '204':
-          description: 'Success'
-        default:
-          $ref: '#/responses/UnknownError'
-
-  /modules/spec_reconstruction/enable:
-    post:
-      summary: 'enable/disable the spec reconstruction'
-      description: 'enable/disable the spec reconstruction.'
-      parameters:
-        - in: 'body'
-          name: 'body'
-          required: true
-          schema:
-            description: 'enabled state'
-            $ref: '#/definitions/FeatureEnable'
-      responses:
-        '204':
-          description: 'Success'
         default:
           $ref: '#/responses/UnknownError'
 
