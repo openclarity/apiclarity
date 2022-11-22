@@ -21,6 +21,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/openclarity/apiclarity/backend/pkg/common"
+	"github.com/openclarity/apiclarity/backend/pkg/utils"
 )
 
 const (
@@ -135,7 +136,7 @@ func (h *TraceSamplingTableHandler) HostsToTraceByTraceSource(component string, 
 
 	var samplings []*TraceSamplingWithHostAndPort
 	t := h.tx.Select("trace_sampling.api_id, trace_sampling.trace_source_id, trace_sampling.component, api_inventory.name, api_inventory.port, api_inventory.destination_namespace").
-		Where("trace_sampling.trace_source_id = ? AND trace_sampling.component = ?", traceSourceID, component).
+		Where("trace_sampling.trace_source_id = ? AND (trace_sampling.component = ? OR trace_sampling.component = \"*\")", traceSourceID, component).
 		Joins("LEFT JOIN api_inventory ON api_inventory.id = trace_sampling.api_id")
 	if err := t.Find(&samplings).Error; err != nil {
 		return nil, err
@@ -144,6 +145,9 @@ func (h *TraceSamplingTableHandler) HostsToTraceByTraceSource(component string, 
 	for _, sampling := range samplings {
 		hosts = append(hosts, createHostFromTraceSamplingWithHostAndPort(sampling)...)
 	}
+
+	// Remove as soon as possible duplicate hosts (because of component="*")
+	hosts = utils.RemoveDuplicateStringFromSlice(hosts)
 
 	return hosts, nil
 }
@@ -162,6 +166,11 @@ func (h *TraceSamplingTableHandler) HostsToTraceByComponent(component string) (m
 	for _, sampling := range samplings {
 		traceSourceHosts := createHostFromTraceSamplingWithHostAndPort(sampling)
 		hostsMap[sampling.TraceSourceID] = append(hostsMap[sampling.TraceSourceID], traceSourceHosts...)
+	}
+
+	// Remove as soon as possible duplicate hosts (because of component="*")
+	for traceSourceID, hosts := range hostsMap {
+		hostsMap[traceSourceID] = utils.RemoveDuplicateStringFromSlice(hosts)
 	}
 
 	return hostsMap, nil

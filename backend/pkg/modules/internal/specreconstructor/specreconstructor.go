@@ -92,7 +92,7 @@ func httpResponse(writer http.ResponseWriter, statusCode int, data interface{}) 
 func (c *specReconstructorPluginHTTPHandler) PostAPIIDStart(w http.ResponseWriter, r *http.Request, apiID int64) {
 	log.Debugf("PostApiIdStart(%v): --> <--", apiID)
 
-	component := "*"
+	component := ModuleName
 
 	if err := c.plugin.accessor.GetTraceSamplingAccessor().AddHostToTrace(component, uint32(apiID)); err != nil {
 		log.Errorf("Failed to add API %v in APIs to trace: %v", apiID, err)
@@ -108,7 +108,7 @@ func (c *specReconstructorPluginHTTPHandler) PostAPIIDStart(w http.ResponseWrite
 func (c *specReconstructorPluginHTTPHandler) PostAPIIDStop(w http.ResponseWriter, r *http.Request, apiID int64) {
 	log.Debugf("PostApiIdStop(%v): --> <--", apiID)
 
-	component := "*"
+	component := ModuleName
 
 	if err := c.plugin.accessor.GetTraceSamplingAccessor().RemoveHostToTrace(component, uint32(apiID)); err != nil {
 		log.Errorf("Failed to remove API %v from APIs to trace: %v", apiID, err)
@@ -140,7 +140,7 @@ func (c *specReconstructorPluginHTTPHandler) PostEnable(w http.ResponseWriter, r
 		return
 	}
 
-	component := "*"
+	component := ModuleName
 	flag := enable.Enable
 	if !*flag {
 		if err := c.plugin.accessor.GetTraceSamplingAccessor().ResetForComponent(component); err != nil {
