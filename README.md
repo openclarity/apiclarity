@@ -182,6 +182,7 @@ Update [values.yaml](https://github.com/openclarity/apiclarity/blob/master/chart
    DATABASE_DRIVER=LOCAL K8S_LOCAL=true FAKE_TRACES=true FAKE_TRACES_PATH=./backend/pkg/test/trace_files \
    ENABLE_DB_INFO_LOGS=true ./backend/bin/backend run
    ```
+   Note: this command requires a proper KUBECONFIG in your environment when __K8S_LOCAL=true__ is used. If you want to run without k8s, use __ENABLE_K8S=false__ instead.
 
 4. Open APIClarity UI in the browser: <http://localhost:8080/>
 
