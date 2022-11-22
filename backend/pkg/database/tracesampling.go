@@ -16,11 +16,17 @@
 package database
 
 import (
+	"strconv"
+
 	"gorm.io/gorm"
+
+	"github.com/openclarity/apiclarity/backend/pkg/common"
+	"github.com/openclarity/apiclarity/backend/pkg/utils"
 )
 
 const (
 	traceSamplingTableName = "trace_sampling"
+	hostnamePortSeparator  = ":"
 )
 
 type TraceSampling struct {
@@ -31,27 +37,45 @@ type TraceSampling struct {
 	Component     string `json:"component,omitempty" gorm:"column:component" faker:"-"`
 }
 
+type TraceSamplingWithHostAndPort struct {
+	APIID                uint
+	TraceSourceID        uint
+	Component            string
+	Name                 string
+	Port                 uint
+	DestinationNamespace string
+}
+
 type TraceSamplingTable interface {
-	SetHostToTrace(apiID uint32, traceSourceID uint, component string) error
-	GetHostsToTrace(traceSourceID uint, component string) ([]*TraceSampling, error)
-	DeleteHostToTrace(apiID uint32, traceSourceID uint, component string) error
-	ResetHostsToTrace(traceSourceID uint, component string) error
+	AddAPIToTrace(component string, traceSourceID uint, apiID uint32) error
+	GetAPIsToTrace(component string, traceSourceID uint) ([]*TraceSampling, error)
+	DeleteAPIToTrace(component string, traceSourceID uint, apiID uint32) error
+	DeleteAll() error
+	ResetAPIsToTraceByTraceSource(component string, traceSourceID uint) error
+	ResetAPIsToTraceByComponent(component string) error
+	GetExternalTraceSourceID() (uint, error)
+	HostsToTraceByTraceSource(component string, traceSourceID uint) ([]string, error)
+	HostsToTraceByComponent(component string) (map[uint][]string, error)
 }
 
 type TraceSamplingTableHandler struct {
 	tx *gorm.DB
 }
 
-func (h *TraceSamplingTableHandler) SetHostToTrace(apiID uint32, traceSourceID uint, component string) error {
+func (TraceSampling) TableName() string {
+	return traceSamplingTableName
+}
+
+func (h *TraceSamplingTableHandler) AddAPIToTrace(component string, traceSourceID uint, apiID uint32) error {
 	sampling := TraceSampling{
 		APIID:         uint(apiID),
 		TraceSourceID: traceSourceID,
 		Component:     component,
 	}
-	return h.tx.Where(sampling).FirstOrCreate(sampling).Error
+	return h.tx.Where(sampling).FirstOrCreate(&sampling).Error
 }
 
-func (h *TraceSamplingTableHandler) GetHostsToTrace(traceSourceID uint, component string) ([]*TraceSampling, error) {
+func (h *TraceSamplingTableHandler) GetAPIsToTrace(component string, traceSourceID uint) ([]*TraceSampling, error) {
 	var samplings []*TraceSampling
 	t := h.tx.Where("trace_source_id = ? AND component = ?", traceSourceID, component)
 
@@ -62,16 +86,92 @@ func (h *TraceSamplingTableHandler) GetHostsToTrace(traceSourceID uint, componen
 	return samplings, nil
 }
 
-func (h *TraceSamplingTableHandler) DeleteHostToTrace(apiID uint32, traceSourceID uint, component string) error {
-	return h.tx.Unscoped().Delete(&TraceSampling{
-		APIID:         uint(apiID),
-		TraceSourceID: traceSourceID,
-		Component:     component,
-	}).Error
+func (h *TraceSamplingTableHandler) DeleteAPIToTrace(component string, traceSourceID uint, apiID uint32) error {
+	return h.tx.Unscoped().
+		Where("trace_source_id = ? AND component = ? AND api_id = ?", traceSourceID, component, apiID).
+		Delete(&TraceSampling{}).
+		Error
 }
 
-func (h *TraceSamplingTableHandler) ResetHostsToTrace(traceSourceID uint, component string) error {
+func (h *TraceSamplingTableHandler) DeleteAll() error {
+	return h.tx.Session(&gorm.Session{AllowGlobalUpdate: true}).
+		Delete(&TraceSampling{}).
+		Error
+}
+
+func (h *TraceSamplingTableHandler) ResetAPIsToTraceByTraceSource(component string, traceSourceID uint) error {
 	return h.tx.Where("trace_source_id = ? AND component = ?", traceSourceID, component).
 		Delete(&TraceSampling{}).
 		Error
+}
+
+func (h *TraceSamplingTableHandler) ResetAPIsToTraceByComponent(component string) error {
+	return h.tx.Where("component = ?", component).
+		Delete(&TraceSampling{}).
+		Error
+}
+
+func (h *TraceSamplingTableHandler) GetExternalTraceSourceID() (uint, error) {
+	return common.DefaultTraceSourceID, nil
+}
+
+// createHostFromTraceSamplingWithHostAndPort will create hosts in the format of `hostname:port` if port exist, otherwise will return only hostname
+// Note: The function will return both `hostname:port` and `hostname` in case port is the default HTTP port (80).
+func createHostFromTraceSamplingWithHostAndPort(sampling *TraceSamplingWithHostAndPort) (ret []string) {
+	// TODO: we might need to create multiple hosts from a single api.Host
+	// example: hostname=foo, port=8080 ==> host=[foo:8080, foo.namespace:8080, ....]
+	if sampling.Port > 0 {
+		ret = append(ret, sampling.Name+hostnamePortSeparator+strconv.Itoa(int(sampling.Port)))
+	}
+
+	if sampling.Port == 0 || sampling.Port == 80 {
+		ret = append(ret, sampling.Name)
+	}
+
+	return ret
+}
+
+func (h *TraceSamplingTableHandler) HostsToTraceByTraceSource(component string, traceSourceID uint) ([]string, error) {
+	var hosts []string
+
+	var samplings []*TraceSamplingWithHostAndPort
+	t := h.tx.Select("trace_sampling.api_id, trace_sampling.trace_source_id, trace_sampling.component, api_inventory.name, api_inventory.port, api_inventory.destination_namespace").
+		Where("trace_sampling.trace_source_id = ? AND (trace_sampling.component = ? OR trace_sampling.component = \"*\")", traceSourceID, component).
+		Joins("LEFT JOIN api_inventory ON api_inventory.id = trace_sampling.api_id")
+	if err := t.Find(&samplings).Error; err != nil {
+		return nil, err
+	}
+
+	for _, sampling := range samplings {
+		hosts = append(hosts, createHostFromTraceSamplingWithHostAndPort(sampling)...)
+	}
+
+	// Remove as soon as possible duplicate hosts (because of component="*")
+	hosts = utils.RemoveDuplicateStringFromSlice(hosts)
+
+	return hosts, nil
+}
+
+func (h *TraceSamplingTableHandler) HostsToTraceByComponent(component string) (map[uint][]string, error) {
+	hostsMap := make(map[uint][]string)
+
+	var samplings []*TraceSamplingWithHostAndPort
+	t := h.tx.Select("trace_sampling.api_id, trace_sampling.trace_source_id, trace_sampling.component, api_inventory.name, api_inventory.port, api_inventory.destination_namespace").
+		Where("trace_sampling.component = ? OR trace_sampling.component = \"*\"", component).
+		Group("trace_sampling.trace_source_id").
+		Joins("LEFT JOIN api_inventory ON api_inventory.id = trace_sampling.api_id")
+	if err := t.Find(&samplings).Error; err != nil {
+		return nil, err
+	}
+	for _, sampling := range samplings {
+		traceSourceHosts := createHostFromTraceSamplingWithHostAndPort(sampling)
+		hostsMap[sampling.TraceSourceID] = append(hostsMap[sampling.TraceSourceID], traceSourceHosts...)
+	}
+
+	// Remove as soon as possible duplicate hosts (because of component="*")
+	for traceSourceID, hosts := range hostsMap {
+		hostsMap[traceSourceID] = utils.RemoveDuplicateStringFromSlice(hosts)
+	}
+
+	return hostsMap, nil
 }

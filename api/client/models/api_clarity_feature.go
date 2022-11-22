@@ -14,7 +14,7 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// APIClarityFeature Description of APIClarity feature and the list of API hosts (in the form 'host:port') the feature requires to get trace for
+// APIClarityFeature Description of APIClarity feature and the list of API hosts (Group by trace sources, in the form 'host:port') the feature requires to get trace for
 //
 // swagger:model APIClarityFeature
 type APIClarityFeature struct {
@@ -27,7 +27,7 @@ type APIClarityFeature struct {
 	FeatureName *APIClarityFeatureEnum `json:"featureName"`
 
 	// hosts to trace
-	HostsToTrace []string `json:"hostsToTrace"`
+	HostsToTrace *HostsToTraceForComponent `json:"hostsToTrace,omitempty"`
 }
 
 // Validate validates this API clarity feature
@@ -35,6 +35,10 @@ func (m *APIClarityFeature) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateFeatureName(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateHostsToTrace(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -66,11 +70,32 @@ func (m *APIClarityFeature) validateFeatureName(formats strfmt.Registry) error {
 	return nil
 }
 
+func (m *APIClarityFeature) validateHostsToTrace(formats strfmt.Registry) error {
+	if swag.IsZero(m.HostsToTrace) { // not required
+		return nil
+	}
+
+	if m.HostsToTrace != nil {
+		if err := m.HostsToTrace.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("hostsToTrace")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
 // ContextValidate validate this API clarity feature based on the context it is used
 func (m *APIClarityFeature) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateFeatureName(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateHostsToTrace(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -86,6 +111,20 @@ func (m *APIClarityFeature) contextValidateFeatureName(ctx context.Context, form
 		if err := m.FeatureName.ContextValidate(ctx, formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("featureName")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *APIClarityFeature) contextValidateHostsToTrace(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.HostsToTrace != nil {
+		if err := m.HostsToTrace.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("hostsToTrace")
 			}
 			return err
 		}

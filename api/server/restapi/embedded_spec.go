@@ -948,74 +948,11 @@ func init() {
           }
         }
       }
-    },
-    "/modules/spec_reconstruction/enable": {
-      "post": {
-        "description": "enable/disable the spec reconstruction.",
-        "summary": "enable/disable the spec reconstruction",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "description": "enabled state",
-              "$ref": "#/definitions/FeatureEnable"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Success"
-          },
-          "default": {
-            "$ref": "#/responses/UnknownError"
-          }
-        }
-      }
-    },
-    "/modules/spec_reconstruction/{apiId}/start": {
-      "post": {
-        "description": "Start the spec reconstruction for this API.",
-        "summary": "Start the spec reconstruction for this API.",
-        "parameters": [
-          {
-            "$ref": "#/parameters/apiId"
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Success"
-          },
-          "default": {
-            "$ref": "#/responses/UnknownError"
-          }
-        }
-      }
-    },
-    "/modules/spec_reconstruction/{apiId}/stop": {
-      "post": {
-        "description": "Stop the spec reconstruction for this API.",
-        "summary": "Stop the spec reconstruction for this API.",
-        "parameters": [
-          {
-            "$ref": "#/parameters/apiId"
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Success"
-          },
-          "default": {
-            "$ref": "#/responses/UnknownError"
-          }
-        }
-      }
     }
   },
   "definitions": {
     "APIClarityFeature": {
-      "description": "Description of APIClarity feature and the list of API hosts (in the form 'host:port') the feature requires to get trace for",
+      "description": "Description of APIClarity feature and the list of API hosts (Group by trace sources, in the form 'host:port') the feature requires to get trace for",
       "type": "object",
       "required": [
         "featureName"
@@ -1029,10 +966,7 @@ func init() {
           "$ref": "#/definitions/APIClarityFeatureEnum"
         },
         "hostsToTrace": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "$ref": "#/definitions/HostsToTraceForComponent"
         }
       }
     },
@@ -1049,7 +983,7 @@ func init() {
       ]
     },
     "APIClarityFeatureList": {
-      "description": "List of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for",
+      "description": "List of APIClarity features and for each feature the list of API hosts (Group by trace sources, in the form 'host:port') the feature requires to get trace for",
       "type": "object",
       "properties": {
         "features": {
@@ -1344,16 +1278,6 @@ func init() {
         "NO_DIFF"
       ]
     },
-    "FeatureEnable": {
-      "description": "Enable/disable a feature",
-      "type": "object",
-      "properties": {
-        "enable": {
-          "description": "enable flag",
-          "type": "boolean"
-        }
-      }
-    },
     "HitCount": {
       "type": "object",
       "properties": {
@@ -1365,6 +1289,40 @@ func init() {
         "time": {
           "type": "string",
           "format": "date-time"
+        }
+      }
+    },
+    "HostsToTraceForComponent": {
+      "description": "List of trace sources for a component, with theirs list of API hosts to get trace for",
+      "type": "object",
+      "properties": {
+        "component": {
+          "description": "Component name",
+          "type": "string"
+        },
+        "traceSourcesHosts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/HostsToTraceForTraceSource"
+          }
+        }
+      }
+    },
+    "HostsToTraceForTraceSource": {
+      "description": "list of API hosts (in the form 'host:port') managed by a traceSource",
+      "type": "object",
+      "properties": {
+        "hostsToTrace": {
+          "description": "List of hosts (in the form 'host:port')",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "traceSourceID": {
+          "description": "ID of the trace source",
+          "type": "integer",
+          "format": "uint32"
         }
       }
     },
@@ -3502,91 +3460,11 @@ func init() {
           }
         }
       }
-    },
-    "/modules/spec_reconstruction/enable": {
-      "post": {
-        "description": "enable/disable the spec reconstruction.",
-        "summary": "enable/disable the spec reconstruction",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "description": "enabled state",
-              "$ref": "#/definitions/FeatureEnable"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Success"
-          },
-          "default": {
-            "description": "unknown error",
-            "schema": {
-              "$ref": "#/definitions/ApiResponse"
-            }
-          }
-        }
-      }
-    },
-    "/modules/spec_reconstruction/{apiId}/start": {
-      "post": {
-        "description": "Start the spec reconstruction for this API.",
-        "summary": "Start the spec reconstruction for this API.",
-        "parameters": [
-          {
-            "type": "integer",
-            "format": "uint32",
-            "name": "apiId",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Success"
-          },
-          "default": {
-            "description": "unknown error",
-            "schema": {
-              "$ref": "#/definitions/ApiResponse"
-            }
-          }
-        }
-      }
-    },
-    "/modules/spec_reconstruction/{apiId}/stop": {
-      "post": {
-        "description": "Stop the spec reconstruction for this API.",
-        "summary": "Stop the spec reconstruction for this API.",
-        "parameters": [
-          {
-            "type": "integer",
-            "format": "uint32",
-            "name": "apiId",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Success"
-          },
-          "default": {
-            "description": "unknown error",
-            "schema": {
-              "$ref": "#/definitions/ApiResponse"
-            }
-          }
-        }
-      }
     }
   },
   "definitions": {
     "APIClarityFeature": {
-      "description": "Description of APIClarity feature and the list of API hosts (in the form 'host:port') the feature requires to get trace for",
+      "description": "Description of APIClarity feature and the list of API hosts (Group by trace sources, in the form 'host:port') the feature requires to get trace for",
       "type": "object",
       "required": [
         "featureName"
@@ -3600,10 +3478,7 @@ func init() {
           "$ref": "#/definitions/APIClarityFeatureEnum"
         },
         "hostsToTrace": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "$ref": "#/definitions/HostsToTraceForComponent"
         }
       }
     },
@@ -3620,7 +3495,7 @@ func init() {
       ]
     },
     "APIClarityFeatureList": {
-      "description": "List of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for",
+      "description": "List of APIClarity features and for each feature the list of API hosts (Group by trace sources, in the form 'host:port') the feature requires to get trace for",
       "type": "object",
       "properties": {
         "features": {
@@ -3915,16 +3790,6 @@ func init() {
         "NO_DIFF"
       ]
     },
-    "FeatureEnable": {
-      "description": "Enable/disable a feature",
-      "type": "object",
-      "properties": {
-        "enable": {
-          "description": "enable flag",
-          "type": "boolean"
-        }
-      }
-    },
     "HitCount": {
       "type": "object",
       "properties": {
@@ -3936,6 +3801,40 @@ func init() {
         "time": {
           "type": "string",
           "format": "date-time"
+        }
+      }
+    },
+    "HostsToTraceForComponent": {
+      "description": "List of trace sources for a component, with theirs list of API hosts to get trace for",
+      "type": "object",
+      "properties": {
+        "component": {
+          "description": "Component name",
+          "type": "string"
+        },
+        "traceSourcesHosts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/HostsToTraceForTraceSource"
+          }
+        }
+      }
+    },
+    "HostsToTraceForTraceSource": {
+      "description": "list of API hosts (in the form 'host:port') managed by a traceSource",
+      "type": "object",
+      "properties": {
+        "hostsToTrace": {
+          "description": "List of hosts (in the form 'host:port')",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "traceSourceID": {
+          "description": "ID of the trace source",
+          "type": "integer",
+          "format": "uint32"
         }
       }
     },

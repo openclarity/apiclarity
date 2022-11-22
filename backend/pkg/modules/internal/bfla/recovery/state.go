@@ -122,7 +122,7 @@ func (p *persister) persistAPIEventAnnotations(ctx context.Context) error {
 		}
 		acked++
 	}
-	log.Infof("Acked %d events; events: %d", acked, events)
+	log.Debugf("Acked %d events; events: %d", acked, events)
 	if len(errs) > 0 {
 		return errs
 	}
@@ -170,7 +170,7 @@ func (p *persister) persistAPIInfoAnnotations(ctx context.Context) error {
 		}
 		annsPersisted += len(anns)
 	}
-	log.Infof("Persisted %d annotations", annsPersisted)
+	log.Debugf("Persisted %d annotations", annsPersisted)
 	if len(errs) > 0 {
 		return errs
 	}

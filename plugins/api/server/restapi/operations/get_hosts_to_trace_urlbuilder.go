@@ -11,15 +11,15 @@ import (
 	golangswaggerpaths "path"
 )
 
-// PostModulesSpecReconstructionEnableURL generates an URL for the post modules spec reconstruction enable operation
-type PostModulesSpecReconstructionEnableURL struct {
+// GetHostsToTraceURL generates an URL for the get hosts to trace operation
+type GetHostsToTraceURL struct {
 	_basePath string
 }
 
 // WithBasePath sets the base path for this url builder, only required when it's different from the
 // base path specified in the swagger spec.
 // When the value of the base path is an empty string
-func (o *PostModulesSpecReconstructionEnableURL) WithBasePath(bp string) *PostModulesSpecReconstructionEnableURL {
+func (o *GetHostsToTraceURL) WithBasePath(bp string) *GetHostsToTraceURL {
 	o.SetBasePath(bp)
 	return o
 }
@@ -27,15 +27,15 @@ func (o *PostModulesSpecReconstructionEnableURL) WithBasePath(bp string) *PostMo
 // SetBasePath sets the base path for this url builder, only required when it's different from the
 // base path specified in the swagger spec.
 // When the value of the base path is an empty string
-func (o *PostModulesSpecReconstructionEnableURL) SetBasePath(bp string) {
+func (o *GetHostsToTraceURL) SetBasePath(bp string) {
 	o._basePath = bp
 }
 
 // Build a url path and query string
-func (o *PostModulesSpecReconstructionEnableURL) Build() (*url.URL, error) {
+func (o *GetHostsToTraceURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/modules/spec_reconstruction/enable"
+	var _path = "/hostsToTrace"
 
 	_basePath := o._basePath
 	if _basePath == "" {
@@ -47,7 +47,7 @@ func (o *PostModulesSpecReconstructionEnableURL) Build() (*url.URL, error) {
 }
 
 // Must is a helper function to panic when the url builder returns an error
-func (o *PostModulesSpecReconstructionEnableURL) Must(u *url.URL, err error) *url.URL {
+func (o *GetHostsToTraceURL) Must(u *url.URL, err error) *url.URL {
 	if err != nil {
 		panic(err)
 	}
@@ -58,17 +58,17 @@ func (o *PostModulesSpecReconstructionEnableURL) Must(u *url.URL, err error) *ur
 }
 
 // String returns the string representation of the path with query string
-func (o *PostModulesSpecReconstructionEnableURL) String() string {
+func (o *GetHostsToTraceURL) String() string {
 	return o.Must(o.Build()).String()
 }
 
 // BuildFull builds a full url with scheme, host, path and query string
-func (o *PostModulesSpecReconstructionEnableURL) BuildFull(scheme, host string) (*url.URL, error) {
+func (o *GetHostsToTraceURL) BuildFull(scheme, host string) (*url.URL, error) {
 	if scheme == "" {
-		return nil, errors.New("scheme is required for a full url on PostModulesSpecReconstructionEnableURL")
+		return nil, errors.New("scheme is required for a full url on GetHostsToTraceURL")
 	}
 	if host == "" {
-		return nil, errors.New("host is required for a full url on PostModulesSpecReconstructionEnableURL")
+		return nil, errors.New("host is required for a full url on GetHostsToTraceURL")
 	}
 
 	base, err := o.Build()
@@ -82,6 +82,6 @@ func (o *PostModulesSpecReconstructionEnableURL) BuildFull(scheme, host string) 
 }
 
 // StringFull returns the string representation of a complete url
-func (o *PostModulesSpecReconstructionEnableURL) StringFull(scheme, host string) string {
+func (o *GetHostsToTraceURL) StringFull(scheme, host string) string {
 	return o.Must(o.BuildFull(scheme, host)).String()
 }

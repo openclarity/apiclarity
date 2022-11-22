@@ -31,6 +31,20 @@ paths:
         default:
           $ref: '#/responses/UnknownError'
 
+  /hostsToTrace:
+    get:
+      summary: 'Get a list of hosts to trace'
+      parameters:
+        - $ref: '#/parameters/TraceSourceTokenHeader'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/HostsToTrace'
+        default:
+          $ref: '#/responses/UnknownError'
+      
+
 definitions:
   Telemetry:
     type: 'object'
@@ -110,6 +124,19 @@ definitions:
     properties:
       message:
         type: 'string'
+
+  HostsList:
+    description: 'List of hosts'
+    type: 'array'
+    items:
+      type: string
+  
+  HostsToTrace:
+    description: 'List of hosts to trace'
+    type: 'object'
+    properties:
+      hosts:
+        $ref: '#/definitions/HostsList'
 
 responses:
   UnknownError:
