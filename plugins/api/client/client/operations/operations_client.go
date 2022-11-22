@@ -28,9 +28,48 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
+	GetHostsToTrace(params *GetHostsToTraceParams, opts ...ClientOption) (*GetHostsToTraceOK, error)
+
 	PostTelemetry(params *PostTelemetryParams, opts ...ClientOption) (*PostTelemetryOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
+}
+
+/*
+  GetHostsToTrace gets a list of hosts to trace
+*/
+func (a *Client) GetHostsToTrace(params *GetHostsToTraceParams, opts ...ClientOption) (*GetHostsToTraceOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetHostsToTraceParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "GetHostsToTrace",
+		Method:             "GET",
+		PathPattern:        "/hostsToTrace",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetHostsToTraceReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetHostsToTraceOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*GetHostsToTraceDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 /*

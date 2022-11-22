@@ -43,6 +43,7 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules"
 	_notifier "github.com/openclarity/apiclarity/backend/pkg/notifier"
 	"github.com/openclarity/apiclarity/backend/pkg/rest"
+	"github.com/openclarity/apiclarity/backend/pkg/sampling"
 	speculators_repo "github.com/openclarity/apiclarity/backend/pkg/speculators"
 	"github.com/openclarity/apiclarity/backend/pkg/traces"
 	speculatorutils "github.com/openclarity/apiclarity/backend/pkg/utils/speculator"
@@ -51,9 +52,6 @@ import (
 	_spec "github.com/openclarity/speculator/pkg/spec"
 	_speculator "github.com/openclarity/speculator/pkg/speculator"
 	_mimeutils "github.com/openclarity/speculator/pkg/utils"
-	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
-	interfacemanager "github.com/openclarity/trace-sampling-manager/manager/pkg/manager/interface"
-	restmanager "github.com/openclarity/trace-sampling-manager/manager/pkg/rest"
 )
 
 type Backend struct {
@@ -94,12 +92,7 @@ func createDatabaseConfig(config *_config.Config) *_database.DBConfig {
 const defaultChanSize = 100
 
 func getCoreFeatures() []modules.ModuleInfo {
-	features := []modules.ModuleInfo{
-		{
-			Name:        string(models.APIClarityFeatureEnumSpecreconstructor),
-			Description: "Reconstructs OAPI specifications from traces",
-		},
-	}
+	features := []modules.ModuleInfo{}
 	return features
 }
 
@@ -126,7 +119,7 @@ func Run() {
 	dbHandler.StartReviewTableCleaner(globalCtx, time.Duration(config.DatabaseCleanerIntervalSec)*time.Second)
 	var clientset kubernetes.Interface
 	var monitor *k8smonitor.Monitor
-	var samplingManager *manager.Manager
+
 	if config.EnableK8s {
 		if config.K8sLocal {
 			clientset, err = k8smonitor.CreateLocalK8sClientset()
@@ -138,37 +131,15 @@ func Run() {
 			if err != nil {
 				log.Fatalf("failed to create K8s clientset: %v", err)
 			}
-		}
-
-		samplingManager, err = manager.Create(clientset, &restmanager.Config{
-			RestServerPort:             config.HTTPTraceSamplingManagerPort,
-			GRPCServerPort:             config.GRPCTraceSamplingManagerPort,
-			HostToTraceSecretName:      config.HostToTraceSecretName,
-			HostToTraceSecretNamespace: config.HostToTraceSecretNamespace,
-			HostToTraceSecretOwnerName: config.HostToTraceSecretOwnerName,
-			EnableTLS:                  config.EnableTLS,
-			TLSServerCertFilePath:      config.TLSServerCertFilePath,
-			TLSServerKeyFilePath:       config.TLSServerKeyFilePath,
-			RootCertFilePath:           config.RootCertFilePath,
-			RestServerTLSPort:          config.HTTPSTraceSamplingManagerPort,
-		})
-		if err != nil {
-			log.Errorf("Failed to create a trace sampling manager: %v", err)
-			return
-		}
-		if err := samplingManager.Start(errChan); err != nil {
-			log.Errorf("Failed to start trace sampling manager: %v", err)
-			return
-		}
-
-		if !config.K8sLocal && !viper.GetBool(_config.NoMonitorEnvVar) {
-			monitor, err = k8smonitor.CreateMonitor(clientset)
-			if err != nil {
-				log.Errorf("Failed to create a monitor: %v", err)
-				return
+			if !viper.GetBool(_config.NoMonitorEnvVar) {
+				monitor, err = k8smonitor.CreateMonitor(clientset)
+				if err != nil {
+					log.Errorf("Failed to create a monitor: %v", err)
+					return
+				}
+				monitor.Start()
+				defer monitor.Stop()
 			}
-			monitor.Start()
-			defer monitor.Stop()
 		}
 	}
 
@@ -196,6 +167,12 @@ func Run() {
 		notifier.Start(context.Background())
 	}
 
+	samplingManager, err := sampling.CreateTraceSamplingManager(dbHandler, config, clientset, errChan)
+	if err != nil {
+		log.Errorf("Failed to create Trace Sampling Manager: %v", err)
+		return
+	}
+
 	modulesWrapper, modInfos, err := modules.New(globalCtx, dbHandler, clientset, samplingManager, speculatoraccessor.NewSpeculatorAccessor(speculators), notifier, config)
 	if err != nil {
 		log.Errorf("Failed to create module wrapper and info: %v", err)
@@ -203,14 +180,6 @@ func Run() {
 	}
 
 	features := append(modInfos, getCoreFeatures()...)
-	if config.EnableK8s && !config.TraceSamplingEnabled {
-		for _, f := range features {
-			samplingManager.AddHostsToTrace(&interfacemanager.HostsByComponentID{
-				Hosts:       []string{"*"},
-				ComponentID: f.Name,
-			})
-		}
-	}
 
 	backend := CreateBackend(config, monitor, speculators, dbHandler, modulesWrapper, notifier)
 
@@ -223,9 +192,9 @@ func Run() {
 		Speculators:           speculators,
 		DBHandler:             dbHandler,
 		ModulesManager:        modulesWrapper,
-		SamplingManager:       samplingManager,
 		Features:              features,
 		Notifier:              notifier,
+		SamplingManager:       samplingManager,
 	}
 	restServer, err := rest.CreateRESTServer(serverConfig)
 	if err != nil {
@@ -242,6 +211,7 @@ func Run() {
 		TLSServerKeyFilePath:  config.TLSServerKeyFilePath,
 		TraceHandleFunc:       backend.handleHTTPTrace,
 		TraceSourceAuthFunc:   nil,
+		TraceSamplingManager:  samplingManager,
 	}
 	tracesServer, err := traces.CreateHTTPTracesServer(httpTracesServerConfig)
 	if err != nil {
@@ -258,6 +228,7 @@ func Run() {
 			TLSServerKeyFilePath:  config.TLSServerKeyFilePath,
 			TraceHandleFunc:       backend.handleHTTPTrace,
 			TraceSourceAuthFunc:   backend.traceSourceAuth,
+			TraceSamplingManager:  samplingManager,
 		}
 		externalTracesServer, err := traces.CreateHTTPTracesServer(httpExternalTracesServerConfig)
 		if err != nil {

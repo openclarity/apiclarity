@@ -562,41 +562,6 @@ paths:
                 $ref: "../common/openapi.yaml#/components/schemas/ApiResponse"
         default:
           $ref: "#/components/responses/UnknownError"
-  /modules/spec_reconstruction/{apiId}/start:
-    post:
-      summary: 'Start the spec reconstruction for this API.'
-      parameters:
-        - $ref: "#/components/parameters/apiId"
-      responses:
-        '204':
-          description: 'Success'
-        default:
-          $ref: "#/components/responses/UnknownError"
-
-  /modules/spec_reconstruction/{apiId}/stop:
-    post:
-      summary: 'Stop the spec reconstruction for this API.'
-      parameters:
-        - $ref: "#/components/parameters/apiId"
-      responses:
-        '204':
-          description: 'Success'
-        default:
-          $ref: "#/components/responses/UnknownError"
-
-  /modules/spec_reconstruction/enable:
-    post:
-      summary: 'enable/disable the spec reconstruction'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/FeatureEnable"
-      responses:
-        '204':
-          description: 'Success'
-        default:
-          $ref: '#/components/responses/UnknownError'
 
 servers:
   - url: /api
@@ -1009,7 +974,7 @@ components:
   schemas: 
     APIClarityFeatureList:
       type: 'object'
-      description: List of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for
+      description: List of APIClarity features and for each feature the list of API hosts (Group by trace sources, in the form 'host:port') the feature requires to get trace for
       properties:
         features:
           type: array
@@ -1017,7 +982,7 @@ components:
             $ref: '#/components/schemas/APIClarityFeature'
     APIClarityFeature:
       type: 'object'
-      description: Description of APIClarity feature and the list of API hosts (in the form 'host:port') the feature requires to get trace for
+      description: Description of APIClarity feature and the list of API hosts (Group by trace sources, in the form 'host:port') the feature requires to get trace for
       properties:
         featureName:
           $ref: '#/components/schemas/APIClarityFeatureEnum'
@@ -1025,11 +990,33 @@ components:
           description: "Short human readable description of the feature"
           type: string
         hostsToTrace:
+          $ref: '#/components/schemas/HostsToTraceForComponent'
+      required:
+      - featureName
+    HostsToTraceForComponent:
+      type: 'object'
+      description: List of trace sources for a component, with theirs list of API hosts to get trace for
+      properties:
+        component:
+          description: "Component name"
+          type: string
+        traceSourcesHosts:
+          type: array
+          items:
+            $ref: '#/components/schemas/HostsToTraceForTraceSource'
+    HostsToTraceForTraceSource:
+      type: 'object'
+      description: list of API hosts (in the form 'host:port') managed by a traceSource
+      properties:
+        traceSourceID:
+          description: ID of the trace source
+          type: integer
+          format: uint32
+        hostsToTrace:
+          description: List of hosts (in the form 'host:port')
           type: array
           items:
             type: string
-      required:
-      - featureName
 
     APIClarityFeatureEnum:
       description: 'APIClarity Feature Name'
@@ -1062,13 +1049,4 @@ components:
         - TYK
         - KONG
         - APIGEEX
-
-    FeatureEnable:
-      description: 'Enable/disable a feature'
-      type: 'object'
-      properties:
-        enable:
-          description: 'enable flag'
-          type: 'boolean'
-
 

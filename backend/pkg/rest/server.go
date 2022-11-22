@@ -30,8 +30,8 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules"
 	_notifier "github.com/openclarity/apiclarity/backend/pkg/notifier"
+	"github.com/openclarity/apiclarity/backend/pkg/sampling"
 	"github.com/openclarity/apiclarity/backend/pkg/speculators"
-	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
 )
 
 type Server struct {
@@ -39,9 +39,9 @@ type Server struct {
 	dbHandler            database.Database
 	speculators          *speculators.Repository
 	modulesManager       modules.ModulesManager
-	samplingManager      *manager.Manager
 	features             []modules.ModuleInfo
 	notifier             *_notifier.Notifier
+	samplingManager      *sampling.TraceSamplingManager
 	needsTraceSourceAuth bool
 }
 
@@ -54,10 +54,10 @@ type ServerConfig struct {
 	Speculators           *speculators.Repository
 	DBHandler             *database.Handler
 	ModulesManager        modules.ModulesManager
-	SamplingManager       *manager.Manager
 	Features              []modules.ModuleInfo
 	NeedsTraceSourceAuth  bool
 	Notifier              *_notifier.Notifier
+	SamplingManager       *sampling.TraceSamplingManager
 }
 
 func CreateRESTServer(config *ServerConfig) (*Server, error) {
@@ -65,9 +65,9 @@ func CreateRESTServer(config *ServerConfig) (*Server, error) {
 		speculators:          config.Speculators,
 		dbHandler:            config.DBHandler,
 		modulesManager:       config.ModulesManager,
-		samplingManager:      config.SamplingManager,
 		features:             config.Features,
 		notifier:             config.Notifier,
+		samplingManager:      config.SamplingManager,
 		needsTraceSourceAuth: config.NeedsTraceSourceAuth,
 	}
 
@@ -184,18 +184,6 @@ func CreateRESTServer(config *ServerConfig) (*Server, error) {
 
 	api.DeleteControlTraceSourcesTraceSourceIDHandler = operations.DeleteControlTraceSourcesTraceSourceIDHandlerFunc(func(params operations.DeleteControlTraceSourcesTraceSourceIDParams) middleware.Responder {
 		return s.DeleteControlTraceSourcesTraceSourceID(params)
-	})
-
-	api.PostModulesSpecReconstructionAPIIDStartHandler = operations.PostModulesSpecReconstructionAPIIDStartHandlerFunc(func(params operations.PostModulesSpecReconstructionAPIIDStartParams) middleware.Responder {
-		return s.PostModulesSpecReconstructionAPIIDStart(params)
-	})
-
-	api.PostModulesSpecReconstructionAPIIDStopHandler = operations.PostModulesSpecReconstructionAPIIDStopHandlerFunc(func(params operations.PostModulesSpecReconstructionAPIIDStopParams) middleware.Responder {
-		return s.PostModulesSpecReconstructionAPIIDStop(params)
-	})
-
-	api.PostModulesSpecReconstructionEnableHandler = operations.PostModulesSpecReconstructionEnableHandlerFunc(func(params operations.PostModulesSpecReconstructionEnableParams) middleware.Responder {
-		return s.PostModulesSpecReconstructionEnable(params)
 	})
 
 	server := restapi.NewServer(api)

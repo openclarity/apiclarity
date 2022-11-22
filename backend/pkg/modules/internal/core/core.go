@@ -25,9 +25,9 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	"github.com/openclarity/apiclarity/backend/pkg/config"
-	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
 )
 
 const BaseHTTPPath = "/api/modules"
@@ -122,11 +122,19 @@ func shouldTrace(host string, port int64, hosts []string) bool {
 func (c *Core) EventNotify(ctx context.Context, event *Event) {
 	host := event.APIEvent.HostSpecName
 	port := event.APIEvent.DestinationPort
+	traceSourceID := event.APIInfo.TraceSourceID
 
 	for modName, mod := range c.Modules {
-		if c.traceSamplingEnabled && !shouldTrace(host, port, c.samplingManager.HostsToTraceByComponentID(modName)) {
-			log.Debugf("Trace of host %s should NOT be sent to module %s.", host, modName)
-			continue
+		if c.traceSamplingEnabled {
+			hosts, err := c.samplingManager.GetHostsToTrace(modName, traceSourceID)
+			if err != nil {
+				log.Debugf("Failed to retrieve hosts for traceSource %v for module %s.", traceSourceID, modName)
+				continue
+			}
+			if !shouldTrace(host, port, hosts) {
+				log.Debugf("Trace of host %s should NOT be sent to module %s.", host, modName)
+				continue
+			}
 		}
 		log.Debugf("Trace of host %s should be sent to module %s.", host, modName)
 

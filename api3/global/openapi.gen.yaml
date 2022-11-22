@@ -373,8 +373,9 @@ components:
       description: unknown error
   schemas:
     APIClarityFeature:
-      description: Description of APIClarity feature and the list of API hosts (in
-        the form 'host:port') the feature requires to get trace for
+      description: Description of APIClarity feature and the list of API hosts (Group
+        by trace sources, in the form 'host:port') the feature requires to get trace
+        for
       properties:
         featureDescription:
           description: Short human readable description of the feature
@@ -382,9 +383,7 @@ components:
         featureName:
           $ref: '#/components/schemas/APIClarityFeatureEnum'
         hostsToTrace:
-          items:
-            type: string
-          type: array
+          $ref: '#/components/schemas/HostsToTraceForComponent'
       required:
       - featureName
       type: object
@@ -396,11 +395,13 @@ components:
       - spec_differ
       - specdiffs
       - specreconstructor
+      - specreconstructor
       - traceanalyzer
       type: string
     APIClarityFeatureList:
       description: List of APIClarity features and for each feature the list of API
-        hosts (in the form 'host:port') the feature requires to get trace for
+        hosts (Group by trace sources, in the form 'host:port') the feature requires
+        to get trace for
       properties:
         features:
           items:
@@ -802,6 +803,31 @@ components:
       - IN_PROGRESS
       title: FuzzingStatus
       type: string
+    HostsToTraceForComponent:
+      description: List of trace sources for a component, with theirs list of API
+        hosts to get trace for
+      properties:
+        component:
+          description: Component name
+          type: string
+        traceSourcesHosts:
+          items:
+            $ref: '#/components/schemas/HostsToTraceForTraceSource'
+          type: array
+      type: object
+    HostsToTraceForTraceSource:
+      description: list of API hosts (in the form 'host:port') managed by a traceSource
+      properties:
+        hostsToTrace:
+          description: List of hosts (in the form 'host:port')
+          items:
+            type: string
+          type: array
+        traceSourceID:
+          description: ID of the trace source
+          format: uint32
+          type: integer
+      type: object
     K8sObjectRef:
       properties:
         apiVersion:
@@ -2436,27 +2462,45 @@ paths:
                 $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
           description: Error response
       summary: Stop Differ for an API
-  /modules/spec_reconstruction/{apiId}/start:
+  /modules/specreconstructor/{apiID}/start:
     post:
+      operationId: specreconstructorPostAPIIDStart
       parameters:
-      - $ref: '#/components/parameters/apiId'
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
       responses:
         "204":
           description: Success
         default:
-          $ref: '#/components/responses/UnknownError'
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
       summary: Start the spec reconstruction for this API.
-  /modules/spec_reconstruction/{apiId}/stop:
+  /modules/specreconstructor/{apiID}/stop:
     post:
+      operationId: specreconstructorPostAPIIDStop
       parameters:
-      - $ref: '#/components/parameters/apiId'
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
       responses:
         "204":
           description: Success
         default:
-          $ref: '#/components/responses/UnknownError'
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
       summary: Stop the spec reconstruction for this API.
-  /modules/spec_reconstruction/enable:
+  /modules/specreconstructor/enable:
     post:
       requestBody:
         content:
@@ -2467,8 +2511,24 @@ paths:
         "204":
           description: Success
         default:
-          $ref: '#/components/responses/UnknownError'
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
       summary: enable/disable the spec reconstruction
+  /modules/specreconstructor/version:
+    get:
+      description: Get the version of this Plugin
+      operationId: specreconstructorgetVersion
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ModuleVersion
+          description: Version of the Plugin
+      summary: Get the version of this Plugin
   /modules/traceanalyzer/{apiID}/start:
     post:
       description: Start Trace Analysis for an API.

@@ -1,4 +1,4 @@
-// Copyright © 2021 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,26 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utils
+package restapi
 
-func MapToSlice(m map[string]bool) []string {
-	var s []string
-
-	for k := range m {
-		s = append(s, k)
-	}
-
-	return s
-}
-
-func RemoveDuplicateStringFromSlice(strSlice []string) []string {
-	allKeys := make(map[string]bool)
-	list := []string{}
-	for _, item := range strSlice {
-		if _, value := allKeys[item]; !value {
-			allKeys[item] = true
-			list = append(list, item)
-		}
-	}
-	return list
-}
+//go:generate go run github.com/deepmap/oapi-codegen/cmd/oapi-codegen -old-config-style -generate chi-server,types,spec,skip-prune -package restapi -o restapi.gen.go --import-mapping=../../../../../../api3/common/openapi.yaml:github.com/openclarity/apiclarity/api3/common openapi.yaml

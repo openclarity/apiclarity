@@ -28,6 +28,7 @@ import (
 
 	backendmodels "github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/backend/pkg/common"
+	"github.com/openclarity/apiclarity/backend/pkg/sampling"
 	"github.com/openclarity/apiclarity/plugins/api/server/models"
 	"github.com/openclarity/apiclarity/plugins/api/server/restapi"
 	"github.com/openclarity/apiclarity/plugins/api/server/restapi/operations"
@@ -43,9 +44,10 @@ type (
 )
 
 type HTTPTracesServer struct {
-	traceHandleFunc     HandleTraceFunc
-	traceSourceAuthFunc TraceSourceAuthFunc
-	server              *restapi.Server
+	traceHandleFunc      HandleTraceFunc
+	traceSourceAuthFunc  TraceSourceAuthFunc
+	server               *restapi.Server
+	TraceSamplingManager *sampling.TraceSamplingManager
 }
 
 type HTTPTracesServerConfig struct {
@@ -56,6 +58,7 @@ type HTTPTracesServerConfig struct {
 	TLSServerKeyFilePath  string
 	TraceHandleFunc       HandleTraceFunc
 	TraceSourceAuthFunc   TraceSourceAuthFunc
+	TraceSamplingManager  *sampling.TraceSamplingManager
 }
 
 func CreateHTTPTracesServer(config *HTTPTracesServerConfig) (*HTTPTracesServer, error) {
@@ -71,10 +74,14 @@ func CreateHTTPTracesServer(config *HTTPTracesServerConfig) (*HTTPTracesServer, 
 	api.PostTelemetryHandler = operations.PostTelemetryHandlerFunc(func(params operations.PostTelemetryParams) middleware.Responder {
 		return s.PostTelemetry(params)
 	})
+	api.GetHostsToTraceHandler = operations.GetHostsToTraceHandlerFunc(func(params operations.GetHostsToTraceParams) middleware.Responder {
+		return s.getHostsToTrace(params)
+	})
 
 	if config.TraceSourceAuthFunc != nil {
 		s.traceSourceAuthFunc = config.TraceSourceAuthFunc
 		api.AddMiddlewareFor("POST", "/telemetry", s.traceSourceAuthMiddleware)
+		api.AddMiddlewareFor("GET", "/hostsToTrace", s.traceSourceAuthMiddleware)
 	}
 
 	server := restapi.NewServer(api)
@@ -172,4 +179,18 @@ func (s *HTTPTracesServer) PostTelemetry(params operations.PostTelemetryParams) 
 	}
 
 	return operations.NewPostTelemetryOK()
+}
+
+func (s *HTTPTracesServer) getHostsToTrace(params operations.GetHostsToTraceParams) middleware.Responder {
+	traceSource := TraceSourceFromContext(params.HTTPRequest.Context())
+	hosts, err := s.TraceSamplingManager.GetHostsToTrace("*", uint(traceSource.ID))
+	if err != nil {
+		log.Errorf("Error from trace handling func: %v", err)
+		return operations.NewGetHostsToTraceDefault(http.StatusInternalServerError)
+	}
+
+	return operations.NewGetHostsToTraceOK().WithPayload(
+		&models.HostsToTrace{
+			Hosts: hosts,
+		})
 }
