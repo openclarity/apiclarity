@@ -124,7 +124,7 @@ func Run() {
 	dbHandler.StartReviewTableCleaner(globalCtx, time.Duration(config.DatabaseCleanerIntervalSec)*time.Second)
 	var clientset kubernetes.Interface
 	var monitor *k8smonitor.Monitor
-	var samplingManager *manager.Manager = nil
+	var samplingManager *manager.Manager
 	if config.EnableK8s {
 		if config.K8sLocal {
 			clientset, err = k8smonitor.CreateLocalK8sClientset()
