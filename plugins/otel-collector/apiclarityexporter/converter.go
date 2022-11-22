@@ -213,6 +213,24 @@ func (e *exporter) setTelemetryServerSpan(actel *apiclientmodels.Telemetry, reso
 	return nil
 }
 
+func (e *exporter) datasetFromTelemetry(actel *apiclientmodels.Telemetry) string {
+	var datasetName string
+	apiName := actel.Request.Host
+	if apiName == "" {
+		datasetName = "root"
+	} else {
+		datasetName = strings.ReplaceAll(apiName, ".", "_")
+	}
+	if strings.HasPrefix(actel.Request.Path, "/") {
+		newPath := strings.ReplaceAll(actel.Request.Path, "/", ".")
+		datasetName += "." + strings.Trim(newPath, ".")
+	}
+	if actel.Request.Method != "" {
+		datasetName += "." + strings.ToLower(actel.Request.Method)
+	}
+	return datasetName
+}
+
 // Process a single span into APIClarity telemetry
 func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.InstrumentationScope, span ptrace.Span) (*apiclientmodels.Telemetry, error) {
 	/*
@@ -224,6 +242,7 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 			return true
 		})
 	*/
+
 	e.logger.Info("Converting span",
 		zap.String("kind", span.Kind().String()),
 		zap.String("name", span.Name()),
@@ -265,7 +284,7 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 	var urlOk bool
 	var urlAttr pcommon.Value
 	if urlAttr, urlOk = attrs.Get(string(semconv.HTTPURLKey)); urlOk {
-		urlVal := urlAttr.StringVal()
+		urlVal := urlAttr.Str()
 		if urlVal == "" {
 			urlOk = false
 		} else {
@@ -486,6 +505,22 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 		return nil, fmt.Errorf("cannot create request id for telemetry: %w", err)
 	}
 	actel.RequestID = idGen.String()
+
+	apiName := e.datasetFromTelemetry(actel)
+	if !e.datasetMap.PutDataset(span.SpanID(), apiName) {
+		e.logger.Warn("cannot cache span to API name",
+			zap.String("kind", span.Kind().String()),
+			zap.String("name", span.Name()),
+			zap.String("traceid", span.TraceID().HexString()),
+			zap.String("spanid", span.SpanID().String()),
+		)
+	}
+
+	if parentSpanID := span.ParentSpanID(); !parentSpanID.IsEmpty() {
+		if parentDataset, found := e.datasetMap.GetDataset(parentSpanID); found {
+			actel.UpstreamLineage = append(actel.UpstreamLineage, parentDataset)
+		}
+	}
 
 	return actel, nil
 }

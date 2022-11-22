@@ -119,7 +119,7 @@ func fillSpanAttributes(span ptrace.Span, spanAttributes map[string]interface{})
 	for key, value := range spanAttributes {
 		switch value := value.(type) {
 		case string:
-			attrs.PutString(key, value)
+			attrs.PutStr(key, value)
 		case int:
 			attrs.PutInt(key, int64(value))
 		}

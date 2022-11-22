@@ -38,11 +38,37 @@ import (
 	"github.com/openclarity/apiclarity/plugins/api/server/restapi/operations"
 )
 
-func TestInvalidConfig(t *testing.T) {
+func TestInvalidConfigEndpoint(t *testing.T) {
 	config := &Config{
 		HTTPClientSettings: confighttp.HTTPClientSettings{
 			Endpoint: "",
 		},
+	}
+	f := NewFactory()
+	set := componenttest.NewNopExporterCreateSettings()
+	_, err := f.CreateTracesExporter(context.Background(), set, config)
+	require.Error(t, err)
+}
+
+func TestInvalidConfigNegativeTTL(t *testing.T) {
+	config := &Config{
+		HTTPClientSettings: confighttp.HTTPClientSettings{
+			Endpoint: "http://localhost",
+		},
+		DatasetMapTTL: -1000,
+	}
+	f := NewFactory()
+	set := componenttest.NewNopExporterCreateSettings()
+	_, err := f.CreateTracesExporter(context.Background(), set, config)
+	require.Error(t, err)
+}
+
+func TestInvalidConfigNegativeSize(t *testing.T) {
+	config := &Config{
+		HTTPClientSettings: confighttp.HTTPClientSettings{
+			Endpoint: "http://localhost",
+		},
+		DatasetMapSize: -1000,
 	}
 	f := NewFactory()
 	set := componenttest.NewNopExporterCreateSettings()

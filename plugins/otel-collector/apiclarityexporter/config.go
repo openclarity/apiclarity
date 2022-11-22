@@ -17,6 +17,7 @@ package apiclarityexporter
 
 import (
 	"errors"
+	"time"
 
 	otelconfig "go.opentelemetry.io/collector/config"
 	"go.opentelemetry.io/collector/config/confighttp"
@@ -29,16 +30,21 @@ type Config struct {
 	confighttp.HTTPClientSettings `mapstructure:",squash"` // squash ensures fields are correctly decoded in embedded struct.
 	exporterhelper.QueueSettings  `mapstructure:"sending_queue"`
 	exporterhelper.RetrySettings  `mapstructure:"retry_on_failure"`
-	PreferHostNames               bool `mapstructure:"prefer_hostnames"`
+	PreferHostNames               bool          `mapstructure:"prefer_hostnames"`
+	DatasetMapTTL                 time.Duration `mapstructure:"dataset_map_ttl"`
+	DatasetMapSize                int64         `mapstructure:"dataset_map_size"`
 }
-
-var _ otelconfig.Exporter = (*Config)(nil)
 
 // Validate checks if the exporter configuration is valid
 func (cfg *Config) Validate() error {
 	if cfg.HTTPClientSettings.Endpoint == "" {
-		return errors.New("at least one endpoint must be specified")
+		return errors.New("at least one Endpoint must be specified")
 	}
-
+	if cfg.DatasetMapTTL < 0 {
+		return errors.New("DatasetMapTTL must be non-negative")
+	}
+	if cfg.DatasetMapSize < 0 {
+		return errors.New("DatasetMapSize must be non-negative")
+	}
 	return nil
 }

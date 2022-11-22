@@ -36,14 +36,13 @@ import (
 )
 
 type exporter struct {
-	// Input configuration.
-	config   *Config
-	logger   *zap.Logger
-	settings component.TelemetrySettings
-	// Default user-agent header.
-	userAgent string
-	client    *http.Client
-	service   *apiclient.APIClarityPluginsTelemetriesAPI
+	config     *Config
+	logger     *zap.Logger
+	settings   component.TelemetrySettings
+	userAgent  string
+	client     *http.Client
+	service    *apiclient.APIClarityPluginsTelemetriesAPI
+	datasetMap *TraceDatasetMap
 }
 
 // Create new exporter.
@@ -81,6 +80,11 @@ func (e *exporter) start(_ context.Context, host component.Host) error {
 	runtime := openapiclient.NewWithClient(urlInfo.Host, urlInfo.Path, []string{urlInfo.Scheme}, e.client)
 	e.service = apiclient.New(runtime, strfmt.Default)
 	//e.logger.Debug("started client for telemetry", zap.String("url", urlInfo.String()), zap.String("endpoint", e.config.Endpoint))
+
+	e.datasetMap, err = NewTraceDatasetMap(e.config.DatasetMapSize, e.config.DatasetMapTTL)
+	if err != nil {
+		return fmt.Errorf("cannot create dataset map with size: %d and ttl: %s", e.config.DatasetMapSize, e.config.DatasetMapTTL.String())
+	}
 
 	return nil
 }

@@ -38,6 +38,9 @@ type Telemetry struct {
 
 	// source address
 	SourceAddress string `json:"sourceAddress,omitempty"`
+
+	// upstream lineage
+	UpstreamLineage []string `json:"upstreamLineage"`
 }
 
 // Validate validates this telemetry

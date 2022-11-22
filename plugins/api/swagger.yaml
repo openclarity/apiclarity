@@ -48,6 +48,10 @@ definitions:
         $ref: '#/definitions/Request'
       response:
         $ref: '#/definitions/Response'
+      upstreamLineage:
+        type: 'array'
+        items:
+          type: 'string'
 
   Request:
     type: 'object'

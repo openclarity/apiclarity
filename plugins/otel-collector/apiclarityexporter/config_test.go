@@ -23,6 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/component/componenttest"
 	otelconfig "go.opentelemetry.io/collector/config"
 	"go.opentelemetry.io/collector/config/confighttp"
@@ -44,7 +45,7 @@ func TestLoadConfig(t *testing.T) {
 	require.Error(t, err)
 	require.NotNil(t, cfg)
 
-	e0 := cfg.Exporters[otelconfig.NewComponentID(typeStr)]
+	e0 := cfg.Exporters[component.NewID(typeStr)]
 	assert.Equal(t, e0, factory.CreateDefaultConfig())
 
 	// Good config
@@ -53,10 +54,10 @@ func TestLoadConfig(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
 
-	e1 := cfg.Exporters[otelconfig.NewComponentIDWithName(typeStr, "2")]
+	e1 := cfg.Exporters[component.NewIDWithName(typeStr, "2")]
 	assert.Equal(t, e1,
 		&Config{
-			ExporterSettings: otelconfig.NewExporterSettings(otelconfig.NewComponentIDWithName(typeStr, "2")),
+			ExporterSettings: otelconfig.NewExporterSettings(component.NewIDWithName(typeStr, "2")),
 			RetrySettings: exporterhelper.RetrySettings{
 				Enabled:         true,
 				InitialInterval: 10 * time.Second,
@@ -89,5 +90,7 @@ func TestLoadConfig(t *testing.T) {
 				Compression:     "none",
 			},
 			PreferHostNames: false,
+			DatasetMapTTL:   300,
+			DatasetMapSize:  1048576,
 		})
 }

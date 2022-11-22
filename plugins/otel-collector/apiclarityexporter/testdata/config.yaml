@@ -30,6 +30,8 @@ exporters:
       another: "somevalue"
     compression: none
     prefer_hostnames: false
+    dataset_map_ttl: 300
+    dataset_map_size: 1048576
 
 service:
   pipelines:

@@ -30,6 +30,8 @@ import (
 const (
 	// The value of "type" key in configuration.
 	typeStr = "apiclarity"
+	// The stability level of the exporter.
+	stability = component.StabilityLevelInDevelopment
 )
 
 // NewFactory creates a factory for OTLP exporter.
@@ -37,12 +39,12 @@ func NewFactory() component.ExporterFactory {
 	return component.NewExporterFactory(
 		typeStr,
 		CreateDefaultConfig,
-		component.WithTracesExporter(CreateTracesExporter, component.StabilityLevelInDevelopment))
+		component.WithTracesExporter(CreateTracesExporter, stability))
 }
 
-func CreateDefaultConfig() otelconfig.Exporter {
+func CreateDefaultConfig() component.ExporterConfig {
 	return &Config{
-		ExporterSettings: otelconfig.NewExporterSettings(otelconfig.NewComponentID(typeStr)),
+		ExporterSettings: otelconfig.NewExporterSettings(component.NewID(typeStr)),
 		RetrySettings:    exporterhelper.NewDefaultRetrySettings(),
 		QueueSettings:    exporterhelper.NewDefaultQueueSettings(),
 		HTTPClientSettings: confighttp.HTTPClientSettings{
@@ -53,13 +55,15 @@ func CreateDefaultConfig() otelconfig.Exporter {
 			WriteBufferSize: 512 * 1024,
 		},
 		PreferHostNames: true,
+		DatasetMapTTL:   60 * time.Second,
+		DatasetMapSize:  1024 * 1024,
 	}
 }
 
 func CreateTracesExporter(
 	ctx context.Context,
 	set component.ExporterCreateSettings,
-	cfg otelconfig.Exporter,
+	cfg component.ExporterConfig,
 ) (component.TracesExporter, error) {
 	oCfg := cfg.(*Config)
 

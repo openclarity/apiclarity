@@ -89,6 +89,7 @@ func init() {
           }
         },
         "time": {
+          "description": "Time since epoch (milliseconds)",
           "type": "integer",
           "format": "int64"
         },
@@ -168,6 +169,12 @@ func init() {
         },
         "sourceAddress": {
           "type": "string"
+        },
+        "upstreamLineage": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }
@@ -265,6 +272,7 @@ func init() {
           }
         },
         "time": {
+          "description": "Time since epoch (milliseconds)",
           "type": "integer",
           "format": "int64"
         },
@@ -344,6 +352,12 @@ func init() {
         },
         "sourceAddress": {
           "type": "string"
+        },
+        "upstreamLineage": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }
