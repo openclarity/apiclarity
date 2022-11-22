@@ -43,7 +43,33 @@ paths:
             $ref: '#/definitions/HostsToTrace'
         default:
           $ref: '#/responses/UnknownError'
-      
+
+  /control/newDiscoveredAPIs:
+    post:
+      summary: 'Allows a client to notify APIClarity about new APIs.'
+      description: 'This allows a client (a gateway for example) to notify APIclarity about newly discovered APIs. If one of the APIs already exists, it is ignored.'
+      parameters:
+        - in: 'body'
+          name: 'body'
+          description: 'List of new discovered APIs'
+          required: true
+          schema:
+            type: 'object'
+            required:
+              - hosts
+            properties:
+              hosts:
+                type: 'array'
+                description: 'List of discovered APIs, format of hostname:port'
+                items:
+                  type: 'string'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/responses/Success'
+        default:
+          $ref: '#/responses/UnknownError'
 
 definitions:
   Telemetry:

@@ -30,6 +30,8 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 	GetHostsToTrace(params *GetHostsToTraceParams, opts ...ClientOption) (*GetHostsToTraceOK, error)
 
+	PostControlNewDiscoveredAPIs(params *PostControlNewDiscoveredAPIsParams, opts ...ClientOption) (*PostControlNewDiscoveredAPIsOK, error)
+
 	PostTelemetry(params *PostTelemetryParams, opts ...ClientOption) (*PostTelemetryOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
@@ -69,6 +71,45 @@ func (a *Client) GetHostsToTrace(params *GetHostsToTraceParams, opts ...ClientOp
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*GetHostsToTraceDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  PostControlNewDiscoveredAPIs allows a client to notify API clarity about new a p is
+
+  This allows a client (a gateway for example) to notify APIclarity about newly discovered APIs. If one of the APIs already exists, it is ignored.
+*/
+func (a *Client) PostControlNewDiscoveredAPIs(params *PostControlNewDiscoveredAPIsParams, opts ...ClientOption) (*PostControlNewDiscoveredAPIsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewPostControlNewDiscoveredAPIsParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "PostControlNewDiscoveredAPIs",
+		Method:             "POST",
+		PathPattern:        "/control/newDiscoveredAPIs",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostControlNewDiscoveredAPIsReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*PostControlNewDiscoveredAPIsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*PostControlNewDiscoveredAPIsDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
