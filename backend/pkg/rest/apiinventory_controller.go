@@ -27,6 +27,7 @@ import (
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
+	"github.com/openclarity/apiclarity/backend/pkg/common"
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 )
 
@@ -56,6 +57,7 @@ func (s *Server) PostAPIInventory(params operations.PostAPIInventoryParams) midd
 		Name:                 params.Body.Name,
 		Port:                 params.Body.Port,
 		DestinationNamespace: params.Body.DestinationNamespace,
+		TraceSourceID:        common.DefaultTraceSourceID, // Force the Trace Source to the default trace source
 	}
 	if _, err := s.dbHandler.APIInventoryTable().FirstOrCreate(apiInfo); err != nil {
 		log.Error(err)
@@ -117,13 +119,7 @@ func (s *Server) GetAPIInventoryAPIIDAPIInfo(params operations.GetAPIInventoryAP
 	}
 
 	return operations.NewGetAPIInventoryAPIIDAPIInfoOK().WithPayload(&models.APIInfoWithType{
-		APIInfo: models.APIInfo{
-			HasProvidedSpec:      &apiInfo.HasProvidedSpec,
-			HasReconstructedSpec: &apiInfo.HasReconstructedSpec,
-			ID:                   uint32(apiInfo.ID),
-			Name:                 apiInfo.Name,
-			Port:                 apiInfo.Port,
-		},
+		APIInfo: *_database.APIInfoFromDB(apiInfo),
 		APIType: apiInfo.Type,
 	})
 }
