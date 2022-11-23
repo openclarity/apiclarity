@@ -34,6 +34,46 @@ func init() {
   },
   "basePath": "/api",
   "paths": {
+    "/control/newDiscoveredAPIs": {
+      "post": {
+        "description": "This allows a client (a gateway for example) to notify APIclarity about newly discovered APIs. If one of the APIs already exists, it is ignored.",
+        "summary": "Allows a client to notify APIClarity about new APIs.",
+        "parameters": [
+          {
+            "description": "List of new discovered APIs",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "hosts"
+              ],
+              "properties": {
+                "hosts": {
+                  "description": "List of discovered APIs, format of hostname:port",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/responses/Success"
+            }
+          },
+          "default": {
+            "$ref": "#/responses/UnknownError"
+          }
+        }
+      }
+    },
     "/hostsToTrace": {
       "get": {
         "summary": "Get a list of hosts to trace",
@@ -253,6 +293,52 @@ func init() {
   },
   "basePath": "/api",
   "paths": {
+    "/control/newDiscoveredAPIs": {
+      "post": {
+        "description": "This allows a client (a gateway for example) to notify APIclarity about newly discovered APIs. If one of the APIs already exists, it is ignored.",
+        "summary": "Allows a client to notify APIClarity about new APIs.",
+        "parameters": [
+          {
+            "description": "List of new discovered APIs",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "hosts"
+              ],
+              "properties": {
+                "hosts": {
+                  "description": "List of discovered APIs, format of hostname:port",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "description": "success message",
+              "schema": {
+                "$ref": "#/definitions/SuccessResponse"
+              }
+            }
+          },
+          "default": {
+            "description": "unknown error",
+            "schema": {
+              "$ref": "#/definitions/ApiResponse"
+            }
+          }
+        }
+      }
+    },
     "/hostsToTrace": {
       "get": {
         "summary": "Get a list of hosts to trace",

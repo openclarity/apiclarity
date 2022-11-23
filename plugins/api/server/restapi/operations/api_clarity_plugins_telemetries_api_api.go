@@ -45,6 +45,9 @@ func NewAPIClarityPluginsTelemetriesAPIAPI(spec *loads.Document) *APIClarityPlug
 		GetHostsToTraceHandler: GetHostsToTraceHandlerFunc(func(params GetHostsToTraceParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetHostsToTrace has not yet been implemented")
 		}),
+		PostControlNewDiscoveredAPIsHandler: PostControlNewDiscoveredAPIsHandlerFunc(func(params PostControlNewDiscoveredAPIsParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostControlNewDiscoveredAPIs has not yet been implemented")
+		}),
 		PostTelemetryHandler: PostTelemetryHandlerFunc(func(params PostTelemetryParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostTelemetry has not yet been implemented")
 		}),
@@ -86,6 +89,8 @@ type APIClarityPluginsTelemetriesAPIAPI struct {
 
 	// GetHostsToTraceHandler sets the operation handler for the get hosts to trace operation
 	GetHostsToTraceHandler GetHostsToTraceHandler
+	// PostControlNewDiscoveredAPIsHandler sets the operation handler for the post control new discovered a p is operation
+	PostControlNewDiscoveredAPIsHandler PostControlNewDiscoveredAPIsHandler
 	// PostTelemetryHandler sets the operation handler for the post telemetry operation
 	PostTelemetryHandler PostTelemetryHandler
 
@@ -167,6 +172,9 @@ func (o *APIClarityPluginsTelemetriesAPIAPI) Validate() error {
 
 	if o.GetHostsToTraceHandler == nil {
 		unregistered = append(unregistered, "GetHostsToTraceHandler")
+	}
+	if o.PostControlNewDiscoveredAPIsHandler == nil {
+		unregistered = append(unregistered, "PostControlNewDiscoveredAPIsHandler")
 	}
 	if o.PostTelemetryHandler == nil {
 		unregistered = append(unregistered, "PostTelemetryHandler")
@@ -263,6 +271,10 @@ func (o *APIClarityPluginsTelemetriesAPIAPI) initHandlerCache() {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/hostsToTrace"] = NewGetHostsToTrace(o.context, o.GetHostsToTraceHandler)
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/control/newDiscoveredAPIs"] = NewPostControlNewDiscoveredAPIs(o.context, o.PostControlNewDiscoveredAPIsHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
