@@ -41,7 +41,9 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 		})
 	}
 
-	return operations.NewPostControlNewDiscoveredAPIsOK()
+	return operations.NewPostControlNewDiscoveredAPIsOK().WithPayload(&models.APIResponse{
+		Message: "New APIs will be processed",
+	})
 }
 
 func (s *Server) CreateNewDiscoveredAPIs(ctx context.Context, hosts []string, traceSource *models.TraceSource) error {
