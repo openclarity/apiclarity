@@ -214,5 +214,7 @@ func (s *HTTPTracesServer) newDiscoveredAPIs(params operations.PostControlNewDis
 		})
 	}
 
-	return operations.NewPostControlNewDiscoveredAPIsOK()
+	return operations.NewPostControlNewDiscoveredAPIsOK().WithPayload(&models.APIResponse{
+		Message: "New APIs will be processed",
+	})
 }
