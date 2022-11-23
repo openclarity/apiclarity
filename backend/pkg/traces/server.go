@@ -39,13 +39,16 @@ const (
 )
 
 type (
-	HandleTraceFunc     func(ctx context.Context, trace *models.Telemetry, traceSource *backendmodels.TraceSource) error
-	TraceSourceAuthFunc func(ctx context.Context, token []byte) (*backendmodels.TraceSource, error)
+	HandleTraceFunc         func(ctx context.Context, trace *models.Telemetry, traceSource *backendmodels.TraceSource) error
+	HandleNewDiscoveredAPIs func(ctx context.Context, hosts []string, traceSource *backendmodels.TraceSource) error
+	TraceSourceAuthFunc     func(ctx context.Context, token []byte) (*backendmodels.TraceSource, error)
 )
 
 type HTTPTracesServer struct {
-	traceHandleFunc      HandleTraceFunc
-	traceSourceAuthFunc  TraceSourceAuthFunc
+	traceHandleFunc             HandleTraceFunc
+	newDiscoveredAPIsHandleFunc HandleNewDiscoveredAPIs
+	traceSourceAuthFunc         TraceSourceAuthFunc
+
 	server               *restapi.Server
 	TraceSamplingManager *sampling.TraceSamplingManager
 }
@@ -57,6 +60,7 @@ type HTTPTracesServerConfig struct {
 	TLSServerCertFilePath string
 	TLSServerKeyFilePath  string
 	TraceHandleFunc       HandleTraceFunc
+	NewDiscoveredAPIsFunc HandleNewDiscoveredAPIs
 	TraceSourceAuthFunc   TraceSourceAuthFunc
 	TraceSamplingManager  *sampling.TraceSamplingManager
 }
@@ -77,11 +81,15 @@ func CreateHTTPTracesServer(config *HTTPTracesServerConfig) (*HTTPTracesServer, 
 	api.GetHostsToTraceHandler = operations.GetHostsToTraceHandlerFunc(func(params operations.GetHostsToTraceParams) middleware.Responder {
 		return s.getHostsToTrace(params)
 	})
+	api.PostControlNewDiscoveredAPIsHandler = operations.PostControlNewDiscoveredAPIsHandlerFunc(func(params operations.PostControlNewDiscoveredAPIsParams) middleware.Responder {
+		return s.newDiscoveredAPIs(params)
+	})
 
 	if config.TraceSourceAuthFunc != nil {
 		s.traceSourceAuthFunc = config.TraceSourceAuthFunc
 		api.AddMiddlewareFor("POST", "/telemetry", s.traceSourceAuthMiddleware)
 		api.AddMiddlewareFor("GET", "/hostsToTrace", s.traceSourceAuthMiddleware)
+		api.AddMiddlewareFor("POST", "/control/newDiscoveredAPIs", s.traceSourceAuthMiddleware)
 	}
 
 	server := restapi.NewServer(api)
@@ -106,6 +114,7 @@ func CreateHTTPTracesServer(config *HTTPTracesServerConfig) (*HTTPTracesServer, 
 
 	s.server = server
 	s.traceHandleFunc = config.TraceHandleFunc
+	s.newDiscoveredAPIsHandleFunc = config.NewDiscoveredAPIsFunc
 
 	return s, nil
 }
@@ -193,4 +202,17 @@ func (s *HTTPTracesServer) getHostsToTrace(params operations.GetHostsToTracePara
 		&models.HostsToTrace{
 			Hosts: hosts,
 		})
+}
+
+func (s *HTTPTracesServer) newDiscoveredAPIs(params operations.PostControlNewDiscoveredAPIsParams) middleware.Responder {
+	traceSource := TraceSourceFromContext(params.HTTPRequest.Context())
+	hosts := params.Body.Hosts
+
+	if err := s.newDiscoveredAPIsHandleFunc(params.HTTPRequest.Context(), hosts, traceSource); err != nil {
+		return operations.NewPostControlNewDiscoveredAPIsDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
+			Message: "Unable to process all new discovered APIs",
+		})
+	}
+
+	return operations.NewPostControlNewDiscoveredAPIsOK()
 }

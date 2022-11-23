@@ -16,6 +16,7 @@
 package rest
 
 import (
+	"context"
 	"net"
 	"net/http"
 	"strconv"
@@ -26,22 +27,30 @@ import (
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
 	"github.com/openclarity/apiclarity/api3/notifications"
+	"github.com/openclarity/apiclarity/backend/pkg/common"
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 )
 
 func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDiscoveredAPIsParams) middleware.Responder {
 	log.Infof("PostControlNewDiscoveredAPIs controller was invoked")
 
-	// Check the token and retrieve the corresponding trace source
-	token := []byte("") // FIXME: get the token from the http header
-	traceSourceID, err := s.CheckTraceSourceAuth(token)
-	if err != nil {
-		log.Errorf("Unable to authenticate the Trace Source")
-		return operations.NewPostControlNewDiscoveredAPIsDefault(http.StatusUnauthorized)
+	var noTraceSource *models.TraceSource = nil //nolint:revive // I really mean it, for documentation
+	if err := s.CreateNewDiscoveredAPIs(params.HTTPRequest.Context(), params.Body.Hosts, noTraceSource); err != nil {
+		return operations.NewPostControlNewDiscoveredAPIsDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
+			Message: "Unable to process all new discovered APIs",
+		})
 	}
 
+	return operations.NewPostControlNewDiscoveredAPIsOK()
+}
+
+func (s *Server) CreateNewDiscoveredAPIs(ctx context.Context, hosts []string, traceSource *models.TraceSource) error {
+	traceSourceID := common.DefaultTraceSourceID
+	if traceSource != nil {
+		traceSourceID = uint(traceSource.ID)
+	}
 	// Iterate over each hosts and check if it already exists
-	for _, h := range params.Body.Hosts {
+	for _, h := range hosts {
 		host, strPort, err := net.SplitHostPort(h)
 		if err != nil {
 			log.Errorf("Unable to parse fqdn:port for '%s': %v", h, err)
@@ -66,13 +75,13 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 			continue
 		}
 		if created {
-			log.Infof("New API '%s' managed by source '%v' was added to inventory", h, traceSourceID)
-			_ = s.speculators.Get(traceSourceID).InitSpec(host, strconv.Itoa(port))
+			log.Infof("New API '%s' managed by source '%v' was added to inventory", h, apiInfo.TraceSourceID)
+			_ = s.speculators.Get(apiInfo.TraceSourceID).InitSpec(host, strconv.Itoa(port))
 
 			if s.notifier != nil {
 				apiID := uint32(apiInfo.ID)
 				port := int(apiInfo.Port)
-				traceSource := uint32(apiInfo.TraceSourceID)
+				tSource := uint32(apiInfo.TraceSourceID)
 				newDiscoveredAPINotification := notifications.NewDiscoveredAPINotification{
 					Id:                   &apiID,
 					Name:                 &apiInfo.Name,
@@ -80,7 +89,7 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 					HasReconstructedSpec: &apiInfo.HasReconstructedSpec,
 					HasProvidedSpec:      &apiInfo.HasProvidedSpec,
 					DestinationNamespace: &apiInfo.DestinationNamespace,
-					TraceSourceId:        &traceSource,
+					TraceSourceId:        &tSource,
 				}
 				notification := notifications.APIClarityNotification{}
 				err := notification.FromNewDiscoveredAPINotification(newDiscoveredAPINotification)
@@ -98,5 +107,5 @@ func (s *Server) PostControlNewDiscoveredAPIs(params operations.PostControlNewDi
 		}
 	}
 
-	return operations.NewPostControlNewDiscoveredAPIsOK()
+	return nil
 }
