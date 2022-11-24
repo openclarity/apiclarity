@@ -197,13 +197,14 @@ func (s *HTTPTracesServer) getHostsToTrace(params operations.GetHostsToTracePara
 		return operations.NewGetHostsToTraceDefault(http.StatusInternalServerError).
 			WithPayload(&models.APIResponse{Message: "No trace sampling manager configured"})
 	}
+
+	traceSourceID := common.DefaultTraceSourceID
 	traceSource := TraceSourceFromContext(params.HTTPRequest.Context())
-	if traceSource == nil {
-		log.Errorf("No trace source")
-		return operations.NewGetHostsToTraceDefault(http.StatusInternalServerError).
-			WithPayload(&models.APIResponse{Message: "No trace source"})
+	if traceSource != nil {
+		traceSourceID = uint(traceSource.ID)
 	}
-	hosts, err := s.TraceSamplingManager.GetHostsToTrace("*", uint(traceSource.ID))
+
+	hosts, err := s.TraceSamplingManager.GetHostsToTrace("*", traceSourceID)
 	if err != nil {
 		log.Errorf("Error from trace handling func: %v", err)
 		return operations.NewGetHostsToTraceDefault(http.StatusInternalServerError)
