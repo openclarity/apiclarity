@@ -47,19 +47,25 @@ func NewTraceDatasetMap(size int64, ttl time.Duration) (*TraceDatasetMap, error)
 	}
 }
 
-func (m *TraceDatasetMap) GetDataset(spanId pcommon.SpanID) (string, bool) {
-	dataset, found := m.cache.Get(spanId)
+func (m *TraceDatasetMap) GetDataset(spanID pcommon.SpanID) (string, bool) {
+	var key []byte = spanID[:]
+	dataset, found := m.cache.Get(key)
 	if !found {
 		return "", false
 	}
 	switch d := dataset.(type) {
 	default:
+		println("found wrong data type for value")
 		return "", false
 	case string:
 		return d, true
 	}
 }
 
-func (m *TraceDatasetMap) PutDataset(spanId pcommon.SpanID, dataset string) bool {
-	return m.cache.SetWithTTL(spanId[:], dataset, int64(unsafe.Sizeof(spanId)), m.keyTTL)
+func (m *TraceDatasetMap) PutDataset(spanID pcommon.SpanID, dataset string) bool {
+	if dataset == "" {
+		return false
+	}
+	var key []byte = spanID[:]
+	return m.cache.SetWithTTL(key, dataset, 8, m.keyTTL)
 }

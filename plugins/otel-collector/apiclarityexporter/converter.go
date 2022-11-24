@@ -16,12 +16,14 @@
 package apiclarityexporter
 
 import (
+	"encoding/hex"
 	"fmt"
 	"net"
 	"net/url"
 	"strings"
 
 	"github.com/gofrs/uuid"
+	apiannotations "github.com/openclarity/apiclarity/plugins/api/annotations"
 	apiclientmodels "github.com/openclarity/apiclarity/plugins/api/client/models"
 	"go.uber.org/zap"
 
@@ -242,11 +244,12 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 			return true
 		})
 	*/
+	var traceID pcommon.TraceID = span.TraceID()
 
 	e.logger.Info("Converting span",
 		zap.String("kind", span.Kind().String()),
 		zap.String("name", span.Name()),
-		zap.String("traceid", span.TraceID().HexString()),
+		zap.String("traceid", hex.EncodeToString(traceID[:])),
 		zap.Int("attributes.length", span.Attributes().Len()),
 	)
 
@@ -335,7 +338,7 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 		e.logger.Warn("span kind unspecified, assuming default",
 			zap.String("kind", span.Kind().String()),
 			zap.String("name", span.Name()),
-			zap.String("traceid", span.TraceID().HexString()),
+			zap.String("traceid", hex.EncodeToString(traceID[:])),
 			zap.Int("default", int(DefaultSpanKind)),
 		)
 		if DefaultSpanKind == ptrace.SpanKindClient {
@@ -347,7 +350,7 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 		e.logger.Warn("ignoring span that is not client or server",
 			zap.String("kind", span.Kind().String()),
 			zap.String("name", span.Name()),
-			zap.String("traceid", span.TraceID().HexString()),
+			zap.String("traceid", hex.EncodeToString(traceID[:])),
 		)
 	}
 	if err != nil {
@@ -371,7 +374,7 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 			e.logger.Warn("Cannot infer destination port, using default 80",
 				zap.String("kind", span.Kind().String()),
 				zap.String("name", span.Name()),
-				zap.String("traceid", span.TraceID().HexString()),
+				zap.String("traceid", hex.EncodeToString(traceID[:])),
 			)
 			actel.DestinationAddress = actel.DestinationAddress + ":80"
 		}
@@ -380,7 +383,7 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 		e.logger.Warn("Cannot infer source address, using default",
 			zap.String("kind", span.Kind().String()),
 			zap.String("name", span.Name()),
-			zap.String("traceid", span.TraceID().HexString()),
+			zap.String("traceid", hex.EncodeToString(traceID[:])),
 			zap.String("address", DefaultSourceAddress),
 		)
 		actel.SourceAddress = DefaultSourceAddress
@@ -390,7 +393,7 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 		e.logger.Warn("Cannot infer source port, using default",
 			zap.String("kind", span.Kind().String()),
 			zap.String("name", span.Name()),
-			zap.String("traceid", span.TraceID().HexString()),
+			zap.String("traceid", hex.EncodeToString(traceID[:])),
 			zap.String("port", defaultPort),
 		)
 		actel.SourceAddress = actel.SourceAddress + ":" + defaultPort
@@ -400,7 +403,7 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 		e.logger.Warn("Cannot find host, using destination",
 			zap.String("kind", span.Kind().String()),
 			zap.String("name", span.Name()),
-			zap.String("traceid", span.TraceID().HexString()),
+			zap.String("traceid", hex.EncodeToString(traceID[:])),
 			zap.String("destination", actel.DestinationAddress),
 		)
 		actel.Request.Host = actel.DestinationAddress
@@ -416,7 +419,7 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 		e.logger.Warn("Cannot find status code, using default",
 			zap.String("kind", span.Kind().String()),
 			zap.String("name", span.Name()),
-			zap.String("traceid", span.TraceID().HexString()),
+			zap.String("traceid", hex.EncodeToString(traceID[:])),
 			zap.String(string(semconv.HTTPStatusCodeKey), DefaultStatusCode),
 		)
 		actel.Response.StatusCode = DefaultStatusCode
@@ -440,7 +443,7 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 			e.logger.Warn("unknown request body value type",
 				zap.String("kind", span.Kind().String()),
 				zap.String("name", span.Name()),
-				zap.String("traceid", span.TraceID().HexString()),
+				zap.String("traceid", hex.EncodeToString(traceID[:])),
 				zap.String("type", reqBody.Type().String()),
 			)
 		}
@@ -461,7 +464,7 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 			e.logger.Warn("unknown response body value type",
 				zap.String("kind", span.Kind().String()),
 				zap.String("name", span.Name()),
-				zap.String("traceid", span.TraceID().HexString()),
+				zap.String("traceid", hex.EncodeToString(traceID[:])),
 				zap.String("type", respBody.Type().String()),
 			)
 		}
@@ -511,14 +514,21 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 		e.logger.Warn("cannot cache span to API name",
 			zap.String("kind", span.Kind().String()),
 			zap.String("name", span.Name()),
-			zap.String("traceid", span.TraceID().HexString()),
+			zap.String("traceid", hex.EncodeToString(traceID[:])),
 			zap.String("spanid", span.SpanID().String()),
 		)
 	}
 
 	if parentSpanID := span.ParentSpanID(); !parentSpanID.IsEmpty() {
 		if parentDataset, found := e.datasetMap.GetDataset(parentSpanID); found {
-			actel.UpstreamLineage = append(actel.UpstreamLineage, parentDataset)
+			actel.Annotations[apiannotations.DataLineageUpstreamKey] = parentDataset
+		} else {
+			e.logger.Debug("no parent span ID found in cache",
+				zap.String("kind", span.Kind().String()),
+				zap.String("name", span.Name()),
+				zap.String("traceid", hex.EncodeToString(traceID[:])),
+				zap.String("spanid", span.SpanID().String()),
+			)
 		}
 	}
 

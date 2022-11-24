@@ -16,6 +16,7 @@
 package apiclarityexporter
 
 import (
+	"math/rand"
 	"net"
 	"testing"
 	"time"
@@ -75,7 +76,12 @@ var (
 			"http.status_code": 200,
 		},
 	}
+	randomizer *rand.Rand
 )
+
+func init() {
+	randomizer = rand.New(rand.NewSource(time.Now().UnixNano()))
+}
 
 // Function from "github.com/open-telemetry/opentelemetry-collector-contrib/internal/common/testutil"
 func GetAvailableLocalAddress(t testing.TB, network string) string {
@@ -91,7 +97,7 @@ func GetAvailableLocalAddress(t testing.TB, network string) string {
 
 // Function from "github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal/testdata/trace"
 func fillSpanOne(span ptrace.Span, kind ptrace.SpanKind) {
-	span.SetName("operationA")
+	span.SetName("GET /operationA/{id}")
 	span.SetStartTimestamp(TestSpanStartTimestamp)
 	span.SetEndTimestamp(TestSpanEndTimestamp)
 	span.SetDroppedAttributesCount(1)
@@ -126,31 +132,65 @@ func fillSpanAttributes(span ptrace.Span, spanAttributes map[string]interface{})
 	}
 }
 
-func generateTracesOneSpan() ptrace.Traces {
+func generateTraceID() pcommon.TraceID {
+	var traceID [16]byte
+	randomizer.Read(traceID[:])
+	return traceID
+}
+
+func generateSpanID() pcommon.SpanID {
+	var spanID [8]byte
+	randomizer.Read(spanID[:])
+	return spanID
+}
+
+func generateTracesOneSpanHelper() ptrace.Traces {
 	td := ptrace.NewTraces()
 	td.ResourceSpans().AppendEmpty()
 	rs0 := td.ResourceSpans().At(0)
 	resAttrs := pcommon.NewMap()
 	resAttrs.FromRaw(resourceAttributes1)
 	resAttrs.CopyTo(rs0.Resource().Attributes())
-	td.ResourceSpans().At(0).ScopeSpans().AppendEmpty()
-	rs0ils0 := td.ResourceSpans().At(0).ScopeSpans().At(0)
-	rs0ils0.Spans().AppendEmpty()
 	return td
 }
 
 // Function from "github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal/testdata"
 func GenerateTracesOneSpan(kind ptrace.SpanKind) ptrace.Traces {
-	td := generateTracesOneSpan()
-	rs0ils0 := td.ResourceSpans().At(0).ScopeSpans().At(0)
-	span := rs0ils0.Spans().At(0)
+	td := generateTracesOneSpanHelper()
+	span := GetFirstSpan(td)
+	span.SetTraceID(generateTraceID())
+	span.SetSpanID(generateSpanID())
 	fillSpanOne(span, kind)
 	return td
 }
 
 func TracesOneSpanAddAttributes(td ptrace.Traces, attrs map[string]interface{}) ptrace.Traces {
-	rs0ils0 := td.ResourceSpans().At(0).ScopeSpans().At(0)
-	span := rs0ils0.Spans().At(0)
-	fillSpanAttributes(span, attrs)
+	fillSpanAttributes(GetFirstSpan(td), attrs)
 	return td
+}
+
+func GetFirstSpan(td ptrace.Traces) ptrace.Span {
+	rspans := td.ResourceSpans()
+	if rspans.Len() == 0 {
+		rspans.AppendEmpty()
+	}
+	for i := 0; i < rspans.Len(); i++ {
+		rspan := rspans.At(i)
+		sspans := rspan.ScopeSpans()
+		if sspans.Len() == 0 {
+			sspans.AppendEmpty()
+		}
+		for j := 0; j < sspans.Len(); j++ {
+			sspan := sspans.At(j)
+			spans := sspan.Spans()
+			if spans.Len() == 0 {
+				spans.AppendEmpty()
+			}
+			for k := 0; k < spans.Len(); k++ {
+				return spans.At(k)
+			}
+		}
+	}
+	//Fallback for compiler, should not execute.
+	return td.ResourceSpans().At(0).ScopeSpans().At(0).Spans().At(0)
 }

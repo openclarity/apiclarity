@@ -37,6 +37,9 @@ import (
 
 	// Enables the traceanalyzer module.
 	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/traceanalyzer"
+
+	// Enables the data lineage module.
+	_ "github.com/openclarity/apiclarity/backend/pkg/modules/internal/lineage"
 	"github.com/openclarity/apiclarity/backend/pkg/notifier"
 	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
 )

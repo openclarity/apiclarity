@@ -17,8 +17,11 @@ package apiclarityexporter
 
 import (
 	"errors"
+	"fmt"
+	"net/url"
 	"time"
 
+	"go.opentelemetry.io/collector/component"
 	otelconfig "go.opentelemetry.io/collector/config"
 	"go.opentelemetry.io/collector/config/confighttp"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
@@ -35,10 +38,16 @@ type Config struct {
 	DatasetMapSize                int64         `mapstructure:"dataset_map_size"`
 }
 
+var _ component.ExporterConfig = (*Config)(nil)
+
 // Validate checks if the exporter configuration is valid
 func (cfg *Config) Validate() error {
 	if cfg.HTTPClientSettings.Endpoint == "" {
 		return errors.New("at least one Endpoint must be specified")
+	}
+	_, err := url.Parse(cfg.HTTPClientSettings.Endpoint)
+	if err != nil {
+		return fmt.Errorf("HTTP endpoint must be a valid URL: %w", err)
 	}
 	if cfg.DatasetMapTTL < 0 {
 		return errors.New("DatasetMapTTL must be non-negative")

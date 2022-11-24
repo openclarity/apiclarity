@@ -30,7 +30,7 @@ func init() {
   "swagger": "2.0",
   "info": {
     "title": "APIClarity Plugins telemetries API",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "basePath": "/api",
   "paths": {
@@ -149,6 +149,12 @@ func init() {
     "Telemetry": {
       "type": "object",
       "properties": {
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "destinationAddress": {
           "type": "string"
         },
@@ -169,12 +175,6 @@ func init() {
         },
         "sourceAddress": {
           "type": "string"
-        },
-        "upstreamLineage": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
         }
       }
     }
@@ -207,7 +207,7 @@ func init() {
   "swagger": "2.0",
   "info": {
     "title": "APIClarity Plugins telemetries API",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "basePath": "/api",
   "paths": {
@@ -332,6 +332,12 @@ func init() {
     "Telemetry": {
       "type": "object",
       "properties": {
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "destinationAddress": {
           "type": "string"
         },
@@ -352,12 +358,6 @@ func init() {
         },
         "sourceAddress": {
           "type": "string"
-        },
-        "upstreamLineage": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
         }
       }
     }

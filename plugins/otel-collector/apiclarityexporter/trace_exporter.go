@@ -65,8 +65,6 @@ func newExporter(oCfg *Config, set component.ExporterCreateSettings) (*exporter,
 	}, nil
 }
 
-// start actually creates the HTTP client. The client construction is deferred till this point as this
-// is the only place we get hold of Extensions which are required to construct auth round tripper.
 func (e *exporter) start(_ context.Context, host component.Host) error {
 	// Add base path specific to endpoint b/c otel endpoint doesn't include path
 	urlInfo, err := url.Parse(e.config.HTTPClientSettings.Endpoint + apiclient.DefaultBasePath)

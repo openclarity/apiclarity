@@ -18,6 +18,9 @@ import (
 // swagger:model Telemetry
 type Telemetry struct {
 
+	// annotations
+	Annotations map[string]string `json:"annotations,omitempty"`
+
 	// destination address
 	DestinationAddress string `json:"destinationAddress,omitempty"`
 
@@ -38,9 +41,6 @@ type Telemetry struct {
 
 	// source address
 	SourceAddress string `json:"sourceAddress,omitempty"`
-
-	// upstream lineage
-	UpstreamLineage []string `json:"upstreamLineage"`
 }
 
 // Validate validates this telemetry

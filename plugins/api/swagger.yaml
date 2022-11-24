@@ -1,6 +1,6 @@
 swagger: "2.0"
 info:
-  version: "1.0.0"
+  version: "1.1.0"
   title: "APIClarity Plugins telemetries API"
 
 basePath: /api
@@ -48,9 +48,9 @@ definitions:
         $ref: '#/definitions/Request'
       response:
         $ref: '#/definitions/Response'
-      upstreamLineage:
-        type: 'array'
-        items:
+      annotations:
+        type: 'object'
+        additionalProperties:
           type: 'string'
 
   Request:

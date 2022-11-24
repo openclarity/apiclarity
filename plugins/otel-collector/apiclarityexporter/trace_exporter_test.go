@@ -76,16 +76,40 @@ func TestInvalidConfigNegativeSize(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestTraceNoBackend(t *testing.T) {
-	exp := startTracesExporter(t, "http://localhost")
-	td := generateTracesOneSpan()
-	assert.Error(t, exp.ConsumeTraces(context.Background(), td))
+func TestTraceInvalidUrl(t *testing.T) {
+	config := &Config{
+		HTTPClientSettings: confighttp.HTTPClientSettings{
+			Endpoint: "http:/\\//this_is_an/*/invalid_url",
+		},
+	}
+
+	var err error
+	f := NewFactory()
+	set := componenttest.NewNopExporterCreateSettings()
+	set.Logger, err = zap.NewDevelopment()
+	require.NoError(t, err)
+	t.Logf("Creating traces exporter with URL: %s", config.HTTPClientSettings.Endpoint)
+	exp, err := f.CreateTracesExporter(context.Background(), set, config)
+	require.NoError(t, err)
+	assert.Error(t, exp.Start(context.Background(), componenttest.NewNopHost()))
 }
 
-func TestTraceInvalidUrl(t *testing.T) {
-	exp := startTracesExporter(t, "http:/\\//this_is_an/*/invalid_url")
-	td := generateTracesOneSpan()
-	assert.Error(t, exp.ConsumeTraces(context.Background(), td))
+func TestTraceNoBackend(t *testing.T) {
+	config := &Config{
+		HTTPClientSettings: confighttp.HTTPClientSettings{
+			Endpoint: "http://localhost",
+		},
+	}
+
+	var err error
+	f := NewFactory()
+	set := componenttest.NewNopExporterCreateSettings()
+	set.Logger, err = zap.NewDevelopment()
+	require.NoError(t, err)
+	t.Logf("Creating traces exporter with URL: %s", config.HTTPClientSettings.Endpoint)
+	exp, err := f.CreateTracesExporter(context.Background(), set, config)
+	require.NoError(t, err)
+	assert.Error(t, exp.Start(context.Background(), componenttest.NewNopHost()))
 }
 
 func TestTraceRoundTrip(t *testing.T) {
@@ -108,9 +132,10 @@ func TestTraceRoundTrip(t *testing.T) {
 			traces: TracesOneSpanAddAttributes(td, attrs),
 		})
 	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			url := startTracesReceiver(t)
+			url, _ := startTracesReceiver(t)
 			exp := startTracesExporter(t, url)
 			assert.NoError(t, exp.ConsumeTraces(context.Background(), test.traces))
 		})
@@ -152,7 +177,7 @@ func MockPostTelemetry(t *testing.T, params operations.PostTelemetryParams) midd
 	}
 }
 
-func startTracesReceiver(t *testing.T) string {
+func startTracesReceiver(t *testing.T) (string, *restapi.Server) {
 	// create from default API handler for  plugins API
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)
 	require.NoError(t, err)
@@ -183,7 +208,7 @@ func startTracesReceiver(t *testing.T) string {
 		ts.Close()
 	})
 	t.Logf("APIClarity telemetry is ready at: %s", ts.URL)
-	return ts.URL
+	return ts.URL, server
 }
 
 func startAndCleanup(t *testing.T, cmp component.Component) {
