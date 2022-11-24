@@ -17,6 +17,7 @@ package core
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -84,20 +85,22 @@ type BackendAccessor interface {
 
 func NewAccessor(dbHandler *database.Handler, clientset kubernetes.Interface, samplingManager *manager.Manager, speculatorAccessor speculatoraccessor.SpeculatorAccessor, notifier *notifier.Notifier, conf *config.Config) (BackendAccessor, error) {
 	return &accessor{
-		dbHandler:          dbHandler,
-		clientset:          clientset,
-		samplingManager:    samplingManager,
-		speculatorAccessor: speculatorAccessor,
-		notifier:           notifier,
+		dbHandler:            dbHandler,
+		clientset:            clientset,
+		samplingManager:      samplingManager,
+		speculatorAccessor:   speculatorAccessor,
+		notifier:             notifier,
+		traceSamplingEnabled: conf.TraceSamplingEnabled,
 	}, nil
 }
 
 type accessor struct {
-	dbHandler          *database.Handler
-	clientset          kubernetes.Interface
-	samplingManager    *manager.Manager
-	speculatorAccessor speculatoraccessor.SpeculatorAccessor
-	notifier           *notifier.Notifier
+	dbHandler            *database.Handler
+	clientset            kubernetes.Interface
+	samplingManager      *manager.Manager
+	speculatorAccessor   speculatoraccessor.SpeculatorAccessor
+	notifier             *notifier.Notifier
+	traceSamplingEnabled bool
 }
 
 func (b *accessor) K8SClient() kubernetes.Interface {
@@ -232,6 +235,9 @@ func (b *accessor) Notify(ctx context.Context, modName string, apiID uint, n not
 }
 
 func (b *accessor) EnableTraces(ctx context.Context, modName string, apiID uint) error {
+	if !b.traceSamplingEnabled {
+		return errors.New("trace sampling is not enabled")
+	}
 	apiInfo := &database.APIInfo{}
 	if err := b.dbHandler.APIInventoryTable().First(apiInfo, apiID); err != nil {
 		return fmt.Errorf("failed to retrieve API info for apiID=%v: %v", apiID, err)
@@ -247,6 +253,9 @@ func (b *accessor) EnableTraces(ctx context.Context, modName string, apiID uint)
 }
 
 func (b *accessor) DisableTraces(ctx context.Context, modName string, apiID uint) error {
+	if !b.traceSamplingEnabled {
+		return nil
+	}
 	apiInfo := &database.APIInfo{}
 	if err := b.dbHandler.APIInventoryTable().First(apiInfo, apiID); err != nil {
 		return fmt.Errorf("failed to retrieve API info for apiID=%v: %v", apiID, err)

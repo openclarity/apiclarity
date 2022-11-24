@@ -56,6 +56,7 @@ func main() {
 	viper.SetDefault(config.DatabaseCleanerIntervalSec, "30")
 	viper.SetDefault(config.StateBackupFileName, "state.gob")
 	viper.SetDefault(config.DatabaseDriver, database.DBDriverTypePostgres)
+	viper.SetDefault(config.EnableK8s, true)
 	viper.SetDefault(config.TLSServerCertFilePath, "/etc/certs/server.crt")
 	viper.SetDefault(config.TLSServerKeyFilePath, "/etc/certs/server.key")
 	viper.SetDefault(config.RootCertFilePath, "/etc/root-ca/ca.crt")

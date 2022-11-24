@@ -62,7 +62,7 @@ func New(ctx context.Context, dbHandler *database.Handler, clientset kubernetes.
 		return nil, nil, fmt.Errorf("failed to create backend accessor: %v", err)
 	}
 
-	module, infos := core.New(ctx, backendAccessor, samplingManager)
+	module, infos := core.New(ctx, backendAccessor, samplingManager, config.TraceSamplingEnabled)
 
 	return module, infos, nil
 }
