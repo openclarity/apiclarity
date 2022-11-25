@@ -135,9 +135,16 @@ func (h *TraceSamplingTableHandler) HostsToTraceByTraceSource(component string, 
 	var hosts []string
 
 	var samplings []*TraceSamplingWithHostAndPort
-	t := h.tx.Select("trace_sampling.api_id, trace_sampling.trace_source_id, trace_sampling.component, api_inventory.name, api_inventory.port, api_inventory.destination_namespace").
-		Where("trace_sampling.trace_source_id = ? AND (trace_sampling.component = ? OR trace_sampling.component = \"*\")", traceSourceID, component).
-		Joins("LEFT JOIN api_inventory ON api_inventory.id = trace_sampling.api_id")
+	var t *gorm.DB
+	if component == "*" {
+		t = h.tx.Select("trace_sampling.api_id, trace_sampling.trace_source_id, trace_sampling.component, api_inventory.name, api_inventory.port, api_inventory.destination_namespace").
+			Where("trace_sampling.trace_source_id = ?", traceSourceID).
+			Joins("LEFT JOIN api_inventory ON api_inventory.id = trace_sampling.api_id")
+	} else {
+		t = h.tx.Select("trace_sampling.api_id, trace_sampling.trace_source_id, trace_sampling.component, api_inventory.name, api_inventory.port, api_inventory.destination_namespace").
+			Where("trace_sampling.trace_source_id = ? AND (trace_sampling.component = ? OR trace_sampling.component = ?)", traceSourceID, component, "*").
+			Joins("LEFT JOIN api_inventory ON api_inventory.id = trace_sampling.api_id")
+	}
 	if err := t.Find(&samplings).Error; err != nil {
 		return nil, err
 	}
@@ -157,8 +164,7 @@ func (h *TraceSamplingTableHandler) HostsToTraceByComponent(component string) (m
 
 	var samplings []*TraceSamplingWithHostAndPort
 	t := h.tx.Select("trace_sampling.api_id, trace_sampling.trace_source_id, trace_sampling.component, api_inventory.name, api_inventory.port, api_inventory.destination_namespace").
-		Where("trace_sampling.component = ? OR trace_sampling.component = \"*\"", component).
-		Group("trace_sampling.trace_source_id").
+		Where("trace_sampling.component = ? OR trace_sampling.component = ?", component, "*").
 		Joins("LEFT JOIN api_inventory ON api_inventory.id = trace_sampling.api_id")
 	if err := t.Find(&samplings).Error; err != nil {
 		return nil, err

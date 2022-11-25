@@ -115,6 +115,7 @@ func CreateHTTPTracesServer(config *HTTPTracesServerConfig) (*HTTPTracesServer, 
 	s.server = server
 	s.traceHandleFunc = config.TraceHandleFunc
 	s.newDiscoveredAPIsHandleFunc = config.NewDiscoveredAPIsFunc
+	s.TraceSamplingManager = config.TraceSamplingManager
 
 	return s, nil
 }
@@ -191,8 +192,19 @@ func (s *HTTPTracesServer) PostTelemetry(params operations.PostTelemetryParams) 
 }
 
 func (s *HTTPTracesServer) getHostsToTrace(params operations.GetHostsToTraceParams) middleware.Responder {
+	if s.TraceSamplingManager == nil {
+		log.Errorf("No trace sampling manager configured")
+		return operations.NewGetHostsToTraceDefault(http.StatusInternalServerError).
+			WithPayload(&models.APIResponse{Message: "No trace sampling manager configured"})
+	}
+
+	traceSourceID := common.DefaultTraceSourceID
 	traceSource := TraceSourceFromContext(params.HTTPRequest.Context())
-	hosts, err := s.TraceSamplingManager.GetHostsToTrace("*", uint(traceSource.ID))
+	if traceSource != nil {
+		traceSourceID = uint(traceSource.ID)
+	}
+
+	hosts, err := s.TraceSamplingManager.GetHostsToTrace("*", traceSourceID)
 	if err != nil {
 		log.Errorf("Error from trace handling func: %v", err)
 		return operations.NewGetHostsToTraceDefault(http.StatusInternalServerError)
