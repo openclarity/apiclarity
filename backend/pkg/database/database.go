@@ -45,6 +45,7 @@ type Database interface {
 	APIEventsAnnotationsTable() APIEventAnnotationTable
 	APIInfoAnnotationsTable() APIAnnotationsTable
 	APIGatewaysTable() APIGatewaysTable
+	LabelsTable() LabelsTable
 }
 
 type Handler struct {
@@ -105,6 +106,12 @@ func (db *Handler) APIGatewaysTable() APIGatewaysTable {
 	}
 }
 
+func (db *Handler) LabelsTable() LabelsTable {
+	return &LabelsTableHandler{
+		tx: db.DB.Table(labelTableName),
+	}
+}
+
 func cleanLocalDataBase(databasePath string) {
 	if _, err := os.Stat(databasePath); !os.IsNotExist(err) {
 		log.Debug("deleting db...")
@@ -137,7 +144,8 @@ func initDataBase(config *DBConfig) *gorm.DB {
 		&Review{},
 		&APIEventAnnotation{},
 		&APIInfoAnnotation{},
-		&APIGateway{}); err != nil {
+		&APIGateway{},
+		&Label{}); err != nil {
 		log.Fatalf("Failed to run auto migration: %v", err)
 	}
 

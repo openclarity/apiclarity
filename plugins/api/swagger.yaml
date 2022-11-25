@@ -48,7 +48,7 @@ definitions:
         $ref: '#/definitions/Request'
       response:
         $ref: '#/definitions/Response'
-      annotations:
+      labels:
         type: 'object'
         additionalProperties:
           type: 'string'

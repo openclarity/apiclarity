@@ -11,7 +11,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	notifications "github.com/openclarity/apiclarity/api3/notifications"
-	speculatorAccessor "github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
+	speculatoraccessor "github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
 	database "github.com/openclarity/apiclarity/backend/pkg/database"
 	kubernetes "k8s.io/client-go/kubernetes"
 )
@@ -242,11 +242,25 @@ func (mr *MockBackendAccessorMockRecorder) GetAPIInfoAnnotation(arg0, arg1, arg2
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAPIInfoAnnotation", reflect.TypeOf((*MockBackendAccessor)(nil).GetAPIInfoAnnotation), arg0, arg1, arg2, arg3)
 }
 
+// GetLabelsTable mocks base method.
+func (m *MockBackendAccessor) GetLabelsTable(arg0 context.Context) database.LabelsTable {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLabelsTable", arg0)
+	ret0, _ := ret[0].(database.LabelsTable)
+	return ret0
+}
+
+// GetLabelsTable indicates an expected call of GetLabelsTable.
+func (mr *MockBackendAccessorMockRecorder) GetLabelsTable(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLabelsTable", reflect.TypeOf((*MockBackendAccessor)(nil).GetLabelsTable), arg0)
+}
+
 // GetSpeculatorAccessor mocks base method.
-func (m *MockBackendAccessor) GetSpeculatorAccessor() speculatorAccessor.SpeculatorAccessor {
+func (m *MockBackendAccessor) GetSpeculatorAccessor() speculatoraccessor.SpeculatorAccessor {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSpeculatorAccessor")
-	ret0, _ := ret[0].(speculatorAccessor.SpeculatorAccessor)
+	ret0, _ := ret[0].(speculatoraccessor.SpeculatorAccessor)
 	return ret0
 }
 

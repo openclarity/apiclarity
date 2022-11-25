@@ -23,8 +23,8 @@ import (
 	"strings"
 
 	"github.com/gofrs/uuid"
-	apiannotations "github.com/openclarity/apiclarity/plugins/api/annotations"
 	apiclientmodels "github.com/openclarity/apiclarity/plugins/api/client/models"
+	apilabels "github.com/openclarity/apiclarity/plugins/api/labels"
 	"go.uber.org/zap"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -521,7 +521,7 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 
 	if parentSpanID := span.ParentSpanID(); !parentSpanID.IsEmpty() {
 		if parentDataset, found := e.datasetMap.GetDataset(parentSpanID); found {
-			actel.Annotations[apiannotations.DataLineageUpstreamKey] = parentDataset
+			actel.Labels[apilabels.DataLineageUpstreamKey] = parentDataset
 		} else {
 			e.logger.Debug("no parent span ID found in cache",
 				zap.String("kind", span.Kind().String()),

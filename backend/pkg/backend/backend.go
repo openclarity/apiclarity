@@ -388,6 +388,9 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 	}
 
 	b.dbHandler.APIEventsTable().CreateAPIEvent(event)
+	if len(trace.Labels) > 0 {
+		b.dbHandler.LabelsTable().CreateLabels(ctx, event.ID, trace.Labels)
+	}
 
 	b.modulesManager.EventNotify(ctx, &modules.Event{APIEvent: event, Telemetry: trace})
 

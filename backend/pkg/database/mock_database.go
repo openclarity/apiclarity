@@ -103,6 +103,20 @@ func (mr *MockDatabaseMockRecorder) APIInventoryTable() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "APIInventoryTable", reflect.TypeOf((*MockDatabase)(nil).APIInventoryTable))
 }
 
+// LabelsTable mocks base method.
+func (m *MockDatabase) LabelsTable() LabelsTable {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LabelsTable")
+	ret0, _ := ret[0].(LabelsTable)
+	return ret0
+}
+
+// LabelsTable indicates an expected call of LabelsTable.
+func (mr *MockDatabaseMockRecorder) LabelsTable() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LabelsTable", reflect.TypeOf((*MockDatabase)(nil).LabelsTable))
+}
+
 // ReviewTable mocks base method.
 func (m *MockDatabase) ReviewTable() ReviewTable {
 	m.ctrl.T.Helper()

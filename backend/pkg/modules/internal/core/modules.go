@@ -77,6 +77,8 @@ type BackendAccessor interface {
 	DeleteAPIInfoAnnotations(ctx context.Context, modName string, apiID uint, name ...string) error
 	DeleteAllAPIInfoAnnotations(ctx context.Context, modName string, apiID uint) error
 
+	GetLabelsTable(ctx context.Context) database.LabelsTable
+
 	EnableTraces(ctx context.Context, modName string, apiID uint) error
 	DisableTraces(ctx context.Context, modName string, apiID uint) error
 
@@ -268,4 +270,8 @@ func (b *accessor) DisableTraces(ctx context.Context, modName string, apiID uint
 		},
 	)
 	return nil
+}
+
+func (b *accessor) GetLabelsTable(ctx context.Context) database.LabelsTable {
+	return b.dbHandler.LabelsTable()
 }

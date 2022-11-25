@@ -149,17 +149,17 @@ func init() {
     "Telemetry": {
       "type": "object",
       "properties": {
-        "annotations": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
         "destinationAddress": {
           "type": "string"
         },
         "destinationNamespace": {
           "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "request": {
           "$ref": "#/definitions/Request"
@@ -332,17 +332,17 @@ func init() {
     "Telemetry": {
       "type": "object",
       "properties": {
-        "annotations": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
         "destinationAddress": {
           "type": "string"
         },
         "destinationNamespace": {
           "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "request": {
           "$ref": "#/definitions/Request"

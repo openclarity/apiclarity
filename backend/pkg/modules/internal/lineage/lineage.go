@@ -18,7 +18,6 @@ package lineage
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
@@ -35,42 +34,49 @@ func init() {
 	core.RegisterModule(newModule)
 }
 
+type controller struct {
+	accessor    core.BackendAccessor
+	info        *core.ModuleInfo
+	httpHandler http.Handler
+	config      *Config
+}
+
 func newModule(ctx context.Context, accessor core.BackendAccessor) (core.Module, error) {
-	log.Debugf("[%s] Start():: -->", ModuleName)
-	s := serverHandler{
+	log.Debugf("[%s] newModule():: -->", ModuleName)
+	s := &controller{
+		accessor: accessor,
 		info: &core.ModuleInfo{
 			Name:        ModuleName,
 			Description: ModuleDescription,
 		},
 	}
-	s.httpHandler = HandlerWithOptions(&controller{accessor: accessor, serverHandler: &s}, ChiServerOptions{BaseURL: fmt.Sprintf("/api/modules/%s", ModuleName)})
-	log.Debugf("[%s] Start():: <--", ModuleName)
-	return &s, nil
-}
-
-type controller struct {
-	accessor      core.BackendAccessor
-	serverHandler *serverHandler
+	s.httpHandler = HandlerWithOptions(s, ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + ModuleName})
+	log.Debugf("[%s] newModule():: <--", ModuleName)
+	return s, nil
 }
 
 func (c *controller) GetVersion(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(Version{Version: ModuleVersion})
 }
 
-type serverHandler struct {
-	info        *core.ModuleInfo
-	httpHandler http.Handler
-	config      *Config
-}
-
-func (p *serverHandler) Info() core.ModuleInfo {
+func (p *controller) Info() core.ModuleInfo {
 	return *p.info
 }
 
-func (p *serverHandler) EventNotify(ctx context.Context, event *core.Event) {
-	log.Infof("[demo] APIEvent.ID=%d Path=%s Method=%s", event.APIEvent.ID, event.Telemetry.Request.Path, event.Telemetry.Request.Method)
+func (p *controller) HTTPHandler() http.Handler {
+	return p.httpHandler
 }
 
-func (p *serverHandler) HTTPHandler() http.Handler {
-	return p.httpHandler
+func (p *controller) EventNotify(ctx context.Context, event *core.Event) {
+	log.Infof("[%s] APIEvent.ID=%d Path=%s Method=%s", ModuleName, event.APIEvent.ID, event.Telemetry.Request.Path, event.Telemetry.Request.Method)
+	labelMap, err := p.accessor.GetLabelsTable(ctx).GetLabels(ctx, event.APIEvent.ID)
+	if err != nil {
+		log.Errorf("[%s] error in labels lookup for event: %d", ModuleName, event.APIEvent.ID)
+		return
+	}
+	if len(labelMap) > 0 {
+		for k, v := range labelMap {
+			log.Infof("[%s] found label: %s -> %s", ModuleName, k, v)
+		}
+	}
 }

@@ -67,5 +67,5 @@ func (m *TraceDatasetMap) PutDataset(spanID pcommon.SpanID, dataset string) bool
 		return false
 	}
 	var key []byte = spanID[:]
-	return m.cache.SetWithTTL(key, dataset, 8, m.keyTTL)
+	return m.cache.SetWithTTL(key, dataset, int64(len(dataset)), m.keyTTL)
 }

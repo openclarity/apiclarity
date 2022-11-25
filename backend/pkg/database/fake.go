@@ -16,6 +16,7 @@
 package database
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"reflect"
@@ -23,6 +24,7 @@ import (
 
 	"github.com/bxcodec/faker/v3"
 	"github.com/go-openapi/strfmt"
+	apilabels "github.com/openclarity/apiclarity/plugins/api/labels"
 )
 
 var (
@@ -66,6 +68,13 @@ func createAPIInfo() *APIInfo {
 	return &event
 }
 
+func createLabels() map[string]string {
+	return map[string]string{
+		apilabels.DataLineageUpstreamKey: "user-service:8080",
+		apilabels.PluginSourceKey:        "open-telemetry",
+	}
+}
+
 func (db *Handler) CreateFakeData() {
 	rand.Seed(time.Now().Unix())
 	time.Sleep(1 * time.Second)
@@ -94,6 +103,7 @@ func (db *Handler) CreateFakeData() {
 			}
 
 			db.APIEventsTable().CreateAPIEvent(apiEvent)
+			db.LabelsTable().CreateLabels(context.Background(), apiEvent.ID, createLabels())
 		}
 	}
 

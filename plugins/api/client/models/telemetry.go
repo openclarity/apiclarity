@@ -18,14 +18,14 @@ import (
 // swagger:model Telemetry
 type Telemetry struct {
 
-	// annotations
-	Annotations map[string]string `json:"annotations,omitempty"`
-
 	// destination address
 	DestinationAddress string `json:"destinationAddress,omitempty"`
 
 	// destination namespace
 	DestinationNamespace string `json:"destinationNamespace,omitempty"`
+
+	// labels
+	Labels map[string]string `json:"labels,omitempty"`
 
 	// request
 	Request *Request `json:"request,omitempty"`

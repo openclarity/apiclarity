@@ -13,9 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package annotations
+package labels
 
 const (
 	//
 	DataLineageUpstreamKey = "data.lineage.upstream"
+)
+
+const (
+	PluginSourceKey = "plugin.source"
 )
