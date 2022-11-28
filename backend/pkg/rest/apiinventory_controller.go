@@ -98,7 +98,17 @@ func (s *Server) GetAPIInventory(params operations.GetAPIInventoryParams) middle
 }
 
 func (s *Server) GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID(params operations.GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams) middleware.Responder {
-	apiID, err := s.dbHandler.APIInventoryTable().GetAPIID(params.Host, params.Port, params.TraceSourceID)
+	dbSource, err := s.dbHandler.TraceSourcesTable().GetTraceSourceFromExternalID(params.TraceSourceID.String())
+	if err != nil {
+		log.Errorf("Failed to get Trace Source: %v", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return operations.NewGetControlTraceSourcesTraceSourceIDNotFound().WithPayload(&models.APIResponse{Message: err.Error()})
+		}
+
+		return operations.NewGetControlTraceSourcesTraceSourceIDDefault(http.StatusInternalServerError)
+	}
+
+	apiID, err := s.dbHandler.APIInventoryTable().GetAPIID(params.Host, params.Port, uint32(dbSource.ID))
 	if err != nil {
 		log.Errorf("Failed to get API ID: %v", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {

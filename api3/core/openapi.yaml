@@ -954,16 +954,16 @@ components:
       description: 'Trace Source ID'
       required: true
       schema:
-        type: integer
-        format: uint32
+        type: string
+        format: uuid
     traceSourceIdQuery:
       name: 'traceSourceId'
       in: query
       description: 'Trace Source ID'
       required: true
       schema:
-        type: integer
-        format: uint32
+        type: string
+        format: uuid
   responses:
     UnknownError:
       description: unknown error
@@ -1040,6 +1040,9 @@ components:
         token:
           type: 'string'
           format: 'byte'
+        externalID:
+          type: 'string'
+          format: 'uuid'
       required:
         - name
         - type

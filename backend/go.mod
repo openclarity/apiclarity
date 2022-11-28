@@ -46,6 +46,11 @@ require (
 )
 
 require (
+	github.com/gofrs/uuid v4.0.0+incompatible
+	github.com/google/uuid v1.3.0
+)
+
+require (
 	cloud.google.com/go v0.81.0 // indirect
 	github.com/Microsoft/go-winio v0.5.1 // indirect
 	github.com/Portshift/go-utils v0.0.0-20220421083203-89265d8a6487 // indirect
@@ -68,7 +73,6 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect

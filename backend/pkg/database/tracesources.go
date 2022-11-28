@@ -39,6 +39,7 @@ type TraceSource struct {
 	Type        string `json:"type,omitempty" gorm:"column:type" faker:"oneof: KONG, TYK, APIGEEX"`
 	Description string `json:"description,omitempty" gorm:"column:description" faker:"-"`
 	Token       []byte `json:"auth_token,omitempty" gorm:"column:auth_token" faker:"-"`
+	ExternalID  string `json:"external_id,omitempty" gorm:"column:external_id" faker:"-"`
 }
 
 type TraceSourcesTable interface {
@@ -46,8 +47,10 @@ type TraceSourcesTable interface {
 	CreateTraceSource(source *TraceSource) error
 	GetTraceSource(ID uint) (*TraceSource, error)
 	GetTraceSourceFromToken(token []byte) (*TraceSource, error)
+	GetTraceSourceFromExternalID(ID string) (*TraceSource, error)
 	GetTraceSources() ([]*TraceSource, error)
 	DeleteTraceSource(ID uint) error
+	DeleteTraceSourceFromExternalID(ID string) error
 }
 
 type TraceSourcesTableHandler struct {
@@ -87,6 +90,15 @@ func (h *TraceSourcesTableHandler) GetTraceSource(ID uint) (*TraceSource, error)
 	return &source, nil
 }
 
+func (h *TraceSourcesTableHandler) GetTraceSourceFromExternalID(ID string) (*TraceSource, error) {
+	source := TraceSource{}
+	if err := h.tx.First(&source, TraceSource{ExternalID: ID}).Error; err != nil {
+		return nil, err
+	}
+
+	return &source, nil
+}
+
 func (h *TraceSourcesTableHandler) GetTraceSourceFromToken(token []byte) (*TraceSource, error) {
 	source := TraceSource{}
 	if err := h.tx.First(&source, TraceSource{Token: token}).Error; err != nil {
@@ -105,4 +117,8 @@ func (h *TraceSourcesTableHandler) GetTraceSources() ([]*TraceSource, error) {
 
 func (h *TraceSourcesTableHandler) DeleteTraceSource(ID uint) error {
 	return h.tx.Unscoped().Delete(&TraceSource{}, ID).Error
+}
+
+func (h *TraceSourcesTableHandler) DeleteTraceSourceFromExternalID(ID string) error {
+	return h.tx.Unscoped().Delete(&TraceSource{}, TraceSource{ExternalID: ID}).Error
 }

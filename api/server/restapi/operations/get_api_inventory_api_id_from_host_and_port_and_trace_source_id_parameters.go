@@ -12,7 +12,6 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
@@ -47,7 +46,7 @@ type GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams struct {
 	  Required: true
 	  In: query
 	*/
-	TraceSourceID uint32
+	TraceSourceID strfmt.UUID
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -140,11 +139,25 @@ func (o *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams) bindTraceSou
 		return err
 	}
 
-	value, err := swag.ConvertUint32(raw)
+	// Format: uuid
+	value, err := formats.Parse("uuid", raw)
 	if err != nil {
-		return errors.InvalidType("traceSourceId", "query", "uint32", raw)
+		return errors.InvalidType("traceSourceId", "query", "strfmt.UUID", raw)
 	}
-	o.TraceSourceID = value
+	o.TraceSourceID = *(value.(*strfmt.UUID))
 
+	if err := o.validateTraceSourceID(formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// validateTraceSourceID carries on validations for parameter TraceSourceID
+func (o *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams) validateTraceSourceID(formats strfmt.Registry) error {
+
+	if err := validate.FormatOf("traceSourceId", "query", "uuid", o.TraceSourceID.String(), formats); err != nil {
+		return err
+	}
 	return nil
 }

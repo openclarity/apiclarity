@@ -11,12 +11,12 @@ import (
 	golangswaggerpaths "path"
 	"strings"
 
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/strfmt"
 )
 
 // GetControlTraceSourcesTraceSourceIDURL generates an URL for the get control trace sources trace source ID operation
 type GetControlTraceSourcesTraceSourceIDURL struct {
-	TraceSourceID uint32
+	TraceSourceID strfmt.UUID
 
 	_basePath string
 	// avoid unkeyed usage
@@ -44,7 +44,7 @@ func (o *GetControlTraceSourcesTraceSourceIDURL) Build() (*url.URL, error) {
 
 	var _path = "/control/traceSources/{traceSourceId}"
 
-	traceSourceID := swag.FormatUint32(o.TraceSourceID)
+	traceSourceID := o.TraceSourceID.String()
 	if traceSourceID != "" {
 		_path = strings.Replace(_path, "{traceSourceId}", traceSourceID, -1)
 	} else {

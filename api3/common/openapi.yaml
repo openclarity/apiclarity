@@ -89,10 +89,20 @@ components:
           type: string
       required:
       - notificationType
+    TraceSourceExternalID:
+      description: 'TraceSourceID as UUID'
+      type: object
+      properties:
+        externalSourceID:
+          type: string
+          format: uuid
+      required:
+      - externalSourceID
     NewDiscoveredAPINotification:
       allOf:
       - $ref: '#/components/schemas/BaseNotification'
       - $ref: '#/components/schemas/ApiInfo'
+      - $ref: '#/components/schemas/TraceSourceExternalID'
     ModuleVersion:
       type: 'object'
       required: [version]

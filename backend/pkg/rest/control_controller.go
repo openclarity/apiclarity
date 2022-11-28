@@ -22,6 +22,7 @@ import (
 	"strconv"
 
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/apiclarity/api/server/models"
@@ -80,10 +81,19 @@ func (s *Server) CreateNewDiscoveredAPIs(ctx context.Context, hosts []string, tr
 			log.Infof("New API '%s' managed by source '%v' was added to inventory", h, apiInfo.TraceSourceID)
 			_ = s.speculators.Get(apiInfo.TraceSourceID).InitSpec(host, strconv.Itoa(port))
 
+			// Get
 			if s.notifier != nil {
+				traceSource, err := s.dbHandler.TraceSourcesTable().GetTraceSource(apiInfo.TraceSourceID)
+				if err != nil {
+					log.Errorf("Failed to get Trace Source: %v", err)
+				}
+				var traceSourceExternalID uuid.UUID
+				if err := traceSourceExternalID.UnmarshalText([]byte(traceSource.ExternalID)); err != nil {
+					log.Errorf("Can't read external ID as UUID: %v", err)
+				}
+
 				apiID := uint32(apiInfo.ID)
 				port := int(apiInfo.Port)
-				tSource := uint32(apiInfo.TraceSourceID)
 				newDiscoveredAPINotification := notifications.NewDiscoveredAPINotification{
 					Id:                   &apiID,
 					Name:                 &apiInfo.Name,
@@ -91,10 +101,10 @@ func (s *Server) CreateNewDiscoveredAPIs(ctx context.Context, hosts []string, tr
 					HasReconstructedSpec: &apiInfo.HasReconstructedSpec,
 					HasProvidedSpec:      &apiInfo.HasProvidedSpec,
 					DestinationNamespace: &apiInfo.DestinationNamespace,
-					TraceSourceId:        &tSource,
+					ExternalSourceID:     traceSourceExternalID,
 				}
 				notification := notifications.APIClarityNotification{}
-				err := notification.FromNewDiscoveredAPINotification(newDiscoveredAPINotification)
+				err = notification.FromNewDiscoveredAPINotification(newDiscoveredAPINotification)
 				if err != nil {
 					log.Errorf("Failed to create 'NewDiscoveredAPI' notification, err=(%v)", err)
 				} else {
