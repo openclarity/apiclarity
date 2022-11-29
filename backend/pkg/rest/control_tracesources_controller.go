@@ -21,6 +21,8 @@ import (
 	"net/http"
 
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
@@ -28,6 +30,8 @@ import (
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 )
+
+// func fromDBTraceSource(d
 
 func (s *Server) GetControlTraceSources(params operations.GetControlTraceSourcesParams) middleware.Responder {
 	log.Debugf("GetControlTraceSources controller was invoked")
@@ -45,6 +49,7 @@ func (s *Server) GetControlTraceSources(params operations.GetControlTraceSources
 	for _, dbGw := range sources {
 		payload.TraceSources = append(payload.TraceSources, &models.TraceSource{
 			ID:          int64(dbGw.ID),
+			UID:         strfmt.UUID(dbGw.UID.String()),
 			Name:        &dbGw.Name,
 			Type:        (*models.TraceSourceType)(&dbGw.Type),
 			Description: dbGw.Description,
@@ -57,18 +62,22 @@ func (s *Server) GetControlTraceSources(params operations.GetControlTraceSources
 func (s *Server) PostControlTraceSources(params operations.PostControlTraceSourcesParams) middleware.Responder {
 	log.Debugf("PostControlTraceSources controller was invoked")
 
+	uid, _ := uuid. Parse(params.Body.UID.String())
 	dbSource := _database.TraceSource{
+		UID:         uid,
 		Name:        *params.Body.Name,
 		Type:        string(*params.Body.Type),
 		Description: params.Body.Description,
+		Token:       params.Body.Token,
 	}
 	if err := s.dbHandler.TraceSourcesTable().CreateTraceSource(&dbSource); err != nil {
-		log.Errorf("Failed to create new TraceSource: %v", err)
-		return operations.NewPostControlTraceSourcesDefault(http.StatusInternalServerError)
+		log.Errorf("Failed to create new TraceSource: %+v", err)
+		 return operations.NewPostControlTraceSourcesDefault(http.StatusInternalServerError)
 	}
 
 	gw := models.TraceSource{
 		ID:          int64(dbSource.ID),
+		UID:         strfmt.UUID(dbSource.UID.String()),
 		Name:        &dbSource.Name,
 		Type:        (*models.TraceSourceType)(&dbSource.Type),
 		Description: dbSource.Description,
@@ -92,6 +101,7 @@ func (s *Server) GetControlTraceSourcesTraceSourceID(params operations.GetContro
 
 	gw := models.TraceSource{
 		ID:          int64(dbSource.ID),
+		UID:         strfmt.UUID(dbSource.UID.String()),
 		Name:        &dbSource.Name,
 		Type:        (*models.TraceSourceType)(&dbSource.Type),
 		Description: dbSource.Description,
