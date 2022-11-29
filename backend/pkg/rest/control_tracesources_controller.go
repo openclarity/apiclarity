@@ -87,7 +87,7 @@ func (s *Server) PostControlTraceSources(params operations.PostControlTraceSourc
 func (s *Server) GetControlTraceSourcesTraceSourceID(params operations.GetControlTraceSourcesTraceSourceIDParams) middleware.Responder {
 	log.Debugf("GetControlTraceSourcesTraceSourceID controller was invoked")
 
-	uid, err := uuid.Parse(params.TraceSourceID.String())
+	uid, _ := uuid.Parse(params.TraceSourceID.String())
 	dbSource, err := s.dbHandler.TraceSourcesTable().GetTraceSource(uid)
 	if err != nil {
 		log.Errorf("Failed to get Trace Source: %v", err)

@@ -107,7 +107,6 @@ func (s *Server) GetAPIInventory(params operations.GetAPIInventoryParams) middle
 }
 
 func (s *Server) GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID(params operations.GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams) middleware.Responder {
-
 	uid, _ := uuid.Parse(params.TraceSourceID.String())
 	apiID, err := s.dbHandler.APIInventoryTable().GetAPIID(params.Host, params.Port, uid)
 	if err != nil {
