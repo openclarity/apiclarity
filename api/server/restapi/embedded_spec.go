@@ -1513,9 +1513,9 @@ func init() {
     "TraceSourceType": {
       "type": "string",
       "enum": [
-        "TYK",
-        "KONG",
-        "APIGEEX"
+        "APIGEE_X",
+        "KONG_INTERNAL",
+        "TYK_INTERNAL"
       ]
     },
     "rawSpec": {
@@ -4028,9 +4028,9 @@ func init() {
     "TraceSourceType": {
       "type": "string",
       "enum": [
-        "TYK",
-        "KONG",
-        "APIGEEX"
+        "APIGEE_X",
+        "KONG_INTERNAL",
+        "TYK_INTERNAL"
       ]
     },
     "rawSpec": {

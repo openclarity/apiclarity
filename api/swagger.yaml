@@ -444,10 +444,9 @@ definitions:
   TraceSourceType:
     type: string
     enum:
-      - TYK
-      - KONG
-      - APIGEEX
-
+      - APIGEE_X
+      - KONG_INTERNAL
+      - TYK_INTERNAL
 paths:
   /apiEvents:
     get:
