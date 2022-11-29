@@ -36,6 +36,10 @@ type TraceSource struct {
 	// type
 	// Required: true
 	Type *TraceSourceType `json:"type"`
+
+	// uid
+	// Format: uuid
+	UID strfmt.UUID `json:"uid,omitempty"`
 }
 
 // Validate validates this trace source
@@ -47,6 +51,10 @@ func (m *TraceSource) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateType(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateUID(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -82,6 +90,18 @@ func (m *TraceSource) validateType(formats strfmt.Registry) error {
 			}
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (m *TraceSource) validateUID(formats strfmt.Registry) error {
+	if swag.IsZero(m.UID) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("uid", "body", "uuid", m.UID.String(), formats); err != nil {
+		return err
 	}
 
 	return nil

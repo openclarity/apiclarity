@@ -14,7 +14,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
 )
 
 // NewGetControlTraceSourcesTraceSourceIDParams creates a new GetControlTraceSourcesTraceSourceIDParams object,
@@ -64,9 +63,9 @@ type GetControlTraceSourcesTraceSourceIDParams struct {
 
 	   Trace Source ID
 
-	   Format: uint32
+	   Format: uuid
 	*/
-	TraceSourceID uint32
+	TraceSourceID strfmt.UUID
 
 	timeout    time.Duration
 	Context    context.Context
@@ -122,13 +121,13 @@ func (o *GetControlTraceSourcesTraceSourceIDParams) SetHTTPClient(client *http.C
 }
 
 // WithTraceSourceID adds the traceSourceID to the get control trace sources trace source ID params
-func (o *GetControlTraceSourcesTraceSourceIDParams) WithTraceSourceID(traceSourceID uint32) *GetControlTraceSourcesTraceSourceIDParams {
+func (o *GetControlTraceSourcesTraceSourceIDParams) WithTraceSourceID(traceSourceID strfmt.UUID) *GetControlTraceSourcesTraceSourceIDParams {
 	o.SetTraceSourceID(traceSourceID)
 	return o
 }
 
 // SetTraceSourceID adds the traceSourceId to the get control trace sources trace source ID params
-func (o *GetControlTraceSourcesTraceSourceIDParams) SetTraceSourceID(traceSourceID uint32) {
+func (o *GetControlTraceSourcesTraceSourceIDParams) SetTraceSourceID(traceSourceID strfmt.UUID) {
 	o.TraceSourceID = traceSourceID
 }
 
@@ -141,7 +140,7 @@ func (o *GetControlTraceSourcesTraceSourceIDParams) WriteToRequest(r runtime.Cli
 	var res []error
 
 	// path param traceSourceId
-	if err := r.SetPathParam("traceSourceId", swag.FormatUint32(o.TraceSourceID)); err != nil {
+	if err := r.SetPathParam("traceSourceId", o.TraceSourceID.String()); err != nil {
 		return err
 	}
 

@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/go-openapi/strfmt"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
@@ -75,7 +76,7 @@ type APIInventoryTable interface {
 	PutAPISpec(apiID uint, spec string, specInfo *models.SpecInfo, specType specType, createdAt strfmt.DateTime) error
 	DeleteProvidedAPISpec(apiID uint32) error
 	DeleteApprovedAPISpec(apiID uint32) error
-	GetAPIID(name, port string, traceSourceID uint32) (uint, error)
+	GetAPIID(name, port string, traceSourceID uuid.UUID) (uint, error)
 	First(dest *APIInfo, conds ...interface{}) error
 	FirstOrCreate(apiInfo *APIInfo) (created bool, err error)
 	CreateAPIInfo(event *APIInfo)
@@ -97,7 +98,7 @@ func APIInfoFromDB(apiInfo *APIInfo) *models.APIInfo {
 		Name:                 apiInfo.Name,
 		Port:                 apiInfo.Port,
 		DestinationNamespace: apiInfo.DestinationNamespace,
-		TraceSourceID:        uint32(apiInfo.TraceSourceID),
+		TraceSourceID:        strfmt.UUID(apiInfo.TraceSource.UID.String()),
 	}
 }
 
@@ -127,6 +128,7 @@ func (a *APIInventoryTableHandler) GetAPIInventoryAndTotal(params operations.Get
 	// get specific page ordered items with the current filters
 	if err := tx.Scopes(Paginate(params.Page, params.PageSize)).
 		Order(sortOrder).
+		Preload("TraceSource").
 		Find(&apiInventory).Error; err != nil {
 		return nil, 0, err
 	}
@@ -164,7 +166,7 @@ func (a *APIInventoryTableHandler) setAPIInventoryFilters(params operations.GetA
 	return table
 }
 
-func (a *APIInventoryTableHandler) GetAPIID(name, port string, traceSourceID uint32) (uint, error) {
+func (a *APIInventoryTableHandler) GetAPIID(name, port string, traceSourceID uuid.UUID) (uint, error) {
 	apiInfo := APIInfo{}
 	cond := map[string]interface{}{
 		nameColumnName:          name,

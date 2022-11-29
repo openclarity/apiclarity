@@ -26,14 +26,14 @@ func NewTraceSourceType(value TraceSourceType) *TraceSourceType {
 
 const (
 
-	// TraceSourceTypeTYK captures enum value "TYK"
-	TraceSourceTypeTYK TraceSourceType = "TYK"
+	// TraceSourceTypeAPIGEEX captures enum value "APIGEE_X"
+	TraceSourceTypeAPIGEEX TraceSourceType = "APIGEE_X"
 
-	// TraceSourceTypeKONG captures enum value "KONG"
-	TraceSourceTypeKONG TraceSourceType = "KONG"
+	// TraceSourceTypeKONGINTERNAL captures enum value "KONG_INTERNAL"
+	TraceSourceTypeKONGINTERNAL TraceSourceType = "KONG_INTERNAL"
 
-	// TraceSourceTypeAPIGEEX captures enum value "APIGEEX"
-	TraceSourceTypeAPIGEEX TraceSourceType = "APIGEEX"
+	// TraceSourceTypeTYKINTERNAL captures enum value "TYK_INTERNAL"
+	TraceSourceTypeTYKINTERNAL TraceSourceType = "TYK_INTERNAL"
 )
 
 // for schema
@@ -41,7 +41,7 @@ var traceSourceTypeEnum []interface{}
 
 func init() {
 	var res []TraceSourceType
-	if err := json.Unmarshal([]byte(`["TYK","KONG","APIGEEX"]`), &res); err != nil {
+	if err := json.Unmarshal([]byte(`["APIGEE_X","KONG_INTERNAL","TYK_INTERNAL"]`), &res); err != nil {
 		panic(err)
 	}
 	for _, v := range res {

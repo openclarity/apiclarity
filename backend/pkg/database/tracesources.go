@@ -19,6 +19,7 @@ import (
 	"crypto/rand"
 	"fmt"
 
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -35,19 +36,20 @@ const (
 type TraceSource struct {
 	gorm.Model
 
-	Name        string `json:"name,omitempty" gorm:"column:name;uniqueIndex" faker:"oneof: customer1.apigee.gw, mynicegateway"`
-	Type        string `json:"type,omitempty" gorm:"column:type" faker:"oneof: KONG, TYK, APIGEEX"`
-	Description string `json:"description,omitempty" gorm:"column:description" faker:"-"`
-	Token       []byte `json:"auth_token,omitempty" gorm:"column:auth_token" faker:"-"`
+	UID         uuid.UUID `json:"uid,omitempty" gorm:"column:uid;uniqueIndex;type:uuid"`
+	Name        string    `json:"name,omitempty" gorm:"column:name;uniqueIndex" faker:"oneof: customer1.apigee.gw, mynicegateway"`
+	Type        string    `json:"type,omitempty" gorm:"column:type" faker:"oneof: KONG, TYK, APIGEEX"`
+	Description string    `json:"description,omitempty" gorm:"column:description" faker:"-"`
+	Token       []byte    `json:"auth_token,omitempty" gorm:"column:auth_token;uniqueIndex" faker:"-"`
 }
 
 type TraceSourcesTable interface {
 	Prepopulate() error
 	CreateTraceSource(source *TraceSource) error
-	GetTraceSource(ID uint) (*TraceSource, error)
+	GetTraceSource(uuid.UUID) (*TraceSource, error)
 	GetTraceSourceFromToken(token []byte) (*TraceSource, error)
 	GetTraceSources() ([]*TraceSource, error)
-	DeleteTraceSource(ID uint) error
+	DeleteTraceSource(uuid.UUID) error
 }
 
 type TraceSourcesTableHandler struct {
@@ -56,7 +58,7 @@ type TraceSourcesTableHandler struct {
 
 func (h *TraceSourcesTableHandler) Prepopulate() error {
 	defaultTraceSources := []map[string]interface{}{
-		{"ID": 0, "Name": "Default Trace Source"},
+		{"ID": 0, "Name": "Default Trace Source", "UID": uuid.Nil},
 	}
 
 	return h.tx.Model(&TraceSource{}).Clauses(clause.OnConflict{
@@ -69,18 +71,26 @@ func (h *TraceSourcesTableHandler) CreateTraceSource(source *TraceSource) error 
 }
 
 func (source *TraceSource) BeforeCreate(tx *gorm.DB) error {
-	source.Token = make([]byte, tokenByteLength)
-	if _, err := rand.Read(source.Token); err != nil {
-		log.Errorf("Unable to generate token for Trace Source '%d': %v", source.ID, err)
-		return fmt.Errorf("unable to generate token for Trace Source '%d': %v", source.ID, err)
+	// If no token is provided, create one
+	if source.Token == nil || len(source.Token) == 0 {
+		source.Token = make([]byte, tokenByteLength)
+		if _, err := rand.Read(source.Token); err != nil {
+			log.Errorf("Unable to generate token for Trace Source '%d': %v", source.ID, err)
+			return fmt.Errorf("unable to generate token for Trace Source '%d': %v", source.ID, err)
+		}
+	}
+
+	// If no uuid is provided, create one
+	if source.UID == uuid.Nil {
+		source.UID = uuid.New()
 	}
 
 	return nil
 }
 
-func (h *TraceSourcesTableHandler) GetTraceSource(ID uint) (*TraceSource, error) {
-	source := TraceSource{}
-	if err := h.tx.First(&source, ID).Error; err != nil {
+func (h *TraceSourcesTableHandler) GetTraceSource(uid uuid.UUID) (*TraceSource, error) {
+	source := TraceSource{UID: uid}
+	if err := h.tx.First(&source, source).Error; err != nil {
 		return nil, err
 	}
 
@@ -103,6 +113,6 @@ func (h *TraceSourcesTableHandler) GetTraceSources() ([]*TraceSource, error) {
 	return dest, nil
 }
 
-func (h *TraceSourcesTableHandler) DeleteTraceSource(ID uint) error {
-	return h.tx.Unscoped().Delete(&TraceSource{}, ID).Error
+func (h *TraceSourcesTableHandler) DeleteTraceSource(uid uuid.UUID) error {
+	return h.tx.Unscoped().Delete(&TraceSource{}, &TraceSource{UID: uid}).Error
 }
