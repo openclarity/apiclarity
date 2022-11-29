@@ -28,7 +28,6 @@ import (
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
-	"github.com/openclarity/apiclarity/backend/pkg/common"
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 )
 
@@ -53,12 +52,21 @@ func (s *Server) PostAPIInventory(params operations.PostAPIInventoryParams) midd
 			Message: "please provide a valid port",
 		})
 	}
+
+	uid, _ := uuid.Parse(params.Body.TraceSourceID.String())
+	traceSource, err := s.dbHandler.TraceSourcesTable().GetTraceSource(uid)
+	if err != nil {
+		return operations.NewPostAPIInventoryDefault(http.StatusBadRequest).WithPayload(&models.APIResponse{
+			Message: fmt.Sprintf("invalid trace source '%s'", params.Body.TraceSourceID),
+		})
+	}
+
 	apiInfo := &_database.APIInfo{
 		Type:                 params.Body.APIType,
 		Name:                 params.Body.Name,
 		Port:                 params.Body.Port,
 		DestinationNamespace: params.Body.DestinationNamespace,
-		TraceSourceID:        common.DefaultTraceSourceID, // Force the Trace Source to the default trace source
+		TraceSourceID:        traceSource.ID, // Force the Trace Source to the default trace source
 	}
 	if _, err := s.dbHandler.APIInventoryTable().FirstOrCreate(apiInfo); err != nil {
 		log.Error(err)
