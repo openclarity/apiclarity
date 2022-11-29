@@ -8,8 +8,10 @@ package models
 import (
 	"context"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // APIInfo Api info
@@ -35,12 +37,34 @@ type APIInfo struct {
 	// port
 	Port int64 `json:"port,omitempty"`
 
-	// Trace Source ID which created this API. 0 means it has been created by APIClarity (from the UI for example)
-	TraceSourceID uint32 `json:"traceSourceId,omitempty"`
+	// Trace Source ID which created this API. Null UUID 0 means it has been created by APIClarity (from the UI for example)
+	// Format: uuid
+	TraceSourceID strfmt.UUID `json:"traceSourceId,omitempty"`
 }
 
 // Validate validates this Api info
 func (m *APIInfo) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateTraceSourceID(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *APIInfo) validateTraceSourceID(formats strfmt.Registry) error {
+	if swag.IsZero(m.TraceSourceID) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("traceSourceId", "body", "uuid", m.TraceSourceID.String(), formats); err != nil {
+		return err
+	}
+
 	return nil
 }
 

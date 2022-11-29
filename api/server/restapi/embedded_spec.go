@@ -1166,10 +1166,9 @@ func init() {
           "type": "integer"
         },
         "traceSourceId": {
-          "description": "Trace Source ID which created this API. 0 means it has been created by APIClarity (from the UI for example)",
-          "type": "integer",
-          "format": "uint32",
-          "default": 0
+          "description": "Trace Source ID which created this API. Null UUID 0 means it has been created by APIClarity (from the UI for example)",
+          "type": "string",
+          "format": "uuid"
         }
       }
     },
@@ -1504,15 +1503,19 @@ func init() {
         },
         "type": {
           "$ref": "#/definitions/TraceSourceType"
+        },
+        "uid": {
+          "type": "string",
+          "format": "uuid"
         }
       }
     },
     "TraceSourceType": {
       "type": "string",
       "enum": [
-        "TYK",
-        "KONG",
-        "APIGEEX"
+        "APIGEE_X",
+        "KONG_INTERNAL",
+        "TYK_INTERNAL"
       ]
     },
     "rawSpec": {
@@ -1944,16 +1947,16 @@ func init() {
       "in": "query"
     },
     "traceSourceId": {
-      "type": "integer",
-      "format": "uint32",
+      "type": "string",
+      "format": "uuid",
       "description": "Trace Source ID",
       "name": "traceSourceId",
       "in": "path",
       "required": true
     },
     "traceSourceIdQuery": {
-      "type": "integer",
-      "format": "uint32",
+      "type": "string",
+      "format": "uuid",
       "description": "Trace Source ID",
       "name": "traceSourceId",
       "in": "query",
@@ -2636,8 +2639,8 @@ func init() {
             "required": true
           },
           {
-            "type": "integer",
-            "format": "uint32",
+            "type": "string",
+            "format": "uuid",
             "description": "Trace Source ID",
             "name": "traceSourceId",
             "in": "query",
@@ -3307,8 +3310,8 @@ func init() {
         "summary": "Get Trace Source information",
         "parameters": [
           {
-            "type": "integer",
-            "format": "uint32",
+            "type": "string",
+            "format": "uuid",
             "description": "Trace Source ID",
             "name": "traceSourceId",
             "in": "path",
@@ -3340,8 +3343,8 @@ func init() {
         "summary": "Delete a Trace Source",
         "parameters": [
           {
-            "type": "integer",
-            "format": "uint32",
+            "type": "string",
+            "format": "uuid",
             "description": "Trace Source ID",
             "name": "traceSourceId",
             "in": "path",
@@ -3678,10 +3681,9 @@ func init() {
           "type": "integer"
         },
         "traceSourceId": {
-          "description": "Trace Source ID which created this API. 0 means it has been created by APIClarity (from the UI for example)",
-          "type": "integer",
-          "format": "uint32",
-          "default": 0
+          "description": "Trace Source ID which created this API. Null UUID 0 means it has been created by APIClarity (from the UI for example)",
+          "type": "string",
+          "format": "uuid"
         }
       }
     },
@@ -4016,15 +4018,19 @@ func init() {
         },
         "type": {
           "$ref": "#/definitions/TraceSourceType"
+        },
+        "uid": {
+          "type": "string",
+          "format": "uuid"
         }
       }
     },
     "TraceSourceType": {
       "type": "string",
       "enum": [
-        "TYK",
-        "KONG",
-        "APIGEEX"
+        "APIGEE_X",
+        "KONG_INTERNAL",
+        "TYK_INTERNAL"
       ]
     },
     "rawSpec": {
@@ -4456,16 +4462,16 @@ func init() {
       "in": "query"
     },
     "traceSourceId": {
-      "type": "integer",
-      "format": "uint32",
+      "type": "string",
+      "format": "uuid",
       "description": "Trace Source ID",
       "name": "traceSourceId",
       "in": "path",
       "required": true
     },
     "traceSourceIdQuery": {
-      "type": "integer",
-      "format": "uint32",
+      "type": "string",
+      "format": "uuid",
       "description": "Trace Source ID",
       "name": "traceSourceId",
       "in": "query",

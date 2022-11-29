@@ -21,6 +21,8 @@ import (
 	"net/http"
 
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
@@ -45,6 +47,7 @@ func (s *Server) GetControlTraceSources(params operations.GetControlTraceSources
 	for _, dbGw := range sources {
 		payload.TraceSources = append(payload.TraceSources, &models.TraceSource{
 			ID:          int64(dbGw.ID),
+			UID:         strfmt.UUID(dbGw.UID.String()),
 			Name:        &dbGw.Name,
 			Type:        (*models.TraceSourceType)(&dbGw.Type),
 			Description: dbGw.Description,
@@ -57,18 +60,22 @@ func (s *Server) GetControlTraceSources(params operations.GetControlTraceSources
 func (s *Server) PostControlTraceSources(params operations.PostControlTraceSourcesParams) middleware.Responder {
 	log.Debugf("PostControlTraceSources controller was invoked")
 
+	uid, _ := uuid.Parse(params.Body.UID.String())
 	dbSource := _database.TraceSource{
+		UID:         uid,
 		Name:        *params.Body.Name,
 		Type:        string(*params.Body.Type),
 		Description: params.Body.Description,
+		Token:       params.Body.Token,
 	}
 	if err := s.dbHandler.TraceSourcesTable().CreateTraceSource(&dbSource); err != nil {
-		log.Errorf("Failed to create new TraceSource: %v", err)
+		log.Errorf("Failed to create new TraceSource: %+v", err)
 		return operations.NewPostControlTraceSourcesDefault(http.StatusInternalServerError)
 	}
 
 	gw := models.TraceSource{
 		ID:          int64(dbSource.ID),
+		UID:         strfmt.UUID(dbSource.UID.String()),
 		Name:        &dbSource.Name,
 		Type:        (*models.TraceSourceType)(&dbSource.Type),
 		Description: dbSource.Description,
@@ -80,7 +87,8 @@ func (s *Server) PostControlTraceSources(params operations.PostControlTraceSourc
 func (s *Server) GetControlTraceSourcesTraceSourceID(params operations.GetControlTraceSourcesTraceSourceIDParams) middleware.Responder {
 	log.Debugf("GetControlTraceSourcesTraceSourceID controller was invoked")
 
-	dbSource, err := s.dbHandler.TraceSourcesTable().GetTraceSource(uint(params.TraceSourceID))
+	uid, _ := uuid.Parse(params.TraceSourceID.String())
+	dbSource, err := s.dbHandler.TraceSourcesTable().GetTraceSource(uid)
 	if err != nil {
 		log.Errorf("Failed to get Trace Source: %v", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -92,6 +100,7 @@ func (s *Server) GetControlTraceSourcesTraceSourceID(params operations.GetContro
 
 	gw := models.TraceSource{
 		ID:          int64(dbSource.ID),
+		UID:         strfmt.UUID(dbSource.UID.String()),
 		Name:        &dbSource.Name,
 		Type:        (*models.TraceSourceType)(&dbSource.Type),
 		Description: dbSource.Description,
@@ -102,11 +111,12 @@ func (s *Server) GetControlTraceSourcesTraceSourceID(params operations.GetContro
 func (s *Server) DeleteControlTraceSourcesTraceSourceID(params operations.DeleteControlTraceSourcesTraceSourceIDParams) middleware.Responder {
 	log.Debugf("DeleteControlTraceSourcesTraceSourceID controller was invoked")
 
-	if err := s.dbHandler.TraceSourcesTable().DeleteTraceSource(uint(params.TraceSourceID)); err != nil {
+	uid, _ := uuid.Parse(params.TraceSourceID.String())
+	if err := s.dbHandler.TraceSourcesTable().DeleteTraceSource(uid); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return operations.NewDeleteControlTraceSourcesTraceSourceIDNotFound()
 		}
-		log.Errorf("Failed to delete Trace Source '%d': %v", params.TraceSourceID, err)
+		log.Errorf("Failed to delete Trace Source '%s': %v", params.TraceSourceID, err)
 		return operations.NewDeleteControlTraceSourcesTraceSourceIDDefault(http.StatusInternalServerError)
 	}
 	return operations.NewDeleteControlTraceSourcesTraceSourceIDNoContent()

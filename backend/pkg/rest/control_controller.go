@@ -83,7 +83,6 @@ func (s *Server) CreateNewDiscoveredAPIs(ctx context.Context, hosts []string, tr
 			if s.notifier != nil {
 				apiID := uint32(apiInfo.ID)
 				port := int(apiInfo.Port)
-				tSource := uint32(apiInfo.TraceSourceID)
 				newDiscoveredAPINotification := notifications.NewDiscoveredAPINotification{
 					Id:                   &apiID,
 					Name:                 &apiInfo.Name,
@@ -91,7 +90,7 @@ func (s *Server) CreateNewDiscoveredAPIs(ctx context.Context, hosts []string, tr
 					HasReconstructedSpec: &apiInfo.HasReconstructedSpec,
 					HasProvidedSpec:      &apiInfo.HasProvidedSpec,
 					DestinationNamespace: &apiInfo.DestinationNamespace,
-					TraceSourceId:        &tSource,
+					TraceSourceId:        &apiInfo.TraceSource.UID,
 				}
 				notification := notifications.APIClarityNotification{}
 				err := notification.FromNewDiscoveredAPINotification(newDiscoveredAPINotification)

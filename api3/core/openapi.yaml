@@ -954,16 +954,16 @@ components:
       description: 'Trace Source ID'
       required: true
       schema:
-        type: integer
-        format: uint32
+        type: string
+        format: uuid
     traceSourceIdQuery:
       name: 'traceSourceId'
       in: query
       description: 'Trace Source ID'
       required: true
       schema:
-        type: integer
-        format: uint32
+        type: string
+        format: uuid
   responses:
     UnknownError:
       description: unknown error
@@ -1030,6 +1030,9 @@ components:
       properties:
         id:
           type: 'integer'
+        uid:
+          type: 'string'
+          format: 'uuid'
         name:
           description: 'Unique name identifying a Trace Source'
           type: 'string'
@@ -1046,7 +1049,6 @@ components:
     TraceSourceType:
       type: string
       enum:
-        - TYK
-        - KONG
-        - APIGEEX
-
+        - APIGEE_X
+        - KONG_INTERNAL
+        - TYK_INTERNAL

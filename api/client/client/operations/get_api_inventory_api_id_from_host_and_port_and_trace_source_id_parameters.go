@@ -14,7 +14,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
 )
 
 // NewGetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams creates a new GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams object,
@@ -76,9 +75,9 @@ type GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams struct {
 
 	   Trace Source ID
 
-	   Format: uint32
+	   Format: uuid
 	*/
-	TraceSourceID uint32
+	TraceSourceID strfmt.UUID
 
 	timeout    time.Duration
 	Context    context.Context
@@ -156,13 +155,13 @@ func (o *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams) SetPort(port
 }
 
 // WithTraceSourceID adds the traceSourceID to the get API inventory API ID from host and port and trace source ID params
-func (o *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams) WithTraceSourceID(traceSourceID uint32) *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams {
+func (o *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams) WithTraceSourceID(traceSourceID strfmt.UUID) *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams {
 	o.SetTraceSourceID(traceSourceID)
 	return o
 }
 
 // SetTraceSourceID adds the traceSourceId to the get API inventory API ID from host and port and trace source ID params
-func (o *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams) SetTraceSourceID(traceSourceID uint32) {
+func (o *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams) SetTraceSourceID(traceSourceID strfmt.UUID) {
 	o.TraceSourceID = traceSourceID
 }
 
@@ -196,7 +195,7 @@ func (o *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams) WriteToReque
 
 	// query param traceSourceId
 	qrTraceSourceID := o.TraceSourceID
-	qTraceSourceID := swag.FormatUint32(qrTraceSourceID)
+	qTraceSourceID := qrTraceSourceID.String()
 	if qTraceSourceID != "" {
 
 		if err := r.SetQueryParam("traceSourceId", qTraceSourceID); err != nil {
