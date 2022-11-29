@@ -46,6 +46,7 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/sampling"
 	speculators_repo "github.com/openclarity/apiclarity/backend/pkg/speculators"
 	"github.com/openclarity/apiclarity/backend/pkg/traces"
+	"github.com/openclarity/apiclarity/backend/pkg/utils"
 	speculatorutils "github.com/openclarity/apiclarity/backend/pkg/utils/speculator"
 	tls "github.com/openclarity/apiclarity/backend/pkg/utils/tls"
 	pluginsmodels "github.com/openclarity/apiclarity/plugins/api/server/models"
@@ -259,9 +260,9 @@ func Run() {
 func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Telemetry, traceSource *models.TraceSource) error {
 	var err error
 
-	traceSourceID := common.DefaultTraceSourceID
+	traceSourceID := common.DefaultTraceSourceUID
 	if traceSource != nil {
-		traceSourceID = uint(traceSource.ID)
+		traceSourceID = utils.ConvertStrfmtUUIDToGoogleUUID(traceSource.UID)
 	}
 
 	log.Debugf("Handling telemetry: %+v", trace)
@@ -334,8 +335,8 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 		}
 
 		// Handle trace telemetry by Speculator
-		if !b.speculators.Get(traceSourceID).HasApprovedSpec(specKey) {
-			err := b.speculators.Get(traceSourceID).LearnTelemetry(telemetry)
+		if !b.speculators.Get(uint(traceSource.ID)).HasApprovedSpec(specKey) {
+			err := b.speculators.Get(uint(traceSource.ID)).LearnTelemetry(telemetry)
 			if err != nil {
 				return fmt.Errorf("failed to learn telemetry: %v", err)
 			}
@@ -346,14 +347,14 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 
 	var providedPathID string
 	var reconstructedPathID string
-	if b.speculators.Get(traceSourceID).HasProvidedSpec(specKey) {
-		providedPathID, err = b.speculators.Get(traceSourceID).GetPathID(specKey, path, _spec.SpecSourceProvided)
+	if b.speculators.Get(uint(traceSource.ID)).HasProvidedSpec(specKey) {
+		providedPathID, err = b.speculators.Get(uint(traceSource.ID)).GetPathID(specKey, path, _spec.SpecSourceProvided)
 		if err != nil {
 			return fmt.Errorf("failed to get path id of provided spec: %v", err)
 		}
 	}
-	if b.speculators.Get(traceSourceID).HasApprovedSpec(specKey) {
-		reconstructedPathID, err = b.speculators.Get(traceSourceID).GetPathID(specKey, path, _spec.SpecSourceReconstructed)
+	if b.speculators.Get(uint(traceSource.ID)).HasApprovedSpec(specKey) {
+		reconstructedPathID, err = b.speculators.Get(uint(traceSource.ID)).GetPathID(specKey, path, _spec.SpecSourceReconstructed)
 		if err != nil {
 			return fmt.Errorf("failed to get path id of reconstructed spec: %v", err)
 		}

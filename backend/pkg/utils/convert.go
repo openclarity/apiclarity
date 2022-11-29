@@ -1,4 +1,4 @@
-// Copyright © 2022 Cisco Systems, Inc. and its affiliates.
+// Copyright © 2021 Cisco Systems, Inc. and its affiliates.
 // All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,12 +13,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package utils
 
-import "github.com/google/uuid"
-
-var DefaultTraceSourceUID = uuid.Nil
-
-const (
-	DefaultTraceSourceID uint = 0
+import (
+	"github.com/go-openapi/strfmt"
+	"github.com/google/uuid"
 )
+
+func ConvertGoogleUUIDToStrfmtUUID(ID uuid.UUID) strfmt.UUID {
+	return strfmt.UUID(ID.String())
+}
+
+func ConvertStrfmtUUIDToGoogleUUID(ID strfmt.UUID) uuid.UUID {
+	return uuid.MustParse(ID.String())
+}

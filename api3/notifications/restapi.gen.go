@@ -55,8 +55,8 @@ type ApiInfo struct {
 	Name *string `json:"name,omitempty"`
 	Port *int    `json:"port,omitempty"`
 
-	// Trace Source ID which created this API. 0 means it has been created by APIClarity (from the UI for example)
-	TraceSourceId *uint32 `json:"traceSourceId,omitempty"`
+	// Trace Source UUID which created this API. empty means it has been created by APIClarity (from the UI for example)
+	TraceSourceId *openapi_types.UUID `json:"traceSourceId,omitempty"`
 }
 
 // AuthorizationModel defines model for AuthorizationModel.
@@ -81,19 +81,18 @@ type BaseNotification struct {
 
 // NewDiscoveredAPINotification defines model for NewDiscoveredAPINotification.
 type NewDiscoveredAPINotification struct {
-	DestinationNamespace *string            `json:"destinationNamespace,omitempty"`
-	ExternalSourceID     openapi_types.UUID `json:"externalSourceID"`
-	HasProvidedSpec      *bool              `json:"hasProvidedSpec,omitempty"`
-	HasReconstructedSpec *bool              `json:"hasReconstructedSpec,omitempty"`
-	Id                   *uint32            `json:"id,omitempty"`
+	DestinationNamespace *string `json:"destinationNamespace,omitempty"`
+	HasProvidedSpec      *bool   `json:"hasProvidedSpec,omitempty"`
+	HasReconstructedSpec *bool   `json:"hasReconstructedSpec,omitempty"`
+	Id                   *uint32 `json:"id,omitempty"`
 
 	// API name
 	Name             *string `json:"name,omitempty"`
 	NotificationType string  `json:"notificationType"`
 	Port             *int    `json:"port,omitempty"`
 
-	// Trace Source ID which created this API. 0 means it has been created by APIClarity (from the UI for example)
-	TraceSourceId *uint32 `json:"traceSourceId,omitempty"`
+	// Trace Source UUID which created this API. empty means it has been created by APIClarity (from the UI for example)
+	TraceSourceId *openapi_types.UUID `json:"traceSourceId,omitempty"`
 }
 
 // Describes the progress of an ongoing test
@@ -165,11 +164,6 @@ type TestReportNotification struct {
 	// Message for status details, if any
 	StatusMessage *string                          `json:"statusMessage,omitempty"`
 	Tags          *[]externalRef1.FuzzingReportTag `json:"tags,omitempty"`
-}
-
-// TraceSourceID as UUID
-type TraceSourceExternalID struct {
-	ExternalSourceID openapi_types.UUID `json:"externalSourceID"`
 }
 
 // PostNotificationApiIDJSONBody defines parameters for PostNotificationApiID.
@@ -726,28 +720,27 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/8RYzW7bOBB+FYK7h11AsN12sQff0roFfGhr1OmpyIGRRtIUEsklR0ncIO++IEXJkik7",
-	"Trbp3mzpm+H8fPND3fNU1VpJkGT58p7btIRa+J8Xm/W7Shik3SdFmGMqCJV0bzK0qcEapSBl3INaaI2y",
-	"8FIaP6DMUBZ2LMZ/m++Pmodz5sfgCb9oqFQGf/j/H1UG1Vn6Tksl/BPcrtCm6gYMZBeb9TlKT8okfKsh",
-	"XWGen+XwNDjhl2BpY1RhwJ6l5yi+VfUFtDJ0rqIJ9EPCtVEaDO0+iRr4ksvB68udBgdREj7nfPntnv9u",
-	"IH9qkh+SR+ROJ/Mx8ZNpe0x4Ok+PSR3NyjmCU1m4ekhcIXbh89UHrvp0yOkFK4xqNFM5yztQnzoEL4EE",
-	"9aRohZYOJHtssHY2c+bWSs6VBik0znairqbT1dvpqEGOIksujBE7/rB/oK6/Q0oOcbRV3HNRVWfw6q2w",
-	"8DRCDSLZhlbjWubKHTkOWQaWXH9DJR39rRYpuOfBCUsmuFkKuzHqBjPIHGVa2Vw0FfFlLioLvePXSlUg",
-	"ZBD6AqmSlkyT0lMkMXO4XJlaEF/yBiW9ec17JEqCAoxDSl+1Uc43a+bfJLErjn0DHwe6yIgUtqoxKayz",
-	"kaGL5OCASwdlLZatV+y2xLRkqQFBkDEq0bKLzXrGFqwGIS1DYqWw7BpA9qjrHdsPH/ZHblTNqAT2dc1y",
-	"ZRjciVpX8CdPzgjEJPGivhIToAJhZJhpcRoc0kuP62tfM0WlrkXV10wB8kTdROZ87tTHhZRwqyH1/ffZ",
-	"B247DS46Bv5p0EDGl9/2qkceJvtgXJ0VzV9VzXEafVFHiqIqcAg2hDBRVUPODWedZXVjicEdgcyi3hpN",
-	"xbhJHAQ5kpgK6uk15eVCGvrho+Nq3xDe3xEYKar1qo3+tlSGhnMwDv/K/7sG66taB5wbREIyJQuFsmAE",
-	"lqJoC43r1TOnkxdt15ojdm0GljjLggm1uMO6qfny1WKR8Bpl+2+RcEKqoHdIh/0r7p+WhCHCqYZ8iTVY",
-	"ErXuDvXYAwv6NoeS/v6L7w/eerDXPNn6RsXdGzGIwdVAl0scc5ljfSDalYRPELRPc4BEjg3U9Vp+fjJL",
-	"LEqwtIUbcIX7PG299P+WKn8uNf9hiHxofvxAWWy9mveyqfdKP4K1ophwKLzwQ7WFsgxIYGUThq4Yd2P7",
-	"HaAOMgE4tUeQKH7GWAweteS5FK3qYMylKKzfXvnEonmM9CHE05Q/wfTuJjCxJXaPnzn4N+tW8aHVrd6r",
-	"U8b8ooGwd9439+O31JezIJonvSVTl9yXtyMwpbVicg7GnWOwP6+YsOzr1/Uq6ocQNHTA8abfYBYX2wFv",
-	"Ig0xhZwIhitPVwbvlAH22V0NXCcYrEEHHxZuwNjWoVezRViDHcv5kr+ZLWZu/daCSu/MfLjmzO99r3/w",
-	"FaSsnxb9guluFHyj7CiRbYN3+oyogcBYn1F0h7szeHfBCVNkGAcyDSThS9Yohn1LPhyUV604WHqrMj9E",
-	"UiUJJLVjSledH99ty7G98keum1Nf0HwOxgQ5CPTYF59kq5W0LU9eLxZPMvGQM9Hp2yZNfWG5kdHUtTC7",
-	"dhty11pGil1oTAMluk8GRtwylLohzxnBCrwB6bjDPMOtStHf5W6Ryv41dRO0tcKCueky25iKL/ncldW/",
-	"AQAA//+lJH5BlBQAAA==",
+	"H4sIAAAAAAAC/8RYTW/bOBP+KwTf97ALCLbbLvbgW9psAR/aGnV6KnygpZE0hfix5MipG/i/L0hRsmzJ",
+	"jpNturdYnHk4H898MA881dJoBYocnz9wl5YgRfjzZrl4VwmLtPuoCXNMBaFW/iRDl1qUqARp6z9IYQyq",
+	"ImgZfI8qQ1W4YzX+v+nhqmm8Z3pOPOE3NZXa4o/w+4POoLoK77JWwj/C/S26VG/BQnazXFwDelEn4SsD",
+	"6S3m+VUOjwsn/A4cLa0uLLircM7KN1CfwWhL1wKNSO8Tbqw2YGn3UUjgc656x3c7A15EK/iU8/nXB/5/",
+	"C/lTk7xPHtG7nMzH1C+m7THl8Tw9pnU2K9cojmVhvU98IbbhC9UHvvpMzOkNK6yuDdM5y1uhLnUIQQMJ",
+	"5KhqhY5ONDvZaO1k4s2VWk21ASUMTnZCVuPp6uz01CBPkTkX1ood3x8+6M03SMlLnG0VD1xU1RW8eisc",
+	"PI1QvUg2oTW4ULn2Vx6HLANHvr+hVp7+zogU/PfohCMb3SyFW1q9xQwyT5lGNxd1RXyei8pB5/hG6wqE",
+	"ikqfIdXKka1TeoomZl4u11YK4nNeo6I3r3kniYqgAOslVajaQc6XCxZOkqErnn09H3tYZEUKK13bFBbZ",
+	"EPTOH7PmnH35srhl9yWmJUstCIKMUYmO3SwXEwbS0I5JEMoxJFYKxzYAqpPc7Nhh7LDfcqsloxLYlwXL",
+	"tWXwXUhTwe886YWgxmzozSjfBu1kmPcKhFVxlA2j7yWD9nFZHUqlqPRGVF2pFKAulMvAnE8t/LB+Eu4M",
+	"pKHtPvvCVYvgo2Ph7xotZHz+9QB95GFyCMb6qmj+qiIepjHU8gBowFMvwfoiTFRVn3D9EeeYrB0x+E6g",
+	"skFLHQzDYW84CfJAYyyol7eTlwtpbIMhjqtSW+oPsmEgb8OvDbhQnCbK+UkiFNOq0KgKRuBoEDdhcHH7",
+	"zPESVJu95Ixdy54l3rJoghTfUdaSz1/NZgmXqJpfs4QTUgWdQyYuUMMG6EhYIhzrqHcowZGQpr00yJ5Y",
+	"0HUrVPTnH/xw8SoIB+Thvadl2hnRi8G6h+UTx3zmWBeIZqfgI1Tr0hxFBo714DqUn5/MEosSHK1gC74E",
+	"n4fWaf9nqQr3Uv0vxsH7+scPVMUqwPylankA/QDOiWLEoXgQZmMjyjIggZVLGPpi3B3b7wVk1ImCY4sA",
+	"ieJnDLjoUUOeO9FAR2PuROHC+slHNsVzpI8hHqf8Baa3q/zImtd+fuYIXy4a4FOrG9z1JWN+UWs/OB+a",
+	"+/ln5stZMJgnnSVjr9SXtyMyZb/e+7Rh3P9bSr3TFtgnvyf7quotByev7C1Y11Thq8ksLoeeMXzO30xm",
+	"E7+UG0FlYNe0P/ynD6Fv7gMbtQudt1u7/HrNl9odBaVplh7PCgkE1oXooL/c38HbbT925D4XydaQxH/r",
+	"HD0duvZ2OnTWjTo4equz0JBTrQgUNS3fVK0f31yTrwP4I2+vsX8nhRwcd7WTQB/7EgrNGa1cU8GvZ7Mn",
+	"mXi6pA1uX9VpGkjq228tpbC7ZrPwbzxGmt0YTCMl2vezFfcMlakpcEawAregPHfY4pYJ53SK4Xlzj1R2",
+	"x9ROo8YKB3bbZra2FZ/zqafoPwEAAP//YvClFqETAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

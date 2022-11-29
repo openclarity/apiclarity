@@ -49,11 +49,10 @@ components:
         port:
           type: integer
         traceSourceId:
-          default: 0
-          description: Trace Source ID which created this API. 0 means it has been
-            created by APIClarity (from the UI for example)
-          format: uint32
-          type: integer
+          description: Trace Source UUID which created this API. empty means it has
+            been created by APIClarity (from the UI for example)
+          format: uuid
+          type: string
       type: object
     AuthorizationModel:
       properties:
@@ -86,7 +85,6 @@ components:
       allOf:
       - $ref: '#/components/schemas/BaseNotification'
       - $ref: '#/components/schemas/ApiInfo'
-      - $ref: '#/components/schemas/TraceSourceExternalID'
     ShortTestProgress:
       description: Describes the progress of an ongoing test
       properties:
@@ -155,15 +153,6 @@ components:
       allOf:
       - $ref: '#/components/schemas/BaseNotification'
       - $ref: '#/components/schemas/ShortTestReport'
-    TraceSourceExternalID:
-      description: TraceSourceID as UUID
-      properties:
-        externalSourceID:
-          format: uuid
-          type: string
-      required:
-      - externalSourceID
-      type: object
 info:
   title: Core OAPI for APIClarity Notification
   version: "1.0"

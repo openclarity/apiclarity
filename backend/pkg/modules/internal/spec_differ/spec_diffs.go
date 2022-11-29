@@ -105,8 +105,9 @@ func (s *specDiffer) EventNotify(ctx context.Context, event *core.Event) {
 	apiEvent := event.APIEvent
 	specKey := _speculator.GetSpecKey(apiEvent.HostSpecName, strconv.Itoa(int(apiEvent.DestinationPort)))
 	speculatorAccessor := s.accessor.GetSpeculatorAccessor()
+	traceSourceID := event.APIInfo.TraceSource.ID
 
-	if !speculatorAccessor.HasProvidedSpec(event.APIInfo.TraceSourceID, specKey) && !speculatorAccessor.HasApprovedSpec(event.APIInfo.TraceSourceID, specKey) {
+	if !speculatorAccessor.HasProvidedSpec(traceSourceID, specKey) && !speculatorAccessor.HasApprovedSpec(traceSourceID, specKey) {
 		log.Debugf("No specs to calculate diffs")
 		return
 	}
@@ -115,28 +116,28 @@ func (s *specDiffer) EventNotify(ctx context.Context, event *core.Event) {
 
 	reconstructedDiffType := models.DiffTypeNODIFF
 	providedDiffType := models.DiffTypeNODIFF
-	if speculatorAccessor.HasProvidedSpec(event.APIInfo.TraceSourceID, specKey) {
+	if speculatorAccessor.HasProvidedSpec(traceSourceID, specKey) {
 		// calculate diffs base on the event
-		providedDiff, err = speculatorAccessor.DiffTelemetry(event.APIInfo.TraceSourceID, speculatorTelemetry, _spec.SpecSourceProvided)
+		providedDiff, err = speculatorAccessor.DiffTelemetry(traceSourceID, speculatorTelemetry, _spec.SpecSourceProvided)
 		if err != nil {
 			log.Errorf("Failed to diff telemetry against provided spec: %v", err)
 			return
 		}
-		providedSpecVersion = s.accessor.GetSpeculatorAccessor().GetProvidedSpecVersion(event.APIInfo.TraceSourceID, specKey)
+		providedSpecVersion = s.accessor.GetSpeculatorAccessor().GetProvidedSpecVersion(traceSourceID, specKey)
 		if err := setAPIEventProvidedDiff(apiEvent, providedDiff, providedSpecVersion); err != nil {
 			log.Errorf("Failed to set api event provided diff: %v", err)
 			return
 		}
 		providedDiffType = convertToModelsDiffType(providedDiff.Type)
 	}
-	if speculatorAccessor.HasApprovedSpec(event.APIInfo.TraceSourceID, specKey) {
+	if speculatorAccessor.HasApprovedSpec(traceSourceID, specKey) {
 		// calculate diffs base on the event
-		reconstructedDiff, err = speculatorAccessor.DiffTelemetry(event.APIInfo.TraceSourceID, speculatorTelemetry, _spec.SpecSourceReconstructed)
+		reconstructedDiff, err = speculatorAccessor.DiffTelemetry(traceSourceID, speculatorTelemetry, _spec.SpecSourceReconstructed)
 		if err != nil {
 			log.Errorf("Failed to diff telemetry against approved spec: %v", err)
 			return
 		}
-		reconstructedSpecVersion = s.accessor.GetSpeculatorAccessor().GetApprovedSpecVersion(event.APIInfo.TraceSourceID, specKey)
+		reconstructedSpecVersion = s.accessor.GetSpeculatorAccessor().GetApprovedSpecVersion(traceSourceID, specKey)
 		if err := setAPIEventReconstructedDiff(apiEvent, reconstructedDiff, reconstructedSpecVersion); err != nil {
 			log.Errorf("Failed to set api event reconstructed diff: %v", err)
 			return

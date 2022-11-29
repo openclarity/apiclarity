@@ -61,7 +61,7 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 
 	approvedReview := createApprovedReviewForSpeculator(params.Body, pathToPathItem)
 	// apply approved review to the speculator
-	if err := s.speculators.Get(review.APIInfo.TraceSourceID).ApplyApprovedReview(speculator.SpecKey(review.SpecKey), approvedReview, specVersion); err != nil {
+	if err := s.speculators.Get(review.APIInfo.TraceSource.ID).ApplyApprovedReview(speculator.SpecKey(review.SpecKey), approvedReview, specVersion); err != nil {
 		errMsg := fmt.Sprintf("Failed to apply the approved review. %v", err)
 		log.Error(errMsg)
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError).WithPayload(&models.APIResponse{
@@ -75,7 +75,7 @@ func (s *Server) PostAPIInventoryReviewIDApprovedReview(params operations.PostAP
 	}
 
 	// generate reconstructed spec and save it to db
-	reviewSpec, ok := s.speculators.Get(review.APIInfo.TraceSourceID).Specs[speculator.SpecKey(review.SpecKey)]
+	reviewSpec, ok := s.speculators.Get(review.APIInfo.TraceSource.ID).Specs[speculator.SpecKey(review.SpecKey)]
 	if !ok {
 		log.Errorf("Failed to find spec with specKey: %v", review.SpecKey)
 		return operations.NewPostAPIInventoryReviewIDApprovedReviewDefault(http.StatusInternalServerError)
@@ -167,7 +167,7 @@ func (s *Server) GetAPIInventoryAPIIDSuggestedReview(params operations.GetAPIInv
 
 	// get suggested review from the engine using the spec key (host + port)
 	specKey := speculator.GetSpecKey(apiInfo.Name, strconv.Itoa(int(apiInfo.Port)))
-	suggestedSpecReview, err := s.speculators.Get(apiInfo.TraceSourceID).SuggestedReview(specKey)
+	suggestedSpecReview, err := s.speculators.Get(apiInfo.TraceSource.ID).SuggestedReview(specKey)
 	if err != nil {
 		log.Errorf("Failed to create suggested review with spec key: %v. %v", specKey, err)
 		return operations.NewGetAPIInventoryAPIIDSuggestedReviewDefault(http.StatusInternalServerError)

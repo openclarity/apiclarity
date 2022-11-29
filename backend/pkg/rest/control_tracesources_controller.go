@@ -21,14 +21,13 @@ import (
 	"net/http"
 
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/strfmt"
-	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
+	"github.com/openclarity/apiclarity/backend/pkg/utils"
 )
 
 func (s *Server) GetControlTraceSources(params operations.GetControlTraceSourcesParams) middleware.Responder {
@@ -47,6 +46,7 @@ func (s *Server) GetControlTraceSources(params operations.GetControlTraceSources
 	for _, dbGw := range sources {
 		payload.TraceSources = append(payload.TraceSources, &models.TraceSource{
 			ID:          int64(dbGw.ID),
+			UID:         utils.ConvertGoogleUUIDToStrfmtUUID(dbGw.UID),
 			Name:        &dbGw.Name,
 			Type:        (*models.TraceSourceType)(&dbGw.Type),
 			Description: dbGw.Description,
@@ -63,31 +63,25 @@ func (s *Server) PostControlTraceSources(params operations.PostControlTraceSourc
 		Name:        *params.Body.Name,
 		Type:        string(*params.Body.Type),
 		Description: params.Body.Description,
-		ExternalID:  params.Body.ExternalID.String(),
 	}
 	if params.Body.Token != nil {
 		dbSource.Token = params.Body.Token
 	}
-	if dbSource.ExternalID == "" {
-		dbSource.ExternalID = uuid.New().String()
+	if params.Body.UID == "" {
+		dbSource.UID = utils.ConvertStrfmtUUIDToGoogleUUID(params.Body.UID)
 	}
 	if err := s.dbHandler.TraceSourcesTable().CreateTraceSource(&dbSource); err != nil {
 		log.Errorf("Failed to create new TraceSource: %v", err)
 		return operations.NewPostControlTraceSourcesDefault(http.StatusInternalServerError)
 	}
 
-	var extID strfmt.UUID
-	if err := extID.UnmarshalText([]byte(dbSource.ExternalID)); err != nil {
-		log.Errorf("Can't read external ID as UUID: %v", err)
-		return operations.NewPostControlTraceSourcesDefault(http.StatusInternalServerError)
-	}
 	gw := models.TraceSource{
 		ID:          int64(dbSource.ID),
 		Name:        &dbSource.Name,
 		Type:        (*models.TraceSourceType)(&dbSource.Type),
 		Description: dbSource.Description,
 		Token:       dbSource.Token,
-		ExternalID:  extID,
+		UID:         utils.ConvertGoogleUUIDToStrfmtUUID(dbSource.UID),
 	}
 	return operations.NewPostControlTraceSourcesCreated().WithPayload(&gw)
 }
@@ -95,7 +89,7 @@ func (s *Server) PostControlTraceSources(params operations.PostControlTraceSourc
 func (s *Server) GetControlTraceSourcesTraceSourceID(params operations.GetControlTraceSourcesTraceSourceIDParams) middleware.Responder {
 	log.Debugf("GetControlTraceSourcesTraceSourceID controller was invoked")
 
-	dbSource, err := s.dbHandler.TraceSourcesTable().GetTraceSourceFromExternalID(params.TraceSourceID.String())
+	dbSource, err := s.dbHandler.TraceSourcesTable().GetTraceSource(utils.ConvertStrfmtUUIDToGoogleUUID(params.TraceSourceID))
 	if err != nil {
 		log.Errorf("Failed to get Trace Source: %v", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -107,6 +101,7 @@ func (s *Server) GetControlTraceSourcesTraceSourceID(params operations.GetContro
 
 	gw := models.TraceSource{
 		ID:          int64(dbSource.ID),
+		UID:         utils.ConvertGoogleUUIDToStrfmtUUID(dbSource.UID),
 		Name:        &dbSource.Name,
 		Type:        (*models.TraceSourceType)(&dbSource.Type),
 		Description: dbSource.Description,
@@ -117,7 +112,7 @@ func (s *Server) GetControlTraceSourcesTraceSourceID(params operations.GetContro
 func (s *Server) DeleteControlTraceSourcesTraceSourceID(params operations.DeleteControlTraceSourcesTraceSourceIDParams) middleware.Responder {
 	log.Debugf("DeleteControlTraceSourcesTraceSourceID controller was invoked")
 
-	if err := s.dbHandler.TraceSourcesTable().DeleteTraceSourceFromExternalID(params.TraceSourceID.String()); err != nil {
+	if err := s.dbHandler.TraceSourcesTable().DeleteTraceSource(utils.ConvertStrfmtUUIDToGoogleUUID(params.TraceSourceID)); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return operations.NewDeleteControlTraceSourcesTraceSourceIDNotFound()
 		}

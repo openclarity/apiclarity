@@ -44,7 +44,7 @@ func (s *Server) GetFeatures(params operations.GetFeaturesParams) middleware.Res
 			for traceSourceID, hosts := range hostsMap {
 				hostsToTrace.TraceSourcesHosts = append(hostsToTrace.TraceSourcesHosts,
 					&models.HostsToTraceForTraceSource{
-						TraceSourceID: uint32(traceSourceID),
+						TraceSourceID: int64(traceSourceID),
 						HostsToTrace:  hosts,
 					})
 			}

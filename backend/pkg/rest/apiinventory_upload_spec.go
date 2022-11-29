@@ -119,5 +119,5 @@ func (s *Server) getSpeculatorAndKey(apiID uint32) (*speculator.Speculator, spec
 		return nil, "", fmt.Errorf("failed to get API Info from DB. id=%v: %v", apiID, err)
 	}
 
-	return s.speculators.Get(apiInfo.TraceSourceID), speculator.GetSpecKey(apiInfo.Name, strconv.Itoa(int(apiInfo.Port))), nil
+	return s.speculators.Get(apiInfo.TraceSource.ID), speculator.GetSpecKey(apiInfo.Name, strconv.Itoa(int(apiInfo.Port))), nil
 }

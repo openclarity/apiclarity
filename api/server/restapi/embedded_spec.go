@@ -1166,10 +1166,9 @@ func init() {
           "type": "integer"
         },
         "traceSourceId": {
-          "description": "Trace Source ID which created this API. 0 means it has been created by APIClarity (from the UI for example)",
-          "type": "integer",
-          "format": "uint32",
-          "default": 0
+          "description": "Trace Source UID which created this API. empty means it has been created by APIClarity (from the UI for example)",
+          "type": "string",
+          "format": "uuid"
         }
       }
     },
@@ -1321,8 +1320,7 @@ func init() {
         },
         "traceSourceID": {
           "description": "ID of the trace source",
-          "type": "integer",
-          "format": "uint32"
+          "type": "integer"
         }
       }
     },
@@ -1491,10 +1489,6 @@ func init() {
         "description": {
           "type": "string"
         },
-        "externalID": {
-          "type": "string",
-          "format": "uuid"
-        },
         "id": {
           "type": "integer"
         },
@@ -1508,15 +1502,19 @@ func init() {
         },
         "type": {
           "$ref": "#/definitions/TraceSourceType"
+        },
+        "uid": {
+          "type": "string",
+          "format": "uuid"
         }
       }
     },
     "TraceSourceType": {
       "type": "string",
       "enum": [
-        "TYK",
-        "KONG",
-        "APIGEEX"
+        "APIGEE_X",
+        "KONG_INTERNAL",
+        "TYK_INTERNAL"
       ]
     },
     "rawSpec": {
@@ -3682,10 +3680,9 @@ func init() {
           "type": "integer"
         },
         "traceSourceId": {
-          "description": "Trace Source ID which created this API. 0 means it has been created by APIClarity (from the UI for example)",
-          "type": "integer",
-          "format": "uint32",
-          "default": 0
+          "description": "Trace Source UID which created this API. empty means it has been created by APIClarity (from the UI for example)",
+          "type": "string",
+          "format": "uuid"
         }
       }
     },
@@ -3837,8 +3834,7 @@ func init() {
         },
         "traceSourceID": {
           "description": "ID of the trace source",
-          "type": "integer",
-          "format": "uint32"
+          "type": "integer"
         }
       }
     },
@@ -4007,10 +4003,6 @@ func init() {
         "description": {
           "type": "string"
         },
-        "externalID": {
-          "type": "string",
-          "format": "uuid"
-        },
         "id": {
           "type": "integer"
         },
@@ -4024,15 +4016,19 @@ func init() {
         },
         "type": {
           "$ref": "#/definitions/TraceSourceType"
+        },
+        "uid": {
+          "type": "string",
+          "format": "uuid"
         }
       }
     },
     "TraceSourceType": {
       "type": "string",
       "enum": [
-        "TYK",
-        "KONG",
-        "APIGEEX"
+        "APIGEE_X",
+        "KONG_INTERNAL",
+        "TYK_INTERNAL"
       ]
     },
     "rawSpec": {

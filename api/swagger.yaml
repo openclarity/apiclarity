@@ -94,10 +94,9 @@ definitions:
       destinationNamespace:
         type: 'string'
       traceSourceId:
-        description: 'Trace Source ID which created this API. 0 means it has been created by APIClarity (from the UI for example)'
-        type: 'integer'
-        format: 'uint32'
-        default: 0
+        description: 'Trace Source UID which created this API. empty means it has been created by APIClarity (from the UI for example)'
+        type: 'string'
+        format: 'uuid'
 
   ApiInfoWithType:
     type: 'object'
@@ -401,7 +400,6 @@ definitions:
       traceSourceID:
         description: ID of the trace source
         type: integer
-        format: uint32
       hostsToTrace:
         description: List of hosts (in the form 'host:port')
         type: array
@@ -425,6 +423,9 @@ definitions:
     properties:
       id:
         type: 'integer'
+      uid:
+        type: 'string'
+        format: 'uuid'
       name:
         description: 'Unique name identifying a Trace Source'
         type: 'string'
@@ -435,9 +436,6 @@ definitions:
       token:
         type: 'string'
         format: 'byte'
-      externalID:
-        type: 'string'
-        format: 'uuid'
     required:
       - name
       - type
@@ -445,10 +443,10 @@ definitions:
   TraceSourceType:
     type: string
     enum:
-      - TYK
-      - KONG
-      - APIGEEX
-
+      - APIGEE_X
+      - KONG_INTERNAL
+      - TYK_INTERNAL
+      
 paths:
   /apiEvents:
     get:

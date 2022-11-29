@@ -92,7 +92,7 @@ func (m *TraceSamplingManager) AddHostToTrace(component string, apiID uint32) er
 		return fmt.Errorf("failed to retrieve API info for apiID=%v: %v", apiID, err)
 	}
 
-	traceSourceID := apiInfo.TraceSourceID
+	traceSourceID := apiInfo.TraceSource.ID
 	if err = m.dbHandler.TraceSamplingTable().AddAPIToTrace(component, traceSourceID, apiID); err != nil {
 		log.Errorf("Failed to enable traces for API %v: %v", apiID, err)
 		return fmt.Errorf("failed to enable traces for API %v: %v", apiID, err)
@@ -127,7 +127,7 @@ func (m *TraceSamplingManager) RemoveHostToTrace(component string, apiID uint32)
 		return fmt.Errorf("failed to retrieve API info for apiID=%v: %v", apiID, err)
 	}
 
-	traceSourceID := apiInfo.TraceSourceID
+	traceSourceID := apiInfo.TraceSource.ID
 	if err = m.dbHandler.TraceSamplingTable().DeleteAPIToTrace(component, traceSourceID, apiID); err != nil {
 		log.Errorf("Failed to disable traces for API %v: %v", apiID, err)
 		return fmt.Errorf("failed to disable traces for API %v: %v", apiID, err)

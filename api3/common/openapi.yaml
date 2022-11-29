@@ -89,20 +89,10 @@ components:
           type: string
       required:
       - notificationType
-    TraceSourceExternalID:
-      description: 'TraceSourceID as UUID'
-      type: object
-      properties:
-        externalSourceID:
-          type: string
-          format: uuid
-      required:
-      - externalSourceID
     NewDiscoveredAPINotification:
       allOf:
       - $ref: '#/components/schemas/BaseNotification'
       - $ref: '#/components/schemas/ApiInfo'
-      - $ref: '#/components/schemas/TraceSourceExternalID'
     ModuleVersion:
       type: 'object'
       required: [version]
@@ -193,10 +183,9 @@ components:
         destinationNamespace:
           type: string
         traceSourceId:
-          description: 'Trace Source ID which created this API. 0 means it has been created by APIClarity (from the UI for example)'
-          type: 'integer'
-          format: 'uint32'
-          default: 0
+          description: 'Trace Source UUID which created this API. empty means it has been created by APIClarity (from the UI for example)'
+          type: 'string'
+          format: 'uuid'
     ApiInfoWithType:
       type: object
       allOf:

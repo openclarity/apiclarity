@@ -21,7 +21,7 @@ type HostsToTraceForTraceSource struct {
 	HostsToTrace []string `json:"hostsToTrace"`
 
 	// ID of the trace source
-	TraceSourceID uint32 `json:"traceSourceID,omitempty"`
+	TraceSourceID int64 `json:"traceSourceID,omitempty"`
 }
 
 // Validate validates this hosts to trace for trace source

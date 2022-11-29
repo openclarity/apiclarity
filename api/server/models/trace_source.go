@@ -22,10 +22,6 @@ type TraceSource struct {
 	// description
 	Description string `json:"description,omitempty"`
 
-	// external ID
-	// Format: uuid
-	ExternalID strfmt.UUID `json:"externalID,omitempty"`
-
 	// id
 	ID int64 `json:"id,omitempty"`
 
@@ -40,15 +36,15 @@ type TraceSource struct {
 	// type
 	// Required: true
 	Type *TraceSourceType `json:"type"`
+
+	// uid
+	// Format: uuid
+	UID strfmt.UUID `json:"uid,omitempty"`
 }
 
 // Validate validates this trace source
 func (m *TraceSource) Validate(formats strfmt.Registry) error {
 	var res []error
-
-	if err := m.validateExternalID(formats); err != nil {
-		res = append(res, err)
-	}
 
 	if err := m.validateName(formats); err != nil {
 		res = append(res, err)
@@ -58,21 +54,13 @@ func (m *TraceSource) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateUID(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *TraceSource) validateExternalID(formats strfmt.Registry) error {
-	if swag.IsZero(m.ExternalID) { // not required
-		return nil
-	}
-
-	if err := validate.FormatOf("externalID", "body", "uuid", m.ExternalID.String(), formats); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -102,6 +90,18 @@ func (m *TraceSource) validateType(formats strfmt.Registry) error {
 			}
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (m *TraceSource) validateUID(formats strfmt.Registry) error {
+	if swag.IsZero(m.UID) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("uid", "body", "uuid", m.UID.String(), formats); err != nil {
+		return err
 	}
 
 	return nil

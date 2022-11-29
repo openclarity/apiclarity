@@ -19,11 +19,13 @@ import (
 	"fmt"
 
 	"github.com/go-openapi/strfmt"
+	uuid "github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
+	"github.com/openclarity/apiclarity/backend/pkg/utils"
 )
 
 const (
@@ -52,7 +54,7 @@ type APIInfo struct {
 	Type                       models.APIType  `json:"type,omitempty" gorm:"column:type;uniqueIndex:api_info_idx_model" faker:"oneof: INTERNAL, EXTERNAL"`
 	Name                       string          `json:"name,omitempty" gorm:"column:name;uniqueIndex:api_info_idx_model" faker:"oneof: test.com, example.com, kaki.org"`
 	Port                       int64           `json:"port,omitempty" gorm:"column:port;uniqueIndex:api_info_idx_model" faker:"oneof: 80, 443"`
-	TraceSourceID              uint            `json:"traceSourceID,omitempty" gorm:"column:trace_source_id;default:0;uniqueIndex:api_info_idx_model" faker:"-"` // This is the name of the Trace Source which notified of this API. Empty means it was auto discovered by APIClarity on first.
+	TraceSourceID              uuid.UUID       `json:"traceSourceID,omitempty" gorm:"column:trace_source_id;uniqueIndex:api_info_idx_model" faker:"-"` // This is the name of the Trace Source which notified of this API. Empty means it was auto discovered by APIClarity on first.
 	HasProvidedSpec            bool            `json:"hasProvidedSpec,omitempty" gorm:"column:has_provided_spec"`
 	HasReconstructedSpec       bool            `json:"hasReconstructedSpec,omitempty" gorm:"column:has_reconstructed_spec"`
 	ReconstructedSpec          string          `json:"reconstructedSpec,omitempty" gorm:"column:reconstructed_spec" faker:"-"`
@@ -75,7 +77,7 @@ type APIInventoryTable interface {
 	PutAPISpec(apiID uint, spec string, specInfo *models.SpecInfo, specType specType, createdAt strfmt.DateTime) error
 	DeleteProvidedAPISpec(apiID uint32) error
 	DeleteApprovedAPISpec(apiID uint32) error
-	GetAPIID(name, port string, traceSourceID uint32) (uint, error)
+	GetAPIID(name, port string, traceSourceID uuid.UUID) (uint, error)
 	First(dest *APIInfo, conds ...interface{}) error
 	FirstOrCreate(apiInfo *APIInfo) (created bool, err error)
 	CreateAPIInfo(event *APIInfo)
@@ -97,7 +99,7 @@ func APIInfoFromDB(apiInfo *APIInfo) *models.APIInfo {
 		Name:                 apiInfo.Name,
 		Port:                 apiInfo.Port,
 		DestinationNamespace: apiInfo.DestinationNamespace,
-		TraceSourceID:        uint32(apiInfo.TraceSourceID),
+		TraceSourceID:        utils.ConvertGoogleUUIDToStrfmtUUID(apiInfo.TraceSourceID),
 	}
 }
 
@@ -127,6 +129,7 @@ func (a *APIInventoryTableHandler) GetAPIInventoryAndTotal(params operations.Get
 	// get specific page ordered items with the current filters
 	if err := tx.Scopes(Paginate(params.Page, params.PageSize)).
 		Order(sortOrder).
+		Preload("TraceSource").
 		Find(&apiInventory).Error; err != nil {
 		return nil, 0, err
 	}
@@ -164,7 +167,7 @@ func (a *APIInventoryTableHandler) setAPIInventoryFilters(params operations.GetA
 	return table
 }
 
-func (a *APIInventoryTableHandler) GetAPIID(name, port string, traceSourceID uint32) (uint, error) {
+func (a *APIInventoryTableHandler) GetAPIID(name, port string, traceSourceID uuid.UUID) (uint, error) {
 	apiInfo := APIInfo{}
 	cond := map[string]interface{}{
 		nameColumnName:          name,

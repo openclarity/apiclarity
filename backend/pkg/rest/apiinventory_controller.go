@@ -29,6 +29,7 @@ import (
 	"github.com/openclarity/apiclarity/api/server/restapi/operations"
 	"github.com/openclarity/apiclarity/backend/pkg/common"
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
+	"github.com/openclarity/apiclarity/backend/pkg/utils"
 )
 
 func (s *Server) PostAPIInventory(params operations.PostAPIInventoryParams) middleware.Responder {
@@ -57,7 +58,7 @@ func (s *Server) PostAPIInventory(params operations.PostAPIInventoryParams) midd
 		Name:                 params.Body.Name,
 		Port:                 params.Body.Port,
 		DestinationNamespace: params.Body.DestinationNamespace,
-		TraceSourceID:        common.DefaultTraceSourceID, // Force the Trace Source to the default trace source
+		TraceSourceID:        common.DefaultTraceSourceUID, // Force the Trace Source to the default trace source
 	}
 	if _, err := s.dbHandler.APIInventoryTable().FirstOrCreate(apiInfo); err != nil {
 		log.Error(err)
@@ -66,7 +67,7 @@ func (s *Server) PostAPIInventory(params operations.PostAPIInventoryParams) midd
 		})
 	}
 
-	_ = s.speculators.Get(apiInfo.TraceSourceID).InitSpec(params.Body.Name, strconv.Itoa(int(params.Body.Port)))
+	_ = s.speculators.Get(apiInfo.TraceSource.ID).InitSpec(params.Body.Name, strconv.Itoa(int(params.Body.Port)))
 
 	return operations.NewPostAPIInventoryOK().WithPayload(_database.APIInfoFromDB(apiInfo))
 }
@@ -98,17 +99,8 @@ func (s *Server) GetAPIInventory(params operations.GetAPIInventoryParams) middle
 }
 
 func (s *Server) GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID(params operations.GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams) middleware.Responder {
-	dbSource, err := s.dbHandler.TraceSourcesTable().GetTraceSourceFromExternalID(params.TraceSourceID.String())
-	if err != nil {
-		log.Errorf("Failed to get Trace Source: %v", err)
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return operations.NewGetControlTraceSourcesTraceSourceIDNotFound().WithPayload(&models.APIResponse{Message: err.Error()})
-		}
-
-		return operations.NewGetControlTraceSourcesTraceSourceIDDefault(http.StatusInternalServerError)
-	}
-
-	apiID, err := s.dbHandler.APIInventoryTable().GetAPIID(params.Host, params.Port, uint32(dbSource.ID))
+	traceSourceID := utils.ConvertStrfmtUUIDToGoogleUUID(params.TraceSourceID)
+	apiID, err := s.dbHandler.APIInventoryTable().GetAPIID(params.Host, params.Port, traceSourceID)
 	if err != nil {
 		log.Errorf("Failed to get API ID: %v", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {

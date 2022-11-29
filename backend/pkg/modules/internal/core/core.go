@@ -120,7 +120,7 @@ func shouldTrace(host string, port int64, hosts []string) bool {
 func (c *Core) EventNotify(ctx context.Context, event *Event) {
 	host := event.APIEvent.HostSpecName
 	port := event.APIEvent.DestinationPort
-	traceSourceID := event.APIInfo.TraceSourceID
+	traceSourceID := event.APIInfo.TraceSource.ID
 
 	for modName, mod := range c.Modules {
 		hosts, err := c.samplingManager.GetHostsToTrace(modName, traceSourceID)
