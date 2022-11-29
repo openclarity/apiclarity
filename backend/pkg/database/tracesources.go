@@ -58,7 +58,7 @@ type TraceSourcesTableHandler struct {
 
 func (h *TraceSourcesTableHandler) Prepopulate() error {
 	defaultTraceSources := []map[string]interface{}{
-		{"ID": 0, "Name": "Default Trace Source"},
+		{"ID": 0, "Name": "Default Trace Source", "UID": uuid.Nil},
 	}
 
 	return h.tx.Model(&TraceSource{}).Clauses(clause.OnConflict{
@@ -71,7 +71,8 @@ func (h *TraceSourcesTableHandler) CreateTraceSource(source *TraceSource) error 
 }
 
 func (source *TraceSource) BeforeCreate(tx *gorm.DB) error {
-	if source.Token == nil {
+	// If no token is provided, create one
+	if source.Token == nil || len(source.Token) == 0 {
 		source.Token = make([]byte, tokenByteLength)
 		if _, err := rand.Read(source.Token); err != nil {
 			log.Errorf("Unable to generate token for Trace Source '%d': %v", source.ID, err)
