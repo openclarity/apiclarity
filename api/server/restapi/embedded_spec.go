@@ -1947,16 +1947,16 @@ func init() {
       "in": "query"
     },
     "traceSourceId": {
-      "type": "integer",
-      "format": "uint32",
+      "type": "string",
+      "format": "uuid",
       "description": "Trace Source ID",
       "name": "traceSourceId",
       "in": "path",
       "required": true
     },
     "traceSourceIdQuery": {
-      "type": "integer",
-      "format": "uint32",
+      "type": "string",
+      "format": "uuid",
       "description": "Trace Source ID",
       "name": "traceSourceId",
       "in": "query",
@@ -2639,8 +2639,8 @@ func init() {
             "required": true
           },
           {
-            "type": "integer",
-            "format": "uint32",
+            "type": "string",
+            "format": "uuid",
             "description": "Trace Source ID",
             "name": "traceSourceId",
             "in": "query",
@@ -3310,8 +3310,8 @@ func init() {
         "summary": "Get Trace Source information",
         "parameters": [
           {
-            "type": "integer",
-            "format": "uint32",
+            "type": "string",
+            "format": "uuid",
             "description": "Trace Source ID",
             "name": "traceSourceId",
             "in": "path",
@@ -3343,8 +3343,8 @@ func init() {
         "summary": "Delete a Trace Source",
         "parameters": [
           {
-            "type": "integer",
-            "format": "uint32",
+            "type": "string",
+            "format": "uuid",
             "description": "Trace Source ID",
             "name": "traceSourceId",
             "in": "path",
@@ -4462,16 +4462,16 @@ func init() {
       "in": "query"
     },
     "traceSourceId": {
-      "type": "integer",
-      "format": "uint32",
+      "type": "string",
+      "format": "uuid",
       "description": "Trace Source ID",
       "name": "traceSourceId",
       "in": "path",
       "required": true
     },
     "traceSourceIdQuery": {
-      "type": "integer",
-      "format": "uint32",
+      "type": "string",
+      "format": "uuid",
       "description": "Trace Source ID",
       "name": "traceSourceId",
       "in": "query",

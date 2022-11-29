@@ -10,14 +10,14 @@ import (
 	"net/url"
 	golangswaggerpaths "path"
 
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/strfmt"
 )
 
 // GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDURL generates an URL for the get API inventory API ID from host and port and trace source ID operation
 type GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDURL struct {
 	Host          string
 	Port          string
-	TraceSourceID uint32
+	TraceSourceID strfmt.UUID
 
 	_basePath string
 	// avoid unkeyed usage
@@ -63,7 +63,7 @@ func (o *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDURL) Build() (*url.U
 		qs.Set("port", portQ)
 	}
 
-	traceSourceIDQ := swag.FormatUint32(o.TraceSourceID)
+	traceSourceIDQ := o.TraceSourceID.String()
 	if traceSourceIDQ != "" {
 		qs.Set("traceSourceId", traceSourceIDQ)
 	}

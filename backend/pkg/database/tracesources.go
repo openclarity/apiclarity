@@ -46,10 +46,10 @@ type TraceSource struct {
 type TraceSourcesTable interface {
 	Prepopulate() error
 	CreateTraceSource(source *TraceSource) error
-	GetTraceSource(ID uint) (*TraceSource, error)
+	GetTraceSource(uuid.UUID) (*TraceSource, error)
 	GetTraceSourceFromToken(token []byte) (*TraceSource, error)
 	GetTraceSources() ([]*TraceSource, error)
-	DeleteTraceSource(ID uint) error
+	DeleteTraceSource(uuid.UUID) error
 }
 
 type TraceSourcesTableHandler struct {
@@ -88,9 +88,9 @@ func (source *TraceSource) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
-func (h *TraceSourcesTableHandler) GetTraceSource(ID uint) (*TraceSource, error) {
-	source := TraceSource{}
-	if err := h.tx.First(&source, ID).Error; err != nil {
+func (h *TraceSourcesTableHandler) GetTraceSource(uid uuid.UUID) (*TraceSource, error) {
+	source := TraceSource{UID: uid}
+	if err := h.tx.First(&source, source).Error; err != nil {
 		return nil, err
 	}
 
@@ -113,6 +113,6 @@ func (h *TraceSourcesTableHandler) GetTraceSources() ([]*TraceSource, error) {
 	return dest, nil
 }
 
-func (h *TraceSourcesTableHandler) DeleteTraceSource(ID uint) error {
-	return h.tx.Unscoped().Delete(&TraceSource{}, ID).Error
+func (h *TraceSourcesTableHandler) DeleteTraceSource(uid uuid.UUID) error {
+	return h.tx.Unscoped().Delete(&TraceSource{}, &TraceSource{UID: uid}).Error
 }

@@ -22,6 +22,7 @@ import (
 	"strconv"
 
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
@@ -98,7 +99,9 @@ func (s *Server) GetAPIInventory(params operations.GetAPIInventoryParams) middle
 }
 
 func (s *Server) GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID(params operations.GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams) middleware.Responder {
-	apiID, err := s.dbHandler.APIInventoryTable().GetAPIID(params.Host, params.Port, params.TraceSourceID)
+
+	uid, _ := uuid.Parse(params.TraceSourceID.String())
+	apiID, err := s.dbHandler.APIInventoryTable().GetAPIID(params.Host, params.Port, uid)
 	if err != nil {
 		log.Errorf("Failed to get API ID: %v", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {

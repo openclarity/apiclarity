@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/go-openapi/strfmt"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
@@ -75,7 +76,7 @@ type APIInventoryTable interface {
 	PutAPISpec(apiID uint, spec string, specInfo *models.SpecInfo, specType specType, createdAt strfmt.DateTime) error
 	DeleteProvidedAPISpec(apiID uint32) error
 	DeleteApprovedAPISpec(apiID uint32) error
-	GetAPIID(name, port string, traceSourceID uint32) (uint, error)
+	GetAPIID(name, port string, traceSourceID uuid.UUID) (uint, error)
 	First(dest *APIInfo, conds ...interface{}) error
 	FirstOrCreate(apiInfo *APIInfo) (created bool, err error)
 	CreateAPIInfo(event *APIInfo)
@@ -164,7 +165,7 @@ func (a *APIInventoryTableHandler) setAPIInventoryFilters(params operations.GetA
 	return table
 }
 
-func (a *APIInventoryTableHandler) GetAPIID(name, port string, traceSourceID uint32) (uint, error) {
+func (a *APIInventoryTableHandler) GetAPIID(name, port string, traceSourceID uuid.UUID) (uint, error) {
 	apiInfo := APIInfo{}
 	cond := map[string]interface{}{
 		nameColumnName:          name,

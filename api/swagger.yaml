@@ -1362,16 +1362,16 @@ parameters:
     name: 'traceSourceId'
     in: path
     description: 'Trace Source ID'
-    type: 'integer'
-    format: 'uint32'
+    type: 'string'
+    format: 'uuid'
     required: true
 
   traceSourceIdQuery:
     name: 'traceSourceId'
     in: 'query'
     description: 'Trace Source ID'
-    type: 'integer'
-    format: 'uint32'
+    type: 'string'
+    format: 'uuid'
     required: true
 
 responses:
