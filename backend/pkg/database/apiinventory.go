@@ -128,6 +128,7 @@ func (a *APIInventoryTableHandler) GetAPIInventoryAndTotal(params operations.Get
 	// get specific page ordered items with the current filters
 	if err := tx.Scopes(Paginate(params.Page, params.PageSize)).
 		Order(sortOrder).
+		Preload("TraceSource").
 		Find(&apiInventory).Error; err != nil {
 		return nil, 0, err
 	}
