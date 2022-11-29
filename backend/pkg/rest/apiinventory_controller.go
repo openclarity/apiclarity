@@ -66,7 +66,7 @@ func (s *Server) PostAPIInventory(params operations.PostAPIInventoryParams) midd
 		Name:                 params.Body.Name,
 		Port:                 params.Body.Port,
 		DestinationNamespace: params.Body.DestinationNamespace,
-		TraceSourceID:        traceSource.ID, // Force the Trace Source to the default trace source
+		TraceSourceID:        traceSource.ID,
 	}
 	if _, err := s.dbHandler.APIInventoryTable().FirstOrCreate(apiInfo); err != nil {
 		log.Error(err)

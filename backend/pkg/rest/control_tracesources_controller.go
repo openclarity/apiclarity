@@ -31,8 +31,6 @@ import (
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 )
 
-// func fromDBTraceSource(d
-
 func (s *Server) GetControlTraceSources(params operations.GetControlTraceSourcesParams) middleware.Responder {
 	log.Debugf("GetControlTraceSources controller was invoked")
 
@@ -118,7 +116,7 @@ func (s *Server) DeleteControlTraceSourcesTraceSourceID(params operations.Delete
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return operations.NewDeleteControlTraceSourcesTraceSourceIDNotFound()
 		}
-		log.Errorf("Failed to delete Trace Source '%d': %v", params.TraceSourceID, err)
+		log.Errorf("Failed to delete Trace Source '%s': %v", params.TraceSourceID, err)
 		return operations.NewDeleteControlTraceSourcesTraceSourceIDDefault(http.StatusInternalServerError)
 	}
 	return operations.NewDeleteControlTraceSourcesTraceSourceIDNoContent()
