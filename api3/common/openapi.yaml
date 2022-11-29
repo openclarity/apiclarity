@@ -183,10 +183,9 @@ components:
         destinationNamespace:
           type: string
         traceSourceId:
-          description: 'Trace Source ID which created this API. 0 means it has been created by APIClarity (from the UI for example)'
-          type: 'integer'
-          format: 'uint32'
-          default: 0
+          description: 'Trace Source ID which created this API. Null UUID 0 means it has been created by APIClarity (from the UI for example)'
+          type: 'string'
+          format: 'uuid'
     ApiInfoWithType:
       type: object
       allOf:
