@@ -18,6 +18,10 @@ spec:
       port: 9443
       protocol: TCP
       targetPort: 9443
+    - name: https-authenticated-trace-server
+      port: 10443
+      protocol: TCP
+      targetPort: 10443
 {{- end }}
     - name: http-backend
       port: 8080
