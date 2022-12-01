@@ -1042,7 +1042,6 @@ components:
           type: 'string'
         token:
           type: 'string'
-          format: 'byte'
       required:
         - name
         - type

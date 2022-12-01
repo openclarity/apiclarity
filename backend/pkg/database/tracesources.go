@@ -17,6 +17,7 @@ package database
 
 import (
 	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -29,10 +30,6 @@ const (
 	traceSourcesTableName = "trace_sources"
 )
 
-const (
-	tokenByteLength = 32
-)
-
 type TraceSource struct {
 	gorm.Model
 
@@ -40,14 +37,14 @@ type TraceSource struct {
 	Name        string    `json:"name,omitempty" gorm:"column:name;uniqueIndex" faker:"oneof: customer1.apigee.gw, mynicegateway"`
 	Type        string    `json:"type,omitempty" gorm:"column:type" faker:"oneof: KONG, TYK, APIGEEX"`
 	Description string    `json:"description,omitempty" gorm:"column:description" faker:"-"`
-	Token       []byte    `json:"auth_token,omitempty" gorm:"column:auth_token;uniqueIndex" faker:"-"`
+	Token       string    `json:"auth_token,omitempty" gorm:"column:auth_token;uniqueIndex" faker:"-"`
 }
 
 type TraceSourcesTable interface {
 	Prepopulate() error
 	CreateTraceSource(source *TraceSource) error
 	GetTraceSource(uuid.UUID) (*TraceSource, error)
-	GetTraceSourceFromToken(token []byte) (*TraceSource, error)
+	GetTraceSourceFromToken(token string) (*TraceSource, error)
 	GetTraceSources() ([]*TraceSource, error)
 	DeleteTraceSource(uuid.UUID) error
 }
@@ -66,17 +63,32 @@ func (h *TraceSourcesTableHandler) Prepopulate() error {
 	}).Create(&defaultTraceSources).Error
 }
 
+
+const tokenByteLength = 32
+
+func GenerateTraceSourceToken() (string, error) {
+	secret := make([]byte, tokenByteLength)
+	if _, err := rand.Read(secret); err != nil {
+		return "", fmt.Errorf("unable to generate random secret: %v", err)
+	}
+
+	encoded := base64.URLEncoding.EncodeToString(secret)
+
+	return encoded, nil
+}
+
 func (h *TraceSourcesTableHandler) CreateTraceSource(source *TraceSource) error {
 	return h.tx.Where(*source).FirstOrCreate(source).Error
 }
 
 func (source *TraceSource) BeforeCreate(tx *gorm.DB) error {
 	// If no token is provided, create one
-	if source.Token == nil || len(source.Token) == 0 {
-		source.Token = make([]byte, tokenByteLength)
-		if _, err := rand.Read(source.Token); err != nil {
+	if len(source.Token) == 0 {
+		if token, err := GenerateTraceSourceToken(); err != nil {
 			log.Errorf("Unable to generate token for Trace Source '%d': %v", source.ID, err)
-			return fmt.Errorf("unable to generate token for Trace Source '%d': %v", source.ID, err)
+			return fmt.Errorf("Unable to generate random token for Trace Source: '%d'", source.ID)
+		} else {
+			source.Token = token
 		}
 	}
 
@@ -97,7 +109,7 @@ func (h *TraceSourcesTableHandler) GetTraceSource(uid uuid.UUID) (*TraceSource, 
 	return &source, nil
 }
 
-func (h *TraceSourcesTableHandler) GetTraceSourceFromToken(token []byte) (*TraceSource, error) {
+func (h *TraceSourcesTableHandler) GetTraceSourceFromToken(token string) (*TraceSource, error) {
 	source := TraceSource{}
 	if err := h.tx.First(&source, TraceSource{Token: token}).Error; err != nil {
 		return nil, err

@@ -17,7 +17,6 @@ package traces
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"net/http"
 
@@ -41,7 +40,7 @@ const (
 type (
 	HandleTraceFunc         func(ctx context.Context, trace *models.Telemetry, traceSource *backendmodels.TraceSource) error
 	HandleNewDiscoveredAPIs func(ctx context.Context, hosts []string, traceSource *backendmodels.TraceSource) error
-	TraceSourceAuthFunc     func(ctx context.Context, token []byte) (*backendmodels.TraceSource, error)
+	TraceSourceAuthFunc     func(ctx context.Context, token string) (*backendmodels.TraceSource, error)
 )
 
 type HTTPTracesServer struct {
@@ -164,13 +163,7 @@ func (s *HTTPTracesServer) traceSourceAuthMiddleware(next http.Handler) http.Han
 			return
 		}
 
-		decodedToken, err := base64.StdEncoding.DecodeString(token)
-		if err != nil {
-			http.Error(w, "incorrect api key auth (not a valid base64 token)", http.StatusUnauthorized)
-			return
-		}
-
-		traceSource, err := s.traceSourceAuthFunc(r.Context(), decodedToken)
+		traceSource, err := s.traceSourceAuthFunc(r.Context(), token)
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
