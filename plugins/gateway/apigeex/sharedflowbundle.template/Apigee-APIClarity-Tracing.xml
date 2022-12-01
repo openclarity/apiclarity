@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<SharedFlowBundle revision="1" name="Apigee-APIClarity-Tracing">
+  <DisplayName/>
+  <Description>Apigee-APIClarity-Tracing</Description>
+  <CreatedAt>1669746750755</CreatedAt>
+  <LastModifiedAt>1669746750755</LastModifiedAt>
+  <Policies>
+    <Policy>Key-Value-Map-Operations-Get-APIClarity-Tracing</Policy>
+    <Policy>JavaScript-APIClarity-Tracing</Policy>
+    <Policy>Key-Value-Map-Operations-Update-APIClarity-Tracing</Policy>
+  </Policies>
+  <Resources>
+    <Resource>jsc://JavaScript-APIClarity-Tracing.js</Resource>
+  </Resources>
+  <SharedFlows>
+    <SharedFlow>default</SharedFlow>
+  </SharedFlows>
+  <subType>SharedFlow</subType>
+</SharedFlowBundle>
