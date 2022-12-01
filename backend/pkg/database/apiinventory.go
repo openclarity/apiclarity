@@ -181,10 +181,10 @@ func (a *APIInventoryTableHandler) GetAPIID(name, port string, traceSourceID uui
 }
 
 func (a *APIInventoryTableHandler) First(dest *APIInfo, conds ...interface{}) error {
-	return a.tx.First(dest, conds).Error
+	return a.tx.Preload("TraceSource").First(dest, conds).Error
 }
 
 func (a *APIInventoryTableHandler) FirstOrCreate(apiInfo *APIInfo) (created bool, err error) {
-	tx := a.tx.Where(*apiInfo).FirstOrCreate(apiInfo)
+	tx := a.tx.Preload("TraceSource").Where(*apiInfo).FirstOrCreate(apiInfo)
 	return tx.RowsAffected > 0, tx.Error
 }
