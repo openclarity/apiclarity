@@ -1108,7 +1108,6 @@ components:
           description: Unique name identifying a Trace Source
           type: string
         token:
-          format: byte
           type: string
         type:
           $ref: '#/components/schemas/TraceSourceType'

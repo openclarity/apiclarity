@@ -1498,8 +1498,7 @@ func init() {
           "type": "string"
         },
         "token": {
-          "type": "string",
-          "format": "byte"
+          "type": "string"
         },
         "type": {
           "$ref": "#/definitions/TraceSourceType"
@@ -4013,8 +4012,7 @@ func init() {
           "type": "string"
         },
         "token": {
-          "type": "string",
-          "format": "byte"
+          "type": "string"
         },
         "type": {
           "$ref": "#/definitions/TraceSourceType"

@@ -30,8 +30,7 @@ type TraceSource struct {
 	Name *string `json:"name"`
 
 	// token
-	// Format: byte
-	Token strfmt.Base64 `json:"token,omitempty"`
+	Token string `json:"token,omitempty"`
 
 	// type
 	// Required: true
