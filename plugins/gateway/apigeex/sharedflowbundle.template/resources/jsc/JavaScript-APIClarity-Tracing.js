@@ -1,5 +1,5 @@
 var maxBodySize = String (properties.maxMessageSize);
-var refrshInterval = String (properties.refreshInterval);
+var refreshInterval = String (properties.refreshInterval);
 var apiClarityUrl = String (properties.apiClarityUrl);
 var urlTrace = apiClarityUrl + "/api/telemetry";
 var urlHostToTrace = apiClarityUrl + "/api/hostsToTrace";
@@ -12,7 +12,7 @@ var allowedHostList = context.getVariable("allowedHostList");
 var destinationAddr = context.getVariable("target.host") + ":" + context.getVariable("target.port");
 
 var currentTime = new Date().getTime();
-var refreshed = isRefresh (refrshInterval, cacheUpdatedTime, currentTime);
+var refreshed = isRefresh (refreshInterval, cacheUpdatedTime, currentTime);
 context.setVariable('APIClarity.refreshed', refreshed);
 
 if (refreshed === true) {

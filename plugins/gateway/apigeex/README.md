@@ -14,10 +14,10 @@ For more information about Apigee-X please visit: https://cloud.google.com/apige
 1. **Add Certificate to Apigee-X**
 
     1. In Apigee-x console, go to Admin->Environments->TLS Keystores and create a keystore named `Apiclarity`
-    1. Create an Alias named `Apiclarity` and upload the Apiclarity public certificate
-    1. In Admin->Environments->References, create a reference named `apiclarityRef` that refers the certificate named `Apiclarity` you previously created.
+    2. Create an Alias named `Apiclarity` and upload the Apiclarity public certificate
+    3. In Admin->Environments->References, create a reference named `apiclarityRef` that refers the certificate named `Apiclarity` you previously created.
 
-1. **Configure the shared flow bundle**
+2. **Configure the shared flow bundle**
    1. Prepare the bundle:
        Run the following script by populating the environment variables with APIClarity URL and the APIClarity token generated for the Apigee-X proxy:
        ```shell
@@ -26,9 +26,9 @@ For more information about Apigee-X please visit: https://cloud.google.com/apige
        APICLARITY_APIGEEX_TOKEN=xxxxxyyyyzzzzz== \
        ./preparebundle.sh
        ```
-    1. Upload the bundle: 
+    2. Upload the bundle: 
        * In Apigee-x console go to Develop->Shared Flows and upload abundle 
        * Select to upload the file ApiClarityFlowBundle.zip generated in previous step
-    1. Deploy the shared flow created by the bundle
-    1. In Apigee-x console, go to Admin->Environments->Flow Hooks and associate the shared flow to the Post-proxy hook 
+    3. Deploy the shared flow created by the bundle
+    4. In Apigee-x console, go to Admin->Environments->Flow Hooks and associate the shared flow to the Post-proxy hook 
     

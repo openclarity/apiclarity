@@ -6,22 +6,22 @@ BUNDLE_FOLDER="sharedflowbundle"
 
 if [ -f "${BUNDLE_FILE}" ]; then
     echo "${BUNDLE_FILE} exists. Remove or delete it and then run the script again"
-    exit 0
+    exit 1
 fi
 
 if [ -d "${BUNDLE_FOLDER}" ]; then
     echo "${BUNDLE_FOLDER} exists. Remove or delete it and then run the script again"
-    exit 0
+    exit 1
 fi
 
 if [ -z "${APICLARITY_URL}" ]; then
     echo "ERROR: APICLARITY_URL env variable not defined"
-    exit 0
+    exit 1
 fi
 
 if [ -z "${APICLARITY_APIGEEX_TOKEN}" ]; then
     echo "ERROR: APICLARITY_URL env variable not defined"
-    exit 0
+    exit 1
 fi
 
 
