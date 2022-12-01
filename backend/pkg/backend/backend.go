@@ -390,7 +390,7 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 	return nil
 }
 
-func (b *Backend) traceSourceAuth(ctx context.Context, token []byte) (*models.TraceSource, error) {
+func (b *Backend) traceSourceAuth(ctx context.Context, token string) (*models.TraceSource, error) {
 	traceSourceDB, err := b.dbHandler.TraceSourcesTable().GetTraceSourceFromToken(token)
 	if err != nil {
 		return nil, fmt.Errorf("no trace source found: %v", err)
