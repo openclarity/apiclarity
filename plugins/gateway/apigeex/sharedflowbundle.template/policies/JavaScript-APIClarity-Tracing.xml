@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Javascript continueOnError="false" enabled="true" timeLimit="200" name="JavaScript-APIClarity-Tracing">
+  <DisplayName>JavaScript-APIClarity-Tracing</DisplayName>
+  <Properties>
+    <Property name="maxMessageSize">1000000</Property>
+    <Property name="apiClarityUrl">{{APIClarityURL}}</Property>
+    <Property name="refreshInterval">30000</Property>
+    <Property name="apiclarityToken">{{APIClarityToken}}</Property>
+  </Properties>
+  <SSLInfo>
+    <Enabled>true</Enabled>
+    <ClientAuthEnabled>false</ClientAuthEnabled>
+    <IgnoreValidationErrors>true</IgnoreValidationErrors>
+    <TrustStore>ref://apiclarityRef</TrustStore>
+  </SSLInfo>
+  <ResourceURL>jsc://JavaScript-APIClarity-Tracing.js</ResourceURL>
+</Javascript>

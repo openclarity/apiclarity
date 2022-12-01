@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<SharedFlow name="default">
+  <Step>
+    <Name>Key-Value-Map-Operations-Get-APIClarity-Tracing</Name>
+  </Step>
+  <Step>
+    <Name>JavaScript-APIClarity-Tracing</Name>
+  </Step>
+  <Step>
+    <Name>Key-Value-Map-Operations-Update-APIClarity-Tracing</Name>
+  </Step>
+</SharedFlow>
