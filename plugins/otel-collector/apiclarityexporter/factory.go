@@ -67,7 +67,7 @@ func CreateTracesExporter(
 ) (component.TracesExporter, error) {
 	oCfg := cfg.(*Config)
 
-	oce, err := newExporter(oCfg, set)
+	oce, err := newTracesExporter(oCfg, set)
 	if err != nil {
 		set.Logger.Error("Failed to create new exporter", zap.Error(err))
 		return nil, err

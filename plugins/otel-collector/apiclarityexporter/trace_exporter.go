@@ -46,7 +46,7 @@ type exporter struct {
 }
 
 // Create new exporter.
-func newExporter(oCfg *Config, set component.ExporterCreateSettings) (*exporter, error) {
+func newTracesExporter(oCfg *Config, set component.ExporterCreateSettings) (*exporter, error) {
 	if err := oCfg.Validate(); err != nil {
 		set.Logger.Error("configuration error", zap.Error(err))
 		return nil, err
@@ -61,7 +61,6 @@ func newExporter(oCfg *Config, set component.ExporterCreateSettings) (*exporter,
 		logger:    set.Logger,
 		userAgent: userAgent,
 		settings:  set.TelemetrySettings,
-		service:   nil,
 	}, nil
 }
 

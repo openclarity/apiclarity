@@ -90,7 +90,7 @@ func TestLoadConfig(t *testing.T) {
 				Compression:     "none",
 			},
 			PreferHostNames: false,
-			DatasetMapTTL:   300,
+			DatasetMapTTL:   300 * time.Second,
 			DatasetMapSize:  1048576,
 		})
 }

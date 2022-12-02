@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	defaultMapSize = 1024
-	defaultMapTTL  = time.Second * 10
+	defaultMapSize = 8192
+	defaultMapTTL  = time.Second * 60
 )
 
 func TestDatasetInit(t *testing.T) {

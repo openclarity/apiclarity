@@ -79,7 +79,7 @@ func TestInvalidConfigNegativeSize(t *testing.T) {
 func TestTraceInvalidUrl(t *testing.T) {
 	config := &Config{
 		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "http:/\\//this_is_an/*/invalid_url",
+			Endpoint: " httAp:/\\this//_is_an/*/invalid_url",
 		},
 	}
 
@@ -89,27 +89,8 @@ func TestTraceInvalidUrl(t *testing.T) {
 	set.Logger, err = zap.NewDevelopment()
 	require.NoError(t, err)
 	t.Logf("Creating traces exporter with URL: %s", config.HTTPClientSettings.Endpoint)
-	exp, err := f.CreateTracesExporter(context.Background(), set, config)
-	require.NoError(t, err)
-	assert.Error(t, exp.Start(context.Background(), componenttest.NewNopHost()))
-}
-
-func TestTraceNoBackend(t *testing.T) {
-	config := &Config{
-		HTTPClientSettings: confighttp.HTTPClientSettings{
-			Endpoint: "http://localhost",
-		},
-	}
-
-	var err error
-	f := NewFactory()
-	set := componenttest.NewNopExporterCreateSettings()
-	set.Logger, err = zap.NewDevelopment()
-	require.NoError(t, err)
-	t.Logf("Creating traces exporter with URL: %s", config.HTTPClientSettings.Endpoint)
-	exp, err := f.CreateTracesExporter(context.Background(), set, config)
-	require.NoError(t, err)
-	assert.Error(t, exp.Start(context.Background(), componenttest.NewNopHost()))
+	_, err = f.CreateTracesExporter(context.Background(), set, config)
+	require.Error(t, err)
 }
 
 func TestTraceRoundTrip(t *testing.T) {

@@ -97,10 +97,6 @@ func (e *exporter) convertHost(addr string) string {
 	//Manage prefs for IP v. hostname for <ip|host>[:port]
 	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
-		e.logger.Error("failed to split host/port",
-			zap.String("address", addr),
-			zap.Error(err),
-		)
 		return addr
 	}
 	if host != "" {

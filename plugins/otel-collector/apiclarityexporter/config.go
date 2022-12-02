@@ -49,11 +49,18 @@ func (cfg *Config) Validate() error {
 	if err != nil {
 		return fmt.Errorf("HTTP endpoint must be a valid URL: %w", err)
 	}
-	if cfg.DatasetMapTTL < 0 {
-		return errors.New("DatasetMapTTL must be non-negative")
+
+	configDefault := (CreateDefaultConfig()).(*Config)
+	if cfg.DatasetMapTTL == 0 {
+		cfg.DatasetMapTTL = configDefault.DatasetMapTTL
+	} else if cfg.DatasetMapTTL < 0 {
+		return errors.New("DatasetMapTTL must be positive")
 	}
-	if cfg.DatasetMapSize < 0 {
-		return errors.New("DatasetMapSize must be non-negative")
+
+	if cfg.DatasetMapSize == 0 {
+		cfg.DatasetMapSize = configDefault.DatasetMapSize
+	} else if cfg.DatasetMapSize < 1024 {
+		return errors.New("DatasetMapSize must be at least 1k")
 	}
 	return nil
 }

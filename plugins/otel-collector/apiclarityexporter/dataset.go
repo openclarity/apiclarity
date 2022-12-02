@@ -17,7 +17,6 @@ package apiclarityexporter
 
 import (
 	"time"
-	"unsafe"
 
 	"github.com/dgraph-io/ristretto"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -29,9 +28,8 @@ type TraceDatasetMap struct {
 }
 
 func NewTraceDatasetMap(size int64, ttl time.Duration) (*TraceDatasetMap, error) {
-	var spanID pcommon.SpanID
 	config := ristretto.Config{
-		NumCounters:        size / int64(unsafe.Sizeof(spanID)),
+		NumCounters:        (size / 8) * 10,
 		MaxCost:            size,
 		BufferItems:        64,
 		Metrics:            false,
@@ -55,7 +53,6 @@ func (m *TraceDatasetMap) GetDataset(spanID pcommon.SpanID) (string, bool) {
 	}
 	switch d := dataset.(type) {
 	default:
-		println("found wrong data type for value")
 		return "", false
 	case string:
 		return d, true
@@ -67,5 +64,9 @@ func (m *TraceDatasetMap) PutDataset(spanID pcommon.SpanID, dataset string) bool
 		return false
 	}
 	var key []byte = spanID[:]
-	return m.cache.SetWithTTL(key, dataset, int64(len(dataset)), m.keyTTL)
+	success := m.cache.SetWithTTL(key, dataset, int64(len(dataset)), m.keyTTL)
+	if success {
+		m.cache.Wait() //wait on insert, not lookup
+	}
+	return success
 }
