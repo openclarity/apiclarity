@@ -31,7 +31,7 @@ const (
 	// The value of "type" key in configuration.
 	typeStr = "apiclarity"
 	// The stability level of the exporter.
-	stability = component.StabilityLevelInDevelopment
+	stability = component.StabilityLevelDevelopment
 )
 
 // NewFactory creates a factory for OTLP exporter.
