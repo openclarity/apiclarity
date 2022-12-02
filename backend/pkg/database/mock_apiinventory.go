@@ -112,7 +112,7 @@ func (mr *MockAPIInventoryTableMockRecorder) FirstOrCreate(arg0 interface{}) *go
 }
 
 // GetAPIID mocks base method.
-func (m *MockAPIInventoryTable) GetAPIID(arg0, arg1 string, arg2 uuid.UUID) (uint, error) {
+func (m *MockAPIInventoryTable) GetAPIID(arg0, arg1 string, arg2 *uuid.UUID) (uint, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAPIID", arg0, arg1, arg2)
 	ret0, _ := ret[0].(uint)

@@ -122,7 +122,7 @@ func (s *Server) GetAPIInventoryAPIIDFromHostAndPort(params operations.GetAPIInv
 
 func (s *Server) GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID(params operations.GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams) middleware.Responder {
 	uid, _ := uuid.Parse(params.TraceSourceID.String())
-	apiID, err := s.dbHandler.APIInventoryTable().GetAPIID(params.Host, params.Port, uid)
+	apiID, err := s.dbHandler.APIInventoryTable().GetAPIID(params.Host, params.Port, &uid)
 	if err != nil {
 		log.Errorf("Failed to get API ID: %v", err)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
