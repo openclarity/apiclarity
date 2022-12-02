@@ -163,6 +163,8 @@ definitions:
     properties:
       hosts:
         $ref: '#/definitions/HostsList'
+    required:
+      - hosts
 
 responses:
   UnknownError:
