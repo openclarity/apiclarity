@@ -76,7 +76,7 @@ type APIInventoryTable interface {
 	PutAPISpec(apiID uint, spec string, specInfo *models.SpecInfo, specType specType, createdAt strfmt.DateTime) error
 	DeleteProvidedAPISpec(apiID uint32) error
 	DeleteApprovedAPISpec(apiID uint32) error
-	GetAPIID(name, port string, traceSourceID uuid.UUID) (uint, error)
+	GetAPIID(name, port string, traceSourceID *uuid.UUID) (uint, error)
 	First(dest *APIInfo, conds ...interface{}) error
 	FirstOrCreate(apiInfo *APIInfo) (created bool, err error)
 	CreateAPIInfo(event *APIInfo)
@@ -166,14 +166,17 @@ func (a *APIInventoryTableHandler) setAPIInventoryFilters(params operations.GetA
 	return table
 }
 
-func (a *APIInventoryTableHandler) GetAPIID(name, port string, traceSourceID uuid.UUID) (uint, error) {
+func (a *APIInventoryTableHandler) GetAPIID(name, port string, traceSourceID *uuid.UUID) (uint, error) {
 	apiInfo := APIInfo{}
 	cond := map[string]interface{}{
-		nameColumnName:          name,
-		portColumnName:          port,
-		traceSourceIDColumnName: traceSourceID,
+		apiInventoryTableName+"."+nameColumnName:          name,
+		apiInventoryTableName+"."+portColumnName:          port,
 	}
-	if result := a.tx.Where(cond).First(&apiInfo); result.Error != nil {
+	tx := a.tx.Joins("TraceSource").Where(cond)
+	if traceSourceID != nil {
+		tx.Where("TraceSource.uid = ?", *traceSourceID)
+	}
+	if result := tx.First(&apiInfo); result.Error != nil {
 		return 0, result.Error
 	}
 
