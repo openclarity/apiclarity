@@ -146,6 +146,10 @@ func CreateRESTServer(config *ServerConfig) (*Server, error) {
 		return s.GetAPIInventoryAPIIDAPIInfo(params)
 	})
 
+	api.GetAPIInventoryAPIIDFromHostAndPortHandler = operations.GetAPIInventoryAPIIDFromHostAndPortHandlerFunc(func(params operations.GetAPIInventoryAPIIDFromHostAndPortParams) middleware.Responder {
+		return s.GetAPIInventoryAPIIDFromHostAndPort(params)
+	})
+
 	api.GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDHandler = operations.GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDHandlerFunc(func(params operations.GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams) middleware.Responder {
 		return s.GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID(params)
 	})
