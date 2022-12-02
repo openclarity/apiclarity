@@ -183,6 +183,9 @@ func init() {
     "HostsToTrace": {
       "description": "List of hosts to trace",
       "type": "object",
+      "required": [
+        "hosts"
+      ],
       "properties": {
         "hosts": {
           "$ref": "#/definitions/HostsList"
@@ -463,6 +466,9 @@ func init() {
     "HostsToTrace": {
       "description": "List of hosts to trace",
       "type": "object",
+      "required": [
+        "hosts"
+      ],
       "properties": {
         "hosts": {
           "$ref": "#/definitions/HostsList"

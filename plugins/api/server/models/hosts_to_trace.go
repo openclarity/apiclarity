@@ -11,6 +11,7 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // HostsToTrace List of hosts to trace
@@ -19,7 +20,8 @@ import (
 type HostsToTrace struct {
 
 	// hosts
-	Hosts HostsList `json:"hosts,omitempty"`
+	// Required: true
+	Hosts HostsList `json:"hosts"`
 }
 
 // Validate validates this hosts to trace
@@ -37,8 +39,9 @@ func (m *HostsToTrace) Validate(formats strfmt.Registry) error {
 }
 
 func (m *HostsToTrace) validateHosts(formats strfmt.Registry) error {
-	if swag.IsZero(m.Hosts) { // not required
-		return nil
+
+	if err := validate.Required("hosts", "body", m.Hosts); err != nil {
+		return err
 	}
 
 	if err := m.Hosts.Validate(formats); err != nil {
