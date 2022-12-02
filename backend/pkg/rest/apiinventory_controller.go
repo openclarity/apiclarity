@@ -106,6 +106,20 @@ func (s *Server) GetAPIInventory(params operations.GetAPIInventoryParams) middle
 		})
 }
 
+func (s *Server) GetAPIInventoryAPIIDFromHostAndPort(params operations.GetAPIInventoryAPIIDFromHostAndPortParams) middleware.Responder {
+	apiID, err := s.dbHandler.APIInventoryTable().GetAPIID(params.Host, params.Port, nil)
+	if err != nil {
+		log.Errorf("Failed to get API ID: %v", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return operations.NewGetAPIInventoryAPIIDFromHostAndPortNotFound().WithPayload(&models.APIResponse{Message: err.Error()})
+		}
+
+		return operations.NewGetAPIInventoryAPIIDFromHostAndPortDefault(http.StatusInternalServerError)
+	}
+
+	return operations.NewGetAPIInventoryAPIIDFromHostAndPortOK().WithPayload(uint32(apiID))
+}
+
 func (s *Server) GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID(params operations.GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams) middleware.Responder {
 	uid, _ := uuid.Parse(params.TraceSourceID.String())
 	apiID, err := s.dbHandler.APIInventoryTable().GetAPIID(params.Host, params.Port, uid)
