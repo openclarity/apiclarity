@@ -312,7 +312,7 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 	}
 
 	// Set API Info type
-	if b.monitor.IsInternalCIDR(destInfo.IP) {
+	if traceSourceID != common.DefaultTraceSourceID || b.monitor.IsInternalCIDR(destInfo.IP) {
 		apiInfo.Type = models.APITypeINTERNAL
 	} else {
 		apiInfo.Type = models.APITypeEXTERNAL
