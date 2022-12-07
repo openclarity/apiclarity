@@ -35,7 +35,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/postgres v1.4.4
 	gorm.io/driver/sqlite v1.4.2
-	gorm.io/gorm v1.24.0
+	gorm.io/gorm v1.24.2
 	gotest.tools v2.2.0+incompatible
 	gotest.tools/v3 v3.0.3
 	k8s.io/api v0.23.5
