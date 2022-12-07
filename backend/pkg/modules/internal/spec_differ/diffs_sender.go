@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//nolint: revive,stylecheck
+// nolint: revive,stylecheck
 package spec_differ
 
 import (
@@ -126,6 +126,7 @@ func convertAPIInfo(apiInfo *database.APIInfo) common.ApiInfoWithType {
 		Id:                   &id,
 		Name:                 &apiInfo.Name,
 		Port:                 &port,
+		TraceSourceId:        &apiInfo.TraceSource.UID,
 	}
 }
 
