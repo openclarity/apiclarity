@@ -174,7 +174,7 @@ func (a *APIInventoryTableHandler) GetAPIID(name, port string, traceSourceID *uu
 	}
 	tx := a.tx.Joins("TraceSource").Where(cond)
 	if traceSourceID != nil {
-		tx.Where("TraceSource.uid = ?", *traceSourceID)
+		tx.Where(traceSourcesTableName+".uid = ?", *traceSourceID)
 	}
 	if result := tx.First(&apiInfo); result.Error != nil {
 		return 0, result.Error
