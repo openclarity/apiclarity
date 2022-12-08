@@ -64,7 +64,7 @@ type APIInfo struct {
 	ProvidedSpecCreatedAt      strfmt.DateTime `json:"providedSpecCreatedAt,omitempty" gorm:"column:provided_spec_created_at" faker:"-"`
 	ReconstructedSpecCreatedAt strfmt.DateTime `json:"reconstructedSpecCreatedAt,omitempty" gorm:"column:reconstructed_spec_created_at" faker:"-"`
 
-	TraceSource TraceSource
+	TraceSource TraceSource          `gorm:"constraint:OnDelete:CASCADE"`
 	Annotations []*APIInfoAnnotation `gorm:"foreignKey:APIID;references:ID"`
 }
 
@@ -169,8 +169,8 @@ func (a *APIInventoryTableHandler) setAPIInventoryFilters(params operations.GetA
 func (a *APIInventoryTableHandler) GetAPIID(name, port string, traceSourceID *uuid.UUID) (uint, error) {
 	apiInfo := APIInfo{}
 	cond := map[string]interface{}{
-		apiInventoryTableName+"."+nameColumnName:          name,
-		apiInventoryTableName+"."+portColumnName:          port,
+		apiInventoryTableName + "." + nameColumnName: name,
+		apiInventoryTableName + "." + portColumnName: port,
 	}
 	tx := a.tx.Where(cond)
 	if traceSourceID != nil {

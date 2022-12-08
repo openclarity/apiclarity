@@ -180,5 +180,8 @@ func initSqlite(dbLogger logger.Interface) *gorm.DB {
 		log.Fatalf("Failed to open db: %v", err)
 	}
 
+	// https://www.sqlite.org/foreignkeys.html#fk_enable
+	db.Exec("PRAGMA foreign_keys = ON")
+
 	return db
 }
