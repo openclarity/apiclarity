@@ -145,7 +145,7 @@ func initDataBase(config *DBConfig) *gorm.DB {
 }
 
 func initPostgres(config *DBConfig, dbLogger logger.Interface) *gorm.DB {
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
+	dsn := fmt.Sprintf("host='%s' user='%s' password='%s' dbname='%s' port='%s' sslmode='disable' TimeZone=UTC",
 		config.DBHost, config.DBUser, config.DBPassword, config.DBName, config.DBPort)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
