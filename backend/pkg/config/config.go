@@ -55,6 +55,7 @@ const (
 	DBHostEnvVar     = "DB_HOST"
 	DBPortEnvVar     = "DB_PORT_NUMBER"
 	DatabaseDriver   = "DATABASE_DRIVER"
+	DBDSN            = "DB_DSN"
 	EnableDBInfoLogs = "ENABLE_DB_INFO_LOGS"
 
 	ResponseHeadersToIgnore = "RESPONSE_HEADERS_TO_IGNORE"
@@ -95,6 +96,7 @@ type Config struct {
 
 	// database config
 	DatabaseDriver   string
+	DBDSN            string
 	DBName           string
 	DBUser           string
 	DBPassword       string
@@ -130,6 +132,7 @@ func LoadConfig() (*Config, error) {
 	config.EnableK8s = viper.GetBool(EnableK8s)
 	config.EnableTLS = viper.GetBool(EnableTLS)
 	config.DatabaseDriver = viper.GetString(DatabaseDriver)
+	config.DBDSN = viper.GetString(DBDSN)
 	config.DBPassword = viper.GetString(DBPasswordEnvVar)
 	config.DBUser = viper.GetString(DBUserEnvVar)
 	config.DBHost = viper.GetString(DBHostEnvVar)

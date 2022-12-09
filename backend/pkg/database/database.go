@@ -54,6 +54,7 @@ type Handler struct {
 type DBConfig struct {
 	EnableInfoLogs bool
 	DriverType     string
+	DSN            string
 	DBPassword     string
 	DBUser         string
 	DBHost         string
@@ -126,7 +127,7 @@ func initDataBase(config *DBConfig) *gorm.DB {
 	case DBDriverTypePostgres:
 		db = initPostgres(config, dbLogger)
 	case DBDriverTypeLocal:
-		db = initSqlite(dbLogger)
+		db = initSqlite(config, dbLogger)
 	default:
 		log.Fatalf("DB driver is not supported: %v", dbDriver)
 	}
@@ -145,8 +146,13 @@ func initDataBase(config *DBConfig) *gorm.DB {
 }
 
 func initPostgres(config *DBConfig, dbLogger logger.Interface) *gorm.DB {
-	dsn := fmt.Sprintf("host='%s' user='%s' password='%s' dbname='%s' port='%s' sslmode='disable' TimeZone=UTC",
-		config.DBHost, config.DBUser, config.DBPassword, config.DBName, config.DBPort)
+	var dsn string
+	if config.DSN != "" {
+		dsn = config.DSN
+	} else {
+		dsn = fmt.Sprintf("host='%s' user='%s' password='%s' dbname='%s' port='%s' sslmode='disable' TimeZone=UTC",
+			config.DBHost, config.DBUser, config.DBPassword, config.DBName, config.DBPort)
+	}
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: dbLogger,
@@ -158,10 +164,16 @@ func initPostgres(config *DBConfig, dbLogger logger.Interface) *gorm.DB {
 	return db
 }
 
-func initSqlite(dbLogger logger.Interface) *gorm.DB {
-	cleanLocalDataBase(localDBPath)
+func initSqlite(config *DBConfig, dbLogger logger.Interface) *gorm.DB {
+	var dsn string
+	if config.DSN != "" {
+		dsn = config.DSN
+	} else {
+		dsn = localDBPath
+		cleanLocalDataBase(localDBPath)
+	}
 
-	db, err := gorm.Open(sqlite.Open(localDBPath), &gorm.Config{
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
 		Logger: dbLogger,
 	})
 	if err != nil {
