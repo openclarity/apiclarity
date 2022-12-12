@@ -42,7 +42,6 @@ type Server struct {
 	features             []modules.ModuleInfo
 	notifier             *_notifier.Notifier
 	samplingManager      *sampling.TraceSamplingManager
-	needsTraceSourceAuth bool
 }
 
 type ServerConfig struct {
@@ -55,7 +54,6 @@ type ServerConfig struct {
 	DBHandler             *database.Handler
 	ModulesManager        modules.ModulesManager
 	Features              []modules.ModuleInfo
-	NeedsTraceSourceAuth  bool
 	Notifier              *_notifier.Notifier
 	SamplingManager       *sampling.TraceSamplingManager
 }
@@ -68,7 +66,6 @@ func CreateRESTServer(config *ServerConfig) (*Server, error) {
 		features:             config.Features,
 		notifier:             config.Notifier,
 		samplingManager:      config.SamplingManager,
-		needsTraceSourceAuth: config.NeedsTraceSourceAuth,
 	}
 
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)
