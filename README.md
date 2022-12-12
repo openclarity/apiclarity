@@ -192,8 +192,8 @@ SQLite, for local testing, and PostgreSQL databases are supported.
 
 To choose your database type, use the `DATABASE_DRIVER` environment variable:
 
-* LOCAL: Select SQLite, and create a local file called `db.db`
-* POSTGRES: Select PostgreSQL. In that case you can specifiy other self-explanatory environment variables:
+* LOCAL: SQLite driver is used. By default, the the `db.db` SQlite file will be used.
+* POSTGRES: PostgreSQL driver is used. In that case you can specifiy other self-explanatory environment variables:
   * DB_NAME
   * DB_USER
   * DB_PASS
@@ -202,6 +202,10 @@ To choose your database type, use the `DATABASE_DRIVER` environment variable:
 
 In any case, you can also specify the full DSN yourself, depending on your
 database type, by setting the `DB_DSN` environment variable.
+
+https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
+https://www.sqlite.org/c3ref/open.html#urifilenameexamples
+
 For example:
 
     DATABASE_DRIVER="POSTGRES" DB_DSN="postgresql:///apiclarity?host=/tmp/apiclaritydb"
