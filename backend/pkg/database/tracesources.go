@@ -18,9 +18,11 @@ package database
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
+	lru "github.com/hashicorp/golang-lru" // Move to v2 to use generics when go version will be updated
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -31,7 +33,7 @@ const (
 )
 
 type TraceSource struct {
-	gorm.Model
+	ID uint `gorm:"primarykey"`
 
 	UID         uuid.UUID `json:"uid,omitempty" gorm:"column:uid;uniqueIndex;type:uuid"`
 	Name        string    `json:"name,omitempty" gorm:"column:name;uniqueIndex" faker:"oneof: customer1.apigee.gw, mynicegateway"`
@@ -49,6 +51,54 @@ type TraceSourcesTable interface {
 	DeleteTraceSource(uuid.UUID) error
 }
 
+type TraceSourceTokenCache struct {
+	cache *lru.Cache
+}
+
+const traceSourceTokenCacheSize = 128
+
+func NewTraceSourceTokenCache() *TraceSourceTokenCache {
+	c, err := lru.New(traceSourceTokenCacheSize)
+	if err != nil {
+		log.Fatalf("Unable to initialize Token Cache: %v", err)
+	}
+
+	return &TraceSourceTokenCache{
+		cache: c,
+	}
+}
+
+func (c *TraceSourceTokenCache) Get(token string) (*TraceSource, bool) {
+	if value, ok := c.cache.Get(token); ok {
+		ts := value.(*TraceSource)
+		return ts, ok
+	}
+
+	return nil, false
+}
+
+func (c *TraceSourceTokenCache) Add(token string, ts *TraceSource) {
+	c.cache.Add(token, ts)
+}
+
+func (c *TraceSourceTokenCache) Remove(token string) {
+	c.cache.Remove(token)
+}
+
+func (c *TraceSourceTokenCache) UpdateTraceSource(traceSource *TraceSource) {
+	for token := range c.cache.Keys() {
+		value, _ := c.cache.Get(token)
+		ts := value.(*TraceSource)
+		if ts.ID == traceSource.ID {
+			c.cache.Remove(token)
+			break
+		}
+	}
+	c.cache.Add(traceSource.Token, traceSource)
+}
+
+var tokensCache = NewTraceSourceTokenCache()
+
 type TraceSourcesTableHandler struct {
 	tx *gorm.DB
 }
@@ -62,7 +112,6 @@ func (h *TraceSourcesTableHandler) Prepopulate() error {
 		UpdateAll: true,
 	}).Create(&defaultTraceSources).Error
 }
-
 
 const tokenByteLength = 32
 
@@ -100,6 +149,21 @@ func (source *TraceSource) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
+func (source *TraceSource) AfterCreate(tx *gorm.DB) error {
+	tokensCache.Add(source.Token, source)
+	return nil
+}
+
+func (source *TraceSource) AfterDelete(tx *gorm.DB) error {
+	tokensCache.Remove(source.Token)
+	return nil
+}
+
+func (source *TraceSource) AfterUpdate(tx *gorm.DB) error {
+	tokensCache.UpdateTraceSource(source)
+	return nil
+}
+
 func (h *TraceSourcesTableHandler) GetTraceSource(uid uuid.UUID) (*TraceSource, error) {
 	source := TraceSource{UID: uid}
 	if err := h.tx.First(&source, source).Error; err != nil {
@@ -110,10 +174,22 @@ func (h *TraceSourcesTableHandler) GetTraceSource(uid uuid.UUID) (*TraceSource, 
 }
 
 func (h *TraceSourcesTableHandler) GetTraceSourceFromToken(token string) (*TraceSource, error) {
+	if cachedTS, ok := tokensCache.Get(token); ok {
+		if cachedTS == nil { // It means that this token was cached as invalid
+			return nil, fmt.Errorf("invalid token")
+		}
+		return cachedTS, nil
+	}
+
 	source := TraceSource{}
 	if err := h.tx.First(&source, TraceSource{Token: token}).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			tokensCache.Add(token, nil) // Cache this token as invalid
+		}
 		return nil, err
 	}
+
+	tokensCache.Add(token, &source)
 
 	return &source, nil
 }
@@ -126,5 +202,7 @@ func (h *TraceSourcesTableHandler) GetTraceSources() ([]*TraceSource, error) {
 }
 
 func (h *TraceSourcesTableHandler) DeleteTraceSource(uid uuid.UUID) error {
-	return h.tx.Unscoped().Delete(&TraceSource{}, &TraceSource{UID: uid}).Error
+	// We need the returning clause in order to have the struct filled in the
+	// AfterDelete hook.
+	return h.tx.Clauses(clause.Returning{Columns: []clause.Column{{Name: "auth_token"}}}).Where(&TraceSource{UID: uid}).Delete(&TraceSource{}).Error
 }

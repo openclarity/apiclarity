@@ -45,7 +45,10 @@ require (
 	sigs.k8s.io/yaml v1.2.0
 )
 
-require github.com/google/uuid v1.3.0
+require (
+	github.com/google/uuid v1.3.0
+	github.com/hashicorp/golang-lru v0.6.0
+)
 
 require (
 	cloud.google.com/go v0.81.0 // indirect
