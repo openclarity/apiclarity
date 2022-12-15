@@ -25,9 +25,9 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	"github.com/openclarity/apiclarity/backend/pkg/config"
+	"github.com/openclarity/apiclarity/backend/pkg/sampling"
 )
 
 const BaseHTTPPath = "/api/modules"
@@ -61,7 +61,7 @@ func RegisterModule(m ModuleFactory) {
 
 type ModuleFactory func(ctx context.Context, accessor BackendAccessor) (Module, error)
 
-func New(ctx context.Context, accessor BackendAccessor, samplingManager *manager.Manager, traceSamplingEnabled bool) (Module, []ModuleInfo) {
+func New(ctx context.Context, accessor BackendAccessor, samplingManager *sampling.TraceSamplingManager, traceSamplingEnabled bool) (Module, []ModuleInfo) {
 	c := &Core{}
 	c.Modules = map[string]Module{}
 	c.samplingManager = samplingManager
@@ -86,7 +86,7 @@ func New(ctx context.Context, accessor BackendAccessor, samplingManager *manager
 
 type Core struct {
 	Modules              map[string]Module
-	samplingManager      *manager.Manager
+	samplingManager      *sampling.TraceSamplingManager
 	traceSamplingEnabled bool
 }
 
