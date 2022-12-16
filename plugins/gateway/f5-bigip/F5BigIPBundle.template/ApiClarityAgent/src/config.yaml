@@ -1,0 +1,10 @@
+apiclarity-url: ""
+apiclarity-token: ""
+apiclarity-cert-path: ../apiclarity.crt
+refresh-interval-seconds: 30
+remote-log-port: 10514
+proto: tcp
+record-path: ../data/record.txt
+hosts-path: ../data/host.txt
+allowed-hosts-path: ../data/allowedhost.txt
+debug: false
