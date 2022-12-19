@@ -103,7 +103,8 @@ type APIEvent struct {
 	// We'll not always have a corresponding API info (e.g. non-API resources) so the type is needed also for the event
 	EventType models.APIType `json:"eventType,omitempty" gorm:"column:event_type" faker:"oneof: INTERNAL, EXTERNAL"`
 
-	Annotations []*APIEventAnnotation `gorm:"foreignKey:EventID;references:ID"`
+	Annotations []*APIEventAnnotation `gorm:"foreignKey:EventID;references:ID;constraint:OnDelete:CASCADE"`
+	APIInfo     APIInfo               `gorm:"constraint:OnDelete:CASCADE"`
 }
 
 //go:generate $GOPATH/bin/mockgen -destination=./mock_apievent.go -package=database github.com/openclarity/apiclarity/backend/pkg/database APIEventsTable

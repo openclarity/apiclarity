@@ -65,7 +65,7 @@ type APIInfo struct {
 	ReconstructedSpecCreatedAt strfmt.DateTime `json:"reconstructedSpecCreatedAt,omitempty" gorm:"column:reconstructed_spec_created_at" faker:"-"`
 
 	TraceSource TraceSource          `gorm:"constraint:OnDelete:CASCADE"`
-	Annotations []*APIInfoAnnotation `gorm:"foreignKey:APIID;references:ID"`
+	Annotations []*APIInfoAnnotation `gorm:"foreignKey:APIID;references:ID;constraint:OnDelete:CASCADE"`
 }
 
 //go:generate $GOPATH/bin/mockgen -destination=./mock_apiinventory.go -package=database github.com/openclarity/apiclarity/backend/pkg/database APIInventoryTable

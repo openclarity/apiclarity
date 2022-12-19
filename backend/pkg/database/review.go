@@ -41,8 +41,8 @@ type Review struct {
 	// serialized PathToPathItem from Speculator
 	PathToPathItemStr string `json:"pathToPathItemStr,omitempty" gorm:"column:path_to_path_item_str" faker:"-"`
 
-	APIInfoID uint `json:"apiInfoId,omitempty" gorm:"column:api_info_id" faker:"-"`
-	APIInfo   APIInfo
+	APIInfoID uint    `json:"apiInfoId,omitempty" gorm:"column:api_info_id" faker:"-"`
+	APIInfo   APIInfo `gorm:"constraint:OnDelete:CASCADE"`
 }
 
 type ReviewTable interface {
