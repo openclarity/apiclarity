@@ -35,7 +35,6 @@ type APIInfoAnnotation struct {
 	ModuleName string `json:"module_name,omitempty" gorm:"column:module_name;uniqueIndex:api_ann_idx_model" faker:"-"`
 	APIID      uint   `json:"api_id,omitempty" gorm:"column:api_id;uniqueIndex:api_ann_idx_model" faker:"-"`
 	Name       string `json:"name,omitempty" gorm:"column:name;uniqueIndex:api_ann_idx_model" faker:"-"`
-
 	Annotation []byte `json:"annotation,omitempty" gorm:"column:annotation" faker:"-"`
 }
 

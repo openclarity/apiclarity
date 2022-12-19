@@ -35,6 +35,9 @@ type TraceSampling struct {
 	APIID         uint   `json:"api_id,omitempty" gorm:"column:api_id" faker:"-"`
 	TraceSourceID uint   `json:"trace_source_id,omitempty" gorm:"column:trace_source_id" faker:"-"`
 	Component     string `json:"component,omitempty" gorm:"column:component" faker:"-"`
+
+	APIInfo     APIInfo     `gorm:"foreignKey:APIID;constraint:OnDelete:CASCADE"`
+	TraceSource TraceSource `gorm:"constraint:OnDelete:CASCADE"`
 }
 
 type TraceSamplingWithHostAndPort struct {
