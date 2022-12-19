@@ -23,25 +23,29 @@ import (
 	"net/http"
 	"strings"
 
+	logging "github.com/sirupsen/logrus"
+
 	oapicommon "github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/api3/global"
 	"github.com/openclarity/apiclarity/api3/notifications"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/clients"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/config"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/model"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/restapi"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/tools"
 )
 
 const (
-	ModuleName        = "fuzzer"
-	ModuleDescription = "Runs a set of tests against API endpoints to discover insecure implementations"
-	ModuleVersion     = "0.0.0"
-	EmptyJSON         = "{}"
-	NbMaxServicePart  = 2
-	AbortedErrorMsg   = "This test has been aborted by User"
+	ModuleName                   = "fuzzer"
+	ModuleDescription            = "Runs a set of tests against API endpoints to discover insecure implementations"
+	ModuleVersion                = "0.0.0"
+	EmptyJSON                    = "{}"
+	NbMaxServicePart             = 2
+	AbortedErrorMsg              = "This test has been aborted by User"
+	ApiFindingsNotificationType  = "ApiFindingsNotification"
+	TestReportNotificationType   = "TestReportNotification"
+	TestProgressNotificationType = "TestProgressNotification"
 )
 
 type pluginFuzzer struct {
@@ -63,7 +67,7 @@ func init() {
 
 //nolint:ireturn,nolintlint // was needed for the module implementation of ApiClarity
 func newFuzzer(ctx context.Context, accessor core.BackendAccessor) (core.Module, error) {
-	logging.InitLogger()
+	//logging.InitLogger()
 	logging.Debugf("[Fuzzer] Start():: -->")
 
 	// Use default values
@@ -121,62 +125,89 @@ func (p *pluginFuzzer) EventNotify(ctx context.Context, event *core.Event) {
  */
 
 func (p *pluginFuzzer) sendAPIFindingsNotification(ctx context.Context, apiID uint, findings []oapicommon.APIFinding) error {
-	logging.Logf("[Fuzzer] sendAPIFindingsNotification(%v): --> <--", apiID)
+	logging.Infof("[Fuzzer] sendAPIFindingsNotification(%v): --> <--", apiID)
+
 	apiFindingsNotification := notifications.ApiFindingsNotification{
-		NotificationType: "ApiFindingsNotification",
+		NotificationType: ApiFindingsNotificationType,
 		Items:            &findings,
 	}
 	notification := notifications.APIClarityNotification{}
-	err := notification.FromApiFindingsNotification(apiFindingsNotification)
-	if err != nil {
-		return fmt.Errorf("failed to create 'APIFindings' notification, err=(%v)", err)
+	if err := notification.FromApiFindingsNotification(apiFindingsNotification); err != nil {
+		return fmt.Errorf("failed to create notification (%v), err=(%v)", ApiFindingsNotificationType, err)
 	}
 
-	err = p.accessor.Notify(ctx, p.info.Name, apiID, notification)
-
-	return err //nolint:wrapcheck // really want to return the result of the notify
+	if err := p.accessor.Notify(ctx, p.info.Name, apiID, notification); err != nil {
+		return fmt.Errorf("failed to send notification (%v), err=(%v)", ApiFindingsNotificationType, err)
+	}
+	return nil
 }
 
 func (p *pluginFuzzer) sendTestReportNotification(ctx context.Context, apiID uint, report restapi.ShortTestReport) error {
-	logging.Logf("[Fuzzer] sendTestReportNotification(%v): --> <--", apiID)
+	logging.Infof("[Fuzzer] sendTestReportNotification(%v): --> <--", apiID)
+
 	globalReportTags := tools.ConvertLocalToGlobalReportTag(report.Tags)
 	testReportNotification := notifications.TestReportNotification{
 		ApiID:            report.ApiID,
 		HighestSeverity:  report.HighestSeverity,
-		NotificationType: "TestReportNotification",
+		NotificationType: TestReportNotificationType,
 		Starttime:        report.Starttime,
 		Status:           global.FuzzingStatusEnum(report.Status),
 		StatusMessage:    report.StatusMessage,
 		Tags:             globalReportTags,
 	}
 	notification := notifications.APIClarityNotification{}
-	err := notification.FromTestReportNotification(testReportNotification)
-	if err != nil {
-		return fmt.Errorf("failed to create 'TestReport' notification, err=(%v)", err)
+	if err := notification.FromTestReportNotification(testReportNotification); err != nil {
+		return fmt.Errorf("failed to create notification (%v), err=(%v)", TestReportNotificationType, err)
 	}
 
-	err = p.accessor.Notify(ctx, p.info.Name, apiID, notification)
-
-	return err //nolint:wrapcheck // really want to return the result of the notify
+	if err := p.accessor.Notify(ctx, p.info.Name, apiID, notification); err != nil {
+		return fmt.Errorf("failed to send notification (%v), err=(%v)", TestReportNotificationType, err)
+	}
+	return nil
 }
 
 func (p *pluginFuzzer) sendTestProgressNotification(ctx context.Context, apiID uint, report restapi.ShortTestProgress) error {
-	logging.Logf("[Fuzzer] sendTestProgressNotification(%v): (%v%%)--> <--", apiID, report.Progress)
+	logging.Infof("[Fuzzer] sendTestProgressNotification(%v): (%v%%)--> <--", apiID, report.Progress)
+
 	testProgressNotification := notifications.TestProgressNotification{
 		ApiID:            report.ApiID,
-		NotificationType: "TestProgressNotification",
+		NotificationType: TestProgressNotificationType,
 		Progress:         report.Progress,
 		Starttime:        report.Starttime,
 	}
 	notification := notifications.APIClarityNotification{}
-	err := notification.FromTestProgressNotification(testProgressNotification)
-	if err != nil {
-		return fmt.Errorf("failed to create 'TestProgress' notification, err=(%v)", err)
+	if err := notification.FromTestProgressNotification(testProgressNotification); err != nil {
+		return fmt.Errorf("failed to create notification (%v), err=(%v)", TestProgressNotificationType, err)
 	}
 
-	err = p.accessor.Notify(ctx, p.info.Name, apiID, notification)
+	if err := p.accessor.Notify(ctx, p.info.Name, apiID, notification); err != nil {
+		return fmt.Errorf("failed to send notification (%v), err=(%v)", TestProgressNotificationType, err)
+	}
+	return nil
+}
 
-	return err //nolint:wrapcheck // really want to return the result of the notify
+func (p *pluginFuzzer) sendTestErrorNotification(ctx context.Context, api *model.API, errorMessage string) {
+	// Here no need to return error at upper level because there is nothing to do in case of such error
+	if api == nil {
+		// Must not happen, Fatal.
+		logging.Errorf("[Fuzzer] sendTestErrorNotification(): can't send error msg='%v' to <nil> api", errorMessage)
+		return
+	}
+
+	apiID := api.ID
+	logging.Infof("[Fuzzer] sendTestErrorNotification(%v): msg='%v'", apiID, errorMessage)
+
+	// Create an empty shortreport that contain only the error message
+	shortReport, err := api.GetShortStatusOnError(errorMessage)
+	if err != nil {
+		// Must not happen, major issue here: it means we have no Test item at all. Fatal because a shortstatus need to be link
+		// to a valid Test, identified by the starttime
+		logging.Errorf("[Fuzzer] sendTestErrorNotification(%v): can't create a short status with error for this API, err=(%v)", apiID, err)
+		return
+	}
+	if err = p.sendTestReportNotification(ctx, uint(apiID), *shortReport); err != nil {
+		logging.Errorf("[Fuzzer] sendTestErrorNotification(): Failed to send 'TestReport' notification for API (%v), err=(%v)", apiID, err)
+	}
 }
 
 /*
@@ -201,7 +232,7 @@ func (p *pluginFuzzer) FuzzTarget(ctx context.Context, apiID oapicommon.ApiID, p
 		return model.ZeroTime, &NotFoundError{msg: ""}
 	}
 
-	logging.Logf("[Fuzzer] FuzzTarget(): API_id (%v) => API (%v)", apiID, api)
+	logging.Infof("[Fuzzer] FuzzTarget(): API_id (%v) => API (%v)", apiID, api)
 
 	// Construct the URI of the enpoint to fuzz
 	serviceToTest := api.Name
@@ -232,8 +263,7 @@ func (p *pluginFuzzer) FuzzTarget(ctx context.Context, apiID oapicommon.ApiID, p
 		return model.ZeroTime, &PluginError{msg: err.Error()}
 	}
 
-	err = p.fuzzerClient.TriggerFuzzingJob(apiID, fullServiceURI, securityParam, timeBudget)
-	if err != nil {
+	if err = p.fuzzerClient.TriggerFuzzingJob(apiID, fullServiceURI, securityParam, timeBudget); err != nil {
 		logging.Errorf("[Fuzzer] FuzzTarget(): can't trigger fuzzing job for API (%v), err=(%v)", apiID, err)
 		fuzzerError := fmt.Errorf("can't start fuzzing job for API (%v), err=(%v)", apiID, err)
 		_ = p.model.StopAPIFuzzing(ctx, uint(apiID), fuzzerError)
@@ -263,24 +293,17 @@ func (p *pluginFuzzer) StopFuzzing(ctx context.Context, apiID oapicommon.ApiID, 
 		return &InvalidParameterError{msg: ""}
 	}
 
-	logging.Logf("[Fuzzer] StopFuzzing(): API (%v) => (%v)", apiID, api)
-
-	// Stop the "fuzzing" status on the model
-	err = p.model.StopAPIFuzzing(ctx, uint(apiID), nil)
-	if err != nil {
-		logging.Errorf("[Fuzzer] StopFuzzing(): failed to stop Fuzzing for API (%v), error=%v", apiID, err)
-		return &PluginError{msg: err.Error()}
-	}
+	logging.Infof("[Fuzzer] StopFuzzing(): API (%v) => (%v)", apiID, api)
 
 	// Stop the fuzzing job
-	err = p.fuzzerClient.StopFuzzingJob(apiID, complete)
-	if err != nil {
-		logging.Errorf("[Fuzzer] StopFuzzing(): can't trigger fuzzing job for API (%v), error=(%v)", apiID, err)
-		// Set an error status for ongoing test
-		err2 := api.SetErrorForLastStatus("failed to stop Fuzzing job")
-		if err2 != nil {
-			logging.Errorf("[Fuzzer] StopFuzzing(): can't set last status error for API (%v), error=(%v)", apiID, err)
-		}
+	if err = p.fuzzerClient.StopFuzzingJob(apiID, complete); err != nil {
+		newError := fmt.Errorf("failed to stop Fuzzing job for API (%v), err=(%v)", apiID, err)
+		logging.Errorf("[Fuzzer] StopFuzzing(): %v", newError)
+	}
+
+	// Remove the "fuzzing" status on the model for this API
+	if err = p.model.StopAPIFuzzing(ctx, uint(apiID), nil); err != nil {
+		logging.Errorf("[Fuzzer] StopFuzzing(): failed to stop Fuzzing for API (%v), error=%v", apiID, err)
 		return &PluginError{msg: err.Error()}
 	}
 
@@ -290,64 +313,39 @@ func (p *pluginFuzzer) StopFuzzing(ctx context.Context, apiID oapicommon.ApiID, 
 		// Must not happen, as we have always a default test & report
 		logging.Errorf("[Fuzzer] StopFuzzing(): failed to get last status for API (%v), error=%v", apiID, err)
 	}
-	shortReport, err := api.GetLastShortStatus()
-	if err != nil {
-		// No short status. Not an error, we can have an error occurred before the fuzzing start.
-		logging.Logf("[Fuzzer] StopFuzzing(): No short status (an error before fuzzing start...)")
+	shortReport, errForLastStatus := api.GetLastShortStatus()
+	if errForLastStatus != nil {
+		logging.Infof("[Fuzzer] StopFuzzing(): Can't compute short status for API (%v), error=%v", apiID, errForLastStatus)
 	}
 
 	/*
 	 * Send report & findings notifications
 	 */
-	if lastStatus == restapi.ERROR && shortReport == nil {
-		// There is no shortstatus, and current status is on error. This can happen if Fuzzer report an error and abort process before starting to fuzz.
-		// Simply get an "empty shortreport with error" and send it as notification
-		shortReport, err = api.GetShortStatusOnError("")
-		if err != nil {
-			// Major issue here: we have no Test item at all
-			logging.Errorf("[Fuzzer] StopFuzzing(): can't create a short status with error for API (%v), err=(%v)", apiID, err)
-			return &PluginError{msg: err.Error()}
+	if lastStatus == restapi.ERROR {
+		// Test in Error
+		// Send in priority the error from the test, use in place the error for lastshorttatus if no error msg
+		errorMsg, _ := api.GetLastStatusError()
+		if len(errorMsg) == 0 && errForLastStatus != nil {
+			errorMsg = errForLastStatus.Error()
 		}
-		if len(*shortReport.StatusMessage) == 0 {
-			// The test is on error, but there is no error message: warning, current test will be displayed as DONE on UI. Not on ERROR
-			logging.Warningf("[Fuzzer] StopFuzzing(): No error message for error on report for API (%v)", apiID)
-		}
-		err = p.sendTestReportNotification(
-			ctx,
-			uint(apiID),
-			*shortReport,
-		)
-		if err != nil {
-			// Log the error, but do not block the process as the error seems external to the Fuzzer module
-			logging.Errorf("[Fuzzer] StopFuzzing(): Failed to send 'TestReport' notification for API (%v), err=(%v)", apiID, err)
-		}
-	} else if shortReport != nil {
+		p.sendTestErrorNotification(ctx, api, errorMsg)
+	} else if errForLastStatus != nil {
+		// No error in the test, but internal error when trying to compute shortstatus
+		p.sendTestErrorNotification(ctx, api, errForLastStatus.Error())
+	} else {
+		// No error in the test
 		// Send the report notification, then the findings list. Note that we can have a finding list even if the report is on error.
-		err = p.sendTestReportNotification(
-			ctx,
-			uint(apiID),
-			*shortReport,
-		)
-		if err != nil {
+		if err := p.sendTestReportNotification(ctx, uint(apiID), *shortReport); err != nil {
 			// Log the error, but do not block the process as the error seems external to the Fuzzer module
 			logging.Errorf("[Fuzzer] StopFuzzing(): Failed to send 'TestReport' notification for API (%v), err=(%v)", apiID, err)
 		}
 		lastFindings := api.GetLastAPIFindings()
-		err = p.sendAPIFindingsNotification(
-			ctx,
-			uint(apiID),
-			*lastFindings,
-		)
-		if err != nil {
+		if err := p.sendAPIFindingsNotification(ctx, uint(apiID), *lastFindings); err != nil {
 			// Log the error, but do not block the process as the error seems external to the Fuzzer module
 			logging.Errorf("[Fuzzer] StopFuzzing(): Failed to send 'APIFindings' notification for API (%v), err=(%v)", apiID, err)
 		}
-	} else {
-		// last case... shortReport is null, and no error on last status. Must not happen
-		return &PluginError{msg: "Unexpected behavior: no report, no error"}
 	}
 
-	// Success
 	return nil
 }
 
@@ -431,7 +429,7 @@ func (p *pluginFuzzerHTTPHandler) PostUpdateStatus(writer http.ResponseWriter, r
 		httpResponse(writer, http.StatusInternalServerError, EmptyJSON)
 		return
 	}
-	logging.Logf("[Fuzzer] PostUpdateStatus(%v): Received a report of size=(%v), progress=(%v%%) and status=(%v)", apiID, len(body), data.Progress, data.Status)
+	logging.Infof("[Fuzzer] PostUpdateStatus(%v): Received a report of size=(%v), progress=(%v%%) and status=(%v)", apiID, len(body), data.Progress, data.Status)
 
 	// Get the API object
 	api, err := p.fuzzer.model.GetAPI(req.Context(), uint(apiID))
@@ -622,7 +620,7 @@ func (p *pluginFuzzerHTTPHandler) GetReport(writer http.ResponseWriter, req *htt
 }
 
 func (p *pluginFuzzerHTTPHandler) GetAnnotatedSpec(writer http.ResponseWriter, req *http.Request, apiID int64) {
-	logging.Logf("[Fuzzer] GetAnnotatedSpec(%v): --> <--", apiID)
+	logging.Infof("[Fuzzer] GetAnnotatedSpec(%v): --> <--", apiID)
 	httpResponse(writer, http.StatusNotImplemented, EmptyJSON)
 }
 

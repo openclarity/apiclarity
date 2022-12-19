@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"strconv"
 
+	logging "github.com/sirupsen/logrus"
+
 	"github.com/ghodss/yaml"
 	uuid "github.com/satori/go.uuid"
 	batchv1 "k8s.io/api/batch/v1"
@@ -31,7 +33,6 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/k8smonitor"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/config"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/tools"
 )
 
@@ -104,38 +105,48 @@ type ConfigMapClient struct {
 	k8sClient          kubernetes.Interface
 	configMapName      string
 	configMapNamespace string
-	currentJob         *batchv1.Job
+	jobs               map[int64]*batchv1.Job // List of jobs, per api
 	fuzzerJobTemplate  []byte
-	authSecrets        map[int64]*tools.AuthSecret
+	authSecrets        map[int64]*tools.AuthSecret // List of secrets, per api
 }
 
 func (l *ConfigMapClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem string, timeBudget string) error {
-	logging.Logf("[Fuzzer][ConfigMapClient] TriggerFuzzingJob(%v, %v, %v, %v):: -->", apiID, endpoint, securityItem, timeBudget)
+	logging.Infof("[Fuzzer][ConfigMapClient] TriggerFuzzingJob(%v, %v, %v, %v):: --> <--", apiID, endpoint, securityItem, timeBudget)
+
+	if l.jobs[apiID] != nil {
+		err := fmt.Errorf("job already started for the API: %v", apiID)
+		logging.Errorf("[Fuzzer][ConfigMapClient] failed to create job, err=(%v)", err)
+		return fmt.Errorf("failed to create job, err=(%v)", err)
+	}
 
 	// Retrieve the env var slice for dynamic parameters from which we will configure our pod
 	envVars := l.getEnvs(apiID, endpoint, securityItem, timeBudget)
 
 	// Create job struct
-	fuzzerJob, err := l.createFuzzerJob(envVars)
+	jobToCreate, err := l.getFuzzerJobToCreate(envVars)
 	if err != nil {
-		logging.Logf("[Fuzzer][ConfigMapClient] Failed to create fuzzer job struct: %v", err)
-		return fmt.Errorf("failed to get create job struct: %v", err)
+		logging.Errorf("[Fuzzer][ConfigMapClient] Failed to create fuzzer job struct, err=(%v)", err)
+		return fmt.Errorf("failed to get create job struct, err=(%v)", err)
 	}
 
 	// Create pod from job
-	if _, err := l.Create(fuzzerJob); err != nil {
-		logging.Logf("[Fuzzer][ConfigMapClient] Failed to create fuzzer job: %v", err)
-		return fmt.Errorf("failed to get create job: %v", err)
+	job, err := l.CreateJob(jobToCreate)
+	if err != nil {
+		logging.Errorf("[Fuzzer][ConfigMapClient] Failed to create fuzzer job, err=(%v)", err)
+		return fmt.Errorf("failed to get create job, err=(%v)v", err)
 	}
+	l.jobs[apiID] = job
 
-	logging.Logf("[Fuzzer][ConfigMapClient] TriggerFuzzingJob():: <--")
 	return nil
 }
 
 func (l *ConfigMapClient) StopFuzzingJob(apiID int64, complete bool) error {
-	logging.Logf("[Fuzzer][ConfigMapClient] StopFuzzingJob(%v): -->", apiID)
-	if l.currentJob == nil {
-		return fmt.Errorf("no current k8s job to terminate")
+	logging.Infof("[Fuzzer][ConfigMapClient] StopFuzzingJob(%v): --> <--", apiID)
+
+	jobToDelete := l.jobs[apiID]
+	if jobToDelete == nil {
+		err := fmt.Errorf("no existing fuzzing job to terminate for the API (%v)", apiID)
+		return fmt.Errorf("failed to stop job, err=(%v)", err)
 	}
 
 	secret, found := l.authSecrets[apiID]
@@ -143,26 +154,44 @@ func (l *ConfigMapClient) StopFuzzingJob(apiID int64, complete bool) error {
 		err := secret.Delete(context.TODO(), l.k8sClient)
 		if err != nil {
 			// Not blocking
-			logging.Logf("[Fuzzer][ConfigMapClient] StopFuzzingJob(%v): failed to delete secret: %v", apiID, err)
+			logging.Infof("[Fuzzer][ConfigMapClient] StopFuzzingJob(%v): failed to delete secret: %v", apiID, err)
 		}
 	}
 
-	var zero int64 // = 0
-	policy := metav1.DeletePropagationForeground
-	deleteOptions := &metav1.DeleteOptions{
-		GracePeriodSeconds: &zero,
-		PropagationPolicy:  &policy,
-	}
-	err := l.k8sClient.BatchV1().Jobs(l.currentJob.Namespace).Delete(context.TODO(), l.currentJob.Name, *deleteOptions)
+	jobClient := l.k8sClient.BatchV1().Jobs(jobToDelete.Namespace)
+	jobName := jobToDelete.Name
+	job, err := jobClient.Get(context.TODO(), jobName, metav1.GetOptions{})
 	if err != nil {
-		logging.Logf("[Fuzzer][ConfigMapClient] StopFuzzingJob(%v): failed to stop k8s fuzzer job: %v", apiID, err)
+		// reset job in case of error, otherwise we will be stuck for the API
+		l.jobs[apiID] = nil
+		return fmt.Errorf("can't find k8s job (%v) to terminate", jobName)
 	}
-	l.currentJob = nil
-	logging.Logf("[Fuzzer][ConfigMapClient] StopFuzzingJob(%v): <--", apiID)
+	if job.Status.Active > 0 {
+		// the Job is still running, we must stop it
+		var zero int64 // = 0
+		policy := metav1.DeletePropagationForeground
+		deleteOptions := &metav1.DeleteOptions{
+			GracePeriodSeconds: &zero,
+			PropagationPolicy:  &policy,
+		}
+		err := jobClient.Delete(context.TODO(), jobName, *deleteOptions)
+		if (err != nil) && !k8serrors.IsNotFound(err) {
+			// An IsNotFound is not an error, here: just the job ended between the GET and the DELETE. it is Ok for us.
+			logging.Infof("[Fuzzer][ConfigMapClient] StopFuzzingJob(%v): failed to stop k8s fuzzer job: %v", apiID, err)
+		}
+	} else {
+		// job.Status.Succeeded > 0 mean "Job Successful"
+		if job.Status.Succeeded == 0 {
+			// The Job has been in error, then nothing to stop.
+			logging.Infof("[Fuzzer][ConfigMapClient] StopFuzzingJob(%v): failed to stop k8s fuzzer job: %v", apiID, err)
+		}
+	}
+
+	l.jobs[apiID] = nil
 	return nil
 }
 
-func (l *ConfigMapClient) createFuzzerJob(dynEnvVars []v1.EnvVar) (*batchv1.Job, error) {
+func (l *ConfigMapClient) getFuzzerJobToCreate(dynEnvVars []v1.EnvVar) (*batchv1.Job, error) {
 	var job batchv1.Job
 	logging.Debugf("[Fuzzer][ConfigMapClient] Using fuzzerTemplate:\n%+v", string(l.fuzzerJobTemplate))
 
@@ -261,43 +290,39 @@ func (l *ConfigMapClient) loadConfigMap() ([]byte, error) {
 	return fuzzerTemplate, nil
 }
 
-func (l *ConfigMapClient) Create(job *batchv1.Job) (*batchv1.Job, error) {
+func (l *ConfigMapClient) CreateJob(job *batchv1.Job) (*batchv1.Job, error) {
 	if job == nil {
 		return nil, fmt.Errorf("invalid job: nil")
 	}
 
-	var ret *batchv1.Job
-	var err error
-
+	// Define nemaspace to use
 	namespace := job.GetNamespace()
 	if len(namespace) == 0 {
-		logging.Logf("[Fuzzer][ConfigMapClient] no namespace found in job template. Use the configmapnamespace in place (%v).", l.configMapNamespace)
+		logging.Infof("[Fuzzer][ConfigMapClient] no namespace found in job template. Use the configmapnamespace in place (%v).", l.configMapNamespace)
 		namespace = l.configMapNamespace
 	}
-	logging.Logf("[Fuzzer][ConfigMapClient] Create new Job in namespace: %v/%v, name=%v", namespace, l.configMapNamespace, job.Name)
-	if ret, err = l.k8sClient.BatchV1().Jobs(namespace).Create(context.TODO(), job, metav1.CreateOptions{}); err != nil {
-		if !k8serrors.IsAlreadyExists(err) {
-			return nil, fmt.Errorf("failed to create job: %v", err)
-		}
-		logging.Logf("[Fuzzer][ConfigMapClient] Job already exists: %v", job.Name)
-		return ret, nil
+
+	// Create the k8s job
+	logging.Infof("[Fuzzer][ConfigMapClient] Create new Job in namespace: %v/%v, name=%v", namespace, l.configMapNamespace, job.Name)
+	newJob, err := l.k8sClient.BatchV1().Jobs(namespace).Create(context.TODO(), job, metav1.CreateOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create job: (%v)", err)
 	}
-	l.currentJob = ret
-	logging.Logf("[Fuzzer][ConfigMapClient] Job was created successfully. name=%v, namespace=%v", job.Name, job.Namespace)
-	return ret, nil
+	logging.Debugf("[Fuzzer][ConfigMapClient] Job was created successfully. name=%v, namespace=%v", job.Name, job.Namespace)
+	return newJob, nil
 }
 
-//nolint: ireturn,nolintlint
+// nolint: ireturn,nolintlint
 func NewConfigMapClient(config *config.Config, accessor core.BackendAccessor) (Client, error) {
 	client := &ConfigMapClient{
 		k8sClient:          accessor.K8SClient(),
 		configMapName:      config.GetJobTemplateConfigMapName(),
 		configMapNamespace: config.GetJobNamespace(),
-		currentJob:         nil,
+		jobs:               make(map[int64]*batchv1.Job),
 		authSecrets:        make(map[int64]*tools.AuthSecret),
 	}
 	if client.k8sClient == nil {
-		logging.Logf("[Fuzzer][ConfigMapClient] Create new Kubernetes client accessor.K8SClient()=%v", accessor.K8SClient())
+		logging.Infof("[Fuzzer][ConfigMapClient] Create new Kubernetes client accessor.K8SClient()=%v", accessor.K8SClient())
 		client.k8sClient, _ = k8smonitor.CreateK8sClientset()
 	}
 	if client.k8sClient == nil {

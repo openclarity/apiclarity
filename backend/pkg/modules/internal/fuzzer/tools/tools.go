@@ -22,10 +22,11 @@ import (
 	"fmt"
 	"strings"
 
+	logging "github.com/sirupsen/logrus"
+
 	oapicommon "github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/api3/global"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/config"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/restapi"
 )
 
@@ -76,7 +77,7 @@ func GetAuthStringFromParam(params *restapi.AuthorizationScheme) (string, error)
 		apiToken, err := params.AsApiToken()
 		if err != nil {
 			msg := fmt.Sprintf("Bad ApiToken auth format (%v)", params)
-			logging.Logf(msg)
+			logging.Infof(msg)
 			return ret, errors.New(msg)
 		}
 		sEncKey := b64.StdEncoding.EncodeToString([]byte(apiToken.Key))
@@ -88,7 +89,7 @@ func GetAuthStringFromParam(params *restapi.AuthorizationScheme) (string, error)
 		basicAuth, err := params.AsBasicAuth()
 		if err != nil {
 			msg := fmt.Sprintf("Bad BasicAuth auth format (%v)", params)
-			logging.Logf(msg)
+			logging.Infof(msg)
 			return ret, errors.New(msg)
 		}
 		sEncUser := b64.StdEncoding.EncodeToString([]byte(basicAuth.Username))
@@ -100,7 +101,7 @@ func GetAuthStringFromParam(params *restapi.AuthorizationScheme) (string, error)
 		bearerToken, err := params.AsBearerToken()
 		if err != nil {
 			msg := fmt.Sprintf("Bad BearerToken auth format (%v)", params)
-			logging.Logf(msg)
+			logging.Infof(msg)
 			return ret, errors.New(msg)
 		}
 		sEncToken := b64.StdEncoding.EncodeToString([]byte(bearerToken.Token))

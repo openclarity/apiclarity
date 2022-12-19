@@ -22,6 +22,8 @@ import (
 	"strings"
 	"time"
 
+	logging "github.com/sirupsen/logrus"
+
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
 
@@ -29,7 +31,6 @@ import (
 	"github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/config"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/restapi"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/tools"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/utils"
@@ -199,7 +200,16 @@ func (api *API) SetErrorForLastStatus(msg string) error {
 		lastTest.ErrorMessage = &msg
 		return nil
 	}
-	return fmt.Errorf("no test for the api")
+	return fmt.Errorf("no test available")
+}
+
+func (api *API) GetLastStatusError() (string, error) {
+	if len(api.TestsList) > 0 {
+		index := len(api.TestsList) - 1
+		lastTest := api.TestsList[index].Test
+		return *lastTest.ErrorMessage, nil
+	}
+	return "", fmt.Errorf("no test available")
 }
 
 func (api *API) GetShortStatusOnError(msg string) (*restapi.ShortTestReport, error) {
@@ -210,7 +220,7 @@ func (api *API) GetShortStatusOnError(msg string) (*restapi.ShortTestReport, err
 		lastTest := api.TestsList[index].Test
 
 		msgToSend := msg
-		if len(msg) == 0 && lastTest.ErrorMessage != nil && len(*lastTest.ErrorMessage) > 0 {
+		if len(msgToSend) == 0 && lastTest.ErrorMessage != nil && len(*lastTest.ErrorMessage) > 0 {
 			msgToSend = *lastTest.ErrorMessage
 		}
 
@@ -291,7 +301,7 @@ func (api *API) getTestShortReport(testItem *TestItem) (*restapi.ShortTestReport
 	}
 
 	// Then iterate on the regular report items and verse it on the shortdemo structure
-	for _, reportItem := range test.Report.Report {
+	for _, reportItem := range report.Report {
 		if strings.HasPrefix(*reportItem.Name, ReportNameCRUDPrefix) {
 			// Come from the 'crud' fuzzer
 			// TODO
@@ -319,8 +329,8 @@ func (api *API) getTestShortReport(testItem *TestItem) (*restapi.ShortTestReport
 		}
 	}
 
-	// Then redo the same for findings (I know, it can be done on the loop above, but I prefer separate the job)
-	for _, reportItem := range test.Report.Report {
+	// Then redo the same for findings (I know, it can be done on the loop above, but I prefer to separate the job)
+	for _, reportItem := range report.Report {
 		for _, finding := range *reportItem.Findings {
 			// finding.Location is something like &[OASv3Spec paths /user/logout get]
 			if len(*finding.Location) < MinLocationTokensNumber {
@@ -479,7 +489,7 @@ func updateRequestCountersForRestler(shortReport *restapi.ShortTestReport, repor
 
 func (api *API) AddNewStatusReport(report restapi.FuzzingStatusAndReport) error {
 	if !api.InFuzzing {
-		logging.Logf("[Fuzzer] AddNewStatusReport():: API id (%v) not in Fuzzing... did you triggered it from HTTP?", api.ID)
+		logging.Infof("[Fuzzer] AddNewStatusReport():: API id (%v) not in Fuzzing... did you triggered it from HTTP?", api.ID)
 		return fmt.Errorf("API not in fuzzing")
 	}
 
@@ -701,7 +711,7 @@ func (api *API) ForceProgressForLastTest(progress int) error {
 }
 
 func (api *API) StartFuzzing(params *FuzzingInput) (FuzzingTimestamp, error) {
-	logging.Logf("[Fuzzer] API(%v).StartFuzzing(): Start fuzzing", api.ID)
+	logging.Infof("[Fuzzer] API(%v).StartFuzzing(): Start fuzzing", api.ID)
 	if api.InFuzzing {
 		logging.Errorf("[Fuzzer] API(%v).StartFuzzing(): A fuzzing is already started", api.ID)
 		return ZeroTime, fmt.Errorf("a fuzzing is already started for api(%v)", api.ID)
@@ -715,7 +725,11 @@ func (api *API) StartFuzzing(params *FuzzingInput) (FuzzingTimestamp, error) {
 }
 
 func (api *API) StopFuzzing(fuzzerError error) error {
-	logging.Logf("[Fuzzer] API(%v).StopFuzzing(): Stop fuzzing, with error(%v)", api.ID, fuzzerError)
+	if fuzzerError != nil {
+		logging.Infof("[Fuzzer] API(%v).StopFuzzing(): Stop fuzzing, with error(%v)", api.ID, fuzzerError)
+	} else {
+		logging.Infof("[Fuzzer] API(%v).StopFuzzing(): Stop fuzzing", api.ID)
+	}
 	api.InFuzzing = false
 	api.Fuzzed = true
 	// Force the last test progress to 100%
@@ -756,7 +770,7 @@ func (api *API) RetrieveInfoFromStore(ctx context.Context, accessor core.Backend
 	}
 	for _, annotation := range dbAnns {
 		if annotation.Name == AnnotationReportName {
-			logging.Logf("[Fuzzer] API(%v).RetrieveInfoFromStore(): Found Annotation Name=(%v), size=(%v)", api.ID, annotation.Name, len(annotation.Annotation))
+			logging.Infof("[Fuzzer] API(%v).RetrieveInfoFromStore(): Found Annotation Name=(%v), size=(%v)", api.ID, annotation.Name, len(annotation.Annotation))
 			var data restapi.FuzzingStatusAndReport
 			err = json.Unmarshal(annotation.Annotation, &data)
 			if err != nil {
@@ -776,7 +790,7 @@ func (api *API) RetrieveInfoFromStore(ctx context.Context, accessor core.Backend
 			api.InFuzzing = false
 		}
 		if annotation.Name == "Fuzzer report" || annotation.Name == "Fuzzer findings" {
-			logging.Logf("[Fuzzer] API(%v).RetrieveInfoFromStore(): Found Annotation Name=(%v), size=(%v)", api.ID, annotation.Name, len(annotation.Annotation))
+			logging.Infof("[Fuzzer] API(%v).RetrieveInfoFromStore(): Found Annotation Name=(%v), size=(%v)", api.ID, annotation.Name, len(annotation.Annotation))
 			// Nothing to do for now, we don't use it
 		}
 	}
