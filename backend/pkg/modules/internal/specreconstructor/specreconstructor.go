@@ -82,15 +82,18 @@ func httpError(w http.ResponseWriter, statusCode int, err error) {
 }
 
 func httpResponse(writer http.ResponseWriter, statusCode int, data interface{}) {
-	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(statusCode)
-	if err := json.NewEncoder(writer).Encode(data); err != nil {
-		httpError(writer, http.StatusInternalServerError, err)
+	if data != nil {
+		writer.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(writer).Encode(data); err != nil {
+			httpError(writer, http.StatusInternalServerError, err)
+			return
+		}
 	}
 }
 
 func (c *specReconstructorPluginHTTPHandler) PostAPIIDStart(w http.ResponseWriter, r *http.Request, apiID int64) {
-	log.Debugf("PostApiIdStart(%v): --> <--", apiID)
+	log.Debugf("Called PostApiIdStart(%v)", apiID)
 
 	component := ModuleName
 
@@ -102,11 +105,11 @@ func (c *specReconstructorPluginHTTPHandler) PostAPIIDStart(w http.ResponseWrite
 	log.Infof("Tracing successfully started for api=%d", apiID)
 
 	// Success...
-	httpResponse(w, http.StatusNoContent, EmptyJSON)
+	httpResponse(w, http.StatusNoContent, nil)
 }
 
 func (c *specReconstructorPluginHTTPHandler) PostAPIIDStop(w http.ResponseWriter, r *http.Request, apiID int64) {
-	log.Debugf("PostApiIdStop(%v): --> <--", apiID)
+	log.Debugf("Called PostApiIdStop(%v)", apiID)
 
 	component := ModuleName
 
@@ -118,11 +121,11 @@ func (c *specReconstructorPluginHTTPHandler) PostAPIIDStop(w http.ResponseWriter
 	log.Infof("Tracing successfully stoped for api=%d", apiID)
 
 	// Success...
-	httpResponse(w, http.StatusNoContent, EmptyJSON)
+	httpResponse(w, http.StatusNoContent, nil)
 }
 
 func (c *specReconstructorPluginHTTPHandler) PostEnable(w http.ResponseWriter, r *http.Request) {
-	log.Debugf("PostEnable(): --> <--")
+	log.Debugf("Called PostEnable()")
 
 	// Decode the restapi.TestInput requesBody
 	body, err := ioutil.ReadAll(r.Body)
@@ -151,11 +154,12 @@ func (c *specReconstructorPluginHTTPHandler) PostEnable(w http.ResponseWriter, r
 	}
 
 	// Success...
-	httpResponse(w, http.StatusNoContent, EmptyJSON)
+	httpResponse(w, http.StatusNoContent, nil)
 }
 
 func (c *specReconstructorPluginHTTPHandler) GetVersion(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(oapicommon.ModuleVersion{Version: ModuleVersion}); err != nil {
 		httpError(w, http.StatusInternalServerError, err)
+		return
 	}
 }
