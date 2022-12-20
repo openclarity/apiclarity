@@ -21,6 +21,7 @@ import (
 	"net/http"
 
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
+	apilabels "github.com/openclarity/apiclarity/plugins/api/labels"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -68,15 +69,29 @@ func (p *controller) HTTPHandler() http.Handler {
 }
 
 func (p *controller) EventNotify(ctx context.Context, event *core.Event) {
-	log.Infof("[%s] APIEvent.ID=%d Path=%s Method=%s", ModuleName, event.APIEvent.ID, event.Telemetry.Request.Path, event.Telemetry.Request.Method)
-	labelMap, err := p.accessor.GetLabelsTable(ctx).GetLabels(ctx, event.APIEvent.ID)
+	apiEvent := event.APIEvent
+
+	log.Infof("[%s] APIEvent.ID=%d Path=%s Method=%s", ModuleName, apiEvent.ID, event.Telemetry.Request.Path, event.Telemetry.Request.Method)
+	labelMap, err := p.accessor.GetLabelsTable(ctx).GetLabels(ctx, apiEvent.ID)
 	if err != nil {
-		log.Errorf("[%s] error in labels lookup for event: %d", ModuleName, event.APIEvent.ID)
+		log.Errorf("[%s] error in labels lookup for event: %d", ModuleName, apiEvent.ID)
+		return
+	} else if len(labelMap) == 0 {
+		log.Debugf("[%s] no labels found, skipping event: %d", ModuleName, apiEvent.ID)
 		return
 	}
-	if len(labelMap) > 0 {
-		for k, v := range labelMap {
-			log.Infof("[%s] found label: %s -> %s", ModuleName, k, v)
+
+	//Convert labels that we care about to API annotations
+	transferLabels := []string{
+		apilabels.DataLineageUpstreamKey,
+	}
+	for _, label := range transferLabels {
+		if value, found := labelMap[label]; found {
+			log.Debugf("[%s] found label: %s -> %s", ModuleName, label, value)
+			err = p.accessor.StoreAPIInfoAnnotations(ctx, ModuleName, apiEvent.APIInfoID, core.Annotation{Name: label, Annotation: []byte(value)})
+			if err != nil {
+				log.Errorf("[%s] error in APIInfoAnnotation lookup for event: %d, APIInfoID: %d", ModuleName, apiEvent.ID, apiEvent.APIInfoID)
+			}
 		}
 	}
 }

@@ -37,8 +37,6 @@ const (
 	missingAttrValue     = "<missing>"
 	DefaultSourceAddress = "client:5280"
 	DefaultStatusCode    = "200"
-	DefaultScheme        = "http"
-	DefaultTarget        = "/"
 	DefaultSpanKind      = ptrace.SpanKindServer
 	RequestBody          = attribute.Key("request_body")
 	ResponseBody         = attribute.Key("response_body")
@@ -280,9 +278,21 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 
 	attrs := span.Attributes()
 
-	var urlOk bool
-	var urlAttr pcommon.Value
-	if urlAttr, urlOk = attrs.Get(string(semconv.HTTPURLKey)); urlOk {
+	method, methodOk := attrs.Get(string(semconv.HTTPMethodKey))
+	if !methodOk {
+		e.logger.Warn("required attribute not set, assuming it is not HTTP span",
+			zap.String("kind", span.Kind().String()),
+			zap.String("name", span.Name()),
+			zap.String("traceid", hex.EncodeToString(traceID[:])),
+			zap.String("attribute", string(semconv.HTTPMethodKey)),
+		)
+		return nil, nil
+	} else {
+		actel.Request.Method = method.AsString()
+	}
+
+	urlAttr, urlOk := attrs.Get(string(semconv.HTTPURLKey))
+	if urlOk {
 		urlVal := urlAttr.Str()
 		if urlVal == "" {
 			urlOk = false
@@ -295,33 +305,50 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 			actel.Request.Host = e.convertHost(urlInfo.Host)
 			actel.Request.Path = urlInfo.Path
 		}
+	} else if span.Kind() == ptrace.SpanKindClient {
+		e.logger.Warn("required attribute not set, assuming it is not HTTP client span",
+			zap.String("kind", span.Kind().String()),
+			zap.String("name", span.Name()),
+			zap.String("traceid", hex.EncodeToString(traceID[:])),
+			zap.String("attribute", string(semconv.HTTPURLKey)),
+		)
+		return nil, nil
 	}
-	if schemeAttr, schemeOk := attrs.Get(string(semconv.HTTPSchemeKey)); schemeOk {
+
+	schemeAttr, schemeOk := attrs.Get(string(semconv.HTTPSchemeKey))
+	if schemeOk {
 		actel.Scheme = schemeAttr.AsString()
-	} else if !urlOk {
-		//Either HTTPURLKey or HTTPSchemeKey should be defined
-		actel.Scheme = DefaultScheme
-		e.logger.Warn("Using default value for missing attribute",
+	} else if !urlOk && span.Kind() == ptrace.SpanKindServer {
+		e.logger.Warn("required attribute not set, assuming it is not HTTP server span",
+			zap.String("kind", span.Kind().String()),
+			zap.String("name", span.Name()),
+			zap.String("traceid", hex.EncodeToString(traceID[:])),
 			zap.String("attribute", string(semconv.HTTPSchemeKey)),
-			zap.String("value", DefaultScheme),
 		)
+		return nil, nil
 	}
+
+	path, pathOk := attrs.Get("http.path")
+	targetAttr, targetOk := attrs.Get(string(semconv.HTTPTargetKey))
 	//Some frameworks use http.path although it's not in the semconv
-	if path, ok := attrs.Get("http.path"); ok {
+	if pathOk {
 		actel.Request.Path = path.AsString()
-	} else if targetAttr, targetOk := attrs.Get(string(semconv.HTTPTargetKey)); targetOk {
+	} else if targetOk {
 		actel.Request.Path = targetAttr.AsString()
-	} else if !urlOk {
-		//Either HTTPURLKey or HTTPTargetKey should be defined
-		actel.Request.Path = DefaultTarget
-		e.logger.Warn("Using default value for missing attribute",
+	} else if !urlOk && span.Kind() == ptrace.SpanKindServer {
+		e.logger.Warn("required attribute not set, assuming it is not HTTP server span",
+			zap.String("kind", span.Kind().String()),
+			zap.String("name", span.Name()),
+			zap.String("traceid", hex.EncodeToString(traceID[:])),
 			zap.String("attribute", string(semconv.HTTPTargetKey)),
-			zap.String("value", DefaultTarget),
 		)
+		return nil, nil
 	}
+
+	hostAttr, hostOk := attrs.Get(string(semconv.HTTPHostKey))
 	//Do not override URL with Host header, but check for use later
-	if hostAttr, hostOk := attrs.Get(string(semconv.HTTPHostKey)); hostOk && actel.Request.Host == "" {
-		actel.Request.Host = e.convertHost(hostAttr.AsString()) // host is Host Header. Is this correct?
+	if hostOk && actel.Request.Host == "" {
+		actel.Request.Host = e.convertHost(hostAttr.AsString()) // host is Host Header. Is this correct for APIClarity?
 	}
 
 	var err error
@@ -330,18 +357,20 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 		err = e.setTelemetryClientSpan(actel, resource, attrs, e.logger)
 	case ptrace.SpanKindServer:
 		err = e.setTelemetryServerSpan(actel, resource, attrs, e.logger)
-	case ptrace.SpanKindUnspecified:
-		e.logger.Warn("span kind unspecified, assuming default",
-			zap.String("kind", span.Kind().String()),
-			zap.String("name", span.Name()),
-			zap.String("traceid", hex.EncodeToString(traceID[:])),
-			zap.Int("default", int(DefaultSpanKind)),
-		)
-		if DefaultSpanKind == ptrace.SpanKindClient {
-			err = e.setTelemetryClientSpan(actel, resource, attrs, e.logger)
-		} else {
-			err = e.setTelemetryServerSpan(actel, resource, attrs, e.logger)
-		}
+	/*
+		case ptrace.SpanKindUnspecified:
+			e.logger.Warn("span kind unspecified, assuming default",
+				zap.String("kind", span.Kind().String()),
+				zap.String("name", span.Name()),
+				zap.String("traceid", hex.EncodeToString(traceID[:])),
+				zap.Int("default", int(DefaultSpanKind)),
+			)
+			if DefaultSpanKind == ptrace.SpanKindClient {
+				err = e.setTelemetryClientSpan(actel, resource, attrs, e.logger)
+			} else {
+				err = e.setTelemetryServerSpan(actel, resource, attrs, e.logger)
+			}
+	*/
 	default:
 		e.logger.Warn("ignoring span that is not client or server",
 			zap.String("kind", span.Kind().String()),
@@ -406,9 +435,6 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 	}
 
 	// Fill in missing data where available.
-	if method, ok := attrs.Get(string(semconv.HTTPMethodKey)); ok {
-		actel.Request.Method = method.AsString()
-	}
 	if statusCode, ok := attrs.Get(string(semconv.HTTPStatusCodeKey)); ok {
 		actel.Response.StatusCode = statusCode.AsString()
 	} else {

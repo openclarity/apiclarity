@@ -123,6 +123,8 @@ func (e *exporter) pushTraces(ctx context.Context, td ptrace.Traces) error {
 				actel, perr := e.processOTelSpan(res, scope, span)
 				if perr != nil {
 					return consumererror.NewPermanent(perr)
+				} else if actel == nil {
+					continue
 				}
 
 				err := e.export(ctx, actel)
