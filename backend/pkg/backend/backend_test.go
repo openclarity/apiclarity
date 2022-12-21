@@ -483,9 +483,12 @@ func TestBackend_handleHTTPTrace(t *testing.T) {
 				monitor:     nil,
 				dbHandler:   mockDatabase,
 				expectDatabase: func(database *_database.MockDatabase) {
+					database.EXPECT().APIInventoryTable().Return(mockAPIInventoryTable)
 					database.EXPECT().APIEventsTable().Return(mockAPIEventTable)
 				},
-				expectAPIInventoryTable: func(apiInventoryTable *_database.MockAPIInventoryTable) {},
+				expectAPIInventoryTable: func(apiInventoryTable *_database.MockAPIInventoryTable) {
+					apiInventoryTable.EXPECT().FirstOrCreate(gomock.Any())
+				},
 				expectAPIEventTable: func(apiEventTable *_database.MockAPIEventsTable) {
 					apiEventTable.EXPECT().CreateAPIEvent(NewEventMatcher(createDefaultTestEvent().WithIsNonAPI(true).event))
 				},

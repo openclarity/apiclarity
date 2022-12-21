@@ -318,23 +318,22 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 		apiInfo.Type = models.APITypeEXTERNAL
 	}
 
-	isNonAPI := isNonAPI(telemetry)
 
-	// Don't link non APIs to an API in the inventory
-	if !isNonAPI {
-		// lock the API inventory to avoid creating API entries twice on trace handling races
-		b.apiInventoryLock.Lock()
-		created, err := b.dbHandler.APIInventoryTable().FirstOrCreate(&apiInfo)
-		if err != nil {
-			b.apiInventoryLock.Unlock()
-			return fmt.Errorf("failed to get or create API info: %v", err)
-		}
+	// lock the API inventory to avoid creating API entries twice on trace handling races
+	b.apiInventoryLock.Lock()
+	created, err := b.dbHandler.APIInventoryTable().FirstOrCreate(&apiInfo)
+	if err != nil {
 		b.apiInventoryLock.Unlock()
-		log.Infof("API Info in DB: %+v", apiInfo)
-		if created {
-			log.Infof("Sending notification for new created API %+v", apiInfo)
-		}
+		return fmt.Errorf("failed to get or create API info: %v", err)
+	}
+	b.apiInventoryLock.Unlock()
+	log.Infof("API Info in DB: %+v", apiInfo)
+	if created {
+		log.Infof("Sending notification for new created API %+v", apiInfo)
+	}
 
+	isNonAPI := isNonAPI(telemetry)
+	if !isNonAPI {
 		// Handle trace telemetry by Speculator
 		if !b.speculators.Get(traceSourceID).HasApprovedSpec(specKey) {
 			err := b.speculators.Get(traceSourceID).LearnTelemetry(telemetry)
