@@ -30,7 +30,7 @@ fi
 
 
 cp -r F5BigIPBundle.template ${BUNDLE_FOLDER}
-cp ${APICLARITY_CERT_PATH} ${BUNDLE_FOLDER}/ApiClarityAgent/deploy
+cp ${APICLARITY_CERT_PATH} ${BUNDLE_FOLDER}/ApiClarityAgent/deploy/apiclarity.crt
 cat ${BUNDLE_FOLDER}/APIClarityAgent/deploy/config.yaml.template | sed "s|{{APIClarityURL}}|${APICLARITY_URL}|g"  | sed "s|{{APIClarityToken}}|${APICLARITY_TOKEN}|g" > ${BUNDLE_FOLDER}/APIClarityAgent/deploy/config.yaml
 
 

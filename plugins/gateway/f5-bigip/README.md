@@ -1,19 +1,19 @@
-# APIClarity F5 Big-IP LTM plugin
+# APIClarity F5 BIG-IP LTM plugin
 
-This is an F5 Big-IP LTM plugin that integrates with APIClarity.
-For more information about F5 Big-IP LTM please visit: https://www.f5.com/products/big-ip-services/local-traffic-manager
+This is an F5 BIG-IP LTM plugin that integrates with APIClarity.
+For more information about F5 BIG-IP LTM please visit: https://www.f5.com/products/big-ip-services/local-traffic-manager
 
 
 ## Prerequisites
 
 * APIClarity backend is running and exposed externally through a publicly reachable URL
-* F5 Big-IP is running
-* Another host (e.g. a Virtual Machine) able to run APIClarity Agent as docker container is runnin. This host must be reachable by F5 Big-IP and must be able to reach APIclarity URL. Let us refer to this host as the `F5-Log-Collector`.
+* F5 BIG-IP is running
+* Another host (e.g. a Virtual Machine) able to run APIClarity Agent as docker container is runnin. This host must be reachable by F5 BIG-IP and must be able to reach APIclarity URL. Let us refer to this host as the `F5-Log-Collector`.
 
 ## Install Instructions
 1. **Prepare the bundle**
 
- Run the following script by populating the environment variables with APIClarity URL, the APIClarity token and the path to the APIClarity certificate generated for the F5 Big-IP instance:
+ Run the following script by populating the environment variables with APIClarity URL, the APIClarity token and the path to the APIClarity certificate generated for the F5 BIG-IP instance:
 
        ```
        APICLARITY_URL=https://1.2.3.4:443/ \
@@ -23,7 +23,7 @@ For more information about F5 Big-IP LTM please visit: https://www.f5.com/produc
        ```
  The generated bundle is named `F5BigIPBundle` and contains all the files needed for subsequent steps.
 
-2. **Configure High Speed Logging in Big-IP**
+2. **Configure High Speed Logging in BIG-IP**
 
     1. Connect to BIG-IP management console
     2. In `System`->`Configuration`->`Log Destinations` click on the `+` button
@@ -31,16 +31,16 @@ For more information about F5 Big-IP LTM please visit: https://www.f5.com/produc
        * Name: `ApiClarityAgent`
        * Description: `APICLarity Agent receiving hsl`
        * Type: `Management Port`
-       * Address: [The host where F5-Log-Collector is reachable from Big-IP]
+       * Address: [The host where F5-Log-Collector is reachable from BIG-IP]
        * Port: `10514`
-       * Protocol: `tcp`
+       * Protocol: `udp`
     5. In `System`->`Configuration`->`Log Publishers` click on the `+` button
     6. Fill the form as follows:
        * Name: `APIClarityLogPublisher`
        * Description: `ApiClarity Log Publisher`
        * Destinations: Make sure `ApiClarityAgent` is in the list of selected destinations 
 
-3. **Configure Log Publisher iRule in Big-IP**
+3. **Configure Log Publisher iRule in BIG-IP**
 
     1. Connect to BIG-IP management console
     2. In `Local Traffic`->`iRules`->`iRule List` click on the `+` button

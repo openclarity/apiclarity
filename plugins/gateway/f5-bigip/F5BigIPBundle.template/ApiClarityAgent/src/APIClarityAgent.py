@@ -1,301 +1,211 @@
 import json
-import yaml
-import time
-import base64
-import requests
-import logging
+import sys
 import threading
-import os
-import copy
+import queue
+import socket
+import time
+import requests
+import helper
+import ssl
+from APIClarityHelper import prepare_telemetry
+import logging
+from urllib.parse import urlparse
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-CONFIGS = None
-
-class Common:
-    def __init__(self, TruncatedBody, body, headers, version):
-        self.version = version
-        self.headers = headers
-        self.body = body
-        self.TruncatedBody = TruncatedBody
-
-class Request:
-    def __init__(self, common, host, method, path):
-        self.method = method
-        self.path = path
-        self.host = host
-        self.common = common
-
-class Response:
-    def __init__(self, common, statusCode):
-        self.statusCode = statusCode
-        self.common = common
-
-class Telemetry:
-    def __init__(self, destinationAddress, destinationNamespace, request, requestID, response, scheme, sourceAddress):
-        self.requestID = requestID
-        self.scheme = scheme
-        self.destinationAddress = destinationAddress
-        self.destinationNamespace = destinationNamespace
-        self.sourceAddress = sourceAddress
-        self.request = request
-        self.response = response
-
-def getCommon (headers, body):
-    headersList = []
-    for header in headers:
-        headerValue = base64.b64decode(header).decode("UTF-8")
-        headerValuePair = headerValue.split(":")
-        if (len(headerValuePair)>1):
-            header = { "key":headerValuePair[0], "value":headerValuePair[1]};
-            headersList.append(header)
-
-    payload = base64.b64decode(body).decode("UTF-8")
-    truncatedBody = False
-    if (len(payload)>1000*1000):
-        truncatedBody = True
-        payload = ""
-    version = "0.0.1"
-    return Common (truncatedBody, body, headersList, version).__dict__
-
-def getRequest (common, host, method, path):
-    return Request (common, host, method, path).__dict__
-
-def getResponse (common, statusCode):
-    return Response (common, statusCode).__dict__
-    
-def getTelemetry (destinationAddress, request, requestID, response, scheme, sourceAddress):
-    return Telemetry (destinationAddress, "", request, requestID, response, scheme, sourceAddress).__dict__
-
-def telemetryRequestProcessing (messageJSON, token, hostsLocation, allowedhostsLocation, apiClarityURL):
-    destination = messageJSON["destination"]
-    requestID = messageJSON["requestID"]
-    source = messageJSON["source"]
-    scheme = messageJSON["scheme"]
-
-    requestHost = messageJSON["requestHost"]
-    requestMethod = messageJSON["requestMethod"]
-    requestPath = messageJSON["requestPath"]
-    responseStatus = messageJSON["responseStatus"]
-
-    requestHeaders = messageJSON["requestheaders"]
-    requestPayload = messageJSON["requestpayload"]
-    responseHeaders = messageJSON["responseheaders"]
-    responsePayload = messageJSON["responsepayload"]
-
-    updateDiscoveredHost (destination, hostsLocation)
-    if (isAllowed (destination, allowedhostsLocation)):
-        logging.info("sending traces : " + destination)
-        requestCommon = getCommon (requestHeaders,requestPayload)
-        request = getRequest (requestCommon, requestHost, requestMethod, requestPath)
-
-        responseCommon = getCommon (responseHeaders,responsePayload)
-        response = getResponse (responseCommon, responseStatus)
-
-        telemetry = getTelemetry (destination, request, requestID, response, scheme, source)
-        telemetryJSON = json.dumps(telemetry)
-        headers = getHeaders (token)
-        response = requests.post(apiClarityURL, data=telemetryJSON, headers=headers)
-
-        logging.info("response : " + response)
-
-def isAllowed (destination, allowedhostsLocation):
-    allowed = False
-    with open(allowedhostsLocation, 'r') as hostFile:
-        for line in hostFile:
-            if (line.strip()==destination.strip()):
-                allowed = True
-            if (line.strip()=="*"):
-                allowed = True
-    return allowed
-               
-def updateDiscoveredHost (destination, hostsLocation):
-    isNewHost = True
-    with open(hostsLocation, 'r') as hostFile:
-        for line in hostFile:
-            if (line.strip()==destination.strip()):
-                isNewHost = False
-    if (isNewHost):
-        with open(hostsLocation, 'a') as hostFile:
-            hostFile.write(destination+"\n")
-
-def processAPIClarity (message, token, hostsLocation, allowedhostsLocation, apiClarityURL):
-    messageJSON = json.loads (message)
-    telemetryRequestProcessing (messageJSON, token, hostsLocation, allowedhostsLocation, apiClarityURL)
-
-def updateSubmittedRecord (record, recordLocation):
-    with open(recordLocation, 'a') as recordFile:
-        recordFile.write(record+"\n")
-
-def isNotSubmittedRecord (record, recordLocation):
-    with open(recordLocation, 'r') as recordFile:
-       for line in recordFile:
-            if (line.strip()==record.strip()):
-                return False
-    return True
-
-def getHeaders (token):
-    headers = {
-        "Content-Type" : "application/json",
-        "Accept" : "application/json",
-        "X-Trace-Source-Token" : token.encode("UTF-8")
-    }
-    return headers
-
-def updateAllowedList (urlHostToTrace, token, allowedhostsLocation):
-    headers = getHeaders (token)
-    response = requests.get(urlHostToTrace, headers=headers, verify=False)
-    response.raise_for_status ()
-    jsonResponse = response.json()
-    print (jsonResponse["hosts"])
-    if (len(jsonResponse["hosts"])>0):
-        with open(allowedhostsLocation, 'w') as allowedHostsFile:
-            for host in jsonResponse["hosts"]:
-                allowedHostsFile.write(host+"\n")
-
-def sendDiscoveredHost (urlHostList, token, hostsLocation):
-    logging.info("sending sendDiscoveredHost")
-    hostArray = []
-    with open(hostsLocation, 'r') as hostFile:
-        for line in hostFile:
-            hostArray.append(line.strip())
-    payload = {
-        "hosts" : json.dumps(hostArray)
-    }
-    headers = getHeaders (token)
-    response = requests.post(urlHostList, data=payload, headers=headers, verify=False)
-    logging.info(response)
-
-def apiclarity_scheduler_task():
-    logging.info("Started APIClarityScheduler ...")
+QUEUE_MAX_SIZE = 100
+__configs = None
 
 
-    apiClaritySamplerManagerURL = CONFIGS["apiclarity-url"] + "/api/hostsToTrace"
-    apiClarityUpdatedHostListURL = CONFIGS["apiclarity-url"] + "/api/control/newDiscoveredAPIs"
-    token = CONFIGS['apiclarity-token']
-    hostsLocation = CONFIGS['hosts-path']
-    allowedhostsLocation = CONFIGS['allowed-hosts-path']
-    refreshInterval = CONFIGS['allowed-hosts-path']
+def trace_receiver(trace_queue: queue.Queue):
+    """
+    Receive traces from network and put them in a queue to be processed.
+    Traces a separated by new line character.
+    If queue is full, trace is dropped on the floor.
+    """
+    port = __configs['remote-log-port']
+    proto = __configs['remote-log-proto']
+
+    logging.info(f"Starting server on {proto}://0.0.0.0:{port}")
+
+    try:
+        ssocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM if proto == "TCP" else socket.SOCK_DGRAM)
+        ssocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        ssocket.bind(('', port))
+
+        if proto == "TCP":
+            ssocket.listen()
+    except Exception as e:
+        helper.log_exception(f"Unable to start server: {e}")
+        sys.exit(1)
 
     while True:
         try:
-            updateAllowedList(apiClaritySamplerManagerURL, token, allowedhostsLocation)
-            sendDiscoveredHost(apiClarityUpdatedHostListURL, token, hostsLocation)
-            time.sleep(int(refreshInterval))
+            if proto == "TCP":
+                s, client = ssocket.accept()
+                logging.info(f"Connection accepted from {client}")
+            else:
+                s = ssocket
+            f = s.makefile()
         except Exception as e:
-            logging.error(e)
+            helper.log_exception(f"Unable to accept new connection: {e}")
+            continue
 
-def apiclarity_processor_task():
-    logging.info("Started APIClarityProcessor ...")
+        while True:
+            try:
+                trace = f.readline()
+                if not trace:
+                    logging.info(f"Connection closed from client {client}")
+                    break
+                trace = trace.rstrip()
+                logging.debug(f"Received a trace: {trace}")
+                try:
+                    jtrace = json.loads(trace)
+                except Exception as e:
+                    helper.log_exception(f"Unable to parse trace {trace}: {e}")
+                    continue
+                if logging.getLogger('').isEnabledFor(logging.DEBUG):
+                    logging.debug("trace: " + json.dumps(jtrace, indent=2))
+                if trace_queue.qsize() == trace_queue.maxsize:
+                    logging.debug("Dropping trace")
+                    continue
+                logging.debug("Forwarding trace")
+                trace_queue.put(jtrace)
+            except Exception as e:
+                helper.log_exception(f"Unable to handle trace {trace}: {e}")
 
-    apiClarityURL = CONFIGS['apiclarity-url'] + "/api/telemetry"
-    token = CONFIGS['apiclarity-token']
-    recordLocation = CONFIGS['record-path']
-    hostsLocation = CONFIGS['hosts-path']
-    allowedhostsLocation = CONFIGS['allowed-hosts-path']
 
-    #Create files if missing
-    create_file(recordLocation)
-    create_file(hostsLocation)
-    create_file(allowedhostsLocation)
+def extract_destination_host(trace) -> str:
+    return trace["requestHost"]
 
-    certfile = open(CONFIGS['apiclarity-cert-path'])
 
-    # Config Map
-    syslogFile = open('/var/log/messages', 'r')
-    while syslogFile:
+
+def create_apiclarity_session() -> (requests.Session, dict):
+    # Verify certificate
+    context = ssl.create_default_context()
+    context.load_verify_locations(__configs['apiclarity-cert-path'])
+    apiclarity_url = urlparse(__configs['apiclarity-url'])
+    with socket.create_connection((apiclarity_url.hostname, apiclarity_url.port)) as sock:
+        with context.wrap_socket(sock, server_hostname=__configs['apiclarity-cert-hostname']):
+            logging.info(f"APIClarity certificate from {__configs['apiclarity-url']}  succesfully verified against hostname `__configs['apiclarity-cert-hostname']`")
+
+    sess = requests.Session()
+    token = __configs['apiclarity-token']
+
+    sess.verify = False #__configs['apiclarity-cert-path']
+    # sess.verify = __configs['apiclarity-cert-path']
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "X-Trace-Source-Token": token.encode("UTF-8")
+    }
+    return sess, headers
+
+
+def trace_sender(trace_queue: queue.Queue, new_api_queue: queue.Queue, api_inventory: dict):
+    logging.info("started")
+
+    sess, headers = create_apiclarity_session()
+    telemetry_path = __configs['apiclarity-url'] + "/api/telemetry"
+    while True:
+        trace = trace_queue.get()
+        logging.debug(f"Received trace from queue: {trace['requestID']}")
         try:
-            line = syslogFile.readline()
-            if "APICLARITY" in line:
-                headerData = line.split("@")
-                if (len(headerData)>2):
-                    if (isNotSubmittedRecord(headerData[1], recordLocation)):
-                        logging.info("processing messages ... ")
-                        processAPIClarity (headerData[2], token, hostsLocation, allowedhostsLocation, apiClarityURL)
-                        updateSubmittedRecord(headerData[1], recordLocation)
-                        time.sleep(1)
+            dhost = extract_destination_host(trace)
         except Exception as e:
-               logging.error(e)
-    syslogFile.close()
+            logging.debug(f"Unable to extract destinaton host from trace {trace['requestID']}: {e}")
+            continue
 
-def create_file(file):
-    try:
-        folder = os.path.dirname(file)
-        os.makedirs(folder, exist_ok=True)
-        open(file, "a").close()
-    except Exception as e:
-        raise Exception(f"Failed creating file {file}: {e}")
-
-
-def merge_config(config:dict, overwrite:dict):
-    """
-    overwrite values if present values overwrite config values
-    :param dict1:
-    :param dict2:
-    :return:
-    """
-    for k in overwrite:
-        if isinstance(overwrite[k], dict):
-            if k in config:
-                merge_config(config[k], overwrite[k])
-                continue
-
-        config[k] = overwrite[k]
-
-
-def config_obfuscate(config):
-    c = copy.deepcopy(config)
-    c['apiclarity-token'] = '**************'
-    return c
-
-
-def get_configs():
-    # Load defaults
-    with open('./config.yaml', 'r') as f:
-        configs = yaml.safe_load(f) or {}
-
-    config_filename = os.environ.get('CONFIG_PATH', None)
-    if config_filename:
+        if dhost not in api_inventory['discovered'] and dhost not in api_inventory['to-notify']:
+            logging.info(f"New API discovered: {dhost}")
+            api_inventory['to-notify'].add(dhost)
+            new_api_queue.put(dhost)
+        if dhost not in api_inventory['to-trace']:
+            logging.debug(f"Dropping trace not to trace: {trace['requestID']}")
+            continue
         try:
-           with open(config_filename, 'r') as f:
-                custom_configs = yaml.safe_load(f) or {}
-                merge_config(configs, custom_configs)
+            # send trace
+            telemetry = prepare_telemetry(trace)
+            response = sess.post(telemetry_path, json=telemetry, headers=headers)
+            response.raise_for_status()
+            if logging.getLogger('').isEnabledFor(logging.DEBUG):
+                logging.debug("trace: " + json.dumps(telemetry, indent=2))
         except Exception as e:
-            logging.error(f"Unable to open config file {config_filename}: {e}")
+            helper.log_exception(f"Unable to send telemetry {telemetry}: {e}")
+
+    sess.close()
 
 
-    logging.basicConfig(level=logging.DEBUG if configs['debug'] else logging.INFO,
-                            format='%(asctime)s %(levelname)s %(message)s')
+def api_notifier(new_api_queue: queue.Queue, api_inventory: dict):
+    logging.info("started")
 
-    logging.debug("DEBUG IS ON")
-    logging.info("\n##################################### CONFIG #####################################\n"
-                 + yaml.dump(config_obfuscate(configs)) +
-                 "##################################################################################")
+    sess, headers = create_apiclarity_session()
+    discovered_apis_path = __configs['apiclarity-url'] + "/api/control/newDiscoveredAPIs"
+    while True:
+        notified = False
+        newapi = new_api_queue.get()
+        logging.info(f"notifying about new api {newapi}")
+        try:
+            newapis = {
+                "hosts": [newapi]
+            }
+            response = sess.post(discovered_apis_path, json=newapis, headers=headers)
+            if response.status_code < 200 or response.status_code >= 300:
+                logging.error(
+                    f"Unable to notify about discovered api {newapi}: return code={response.status_code}")
+            else:
+                notified = True
+        except Exception as e:
+            helper.log_exception(f"Unable to notify about discovered api {newapi}: {e}")
+            api_inventory['to-notify'].remove(newapi)
+            continue
 
-    fatal = False
-    if not configs.get('apiclarity-url'):
-        logging.error("Missing config `apiclarity-url`")
-        fatal = True
-    if not configs.get('apiclarity-token'):
-        logging.error("Missing config `apiclarity-token`")
-        fatal = True
+        if notified:
+            logging.info(f"Successfully notified about new api {newapi}")
+            api_inventory['discovered'].add(newapi)
 
-    if fatal:
-        raise Exception("Invalid configuration")
 
-    return configs
+def hosts_to_trace_poller(api_inventory: dict):
+    logging.info("started")
+
+    sess, headers = create_apiclarity_session()
+    hosts_to_trace_path = __configs['apiclarity-url'] + "/api/hostsToTrace"
+    while True:
+        try:
+            logging.debug("Retrieving hosts to trace")
+            response = sess.get(hosts_to_trace_path, headers=headers)
+            response.raise_for_status()
+            hosts_to_trace = response.json()["hosts"]
+            logging.info(f"Retrieved hosts to trace: {hosts_to_trace}")
+            api_inventory['to-trace'] = set(hosts_to_trace)
+        except Exception as e:
+            helper.log_exception(f"Unable to retrieve hosts to trace: {e}")
+        time.sleep(int(__configs['refresh-interval-seconds']))
+
 
 def main():
-    global CONFIGS
-    CONFIGS = get_configs()
+    global __configs
+    __configs = helper.get_configs()
+    # Queue for traces
+    trace_queue = queue.Queue(maxsize=QUEUE_MAX_SIZE)
 
-    schedulerThread = threading.Thread(target=apiclarity_scheduler_task)
-    schedulerThread.start()
+    # Queue for discovered APIs
+    new_api_queue = queue.Queue()
 
-    processorThread = threading.Thread(target=apiclarity_processor_task)
-    processorThread.start()
+    # API Inventory
+    api_inventory = {
+        'to-notify': set(),
+        'discovered': set(),
+        'to-trace': set()
+    }
 
-    schedulerThread.join()
-    processorThread.join()
+    t_receiver = threading.Thread(target=trace_receiver, name="trace-receiver", args=[trace_queue]).start()
+    t_sender = threading.Thread(target=trace_sender, name="trace-sender",
+                                args=[trace_queue, new_api_queue, api_inventory]).start()
+    a_notifier = threading.Thread(target=api_notifier, name="api-notifier", args=[new_api_queue, api_inventory]).start()
+    htt_poller = threading.Thread(target=hosts_to_trace_poller, name="hosts-to-trace-poller",
+                                  args=[api_inventory]).start()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

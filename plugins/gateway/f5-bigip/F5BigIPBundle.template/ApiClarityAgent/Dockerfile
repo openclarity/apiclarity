@@ -9,4 +9,6 @@ COPY ./requirements.txt requirements.txt
 RUN pip3 install -r requirements.txt
 COPY src ./
 
+EXPOSE 10514/udp
+
 ENTRYPOINT ["python3", "APIClarityAgent.py"]
