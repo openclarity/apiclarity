@@ -9,9 +9,10 @@ when HTTP_REQUEST_SEND {
         set request_method [HTTP::method]
         set request_path [HTTP::path]
         set request_host [HTTP::header value Host]
-        if {[string first $request_host ":"] != -1} {
+        if {[string first ":" $request_host] == -1} {
             set request_host "$request_host:[TCP::server_port]"
         }
+        
         
         
         set contentLength [HTTP::header "Content-Length"]
