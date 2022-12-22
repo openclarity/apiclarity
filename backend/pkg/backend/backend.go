@@ -318,7 +318,6 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 		apiInfo.Type = models.APITypeEXTERNAL
 	}
 
-
 	// lock the API inventory to avoid creating API entries twice on trace handling races
 	b.apiInventoryLock.Lock()
 	created, err := b.dbHandler.APIInventoryTable().FirstOrCreate(&apiInfo)

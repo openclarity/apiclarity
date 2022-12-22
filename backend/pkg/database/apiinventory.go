@@ -43,7 +43,6 @@ const (
 	providedSpecInfoColumnName           = "provided_spec_info"
 	providedSpecCreatedAtColumnName      = "provided_spec_created_at"
 	reconstructedSpecCreatedAtColumnName = "reconstructed_spec_created_at"
-	traceSourceIDColumnName              = "trace_source_id"
 )
 
 type APIInfo struct {

@@ -63,7 +63,6 @@ func (h *TraceSourcesTableHandler) Prepopulate() error {
 	}).Create(&defaultTraceSources).Error
 }
 
-
 const tokenByteLength = 32
 
 func GenerateTraceSourceToken() (string, error) {
@@ -84,12 +83,12 @@ func (h *TraceSourcesTableHandler) CreateTraceSource(source *TraceSource) error 
 func (source *TraceSource) BeforeCreate(tx *gorm.DB) error {
 	// If no token is provided, create one
 	if len(source.Token) == 0 {
-		if token, err := GenerateTraceSourceToken(); err != nil {
+		newToken, err := GenerateTraceSourceToken()
+		if err != nil {
 			log.Errorf("Unable to generate token for Trace Source '%d': %v", source.ID, err)
-			return fmt.Errorf("Unable to generate random token for Trace Source: '%d'", source.ID)
-		} else {
-			source.Token = token
+			return fmt.Errorf("unable to generate random token for Trace Source: '%d'", source.ID)
 		}
+		source.Token = newToken
 	}
 
 	// If no uuid is provided, create one
