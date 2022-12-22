@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<KeyValueMapOperations continueOnError="false" enabled="true" name="Key-Value-Map-Operations-Get-APIClarity-Tracing" mapIdentifier="apiclarity-kvm">
+  <DisplayName>Key Value Map Operations Get APIClarity Tracing</DisplayName>
+  <Properties/>
+  <ExclusiveCache>false</ExclusiveCache>
+  <ExpiryTimeInSecs>86400</ExpiryTimeInSecs>
+  <InitialEntries>
+    <Entry>
+      <Key>
+        <Parameter>cacheUpdatedTime</Parameter>
+      </Key>
+      <Value>0</Value>
+    </Entry>
+  </InitialEntries>
+  <Get assignTo="token" index="1">
+    <Key>
+      <Parameter>token</Parameter>
+    </Key>
+  </Get>
+  <Get assignTo="cacheUpdatedTime" index="1">
+    <Key>
+      <Parameter>cacheUpdatedTime</Parameter>
+    </Key>
+  </Get>
+  <Get assignTo="allowedHostList" index="1">
+    <Key>
+      <Parameter>allowedHostList</Parameter>
+    </Key>
+  </Get>
+  <Get assignTo="hostList" index="1">
+    <Key>
+      <Parameter>hostList</Parameter>
+    </Key>
+  </Get>
+  <Scope>environment</Scope>
+</KeyValueMapOperations>

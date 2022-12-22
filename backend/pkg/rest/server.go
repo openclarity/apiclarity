@@ -29,17 +29,20 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/common"
 	"github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/modules"
-	_speculator "github.com/openclarity/speculator/pkg/speculator"
-	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
+	_notifier "github.com/openclarity/apiclarity/backend/pkg/notifier"
+	"github.com/openclarity/apiclarity/backend/pkg/sampling"
+	"github.com/openclarity/apiclarity/backend/pkg/speculators"
 )
 
 type Server struct {
-	server          *restapi.Server
-	dbHandler       database.Database
-	speculator      *_speculator.Speculator
-	modulesManager  modules.ModulesManager
-	samplingManager *manager.Manager
-	features        []modules.ModuleInfo
+	server               *restapi.Server
+	dbHandler            database.Database
+	speculators          *speculators.Repository
+	modulesManager       modules.ModulesManager
+	features             []modules.ModuleInfo
+	notifier             *_notifier.Notifier
+	samplingManager      *sampling.TraceSamplingManager
+	needsTraceSourceAuth bool
 }
 
 type ServerConfig struct {
@@ -48,20 +51,24 @@ type ServerConfig struct {
 	TLSPort               int
 	TLSServerCertFilePath string
 	TLSServerKeyFilePath  string
-	Speculator            *_speculator.Speculator
+	Speculators           *speculators.Repository
 	DBHandler             *database.Handler
 	ModulesManager        modules.ModulesManager
-	SamplingManager       *manager.Manager
 	Features              []modules.ModuleInfo
+	NeedsTraceSourceAuth  bool
+	Notifier              *_notifier.Notifier
+	SamplingManager       *sampling.TraceSamplingManager
 }
 
 func CreateRESTServer(config *ServerConfig) (*Server, error) {
 	s := &Server{
-		speculator:      config.Speculator,
-		dbHandler:       config.DBHandler,
-		modulesManager:  config.ModulesManager,
-		samplingManager: config.SamplingManager,
-		features:        config.Features,
+		speculators:          config.Speculators,
+		dbHandler:            config.DBHandler,
+		modulesManager:       config.ModulesManager,
+		features:             config.Features,
+		notifier:             config.Notifier,
+		samplingManager:      config.SamplingManager,
+		needsTraceSourceAuth: config.NeedsTraceSourceAuth,
 	}
 
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)
@@ -143,6 +150,10 @@ func CreateRESTServer(config *ServerConfig) (*Server, error) {
 		return s.GetAPIInventoryAPIIDFromHostAndPort(params)
 	})
 
+	api.GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDHandler = operations.GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDHandlerFunc(func(params operations.GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams) middleware.Responder {
+		return s.GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID(params)
+	})
+
 	api.PostAPIInventoryReviewIDApprovedReviewHandler = operations.PostAPIInventoryReviewIDApprovedReviewHandlerFunc(func(params operations.PostAPIInventoryReviewIDApprovedReviewParams) middleware.Responder {
 		return s.PostAPIInventoryReviewIDApprovedReview(params)
 	})
@@ -163,20 +174,20 @@ func CreateRESTServer(config *ServerConfig) (*Server, error) {
 		return s.PostControlNewDiscoveredAPIs(params)
 	})
 
-	api.GetControlGatewaysHandler = operations.GetControlGatewaysHandlerFunc(func(params operations.GetControlGatewaysParams) middleware.Responder {
-		return s.GetControlAPIGateways(params)
+	api.GetControlTraceSourcesHandler = operations.GetControlTraceSourcesHandlerFunc(func(params operations.GetControlTraceSourcesParams) middleware.Responder {
+		return s.GetControlTraceSources(params)
 	})
 
-	api.PostControlGatewaysHandler = operations.PostControlGatewaysHandlerFunc(func(params operations.PostControlGatewaysParams) middleware.Responder {
-		return s.PostControlAPIGateways(params)
+	api.PostControlTraceSourcesHandler = operations.PostControlTraceSourcesHandlerFunc(func(params operations.PostControlTraceSourcesParams) middleware.Responder {
+		return s.PostControlTraceSources(params)
 	})
 
-	api.GetControlGatewaysGatewayIDHandler = operations.GetControlGatewaysGatewayIDHandlerFunc(func(params operations.GetControlGatewaysGatewayIDParams) middleware.Responder {
-		return s.GetControlAPIGatewaysGatewayID(params)
+	api.GetControlTraceSourcesTraceSourceIDHandler = operations.GetControlTraceSourcesTraceSourceIDHandlerFunc(func(params operations.GetControlTraceSourcesTraceSourceIDParams) middleware.Responder {
+		return s.GetControlTraceSourcesTraceSourceID(params)
 	})
 
-	api.DeleteControlGatewaysGatewayIDHandler = operations.DeleteControlGatewaysGatewayIDHandlerFunc(func(params operations.DeleteControlGatewaysGatewayIDParams) middleware.Responder {
-		return s.DeleteControlAPIGatewaysGatewayID(params)
+	api.DeleteControlTraceSourcesTraceSourceIDHandler = operations.DeleteControlTraceSourcesTraceSourceIDHandlerFunc(func(params operations.DeleteControlTraceSourcesTraceSourceIDParams) middleware.Responder {
+		return s.DeleteControlTraceSourcesTraceSourceID(params)
 	})
 
 	server := restapi.NewServer(api)

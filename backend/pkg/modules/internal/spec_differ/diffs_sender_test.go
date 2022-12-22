@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//nolint: revive,stylecheck
+// nolint: revive,stylecheck
 package spec_differ
 
 import (
@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/google/uuid"
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api3/common"
@@ -48,6 +49,7 @@ func Test_pluginDiffer_getSpecDiffsNotifications(t *testing.T) {
 		hash1   = sha256.Sum256([]byte(newSpec + oldSpec))
 		hash2   = sha256.Sum256([]byte(newSpec2 + oldSpec2))
 		apiType = common.INTERNAL
+		uuid0   = uuid.MustParse("00000000-0000-0000-0000-000000000000")
 	)
 
 	type fields struct {
@@ -110,6 +112,7 @@ func Test_pluginDiffer_getSpecDiffsNotifications(t *testing.T) {
 							Id:                   uint32Ptr(1),
 							Name:                 stringPtr("foo"),
 							Port:                 intPtr(8080),
+							TraceSourceId:        &uuid0,
 						},
 						Diffs: []global.Diff{
 							{
@@ -145,6 +148,7 @@ func Test_pluginDiffer_getSpecDiffsNotifications(t *testing.T) {
 							Id:                   uint32Ptr(2),
 							Name:                 stringPtr("foo2"),
 							Port:                 intPtr(8000),
+							TraceSourceId:        &uuid0,
 						},
 						Diffs: []global.Diff{
 							{

@@ -40,7 +40,6 @@ var (
 var (
 	resourceAttributes1  = map[string]interface{}{"resource-attr": "resource-attr-val-1"}
 	spanEventAttributes  = map[string]interface{}{"span-event-attr": "span-event-attr-val"}
-	spanLinkAttributes   = map[string]interface{}{"span-link-attr": "span-link-attr-val"}
 	spanClientAttributes = []map[string]interface{}{
 		{
 			"span.kind":        "client",

@@ -48,8 +48,8 @@ func NewAPIClarityAPIsAPI(spec *loads.Document) *APIClarityAPIsAPI {
 		DeleteAPIInventoryAPIIDSpecsReconstructedSpecHandler: DeleteAPIInventoryAPIIDSpecsReconstructedSpecHandlerFunc(func(params DeleteAPIInventoryAPIIDSpecsReconstructedSpecParams) middleware.Responder {
 			return middleware.NotImplemented("operation DeleteAPIInventoryAPIIDSpecsReconstructedSpec has not yet been implemented")
 		}),
-		DeleteControlGatewaysGatewayIDHandler: DeleteControlGatewaysGatewayIDHandlerFunc(func(params DeleteControlGatewaysGatewayIDParams) middleware.Responder {
-			return middleware.NotImplemented("operation DeleteControlGatewaysGatewayID has not yet been implemented")
+		DeleteControlTraceSourcesTraceSourceIDHandler: DeleteControlTraceSourcesTraceSourceIDHandlerFunc(func(params DeleteControlTraceSourcesTraceSourceIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation DeleteControlTraceSourcesTraceSourceID has not yet been implemented")
 		}),
 		GetAPIEventsHandler: GetAPIEventsHandlerFunc(func(params GetAPIEventsParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetAPIEvents has not yet been implemented")
@@ -72,6 +72,9 @@ func NewAPIClarityAPIsAPI(spec *loads.Document) *APIClarityAPIsAPI {
 		GetAPIInventoryAPIIDFromHostAndPortHandler: GetAPIInventoryAPIIDFromHostAndPortHandlerFunc(func(params GetAPIInventoryAPIIDFromHostAndPortParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetAPIInventoryAPIIDFromHostAndPort has not yet been implemented")
 		}),
+		GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDHandler: GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDHandlerFunc(func(params GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID has not yet been implemented")
+		}),
 		GetAPIInventoryAPIIDProvidedSwaggerJSONHandler: GetAPIInventoryAPIIDProvidedSwaggerJSONHandlerFunc(func(params GetAPIInventoryAPIIDProvidedSwaggerJSONParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetAPIInventoryAPIIDProvidedSwaggerJSON has not yet been implemented")
 		}),
@@ -87,11 +90,11 @@ func NewAPIClarityAPIsAPI(spec *loads.Document) *APIClarityAPIsAPI {
 		GetAPIUsageHitCountHandler: GetAPIUsageHitCountHandlerFunc(func(params GetAPIUsageHitCountParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetAPIUsageHitCount has not yet been implemented")
 		}),
-		GetControlGatewaysHandler: GetControlGatewaysHandlerFunc(func(params GetControlGatewaysParams) middleware.Responder {
-			return middleware.NotImplemented("operation GetControlGateways has not yet been implemented")
+		GetControlTraceSourcesHandler: GetControlTraceSourcesHandlerFunc(func(params GetControlTraceSourcesParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetControlTraceSources has not yet been implemented")
 		}),
-		GetControlGatewaysGatewayIDHandler: GetControlGatewaysGatewayIDHandlerFunc(func(params GetControlGatewaysGatewayIDParams) middleware.Responder {
-			return middleware.NotImplemented("operation GetControlGatewaysGatewayID has not yet been implemented")
+		GetControlTraceSourcesTraceSourceIDHandler: GetControlTraceSourcesTraceSourceIDHandlerFunc(func(params GetControlTraceSourcesTraceSourceIDParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetControlTraceSourcesTraceSourceID has not yet been implemented")
 		}),
 		GetDashboardAPIUsageHandler: GetDashboardAPIUsageHandlerFunc(func(params GetDashboardAPIUsageParams) middleware.Responder {
 			return middleware.NotImplemented("operation GetDashboardAPIUsage has not yet been implemented")
@@ -111,11 +114,11 @@ func NewAPIClarityAPIsAPI(spec *loads.Document) *APIClarityAPIsAPI {
 		PostAPIInventoryReviewIDApprovedReviewHandler: PostAPIInventoryReviewIDApprovedReviewHandlerFunc(func(params PostAPIInventoryReviewIDApprovedReviewParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostAPIInventoryReviewIDApprovedReview has not yet been implemented")
 		}),
-		PostControlGatewaysHandler: PostControlGatewaysHandlerFunc(func(params PostControlGatewaysParams) middleware.Responder {
-			return middleware.NotImplemented("operation PostControlGateways has not yet been implemented")
-		}),
 		PostControlNewDiscoveredAPIsHandler: PostControlNewDiscoveredAPIsHandlerFunc(func(params PostControlNewDiscoveredAPIsParams) middleware.Responder {
 			return middleware.NotImplemented("operation PostControlNewDiscoveredAPIs has not yet been implemented")
+		}),
+		PostControlTraceSourcesHandler: PostControlTraceSourcesHandlerFunc(func(params PostControlTraceSourcesParams) middleware.Responder {
+			return middleware.NotImplemented("operation PostControlTraceSources has not yet been implemented")
 		}),
 		PutAPIInventoryAPIIDSpecsProvidedSpecHandler: PutAPIInventoryAPIIDSpecsProvidedSpecHandlerFunc(func(params PutAPIInventoryAPIIDSpecsProvidedSpecParams) middleware.Responder {
 			return middleware.NotImplemented("operation PutAPIInventoryAPIIDSpecsProvidedSpec has not yet been implemented")
@@ -160,8 +163,8 @@ type APIClarityAPIsAPI struct {
 	DeleteAPIInventoryAPIIDSpecsProvidedSpecHandler DeleteAPIInventoryAPIIDSpecsProvidedSpecHandler
 	// DeleteAPIInventoryAPIIDSpecsReconstructedSpecHandler sets the operation handler for the delete API inventory API ID specs reconstructed spec operation
 	DeleteAPIInventoryAPIIDSpecsReconstructedSpecHandler DeleteAPIInventoryAPIIDSpecsReconstructedSpecHandler
-	// DeleteControlGatewaysGatewayIDHandler sets the operation handler for the delete control gateways gateway ID operation
-	DeleteControlGatewaysGatewayIDHandler DeleteControlGatewaysGatewayIDHandler
+	// DeleteControlTraceSourcesTraceSourceIDHandler sets the operation handler for the delete control trace sources trace source ID operation
+	DeleteControlTraceSourcesTraceSourceIDHandler DeleteControlTraceSourcesTraceSourceIDHandler
 	// GetAPIEventsHandler sets the operation handler for the get API events operation
 	GetAPIEventsHandler GetAPIEventsHandler
 	// GetAPIEventsEventIDHandler sets the operation handler for the get API events event ID operation
@@ -176,6 +179,8 @@ type APIClarityAPIsAPI struct {
 	GetAPIInventoryAPIIDAPIInfoHandler GetAPIInventoryAPIIDAPIInfoHandler
 	// GetAPIInventoryAPIIDFromHostAndPortHandler sets the operation handler for the get API inventory API ID from host and port operation
 	GetAPIInventoryAPIIDFromHostAndPortHandler GetAPIInventoryAPIIDFromHostAndPortHandler
+	// GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDHandler sets the operation handler for the get API inventory API ID from host and port and trace source ID operation
+	GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDHandler GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDHandler
 	// GetAPIInventoryAPIIDProvidedSwaggerJSONHandler sets the operation handler for the get API inventory API ID provided swagger JSON operation
 	GetAPIInventoryAPIIDProvidedSwaggerJSONHandler GetAPIInventoryAPIIDProvidedSwaggerJSONHandler
 	// GetAPIInventoryAPIIDReconstructedSwaggerJSONHandler sets the operation handler for the get API inventory API ID reconstructed swagger JSON operation
@@ -186,10 +191,10 @@ type APIClarityAPIsAPI struct {
 	GetAPIInventoryAPIIDSuggestedReviewHandler GetAPIInventoryAPIIDSuggestedReviewHandler
 	// GetAPIUsageHitCountHandler sets the operation handler for the get API usage hit count operation
 	GetAPIUsageHitCountHandler GetAPIUsageHitCountHandler
-	// GetControlGatewaysHandler sets the operation handler for the get control gateways operation
-	GetControlGatewaysHandler GetControlGatewaysHandler
-	// GetControlGatewaysGatewayIDHandler sets the operation handler for the get control gateways gateway ID operation
-	GetControlGatewaysGatewayIDHandler GetControlGatewaysGatewayIDHandler
+	// GetControlTraceSourcesHandler sets the operation handler for the get control trace sources operation
+	GetControlTraceSourcesHandler GetControlTraceSourcesHandler
+	// GetControlTraceSourcesTraceSourceIDHandler sets the operation handler for the get control trace sources trace source ID operation
+	GetControlTraceSourcesTraceSourceIDHandler GetControlTraceSourcesTraceSourceIDHandler
 	// GetDashboardAPIUsageHandler sets the operation handler for the get dashboard API usage operation
 	GetDashboardAPIUsageHandler GetDashboardAPIUsageHandler
 	// GetDashboardAPIUsageLatestDiffsHandler sets the operation handler for the get dashboard API usage latest diffs operation
@@ -202,10 +207,10 @@ type APIClarityAPIsAPI struct {
 	PostAPIInventoryHandler PostAPIInventoryHandler
 	// PostAPIInventoryReviewIDApprovedReviewHandler sets the operation handler for the post API inventory review ID approved review operation
 	PostAPIInventoryReviewIDApprovedReviewHandler PostAPIInventoryReviewIDApprovedReviewHandler
-	// PostControlGatewaysHandler sets the operation handler for the post control gateways operation
-	PostControlGatewaysHandler PostControlGatewaysHandler
 	// PostControlNewDiscoveredAPIsHandler sets the operation handler for the post control new discovered a p is operation
 	PostControlNewDiscoveredAPIsHandler PostControlNewDiscoveredAPIsHandler
+	// PostControlTraceSourcesHandler sets the operation handler for the post control trace sources operation
+	PostControlTraceSourcesHandler PostControlTraceSourcesHandler
 	// PutAPIInventoryAPIIDSpecsProvidedSpecHandler sets the operation handler for the put API inventory API ID specs provided spec operation
 	PutAPIInventoryAPIIDSpecsProvidedSpecHandler PutAPIInventoryAPIIDSpecsProvidedSpecHandler
 
@@ -291,8 +296,8 @@ func (o *APIClarityAPIsAPI) Validate() error {
 	if o.DeleteAPIInventoryAPIIDSpecsReconstructedSpecHandler == nil {
 		unregistered = append(unregistered, "DeleteAPIInventoryAPIIDSpecsReconstructedSpecHandler")
 	}
-	if o.DeleteControlGatewaysGatewayIDHandler == nil {
-		unregistered = append(unregistered, "DeleteControlGatewaysGatewayIDHandler")
+	if o.DeleteControlTraceSourcesTraceSourceIDHandler == nil {
+		unregistered = append(unregistered, "DeleteControlTraceSourcesTraceSourceIDHandler")
 	}
 	if o.GetAPIEventsHandler == nil {
 		unregistered = append(unregistered, "GetAPIEventsHandler")
@@ -315,6 +320,9 @@ func (o *APIClarityAPIsAPI) Validate() error {
 	if o.GetAPIInventoryAPIIDFromHostAndPortHandler == nil {
 		unregistered = append(unregistered, "GetAPIInventoryAPIIDFromHostAndPortHandler")
 	}
+	if o.GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDHandler == nil {
+		unregistered = append(unregistered, "GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDHandler")
+	}
 	if o.GetAPIInventoryAPIIDProvidedSwaggerJSONHandler == nil {
 		unregistered = append(unregistered, "GetAPIInventoryAPIIDProvidedSwaggerJSONHandler")
 	}
@@ -330,11 +338,11 @@ func (o *APIClarityAPIsAPI) Validate() error {
 	if o.GetAPIUsageHitCountHandler == nil {
 		unregistered = append(unregistered, "GetAPIUsageHitCountHandler")
 	}
-	if o.GetControlGatewaysHandler == nil {
-		unregistered = append(unregistered, "GetControlGatewaysHandler")
+	if o.GetControlTraceSourcesHandler == nil {
+		unregistered = append(unregistered, "GetControlTraceSourcesHandler")
 	}
-	if o.GetControlGatewaysGatewayIDHandler == nil {
-		unregistered = append(unregistered, "GetControlGatewaysGatewayIDHandler")
+	if o.GetControlTraceSourcesTraceSourceIDHandler == nil {
+		unregistered = append(unregistered, "GetControlTraceSourcesTraceSourceIDHandler")
 	}
 	if o.GetDashboardAPIUsageHandler == nil {
 		unregistered = append(unregistered, "GetDashboardAPIUsageHandler")
@@ -354,11 +362,11 @@ func (o *APIClarityAPIsAPI) Validate() error {
 	if o.PostAPIInventoryReviewIDApprovedReviewHandler == nil {
 		unregistered = append(unregistered, "PostAPIInventoryReviewIDApprovedReviewHandler")
 	}
-	if o.PostControlGatewaysHandler == nil {
-		unregistered = append(unregistered, "PostControlGatewaysHandler")
-	}
 	if o.PostControlNewDiscoveredAPIsHandler == nil {
 		unregistered = append(unregistered, "PostControlNewDiscoveredAPIsHandler")
+	}
+	if o.PostControlTraceSourcesHandler == nil {
+		unregistered = append(unregistered, "PostControlTraceSourcesHandler")
 	}
 	if o.PutAPIInventoryAPIIDSpecsProvidedSpecHandler == nil {
 		unregistered = append(unregistered, "PutAPIInventoryAPIIDSpecsProvidedSpecHandler")
@@ -462,7 +470,7 @@ func (o *APIClarityAPIsAPI) initHandlerCache() {
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
-	o.handlers["DELETE"]["/control/gateways/{gatewayId}"] = NewDeleteControlGatewaysGatewayID(o.context, o.DeleteControlGatewaysGatewayIDHandler)
+	o.handlers["DELETE"]["/control/traceSources/{traceSourceId}"] = NewDeleteControlTraceSourcesTraceSourceID(o.context, o.DeleteControlTraceSourcesTraceSourceIDHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -494,6 +502,10 @@ func (o *APIClarityAPIsAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
+	o.handlers["GET"]["/apiInventory/apiId/fromHostAndPortAndTraceSourceID"] = NewGetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID(o.context, o.GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDHandler)
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
 	o.handlers["GET"]["/apiInventory/{apiId}/provided_swagger.json"] = NewGetAPIInventoryAPIIDProvidedSwaggerJSON(o.context, o.GetAPIInventoryAPIIDProvidedSwaggerJSONHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
@@ -514,11 +526,11 @@ func (o *APIClarityAPIsAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/control/gateways"] = NewGetControlGateways(o.context, o.GetControlGatewaysHandler)
+	o.handlers["GET"]["/control/traceSources"] = NewGetControlTraceSources(o.context, o.GetControlTraceSourcesHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/control/gateways/{gatewayId}"] = NewGetControlGatewaysGatewayID(o.context, o.GetControlGatewaysGatewayIDHandler)
+	o.handlers["GET"]["/control/traceSources/{traceSourceId}"] = NewGetControlTraceSourcesTraceSourceID(o.context, o.GetControlTraceSourcesTraceSourceIDHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
@@ -546,11 +558,11 @@ func (o *APIClarityAPIsAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/control/gateways"] = NewPostControlGateways(o.context, o.PostControlGatewaysHandler)
+	o.handlers["POST"]["/control/newDiscoveredAPIs"] = NewPostControlNewDiscoveredAPIs(o.context, o.PostControlNewDiscoveredAPIsHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/control/newDiscoveredAPIs"] = NewPostControlNewDiscoveredAPIs(o.context, o.PostControlNewDiscoveredAPIsHandler)
+	o.handlers["POST"]["/control/traceSources"] = NewPostControlTraceSources(o.context, o.PostControlTraceSourcesHandler)
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}

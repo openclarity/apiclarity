@@ -720,7 +720,11 @@ func (l *learnAndDetectBFLA) traceRunner(ctx context.Context, trace *CompositeTr
 		if err != nil {
 			return fmt.Errorf("unable to find source obj: %w", err)
 		}
-		log.Debugf("Detected audience is: %v, external=%v, authorized=%v", aud.K8sObject.Name, aud.External, aud.Authorized)
+		if aud.K8sObject != nil {
+			log.Debugf("Detected audience is: %v, external=%v, authorized=%v", aud.K8sObject.Name, aud.External, aud.Authorized)
+		} else {
+			log.Debugf("Detected audience is not from kubernetes, external=%v, authorized=%v", aud.External, aud.Authorized)
+		}
 		findingsUpdated := false
 		if !aud.Authorized {
 			// updates the auth model but this time as unauthorized

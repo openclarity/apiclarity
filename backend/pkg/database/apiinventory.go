@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/go-openapi/strfmt"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
@@ -51,6 +52,7 @@ type APIInfo struct {
 	Type                       models.APIType  `json:"type,omitempty" gorm:"column:type;uniqueIndex:api_info_idx_model" faker:"oneof: INTERNAL, EXTERNAL"`
 	Name                       string          `json:"name,omitempty" gorm:"column:name;uniqueIndex:api_info_idx_model" faker:"oneof: test.com, example.com, kaki.org"`
 	Port                       int64           `json:"port,omitempty" gorm:"column:port;uniqueIndex:api_info_idx_model" faker:"oneof: 80, 443"`
+	TraceSourceID              uint            `json:"traceSourceID,omitempty" gorm:"column:trace_source_id;default:0;uniqueIndex:api_info_idx_model" faker:"-"` // This is the name of the Trace Source which notified of this API. Empty means it was auto discovered by APIClarity on first.
 	HasProvidedSpec            bool            `json:"hasProvidedSpec,omitempty" gorm:"column:has_provided_spec"`
 	HasReconstructedSpec       bool            `json:"hasReconstructedSpec,omitempty" gorm:"column:has_reconstructed_spec"`
 	ReconstructedSpec          string          `json:"reconstructedSpec,omitempty" gorm:"column:reconstructed_spec" faker:"-"`
@@ -60,9 +62,9 @@ type APIInfo struct {
 	DestinationNamespace       string          `json:"destinationNamespace,omitempty" gorm:"column:destination_namespace;uniqueIndex:api_info_idx_model" faker:"-"`
 	ProvidedSpecCreatedAt      strfmt.DateTime `json:"providedSpecCreatedAt,omitempty" gorm:"column:provided_spec_created_at" faker:"-"`
 	ReconstructedSpecCreatedAt strfmt.DateTime `json:"reconstructedSpecCreatedAt,omitempty" gorm:"column:reconstructed_spec_created_at" faker:"-"`
-	CreatedBy                  string          `json:"createdBy,omitempty" gorm:"column:created_by;default:APICLARITY;uniqueIndex:api_info_idx_model" faker:"-"` // This is the name of the Gateway which notified of this API. Empty means it was auto discovered by APIClarity on first.
 
-	Annotations []*APIInfoAnnotation `gorm:"foreignKey:APIID;references:ID"`
+	TraceSource TraceSource          `gorm:"constraint:OnDelete:CASCADE"`
+	Annotations []*APIInfoAnnotation `gorm:"foreignKey:APIID;references:ID;constraint:OnDelete:CASCADE"`
 }
 
 //go:generate $GOPATH/bin/mockgen -destination=./mock_apiinventory.go -package=database github.com/openclarity/apiclarity/backend/pkg/database APIInventoryTable
@@ -73,7 +75,7 @@ type APIInventoryTable interface {
 	PutAPISpec(apiID uint, spec string, specInfo *models.SpecInfo, specType specType, createdAt strfmt.DateTime) error
 	DeleteProvidedAPISpec(apiID uint32) error
 	DeleteApprovedAPISpec(apiID uint32) error
-	GetAPIID(name, port string) (uint, error)
+	GetAPIID(name, port string, traceSourceID *uuid.UUID) (uint, error)
 	First(dest *APIInfo, conds ...interface{}) error
 	FirstOrCreate(apiInfo *APIInfo) (created bool, err error)
 	CreateAPIInfo(event *APIInfo)
@@ -95,7 +97,7 @@ func APIInfoFromDB(apiInfo *APIInfo) *models.APIInfo {
 		Name:                 apiInfo.Name,
 		Port:                 apiInfo.Port,
 		DestinationNamespace: apiInfo.DestinationNamespace,
-		CreatedBy:            &apiInfo.CreatedBy,
+		TraceSourceID:        strfmt.UUID(apiInfo.TraceSource.UID.String()),
 	}
 }
 
@@ -125,6 +127,7 @@ func (a *APIInventoryTableHandler) GetAPIInventoryAndTotal(params operations.Get
 	// get specific page ordered items with the current filters
 	if err := tx.Scopes(Paginate(params.Page, params.PageSize)).
 		Order(sortOrder).
+		Preload("TraceSource").
 		Find(&apiInventory).Error; err != nil {
 		return nil, 0, err
 	}
@@ -162,9 +165,17 @@ func (a *APIInventoryTableHandler) setAPIInventoryFilters(params operations.GetA
 	return table
 }
 
-func (a *APIInventoryTableHandler) GetAPIID(name, port string) (uint, error) {
+func (a *APIInventoryTableHandler) GetAPIID(name, port string, traceSourceID *uuid.UUID) (uint, error) {
 	apiInfo := APIInfo{}
-	if result := a.tx.Where(nameColumnName+" = ?", name).Where(portColumnName+" = ?", port).First(&apiInfo); result.Error != nil {
+	cond := map[string]interface{}{
+		apiInventoryTableName + "." + nameColumnName: name,
+		apiInventoryTableName + "." + portColumnName: port,
+	}
+	tx := a.tx.Where(cond)
+	if traceSourceID != nil {
+		tx.Joins("TraceSource").Where("uid = ?", *traceSourceID)
+	}
+	if result := tx.First(&apiInfo); result.Error != nil {
 		return 0, result.Error
 	}
 
@@ -172,10 +183,10 @@ func (a *APIInventoryTableHandler) GetAPIID(name, port string) (uint, error) {
 }
 
 func (a *APIInventoryTableHandler) First(dest *APIInfo, conds ...interface{}) error {
-	return a.tx.First(dest, conds).Error
+	return a.tx.Preload("TraceSource").First(dest, conds).Error
 }
 
 func (a *APIInventoryTableHandler) FirstOrCreate(apiInfo *APIInfo) (created bool, err error) {
-	tx := a.tx.Where(*apiInfo).FirstOrCreate(apiInfo)
+	tx := a.tx.Preload("TraceSource").Where(*apiInfo).FirstOrCreate(apiInfo)
 	return tx.RowsAffected > 0, tx.Error
 }

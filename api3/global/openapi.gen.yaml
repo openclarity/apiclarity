@@ -122,13 +122,6 @@ components:
       schema:
         format: date-time
         type: string
-    gatewayId:
-      description: Gateway ID
-      in: path
-      name: gatewayId
-      required: true
-      schema:
-        type: integer
     hasProvidedSpecFilter:
       in: query
       name: hasProvidedSpec[is]
@@ -355,6 +348,22 @@ components:
       name: statusCode[lte]
       schema:
         type: string
+    traceSourceId:
+      description: Trace Source ID
+      in: path
+      name: traceSourceId
+      required: true
+      schema:
+        format: uuid
+        type: string
+    traceSourceIdQuery:
+      description: Trace Source ID
+      in: query
+      name: traceSourceId
+      required: true
+      schema:
+        format: uuid
+        type: string
   responses:
     UnknownError:
       content:
@@ -364,8 +373,9 @@ components:
       description: unknown error
   schemas:
     APIClarityFeature:
-      description: Description of APIClarity feature and the list of API hosts (in
-        the form 'host:port') the feature requires to get trace for
+      description: Description of APIClarity feature and the list of API hosts (Group
+        by trace sources, in the form 'host:port') the feature requires to get trace
+        for
       properties:
         featureDescription:
           description: Short human readable description of the feature
@@ -373,9 +383,7 @@ components:
         featureName:
           $ref: '#/components/schemas/APIClarityFeatureEnum'
         hostsToTrace:
-          items:
-            type: string
-          type: array
+          $ref: '#/components/schemas/HostsToTraceForComponent'
       required:
       - featureName
       type: object
@@ -387,11 +395,13 @@ components:
       - spec_differ
       - specdiffs
       - specreconstructor
+      - specreconstructor
       - traceanalyzer
       type: string
     APIClarityFeatureList:
       description: List of APIClarity features and for each feature the list of API
-        hosts (in the form 'host:port') the feature requires to get trace for
+        hosts (Group by trace sources, in the form 'host:port') the feature requires
+        to get trace for
       properties:
         features:
           items:
@@ -428,31 +438,6 @@ components:
       - bflaStatus
       - external
       - mismatchedScopes
-    APIGateway:
-      description: Gateway which is externally exposing APIs
-      properties:
-        description:
-          type: string
-        id:
-          type: integer
-        name:
-          description: Unique name identifying a gateway
-          type: string
-        token:
-          format: byte
-          type: string
-        type:
-          $ref: '#/components/schemas/APIGatewayType'
-      required:
-      - name
-      - type
-      type: object
-    APIGatewayType:
-      enum:
-      - TYK
-      - KONG
-      - APIGEEX
-      type: string
     Annotation:
       properties:
         annotation:
@@ -672,6 +657,13 @@ components:
       - specType
       - specTimestamp
       type: object
+    FeatureEnable:
+      description: Enable/disable a feature
+      properties:
+        enable:
+          description: enable flag
+          type: boolean
+      type: object
     Finding:
       properties:
         description:
@@ -811,6 +803,31 @@ components:
       - IN_PROGRESS
       title: FuzzingStatus
       type: string
+    HostsToTraceForComponent:
+      description: List of trace sources for a component, with theirs list of API
+        hosts to get trace for
+      properties:
+        component:
+          description: Component name
+          type: string
+        traceSourcesHosts:
+          items:
+            $ref: '#/components/schemas/HostsToTraceForTraceSource'
+          type: array
+      type: object
+    HostsToTraceForTraceSource:
+      description: list of API hosts (in the form 'host:port') managed by a traceSource
+      properties:
+        hostsToTrace:
+          description: List of hosts (in the form 'host:port')
+          items:
+            type: string
+          type: array
+        traceSourceID:
+          description: ID of the trace source
+          format: uint32
+          type: integer
+      type: object
     K8sObjectRef:
       properties:
         apiVersion:
@@ -1080,6 +1097,33 @@ components:
           type: integer
       title: Tests
       type: object
+    TraceSource:
+      description: A Source which is sending traces to APIClarity
+      properties:
+        description:
+          type: string
+        id:
+          type: integer
+        name:
+          description: Unique name identifying a Trace Source
+          type: string
+        token:
+          type: string
+        type:
+          $ref: '#/components/schemas/TraceSourceType'
+        uid:
+          format: uuid
+          type: string
+      required:
+      - name
+      - type
+      type: object
+    TraceSourceType:
+      enum:
+      - APIGEE_X
+      - KONG_INTERNAL
+      - TYK_INTERNAL
+      type: string
     Version:
       properties:
         version:
@@ -1459,6 +1503,30 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       summary: Get apiId from host and port
+  /apiInventory/apiId/fromHostAndPortAndTraceSourceID:
+    get:
+      parameters:
+      - $ref: '#/components/parameters/host'
+      - $ref: '#/components/parameters/port'
+      - $ref: '#/components/parameters/traceSourceIdQuery'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                description: api id
+                format: uint32
+                type: integer
+          description: Success
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: API ID Not Found
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Get apiId from host and port and Trace Source ID
   /apiUsage/hitCount:
     get:
       parameters:
@@ -1502,75 +1570,6 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       summary: Get a hit count within a selected timeframe for the filtered API events
-  /control/gateways:
-    get:
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                properties:
-                  gateways:
-                    description: List of gateways
-                    items:
-                      $ref: '#/components/schemas/APIGateway'
-                    type: array
-                required:
-                - gateways
-                type: object
-          description: Success
-        default:
-          $ref: '#/components/responses/UnknownError'
-      summary: List of configured gateways
-    post:
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/APIGateway'
-      responses:
-        "201":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIGateway'
-          description: Success
-        default:
-          $ref: '#/components/responses/UnknownError'
-      summary: Create a new gateway
-  /control/gateways/{gatewayId}:
-    delete:
-      responses:
-        "204":
-          description: Success
-        "404":
-          content:
-            application/json:
-              schema:
-                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
-          description: API Gateway not found
-        default:
-          $ref: '#/components/responses/UnknownError'
-      summary: Delete a gateway
-    get:
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIGateway'
-          description: Gateway information
-        "404":
-          content:
-            application/json:
-              schema:
-                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
-          description: API Gateway not found
-        default:
-          $ref: '#/components/responses/UnknownError'
-      summary: Get gateway information
-    parameters:
-    - $ref: '#/components/parameters/gatewayId'
   /control/newDiscoveredAPIs:
     post:
       description: This allows a client (a gateway for example) to notify APIclarity
@@ -1585,9 +1584,6 @@ paths:
                   items:
                     type: string
                   type: array
-                source:
-                  description: Optional name identifying the entity sending this notification.
-                  type: string
               required:
               - hosts
               type: object
@@ -1601,6 +1597,75 @@ paths:
         default:
           $ref: '#/components/responses/UnknownError'
       summary: Allows a client to notify APIClarity about new APIs.
+  /control/traceSources:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                properties:
+                  trace_sources:
+                    description: List of trace sources
+                    items:
+                      $ref: '#/components/schemas/TraceSource'
+                    type: array
+                required:
+                - trace_sources
+                type: object
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: List of configured trace sources
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TraceSource'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TraceSource'
+          description: Success
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Create a new Trace Source
+  /control/traceSources/{traceSourceId}:
+    delete:
+      responses:
+        "204":
+          description: Success
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Trace Source not found
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Delete a Trace Source
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TraceSource'
+          description: Trace Source information
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Trace Source not found
+        default:
+          $ref: '#/components/responses/UnknownError'
+      summary: Get Trace Source information
+    parameters:
+    - $ref: '#/components/parameters/traceSourceId'
   /dashboard/apiUsage:
     get:
       parameters:
@@ -2399,6 +2464,73 @@ paths:
                 $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
           description: Error response
       summary: Stop Differ for an API
+  /modules/specreconstructor/{apiID}/start:
+    post:
+      operationId: specreconstructorPostAPIIDStart
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "204":
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      summary: Start the spec reconstruction for this API.
+  /modules/specreconstructor/{apiID}/stop:
+    post:
+      operationId: specreconstructorPostAPIIDStop
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        "204":
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      summary: Stop the spec reconstruction for this API.
+  /modules/specreconstructor/enable:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeatureEnable'
+      responses:
+        "204":
+          description: Success
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ApiResponse
+          description: Error response
+      summary: enable/disable the spec reconstruction
+  /modules/specreconstructor/version:
+    get:
+      description: Get the version of this Plugin
+      operationId: specreconstructorgetVersion
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ModuleVersion
+          description: Version of the Plugin
+      summary: Get the version of this Plugin
   /modules/traceanalyzer/{apiID}/start:
     post:
       description: Start Trace Analysis for an API.

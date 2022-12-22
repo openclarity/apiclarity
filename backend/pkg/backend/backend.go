@@ -35,6 +35,7 @@ import (
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
+	"github.com/openclarity/apiclarity/backend/pkg/common"
 	_config "github.com/openclarity/apiclarity/backend/pkg/config"
 	_database "github.com/openclarity/apiclarity/backend/pkg/database"
 	"github.com/openclarity/apiclarity/backend/pkg/healthz"
@@ -42,6 +43,8 @@ import (
 	"github.com/openclarity/apiclarity/backend/pkg/modules"
 	_notifier "github.com/openclarity/apiclarity/backend/pkg/notifier"
 	"github.com/openclarity/apiclarity/backend/pkg/rest"
+	"github.com/openclarity/apiclarity/backend/pkg/sampling"
+	speculators_repo "github.com/openclarity/apiclarity/backend/pkg/speculators"
 	"github.com/openclarity/apiclarity/backend/pkg/traces"
 	speculatorutils "github.com/openclarity/apiclarity/backend/pkg/utils/speculator"
 	tls "github.com/openclarity/apiclarity/backend/pkg/utils/tls"
@@ -49,13 +52,10 @@ import (
 	_spec "github.com/openclarity/speculator/pkg/spec"
 	_speculator "github.com/openclarity/speculator/pkg/speculator"
 	_mimeutils "github.com/openclarity/speculator/pkg/utils"
-	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
-	interfacemanager "github.com/openclarity/trace-sampling-manager/manager/pkg/manager/interface"
-	restmanager "github.com/openclarity/trace-sampling-manager/manager/pkg/rest"
 )
 
 type Backend struct {
-	speculator          *_speculator.Speculator
+	speculators         *speculators_repo.Repository
 	stateBackupInterval time.Duration
 	stateBackupFileName string
 	monitor             *k8smonitor.Monitor
@@ -65,9 +65,9 @@ type Backend struct {
 	notifier            *_notifier.Notifier
 }
 
-func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculator *_speculator.Speculator, dbHandler *_database.Handler, modulesManager modules.ModulesManager, notifier *_notifier.Notifier) *Backend {
+func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculators *speculators_repo.Repository, dbHandler *_database.Handler, modulesManager modules.ModulesManager, notifier *_notifier.Notifier) *Backend {
 	return &Backend{
-		speculator:          speculator,
+		speculators:         speculators,
 		stateBackupInterval: time.Second * time.Duration(config.StateBackupIntervalSec),
 		stateBackupFileName: config.StateBackupFileName,
 		monitor:             monitor,
@@ -92,12 +92,7 @@ func createDatabaseConfig(config *_config.Config) *_database.DBConfig {
 const defaultChanSize = 100
 
 func getCoreFeatures() []modules.ModuleInfo {
-	features := []modules.ModuleInfo{
-		{
-			Name:        string(models.APIClarityFeatureEnumSpecreconstructor),
-			Description: "Reconstructs OAPI specifications from traces",
-		},
-	}
+	features := []modules.ModuleInfo{}
 	return features
 }
 
@@ -124,7 +119,7 @@ func Run() {
 	dbHandler.StartReviewTableCleaner(globalCtx, time.Duration(config.DatabaseCleanerIntervalSec)*time.Second)
 	var clientset kubernetes.Interface
 	var monitor *k8smonitor.Monitor
-	var samplingManager *manager.Manager
+
 	if config.EnableK8s {
 		if config.K8sLocal {
 			clientset, err = k8smonitor.CreateLocalK8sClientset()
@@ -136,37 +131,15 @@ func Run() {
 			if err != nil {
 				log.Fatalf("failed to create K8s clientset: %v", err)
 			}
-		}
-
-		samplingManager, err = manager.Create(clientset, &restmanager.Config{
-			RestServerPort:             config.HTTPTraceSamplingManagerPort,
-			GRPCServerPort:             config.GRPCTraceSamplingManagerPort,
-			HostToTraceSecretName:      config.HostToTraceSecretName,
-			HostToTraceSecretNamespace: config.HostToTraceSecretNamespace,
-			HostToTraceSecretOwnerName: config.HostToTraceSecretOwnerName,
-			EnableTLS:                  config.EnableTLS,
-			TLSServerCertFilePath:      config.TLSServerCertFilePath,
-			TLSServerKeyFilePath:       config.TLSServerKeyFilePath,
-			RootCertFilePath:           config.RootCertFilePath,
-			RestServerTLSPort:          config.HTTPSTraceSamplingManagerPort,
-		})
-		if err != nil {
-			log.Errorf("Failed to create a trace sampling manager: %v", err)
-			return
-		}
-		if err := samplingManager.Start(errChan); err != nil {
-			log.Errorf("Failed to start trace sampling manager: %v", err)
-			return
-		}
-
-		if !config.K8sLocal && !viper.GetBool(_config.NoMonitorEnvVar) {
-			monitor, err = k8smonitor.CreateMonitor(clientset)
-			if err != nil {
-				log.Errorf("Failed to create a monitor: %v", err)
-				return
+			if !viper.GetBool(_config.NoMonitorEnvVar) {
+				monitor, err = k8smonitor.CreateMonitor(clientset)
+				if err != nil {
+					log.Errorf("Failed to create a monitor: %v", err)
+					return
+				}
+				monitor.Start()
+				defer monitor.Stop()
 			}
-			monitor.Start()
-			defer monitor.Stop()
 		}
 	}
 
@@ -174,10 +147,10 @@ func Run() {
 		go dbHandler.CreateFakeData()
 	}
 
-	speculator, err := _speculator.DecodeState(config.StateBackupFileName, config.SpeculatorConfig)
+	speculators, err := speculators_repo.DecodeState(config.StateBackupFileName, config.SpeculatorConfig)
 	if err != nil {
-		log.Infof("No speculator state to decode, creating new: %v", err)
-		speculator = _speculator.CreateSpeculator(config.SpeculatorConfig)
+		log.Infof("No speculators state to decode, creating new: %v", err)
+		speculators = speculators_repo.NewMapRepository(config.SpeculatorConfig)
 	} else {
 		log.Infof("Using encoded speculator state")
 	}
@@ -194,23 +167,21 @@ func Run() {
 		notifier.Start(context.Background())
 	}
 
-	modulesWrapper, modInfos, err := modules.New(globalCtx, dbHandler, clientset, samplingManager, speculatoraccessor.NewSpeculatorAccessor(speculator), notifier, config)
+	samplingManager, err := sampling.CreateTraceSamplingManager(dbHandler, config, clientset, errChan)
+	if err != nil {
+		log.Errorf("Failed to create Trace Sampling Manager: %v", err)
+		return
+	}
+
+	modulesWrapper, modInfos, err := modules.New(globalCtx, dbHandler, clientset, samplingManager, speculatoraccessor.NewSpeculatorAccessor(speculators), notifier, config)
 	if err != nil {
 		log.Errorf("Failed to create module wrapper and info: %v", err)
 		return
 	}
 
 	features := append(modInfos, getCoreFeatures()...)
-	if config.EnableK8s && !config.TraceSamplingEnabled {
-		for _, f := range features {
-			samplingManager.AddHostsToTrace(&interfacemanager.HostsByComponentID{
-				Hosts:       []string{"*"},
-				ComponentID: f.Name,
-			})
-		}
-	}
 
-	backend := CreateBackend(config, monitor, speculator, dbHandler, modulesWrapper, notifier)
+	backend := CreateBackend(config, monitor, speculators, dbHandler, modulesWrapper, notifier)
 
 	serverConfig := &rest.ServerConfig{
 		EnableTLS:             config.EnableTLS,
@@ -218,11 +189,12 @@ func Run() {
 		TLSPort:               config.BackendRestTLSPort,
 		TLSServerCertFilePath: config.TLSServerCertFilePath,
 		TLSServerKeyFilePath:  config.TLSServerKeyFilePath,
-		Speculator:            speculator,
+		Speculators:           speculators,
 		DBHandler:             dbHandler,
 		ModulesManager:        modulesWrapper,
-		SamplingManager:       samplingManager,
 		Features:              features,
+		Notifier:              notifier,
+		SamplingManager:       samplingManager,
 	}
 	restServer, err := rest.CreateRESTServer(serverConfig)
 	if err != nil {
@@ -238,6 +210,9 @@ func Run() {
 		TLSServerCertFilePath: config.TLSServerCertFilePath,
 		TLSServerKeyFilePath:  config.TLSServerKeyFilePath,
 		TraceHandleFunc:       backend.handleHTTPTrace,
+		NewDiscoveredAPIsFunc: restServer.CreateNewDiscoveredAPIs,
+		TraceSourceAuthFunc:   nil,
+		TraceSamplingManager:  samplingManager,
 	}
 	tracesServer, err := traces.CreateHTTPTracesServer(httpTracesServerConfig)
 	if err != nil {
@@ -245,6 +220,22 @@ func Run() {
 	}
 	tracesServer.Start(errChan)
 	defer tracesServer.Stop()
+
+	if config.EnableTLS {
+		httpExternalTracesServerConfig := httpTracesServerConfig
+		httpExternalTracesServerConfig.EnableTLS = true
+		httpExternalTracesServerConfig.TLSPort = config.ExternalHTTPTracesTLSPort
+		httpExternalTracesServerConfig.TraceSourceAuthFunc = backend.traceSourceAuth
+
+		externalTracesServer, err := traces.CreateHTTPTracesServer(httpExternalTracesServerConfig)
+		if err != nil {
+			log.Fatalf("Failed to create external trace server: %v", err)
+		}
+		externalTracesServer.Start(errChan)
+		defer externalTracesServer.Stop()
+	} else {
+		log.Warningf("External trace server not started because TLS is not enabled")
+	}
 
 	backend.startStateBackup(globalCtx)
 
@@ -267,8 +258,13 @@ func Run() {
 	}
 }
 
-func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Telemetry) error {
+func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Telemetry, traceSource *models.TraceSource) error {
 	var err error
+
+	traceSourceID := common.DefaultTraceSourceID
+	if traceSource != nil {
+		traceSourceID = uint(traceSource.ID)
+	}
 
 	log.Debugf("Handling telemetry: %+v", trace)
 
@@ -311,35 +307,35 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 		Port: int64(destPort),
 
 		DestinationNamespace: trace.DestinationNamespace,
+
+		TraceSourceID: traceSourceID,
 	}
 
 	// Set API Info type
-	if b.monitor.IsInternalCIDR(destInfo.IP) {
+	if traceSourceID != common.DefaultTraceSourceID || b.monitor.IsInternalCIDR(destInfo.IP) {
 		apiInfo.Type = models.APITypeINTERNAL
 	} else {
 		apiInfo.Type = models.APITypeEXTERNAL
 	}
 
-	isNonAPI := isNonAPI(telemetry)
-
-	// Don't link non APIs to an API in the inventory
-	if !isNonAPI {
-		// lock the API inventory to avoid creating API entries twice on trace handling races
-		b.apiInventoryLock.Lock()
-		created, err := b.dbHandler.APIInventoryTable().FirstOrCreate(&apiInfo)
-		if err != nil {
-			b.apiInventoryLock.Unlock()
-			return fmt.Errorf("failed to get or create API info: %v", err)
-		}
+	// lock the API inventory to avoid creating API entries twice on trace handling races
+	b.apiInventoryLock.Lock()
+	created, err := b.dbHandler.APIInventoryTable().FirstOrCreate(&apiInfo)
+	if err != nil {
 		b.apiInventoryLock.Unlock()
-		log.Infof("API Info in DB: %+v", apiInfo)
-		if created {
-			log.Infof("Sending notification for new created API %+v", apiInfo)
-		}
+		return fmt.Errorf("failed to get or create API info: %v", err)
+	}
+	b.apiInventoryLock.Unlock()
+	log.Infof("API Info in DB: %+v", apiInfo)
+	if created {
+		log.Infof("Sending notification for new created API %+v", apiInfo)
+	}
 
+	isNonAPI := isNonAPI(telemetry)
+	if !isNonAPI {
 		// Handle trace telemetry by Speculator
-		if !b.speculator.HasApprovedSpec(specKey) {
-			err := b.speculator.LearnTelemetry(telemetry)
+		if !b.speculators.Get(traceSourceID).HasApprovedSpec(specKey) {
+			err := b.speculators.Get(traceSourceID).LearnTelemetry(telemetry)
 			if err != nil {
 				return fmt.Errorf("failed to learn telemetry: %v", err)
 			}
@@ -350,14 +346,14 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 
 	var providedPathID string
 	var reconstructedPathID string
-	if b.speculator.HasProvidedSpec(specKey) {
-		providedPathID, err = b.speculator.GetPathID(specKey, path, _spec.SpecSourceProvided)
+	if b.speculators.Get(traceSourceID).HasProvidedSpec(specKey) {
+		providedPathID, err = b.speculators.Get(traceSourceID).GetPathID(specKey, path, _spec.SpecSourceProvided)
 		if err != nil {
 			return fmt.Errorf("failed to get path id of provided spec: %v", err)
 		}
 	}
-	if b.speculator.HasApprovedSpec(specKey) {
-		reconstructedPathID, err = b.speculator.GetPathID(specKey, path, _spec.SpecSourceReconstructed)
+	if b.speculators.Get(traceSourceID).HasApprovedSpec(specKey) {
+		reconstructedPathID, err = b.speculators.Get(traceSourceID).GetPathID(specKey, path, _spec.SpecSourceReconstructed)
 		if err != nil {
 			return fmt.Errorf("failed to get path id of reconstructed spec: %v", err)
 		}
@@ -389,9 +385,23 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 
 	b.dbHandler.APIEventsTable().CreateAPIEvent(event)
 
-	b.modulesManager.EventNotify(ctx, &modules.Event{APIEvent: event, Telemetry: trace})
+	b.modulesManager.EventNotify(ctx, &modules.Event{APIEvent: event, APIInfo: &apiInfo, Telemetry: trace})
 
 	return nil
+}
+
+func (b *Backend) traceSourceAuth(ctx context.Context, token string) (*models.TraceSource, error) {
+	traceSourceDB, err := b.dbHandler.TraceSourcesTable().GetTraceSourceFromToken(token)
+	if err != nil {
+		return nil, fmt.Errorf("no trace source found: %v", err)
+	}
+
+	traceSource := models.TraceSource{
+		Description: traceSourceDB.Description,
+		ID:          int64(traceSourceDB.ID),
+		Name:        &traceSourceDB.Name,
+	}
+	return &traceSource, nil
 }
 
 func convertHeadersToMap(headers []*pluginsmodels.Header) map[string]string {
@@ -455,7 +465,7 @@ func (b *Backend) startStateBackup(ctx context.Context) {
 				log.Debugf("Stopping state backup")
 				return
 			case <-time.After(stateBackupInterval):
-				if err := b.speculator.EncodeState(b.stateBackupFileName); err != nil {
+				if err := b.speculators.EncodeState(b.stateBackupFileName); err != nil {
 					log.Errorf("Failed to encode state: %v", err)
 				}
 			}

@@ -44,7 +44,8 @@ type Database interface {
 	ReviewTable() ReviewTable
 	APIEventsAnnotationsTable() APIEventAnnotationTable
 	APIInfoAnnotationsTable() APIAnnotationsTable
-	APIGatewaysTable() APIGatewaysTable
+	TraceSourcesTable() TraceSourcesTable
+	TraceSamplingTable() TraceSamplingTable
 }
 
 type Handler struct {
@@ -65,6 +66,10 @@ func Init(config *DBConfig) *Handler {
 	databaseHandler := Handler{}
 
 	databaseHandler.DB = initDataBase(config)
+
+	if err := databaseHandler.TraceSourcesTable().Prepopulate(); err != nil {
+		log.Fatalf("Unable to prepopulate TraceSource table: %v", err)
+	}
 
 	return &databaseHandler
 }
@@ -99,9 +104,15 @@ func (db *Handler) APIInfoAnnotationsTable() APIAnnotationsTable {
 	}
 }
 
-func (db *Handler) APIGatewaysTable() APIGatewaysTable {
-	return &APIGatewaysTableHandler{
-		tx: db.DB.Table(apiGatewaysTableName),
+func (db *Handler) TraceSourcesTable() TraceSourcesTable {
+	return &TraceSourcesTableHandler{
+		tx: db.DB.Table(traceSourcesTableName),
+	}
+}
+
+func (db *Handler) TraceSamplingTable() TraceSamplingTable {
+	return &TraceSamplingTableHandler{
+		tx: db.DB.Table(traceSamplingTableName),
 	}
 }
 
@@ -137,7 +148,8 @@ func initDataBase(config *DBConfig) *gorm.DB {
 		&Review{},
 		&APIEventAnnotation{},
 		&APIInfoAnnotation{},
-		&APIGateway{}); err != nil {
+		&TraceSource{},
+		&TraceSampling{}); err != nil {
 		log.Fatalf("Failed to run auto migration: %v", err)
 	}
 
@@ -167,6 +179,9 @@ func initSqlite(dbLogger logger.Interface) *gorm.DB {
 	if err != nil {
 		log.Fatalf("Failed to open db: %v", err)
 	}
+
+	// https://www.sqlite.org/foreignkeys.html#fk_enable
+	db.Exec("PRAGMA foreign_keys = ON")
 
 	return db
 }

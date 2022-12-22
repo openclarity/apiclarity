@@ -11,8 +11,9 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	notifications "github.com/openclarity/apiclarity/api3/notifications"
-	speculatorAccessor "github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
+	speculatoraccessor "github.com/openclarity/apiclarity/backend/pkg/backend/speculatoraccessor"
 	database "github.com/openclarity/apiclarity/backend/pkg/database"
+	sampling "github.com/openclarity/apiclarity/backend/pkg/sampling"
 	kubernetes "k8s.io/client-go/kubernetes"
 )
 
@@ -243,10 +244,10 @@ func (mr *MockBackendAccessorMockRecorder) GetAPIInfoAnnotation(arg0, arg1, arg2
 }
 
 // GetSpeculatorAccessor mocks base method.
-func (m *MockBackendAccessor) GetSpeculatorAccessor() speculatorAccessor.SpeculatorAccessor {
+func (m *MockBackendAccessor) GetSpeculatorAccessor() speculatoraccessor.SpeculatorsAccessor {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSpeculatorAccessor")
-	ret0, _ := ret[0].(speculatorAccessor.SpeculatorAccessor)
+	ret0, _ := ret[0].(speculatoraccessor.SpeculatorsAccessor)
 	return ret0
 }
 
@@ -254,6 +255,20 @@ func (m *MockBackendAccessor) GetSpeculatorAccessor() speculatorAccessor.Specula
 func (mr *MockBackendAccessorMockRecorder) GetSpeculatorAccessor() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSpeculatorAccessor", reflect.TypeOf((*MockBackendAccessor)(nil).GetSpeculatorAccessor))
+}
+
+// GetTraceSamplingAccessor mocks base method.
+func (m *MockBackendAccessor) GetTraceSamplingAccessor() *sampling.TraceSamplingManager {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTraceSamplingAccessor")
+	ret0, _ := ret[0].(*sampling.TraceSamplingManager)
+	return ret0
+}
+
+// GetTraceSamplingAccessor indicates an expected call of GetTraceSamplingAccessor.
+func (mr *MockBackendAccessorMockRecorder) GetTraceSamplingAccessor() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTraceSamplingAccessor", reflect.TypeOf((*MockBackendAccessor)(nil).GetTraceSamplingAccessor))
 }
 
 // K8SClient mocks base method.
