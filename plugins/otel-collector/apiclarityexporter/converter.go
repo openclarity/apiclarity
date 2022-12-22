@@ -134,7 +134,7 @@ func (e *exporter) parseResourceServerAttrs(actel *apiclientmodels.Telemetry, re
 	} else if serviceName, ok := resAttrs.Get(string(semconv.ServiceNameKey)); ok {
 		actel.DestinationAddress = serviceName.AsString()
 	} else {
-		ok = false
+		ok = false //nolint:ineffassign
 	}
 	return ok
 }
@@ -265,7 +265,7 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 	var urlOk bool
 	var urlAttr pcommon.Value
 	if urlAttr, urlOk = attrs.Get(string(semconv.HTTPURLKey)); urlOk {
-		urlVal := urlAttr.StringVal()
+		urlVal := urlAttr.Str()
 		if urlVal == "" {
 			urlOk = false
 		} else {

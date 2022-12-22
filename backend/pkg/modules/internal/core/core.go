@@ -27,7 +27,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/apiclarity/backend/pkg/config"
-	"github.com/openclarity/trace-sampling-manager/manager/pkg/manager"
+	"github.com/openclarity/apiclarity/backend/pkg/sampling"
 )
 
 const BaseHTTPPath = "/api/modules"
@@ -61,7 +61,7 @@ func RegisterModule(m ModuleFactory) {
 
 type ModuleFactory func(ctx context.Context, accessor BackendAccessor) (Module, error)
 
-func New(ctx context.Context, accessor BackendAccessor, samplingManager *manager.Manager, traceSamplingEnabled bool) (Module, []ModuleInfo) {
+func New(ctx context.Context, accessor BackendAccessor, samplingManager *sampling.TraceSamplingManager, traceSamplingEnabled bool) (Module, []ModuleInfo) {
 	c := &Core{}
 	c.Modules = map[string]Module{}
 	c.samplingManager = samplingManager
@@ -86,7 +86,7 @@ func New(ctx context.Context, accessor BackendAccessor, samplingManager *manager
 
 type Core struct {
 	Modules              map[string]Module
-	samplingManager      *manager.Manager
+	samplingManager      *sampling.TraceSamplingManager
 	traceSamplingEnabled bool
 }
 
@@ -122,11 +122,19 @@ func shouldTrace(host string, port int64, hosts []string) bool {
 func (c *Core) EventNotify(ctx context.Context, event *Event) {
 	host := event.APIEvent.HostSpecName
 	port := event.APIEvent.DestinationPort
+	traceSourceID := event.APIInfo.TraceSourceID
 
 	for modName, mod := range c.Modules {
-		if c.traceSamplingEnabled && !shouldTrace(host, port, c.samplingManager.HostsToTraceByComponentID(modName)) {
-			log.Debugf("Trace of host %s should NOT be sent to module %s.", host, modName)
-			continue
+		if c.traceSamplingEnabled {
+			hosts, err := c.samplingManager.GetHostsToTrace(modName, traceSourceID)
+			if err != nil {
+				log.Debugf("Failed to retrieve hosts for traceSource %v for module %s.", traceSourceID, modName)
+				continue
+			}
+			if !shouldTrace(host, port, hosts) {
+				log.Debugf("Trace of host %s should NOT be sent to module %s.", host, modName)
+				continue
+			}
 		}
 		log.Debugf("Trace of host %s should be sent to module %s.", host, modName)
 

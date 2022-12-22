@@ -34,7 +34,7 @@ type ClientService interface {
 
 	DeleteAPIInventoryAPIIDSpecsReconstructedSpec(params *DeleteAPIInventoryAPIIDSpecsReconstructedSpecParams, opts ...ClientOption) (*DeleteAPIInventoryAPIIDSpecsReconstructedSpecOK, error)
 
-	DeleteControlGatewaysGatewayID(params *DeleteControlGatewaysGatewayIDParams, opts ...ClientOption) (*DeleteControlGatewaysGatewayIDNoContent, error)
+	DeleteControlTraceSourcesTraceSourceID(params *DeleteControlTraceSourcesTraceSourceIDParams, opts ...ClientOption) (*DeleteControlTraceSourcesTraceSourceIDNoContent, error)
 
 	GetAPIEvents(params *GetAPIEventsParams, opts ...ClientOption) (*GetAPIEventsOK, error)
 
@@ -50,6 +50,8 @@ type ClientService interface {
 
 	GetAPIInventoryAPIIDFromHostAndPort(params *GetAPIInventoryAPIIDFromHostAndPortParams, opts ...ClientOption) (*GetAPIInventoryAPIIDFromHostAndPortOK, error)
 
+	GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID(params *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams, opts ...ClientOption) (*GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDOK, error)
+
 	GetAPIInventoryAPIIDProvidedSwaggerJSON(params *GetAPIInventoryAPIIDProvidedSwaggerJSONParams, opts ...ClientOption) (*GetAPIInventoryAPIIDProvidedSwaggerJSONOK, error)
 
 	GetAPIInventoryAPIIDReconstructedSwaggerJSON(params *GetAPIInventoryAPIIDReconstructedSwaggerJSONParams, opts ...ClientOption) (*GetAPIInventoryAPIIDReconstructedSwaggerJSONOK, error)
@@ -60,9 +62,9 @@ type ClientService interface {
 
 	GetAPIUsageHitCount(params *GetAPIUsageHitCountParams, opts ...ClientOption) (*GetAPIUsageHitCountOK, error)
 
-	GetControlGateways(params *GetControlGatewaysParams, opts ...ClientOption) (*GetControlGatewaysOK, error)
+	GetControlTraceSources(params *GetControlTraceSourcesParams, opts ...ClientOption) (*GetControlTraceSourcesOK, error)
 
-	GetControlGatewaysGatewayID(params *GetControlGatewaysGatewayIDParams, opts ...ClientOption) (*GetControlGatewaysGatewayIDOK, error)
+	GetControlTraceSourcesTraceSourceID(params *GetControlTraceSourcesTraceSourceIDParams, opts ...ClientOption) (*GetControlTraceSourcesTraceSourceIDOK, error)
 
 	GetDashboardAPIUsage(params *GetDashboardAPIUsageParams, opts ...ClientOption) (*GetDashboardAPIUsageOK, error)
 
@@ -76,9 +78,9 @@ type ClientService interface {
 
 	PostAPIInventoryReviewIDApprovedReview(params *PostAPIInventoryReviewIDApprovedReviewParams, opts ...ClientOption) (*PostAPIInventoryReviewIDApprovedReviewOK, error)
 
-	PostControlGateways(params *PostControlGatewaysParams, opts ...ClientOption) (*PostControlGatewaysCreated, error)
-
 	PostControlNewDiscoveredAPIs(params *PostControlNewDiscoveredAPIsParams, opts ...ClientOption) (*PostControlNewDiscoveredAPIsOK, error)
+
+	PostControlTraceSources(params *PostControlTraceSourcesParams, opts ...ClientOption) (*PostControlTraceSourcesCreated, error)
 
 	PutAPIInventoryAPIIDSpecsProvidedSpec(params *PutAPIInventoryAPIIDSpecsProvidedSpecParams, opts ...ClientOption) (*PutAPIInventoryAPIIDSpecsProvidedSpecCreated, error)
 
@@ -160,22 +162,22 @@ func (a *Client) DeleteAPIInventoryAPIIDSpecsReconstructedSpec(params *DeleteAPI
 }
 
 /*
-  DeleteControlGatewaysGatewayID deletes a gateway
+  DeleteControlTraceSourcesTraceSourceID deletes a trace source
 */
-func (a *Client) DeleteControlGatewaysGatewayID(params *DeleteControlGatewaysGatewayIDParams, opts ...ClientOption) (*DeleteControlGatewaysGatewayIDNoContent, error) {
+func (a *Client) DeleteControlTraceSourcesTraceSourceID(params *DeleteControlTraceSourcesTraceSourceIDParams, opts ...ClientOption) (*DeleteControlTraceSourcesTraceSourceIDNoContent, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewDeleteControlGatewaysGatewayIDParams()
+		params = NewDeleteControlTraceSourcesTraceSourceIDParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "DeleteControlGatewaysGatewayID",
+		ID:                 "DeleteControlTraceSourcesTraceSourceID",
 		Method:             "DELETE",
-		PathPattern:        "/control/gateways/{gatewayId}",
+		PathPattern:        "/control/traceSources/{traceSourceId}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
-		Reader:             &DeleteControlGatewaysGatewayIDReader{formats: a.formats},
+		Reader:             &DeleteControlTraceSourcesTraceSourceIDReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -187,12 +189,12 @@ func (a *Client) DeleteControlGatewaysGatewayID(params *DeleteControlGatewaysGat
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*DeleteControlGatewaysGatewayIDNoContent)
+	success, ok := result.(*DeleteControlTraceSourcesTraceSourceIDNoContent)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*DeleteControlGatewaysGatewayIDDefault)
+	unexpectedSuccess := result.(*DeleteControlTraceSourcesTraceSourceIDDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
@@ -456,6 +458,43 @@ func (a *Client) GetAPIInventoryAPIIDFromHostAndPort(params *GetAPIInventoryAPII
 }
 
 /*
+  GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID gets api Id from host and port and trace source ID
+*/
+func (a *Client) GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID(params *GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams, opts ...ClientOption) (*GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceID",
+		Method:             "GET",
+		PathPattern:        "/apiInventory/apiId/fromHostAndPortAndTraceSourceID",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*GetAPIInventoryAPIIDFromHostAndPortAndTraceSourceIDDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
   GetAPIInventoryAPIIDProvidedSwaggerJSON gets provided API spec json file
 */
 func (a *Client) GetAPIInventoryAPIIDProvidedSwaggerJSON(params *GetAPIInventoryAPIIDProvidedSwaggerJSONParams, opts ...ClientOption) (*GetAPIInventoryAPIIDProvidedSwaggerJSONOK, error) {
@@ -641,22 +680,22 @@ func (a *Client) GetAPIUsageHitCount(params *GetAPIUsageHitCountParams, opts ...
 }
 
 /*
-  GetControlGateways lists of configured gateways
+  GetControlTraceSources lists of configured trace sources
 */
-func (a *Client) GetControlGateways(params *GetControlGatewaysParams, opts ...ClientOption) (*GetControlGatewaysOK, error) {
+func (a *Client) GetControlTraceSources(params *GetControlTraceSourcesParams, opts ...ClientOption) (*GetControlTraceSourcesOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewGetControlGatewaysParams()
+		params = NewGetControlTraceSourcesParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "GetControlGateways",
+		ID:                 "GetControlTraceSources",
 		Method:             "GET",
-		PathPattern:        "/control/gateways",
+		PathPattern:        "/control/traceSources",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
-		Reader:             &GetControlGatewaysReader{formats: a.formats},
+		Reader:             &GetControlTraceSourcesReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -668,32 +707,32 @@ func (a *Client) GetControlGateways(params *GetControlGatewaysParams, opts ...Cl
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*GetControlGatewaysOK)
+	success, ok := result.(*GetControlTraceSourcesOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*GetControlGatewaysDefault)
+	unexpectedSuccess := result.(*GetControlTraceSourcesDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 /*
-  GetControlGatewaysGatewayID gets gateway information
+  GetControlTraceSourcesTraceSourceID gets trace source information
 */
-func (a *Client) GetControlGatewaysGatewayID(params *GetControlGatewaysGatewayIDParams, opts ...ClientOption) (*GetControlGatewaysGatewayIDOK, error) {
+func (a *Client) GetControlTraceSourcesTraceSourceID(params *GetControlTraceSourcesTraceSourceIDParams, opts ...ClientOption) (*GetControlTraceSourcesTraceSourceIDOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewGetControlGatewaysGatewayIDParams()
+		params = NewGetControlTraceSourcesTraceSourceIDParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "GetControlGatewaysGatewayID",
+		ID:                 "GetControlTraceSourcesTraceSourceID",
 		Method:             "GET",
-		PathPattern:        "/control/gateways/{gatewayId}",
+		PathPattern:        "/control/traceSources/{traceSourceId}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
-		Reader:             &GetControlGatewaysGatewayIDReader{formats: a.formats},
+		Reader:             &GetControlTraceSourcesTraceSourceIDReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -705,12 +744,12 @@ func (a *Client) GetControlGatewaysGatewayID(params *GetControlGatewaysGatewayID
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*GetControlGatewaysGatewayIDOK)
+	success, ok := result.(*GetControlTraceSourcesTraceSourceIDOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*GetControlGatewaysGatewayIDDefault)
+	unexpectedSuccess := result.(*GetControlTraceSourcesTraceSourceIDDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
@@ -938,43 +977,6 @@ func (a *Client) PostAPIInventoryReviewIDApprovedReview(params *PostAPIInventory
 }
 
 /*
-  PostControlGateways creates a new gateway
-*/
-func (a *Client) PostControlGateways(params *PostControlGatewaysParams, opts ...ClientOption) (*PostControlGatewaysCreated, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewPostControlGatewaysParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "PostControlGateways",
-		Method:             "POST",
-		PathPattern:        "/control/gateways",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &PostControlGatewaysReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*PostControlGatewaysCreated)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	unexpectedSuccess := result.(*PostControlGatewaysDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
-}
-
-/*
   PostControlNewDiscoveredAPIs allows a client to notify API clarity about new a p is
 
   This allows a client (a gateway for example) to notify APIclarity about newly discovered APIs. If one of the APIs already exists, it is ignored.
@@ -1010,6 +1012,43 @@ func (a *Client) PostControlNewDiscoveredAPIs(params *PostControlNewDiscoveredAP
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*PostControlNewDiscoveredAPIsDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  PostControlTraceSources creates a new trace source
+*/
+func (a *Client) PostControlTraceSources(params *PostControlTraceSourcesParams, opts ...ClientOption) (*PostControlTraceSourcesCreated, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewPostControlTraceSourcesParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "PostControlTraceSources",
+		Method:             "POST",
+		PathPattern:        "/control/traceSources",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostControlTraceSourcesReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*PostControlTraceSourcesCreated)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*PostControlTraceSourcesDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

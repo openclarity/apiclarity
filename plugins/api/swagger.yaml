@@ -16,12 +16,53 @@ paths:
     post:
       summary: 'Post an http telemetry'
       parameters:
+        - $ref: '#/parameters/TraceSourceTokenHeader'
         - in: 'body'
           name: 'body'
           required: true
           schema:
             description: 'Telemetry'
             $ref: '#/definitions/Telemetry'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/responses/Success'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /hostsToTrace:
+    get:
+      summary: 'Get a list of hosts to trace'
+      parameters:
+        - $ref: '#/parameters/TraceSourceTokenHeader'
+      responses:
+        '200':
+          description: 'Success'
+          schema:
+            $ref: '#/definitions/HostsToTrace'
+        default:
+          $ref: '#/responses/UnknownError'
+
+  /control/newDiscoveredAPIs:
+    post:
+      summary: 'Allows a client to notify APIClarity about new APIs.'
+      description: 'This allows a client (a gateway for example) to notify APIclarity about newly discovered APIs. If one of the APIs already exists, it is ignored.'
+      parameters:
+        - in: 'body'
+          name: 'body'
+          description: 'List of new discovered APIs'
+          required: true
+          schema:
+            type: 'object'
+            required:
+              - hosts
+            properties:
+              hosts:
+                type: 'array'
+                description: 'List of discovered APIs, format of hostname:port'
+                items:
+                  type: 'string'
       responses:
         '200':
           description: 'Success'
@@ -110,6 +151,21 @@ definitions:
       message:
         type: 'string'
 
+  HostsList:
+    description: 'List of hosts'
+    type: 'array'
+    items:
+      type: string
+  
+  HostsToTrace:
+    description: 'List of hosts to trace'
+    type: 'object'
+    properties:
+      hosts:
+        $ref: '#/definitions/HostsList'
+    required:
+      - hosts
+
 responses:
   UnknownError:
     description: 'unknown error'
@@ -119,3 +175,11 @@ responses:
     description: 'success message'
     schema:
       $ref: '#/definitions/SuccessResponse'
+
+parameters:
+  TraceSourceTokenHeader:
+    name: 'X-Trace-Source-Token'
+    description: 'Optional header to authenticate the trace source'
+    in: 'header'
+    type: 'string'
+    required: false

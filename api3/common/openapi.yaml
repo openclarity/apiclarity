@@ -89,6 +89,10 @@ components:
           type: string
       required:
       - notificationType
+    NewDiscoveredAPINotification:
+      allOf:
+      - $ref: '#/components/schemas/BaseNotification'
+      - $ref: '#/components/schemas/ApiInfo'
     ModuleVersion:
       type: 'object'
       required: [version]
@@ -178,6 +182,10 @@ components:
           default: false
         destinationNamespace:
           type: string
+        traceSourceId:
+          description: 'Trace Source ID which created this API. Null UUID 0 means it has been created by APIClarity (from the UI for example)'
+          type: 'string'
+          format: 'uuid'
     ApiInfoWithType:
       type: object
       allOf:

@@ -40,6 +40,9 @@ type Review struct {
 	SpecKey  string `json:"specKey,omitempty" gorm:"column:spec_key" faker:"-"`
 	// serialized PathToPathItem from Speculator
 	PathToPathItemStr string `json:"pathToPathItemStr,omitempty" gorm:"column:path_to_path_item_str" faker:"-"`
+
+	APIInfoID uint    `json:"apiInfoId,omitempty" gorm:"column:api_info_id" faker:"-"`
+	APIInfo   APIInfo `gorm:"constraint:OnDelete:CASCADE"`
 }
 
 type ReviewTable interface {
@@ -78,7 +81,7 @@ func (r *ReviewTableHandler) DeleteApproved() error {
 }
 
 func (r *ReviewTableHandler) First(dest *Review, conds ...interface{}) error {
-	return r.tx.First(dest, conds).Error
+	return r.tx.Joins("APIInfo").First(dest, conds).Error
 }
 
 func (db *Handler) StartReviewTableCleaner(ctx context.Context, cleanInterval time.Duration) {

@@ -1,0 +1,88 @@
+openapi: 3.0.3
+info:
+  title: APIClarity Spec Reconstructor Module
+  version: 0.0.1
+  description: APIClarity Spec Reconstructor Module API
+paths:
+  /version:
+    get:
+      operationId: getVersion
+      summary: Get the version of this Plugin
+      description: Get the version of this Plugin
+      responses:
+        '200':
+          description: Version of the Plugin
+          content:
+            application/json:
+              schema:
+                $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ModuleVersion
+
+  /{apiID}/start:
+    post:
+      summary: 'Start the spec reconstruction for this API.'
+      operationId: PostAPIIDStart
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        '204':
+          description: 'Success'
+        default:
+          description: 'Error response'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+
+  /{apiID}/stop:
+    post:
+      summary: 'Stop the spec reconstruction for this API.'
+      operationId: PostAPIIDStop
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: ../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID
+      responses:
+        '204':
+          description: 'Success'
+        default:
+          description: 'Error response'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+
+  /enable:
+    post:
+      summary: 'enable/disable the spec reconstruction'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeatureEnable"
+      responses:
+        '204':
+          description: 'Success'
+        default:
+          description: 'Error response'
+          content:
+            'application/json':
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiResponse'
+
+
+components:
+  schemas:
+    FeatureEnable:
+      description: 'Enable/disable a feature'
+      type: 'object'
+      properties:
+        enable:
+          description: 'enable flag'
+          type: 'boolean'
+    

@@ -9,6 +9,7 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 	gomock "github.com/golang/mock/gomock"
+	uuid "github.com/google/uuid"
 	models "github.com/openclarity/apiclarity/api/server/models"
 	operations "github.com/openclarity/apiclarity/api/server/restapi/operations"
 )
@@ -111,18 +112,18 @@ func (mr *MockAPIInventoryTableMockRecorder) FirstOrCreate(arg0 interface{}) *go
 }
 
 // GetAPIID mocks base method.
-func (m *MockAPIInventoryTable) GetAPIID(arg0, arg1 string) (uint, error) {
+func (m *MockAPIInventoryTable) GetAPIID(arg0, arg1 string, arg2 *uuid.UUID) (uint, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAPIID", arg0, arg1)
+	ret := m.ctrl.Call(m, "GetAPIID", arg0, arg1, arg2)
 	ret0, _ := ret[0].(uint)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAPIID indicates an expected call of GetAPIID.
-func (mr *MockAPIInventoryTableMockRecorder) GetAPIID(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAPIInventoryTableMockRecorder) GetAPIID(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAPIID", reflect.TypeOf((*MockAPIInventoryTable)(nil).GetAPIID), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAPIID", reflect.TypeOf((*MockAPIInventoryTable)(nil).GetAPIID), arg0, arg1, arg2)
 }
 
 // GetAPIInventoryAndTotal mocks base method.

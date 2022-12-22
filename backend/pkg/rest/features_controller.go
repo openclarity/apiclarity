@@ -31,17 +31,35 @@ func (s *Server) GetFeatures(params operations.GetFeaturesParams) middleware.Res
 	}
 
 	for _, info := range s.features {
-		var hostsToTrace []string
+		hostsToTrace := models.HostsToTraceForComponent{
+			Component:         info.Name,
+			TraceSourcesHosts: []*models.HostsToTraceForTraceSource{},
+		}
 		if s.samplingManager != nil {
-			hostsToTrace = s.samplingManager.HostsToTraceByComponentID(info.Name)
+			hostsMap, err := s.samplingManager.GetHostsToTraceByComponent(info.Name)
+			if err != nil {
+				log.Errorf("failed to retrieve HostsToTraceByComponent for component=%v: %v", info.Name, err)
+				continue
+			}
+			for traceSourceID, hosts := range hostsMap {
+				hostsToTrace.TraceSourcesHosts = append(hostsToTrace.TraceSourcesHosts,
+					&models.HostsToTraceForTraceSource{
+						TraceSourceID: uint32(traceSourceID),
+						HostsToTrace:  hosts,
+					})
+			}
 		} else {
-			hostsToTrace = []string{"*"}
+			hostsToTrace.TraceSourcesHosts = append(hostsToTrace.TraceSourcesHosts,
+				&models.HostsToTraceForTraceSource{
+					TraceSourceID: 0,
+					HostsToTrace:  []string{"*"},
+				})
 		}
 		featureList.Features = append(featureList.Features,
 			&models.APIClarityFeature{
 				FeatureDescription: info.Description,
 				FeatureName:        models.NewAPIClarityFeatureEnum(models.APIClarityFeatureEnum(info.Name)),
-				HostsToTrace:       hostsToTrace,
+				HostsToTrace:       &hostsToTrace,
 			},
 		)
 	}
