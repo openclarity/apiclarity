@@ -1,0 +1,8 @@
+apiclarity-url: ""
+apiclarity-token: ""
+apiclarity-cert-path: ../apiclarity.crt
+apiclarity-cert-hostname: apiclarity
+refresh-interval-seconds: 30
+remote-log-port: 10514
+remote-log-proto: UDP
+debug: true
