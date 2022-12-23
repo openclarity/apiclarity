@@ -23,11 +23,10 @@ import (
 	"strconv"
 	"strings"
 
-	logging "github.com/sirupsen/logrus"
-
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	dockerClient "github.com/docker/docker/client"
+	logging "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/config"
 )
@@ -55,7 +54,7 @@ func (c *DockerClient) TriggerFuzzingJob(apiID int64, endpoint string, securityI
 		return fmt.Errorf("unable to create new docker client: %v", err)
 	}
 
-	containerName := c.GetContainerNameForApi(apiID)
+	containerName := c.GetContainerNameForAPI(apiID)
 
 	// Define environment for container
 	inputEnv := []string{
@@ -127,7 +126,7 @@ func (c *DockerClient) StopFuzzingJob(apiID int64, complete bool) error {
 		return fmt.Errorf("unable to create new docker client: %w", err)
 	}
 
-	containerName := c.GetContainerNameForApi(apiID)
+	containerName := c.GetContainerNameForAPI(apiID)
 
 	if err := cli.ContainerStop(ctx, containerName, nil); err != nil {
 		logging.Errorf("[Fuzzer][DockerClient] can't stop container (%v), err=(%v)", containerName, err)
@@ -145,8 +144,8 @@ func (c *DockerClient) StopFuzzingJob(apiID int64, complete bool) error {
 	return nil
 }
 
-func (c *DockerClient) GetContainerNameForApi(apiID int64) string {
-	return containerNamePrefix + strconv.FormatInt(apiID, 10)
+func (c *DockerClient) GetContainerNameForAPI(apiID int64) string {
+	return containerNamePrefix + strconv.FormatInt(apiID, 10) //nolint:gomnd
 }
 
 // nolint: ireturn,nolintlint

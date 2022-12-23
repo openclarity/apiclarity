@@ -43,7 +43,7 @@ const (
 	EmptyJSON                    = "{}"
 	NbMaxServicePart             = 2
 	AbortedErrorMsg              = "This test has been aborted by User"
-	ApiFindingsNotificationType  = "ApiFindingsNotification"
+	APIFindingsNotificationType  = "ApiFindingsNotification"
 	TestReportNotificationType   = "TestReportNotification"
 	TestProgressNotificationType = "TestProgressNotification"
 )
@@ -67,7 +67,6 @@ func init() {
 
 //nolint:ireturn,nolintlint // was needed for the module implementation of ApiClarity
 func newFuzzer(ctx context.Context, accessor core.BackendAccessor) (core.Module, error) {
-	//logging.InitLogger()
 	logging.Debugf("[Fuzzer] Start():: -->")
 
 	// Use default values
@@ -128,16 +127,16 @@ func (p *pluginFuzzer) sendAPIFindingsNotification(ctx context.Context, apiID ui
 	logging.Infof("[Fuzzer] sendAPIFindingsNotification(%v): --> <--", apiID)
 
 	apiFindingsNotification := notifications.ApiFindingsNotification{
-		NotificationType: ApiFindingsNotificationType,
+		NotificationType: APIFindingsNotificationType,
 		Items:            &findings,
 	}
 	notification := notifications.APIClarityNotification{}
 	if err := notification.FromApiFindingsNotification(apiFindingsNotification); err != nil {
-		return fmt.Errorf("failed to create notification (%v), err=(%v)", ApiFindingsNotificationType, err)
+		return fmt.Errorf("failed to create notification (%v), err=(%v)", APIFindingsNotificationType, err)
 	}
 
 	if err := p.accessor.Notify(ctx, p.info.Name, apiID, notification); err != nil {
-		return fmt.Errorf("failed to send notification (%v), err=(%v)", ApiFindingsNotificationType, err)
+		return fmt.Errorf("failed to send notification (%v), err=(%v)", APIFindingsNotificationType, err)
 	}
 	return nil
 }
@@ -205,7 +204,7 @@ func (p *pluginFuzzer) sendTestErrorNotification(ctx context.Context, api *model
 		logging.Errorf("[Fuzzer] sendTestErrorNotification(%v): can't create a short status with error for this API, err=(%v)", apiID, err)
 		return
 	}
-	if err = p.sendTestReportNotification(ctx, uint(apiID), *shortReport); err != nil {
+	if err = p.sendTestReportNotification(ctx, apiID, *shortReport); err != nil {
 		logging.Errorf("[Fuzzer] sendTestErrorNotification(): Failed to send 'TestReport' notification for API (%v), err=(%v)", apiID, err)
 	}
 }

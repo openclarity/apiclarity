@@ -20,10 +20,9 @@ import (
 	"fmt"
 	"strconv"
 
-	logging "github.com/sirupsen/logrus"
-
 	"github.com/ghodss/yaml"
 	uuid "github.com/satori/go.uuid"
+	logging "github.com/sirupsen/logrus"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"

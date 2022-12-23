@@ -25,9 +25,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/routers"
 	"github.com/ghodss/yaml"
-
 	logging "github.com/sirupsen/logrus"
-
 	"k8s.io/utils/strings/slices"
 
 	"github.com/openclarity/apiclarity/api/server/models"

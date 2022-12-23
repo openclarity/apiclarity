@@ -21,7 +21,6 @@ import (
 	"sync"
 
 	logging "github.com/sirupsen/logrus"
-
 	"github.com/spf13/viper"
 
 	backendConfig "github.com/openclarity/apiclarity/backend/pkg/config"

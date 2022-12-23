@@ -22,10 +22,9 @@ import (
 	"strings"
 	"time"
 
-	logging "github.com/sirupsen/logrus"
-
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
+	logging "github.com/sirupsen/logrus"
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/api3/common"

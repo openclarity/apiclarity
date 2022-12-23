@@ -18,9 +18,10 @@ package clients
 import (
 	"errors"
 
+	logging "github.com/sirupsen/logrus"
+
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/config"
-	logging "github.com/sirupsen/logrus"
 )
 
 type Client interface {
