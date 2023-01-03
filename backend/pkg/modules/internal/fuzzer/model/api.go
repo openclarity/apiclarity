@@ -275,14 +275,14 @@ func (api *API) getTestShortReport(testItem *TestItem) (*restapi.ShortTestReport
 	// Prepare on the shortreport structure the list of tags/operations from the spec content
 	if specInfo.Tags != nil {
 		for _, tag := range specInfo.Tags {
-			logging.Debugf("[Fuzzer] API(%v).GetLastShortStatus(): ... tag (%v)", api.ID, tag.Name)
+			// logging.Debugf("[Fuzzer] API(%v).GetLastShortStatus(): ... tag (%v)", api.ID, tag.Name)
 			fuzzingReportTag := restapi.FuzzingReportTag{
 				Name:            tag.Name,
 				Operations:      []restapi.FuzzingReportOperation{},
 				HighestSeverity: nil,
 			}
 			for _, op := range tag.MethodAndPathList {
-				logging.Debugf("[Fuzzer] API(%v).GetLastShortStatus(): ... ... method %v %v", api.ID, op.Method, op.Path)
+				// logging.Debugf("[Fuzzer] API(%v).GetLastShortStatus(): ... ... method %v %v", api.ID, op.Method, op.Path)
 				fuzzingReportTag.Operations = append(fuzzingReportTag.Operations, restapi.FuzzingReportOperation{
 					Operation: common.MethodAndPath{
 						Method: (*common.HttpMethod)(&op.Method),
@@ -467,7 +467,7 @@ func updateRequestCountersForRestler(shortReport *restapi.ShortTestReport, repor
 				URIsToTest = append(URIsToTest, strings.TrimPrefix(*path.Uri, basepath))
 			}
 		}
-		logging.Debugf("[Fuzzer] updateRequestCountersForRestler(): process paths (%v %v)", verb, URIsToTest)
+		// logging.Debugf("[Fuzzer] updateRequestCountersForRestler(): process paths (%v %v)", verb, URIsToTest)
 		for _, uri := range URIsToTest {
 			route, err := tools.FindRoute(&router, verb, uri)
 			if err != nil {

@@ -163,7 +163,7 @@ func (l *ConfigMapClient) StopFuzzingJob(apiID int64, complete bool) error {
 	if err != nil {
 		// reset job in case of error, otherwise we will be stuck for the API
 		l.jobs[apiID] = nil
-		return fmt.Errorf("can't find k8s job (%v) to terminate", jobName)
+		return fmt.Errorf("can't find k8s job (%v) on namespace (%v) to terminate: err=%v", jobName, jobToDelete.Namespace, err)
 	}
 	if job.Status.Active > 0 {
 		// the Job is still running, we must stop it

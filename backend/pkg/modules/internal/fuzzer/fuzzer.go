@@ -215,7 +215,8 @@ func (p *pluginFuzzer) sendTestErrorNotification(ctx context.Context, api *model
 *
  */
 
-func (p *pluginFuzzer) FuzzTarget(ctx context.Context, apiID oapicommon.ApiID, params *model.FuzzingInput) (model.FuzzingTimestamp, error) {
+func (p *pluginFuzzer) StartFuzzing(ctx context.Context, apiID oapicommon.ApiID, params *model.FuzzingInput) (model.FuzzingTimestamp, error) {
+	logging.Infof("[Fuzzer] StartFuzzing(): called for API (%v)", apiID)
 	// Checks
 	if p.fuzzerClient == nil {
 		return model.ZeroTime, &PluginError{"No deployment client running"}
@@ -227,11 +228,11 @@ func (p *pluginFuzzer) FuzzTarget(ctx context.Context, apiID oapicommon.ApiID, p
 	// Retrieve the API (it will give the endpoint and the port)
 	api, err := p.model.GetAPI(ctx, uint(apiID))
 	if err != nil {
-		logging.Errorf("[Fuzzer] FuzzTarget(): can't retrieve API (%v)", apiID)
+		logging.Errorf("[Fuzzer] StartFuzzing(): can't retrieve API (%v)", apiID)
 		return model.ZeroTime, &NotFoundError{msg: ""}
 	}
 
-	logging.Infof("[Fuzzer] FuzzTarget(): API_id (%v) => API (%v)", apiID, api)
+	logging.Infof("[Fuzzer] StartFuzzing(): API_id (%v) => API (%v)", apiID, api)
 
 	// Construct the URI of the enpoint to fuzz
 	serviceToTest := api.Name
@@ -243,14 +244,14 @@ func (p *pluginFuzzer) FuzzTarget(ctx context.Context, apiID oapicommon.ApiID, p
 	// Get auth material, if provided
 	securityParam, err := tools.GetAuthStringFromParam(params.Auth)
 	if err != nil {
-		logging.Errorf("[Fuzzer] FuzzTarget(): can't get auth material for (%v)", apiID)
+		logging.Errorf("[Fuzzer] StartFuzzing(): can't get auth material for (%v)", apiID)
 		return model.ZeroTime, &InvalidParameterError{msg: err.Error()}
 	}
 
 	// Get time budget
 	timeBudget, err := tools.GetTimeBudgetFromParam(params.Depth)
 	if err != nil {
-		logging.Errorf("[Fuzzer] FuzzTarget(): can't get depth param (%v)", apiID)
+		logging.Errorf("[Fuzzer] StartFuzzing(): can't get depth param (%v)", apiID)
 		return model.ZeroTime, &InvalidParameterError{msg: err.Error()}
 	}
 
@@ -258,12 +259,12 @@ func (p *pluginFuzzer) FuzzTarget(ctx context.Context, apiID oapicommon.ApiID, p
 
 	timestamp, err := p.model.StartAPIFuzzing(ctx, uint(apiID), params)
 	if err != nil {
-		logging.Errorf("[Fuzzer] FuzzTarget(): can't start fuzzing for API (%v)", apiID)
+		logging.Errorf("[Fuzzer] StartFuzzing(): can't start fuzzing for API (%v)", apiID)
 		return model.ZeroTime, &PluginError{msg: err.Error()}
 	}
 
 	if err = p.fuzzerClient.TriggerFuzzingJob(apiID, fullServiceURI, securityParam, timeBudget); err != nil {
-		logging.Errorf("[Fuzzer] FuzzTarget(): can't trigger fuzzing job for API (%v), err=(%v)", apiID, err)
+		logging.Errorf("[Fuzzer] StartFuzzing(): can't trigger fuzzing job for API (%v), err=(%v)", apiID, err)
 		fuzzerError := fmt.Errorf("can't start fuzzing job for API (%v), err=(%v)", apiID, err)
 		_ = p.model.StopAPIFuzzing(ctx, uint(apiID), fuzzerError)
 		return model.ZeroTime, &PluginError{msg: err.Error()}
@@ -274,6 +275,7 @@ func (p *pluginFuzzer) FuzzTarget(ctx context.Context, apiID oapicommon.ApiID, p
 }
 
 func (p *pluginFuzzer) StopFuzzing(ctx context.Context, apiID oapicommon.ApiID, complete bool) error {
+	logging.Infof("[Fuzzer] StopFuzzing(): called for API (%v)", apiID)
 	// Retrieve the API
 	api, err := p.model.GetAPI(ctx, uint(apiID))
 	if err != nil {
@@ -372,7 +374,7 @@ func httpResponse(writer http.ResponseWriter, statusCode int, data interface{}) 
 
 // Return the version for the fuzzer module.
 func (*pluginFuzzerHTTPHandler) GetVersion(writer http.ResponseWriter, req *http.Request) {
-	logging.Debugf("[Fuzzer] GetVersion(): -->")
+	logging.Debugf("[Fuzzer] GetVersion(): --> <--")
 	if err := json.NewEncoder(writer).Encode(restapi.Version{Version: ModuleVersion}); err != nil {
 		httpError(writer, err)
 	}
@@ -385,7 +387,7 @@ func (p *pluginFuzzerHTTPHandler) GetState(writer http.ResponseWriter, req *http
 
 // Retrieve the last update status for the API.
 func (p *pluginFuzzerHTTPHandler) GetUpdateStatus(writer http.ResponseWriter, req *http.Request, apiID int64) {
-	logging.Debugf("[Fuzzer] GetUpdateStatus(%v): -->", apiID)
+	logging.Debugf("[Fuzzer] GetUpdateStatus(%v): --> <--", apiID)
 
 	api, err := p.fuzzer.model.GetAPI(req.Context(), uint(apiID))
 	if err != nil {
@@ -411,7 +413,7 @@ func (p *pluginFuzzerHTTPHandler) GetUpdateStatus(writer http.ResponseWriter, re
 
 // Receive last status update.
 func (p *pluginFuzzerHTTPHandler) PostUpdateStatus(writer http.ResponseWriter, req *http.Request, apiID int64) {
-	logging.Debugf("[Fuzzer] PostUpdateStatus(%v): -->", apiID)
+	logging.Debugf("[Fuzzer] PostUpdateStatus(%v): --> <--", apiID)
 
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
@@ -493,7 +495,7 @@ func (p *pluginFuzzerHTTPHandler) PostUpdateStatus(writer http.ResponseWriter, r
 
 // Return the findings list for the lastest Test.
 func (p *pluginFuzzerHTTPHandler) GetAPIFindings(writer http.ResponseWriter, req *http.Request, apiID int64, params restapi.GetAPIFindingsParams) {
-	logging.Debugf("[Fuzzer] GetFindings(%v): -->", apiID)
+	logging.Debugf("[Fuzzer] GetFindings(%v): --> <--", apiID)
 	api, err := p.fuzzer.model.GetAPI(req.Context(), uint(apiID))
 	if err != nil {
 		logging.Errorf("[Fuzzer] GetFindings(%v): Can't retrieve api_id=(%v), error=(%v)", apiID, apiID, err)
@@ -515,7 +517,7 @@ func (p *pluginFuzzerHTTPHandler) GetAPIFindings(writer http.ResponseWriter, req
 
 // Receive findings for last Test.
 func (p *pluginFuzzerHTTPHandler) PostRawfindings(writer http.ResponseWriter, req *http.Request, apiID int64) {
-	logging.Debugf("[Fuzzer] PostRawfindings(%v): -->", apiID)
+	logging.Debugf("[Fuzzer] PostRawfindings(%v): --> <--", apiID)
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		logging.Errorf("[Fuzzer] PostRawfindings(%v): can't read body content, error=(%v)", apiID, err)
@@ -541,7 +543,7 @@ func (p *pluginFuzzerHTTPHandler) PostRawfindings(writer http.ResponseWriter, re
 
 // Send the list of Tests for the API.
 func (p *pluginFuzzerHTTPHandler) GetTests(writer http.ResponseWriter, req *http.Request, apiID int64) {
-	logging.Debugf("[Fuzzer] GetTests(%v): -->", apiID)
+	logging.Debugf("[Fuzzer] GetTests(%v): --> <--", apiID)
 
 	api, err := p.fuzzer.model.GetAPI(req.Context(), uint(apiID))
 	if err != nil {
@@ -569,11 +571,11 @@ func (p *pluginFuzzerHTTPHandler) GetTests(writer http.ResponseWriter, req *http
 }
 
 func (p *pluginFuzzerHTTPHandler) GetShortReportByTimestamp(writer http.ResponseWriter, req *http.Request, apiID int64, timestamp int64) {
-	logging.Debugf("[Fuzzer] GetReport(%v): -->", apiID)
+	logging.Debugf("[Fuzzer] GetShortReportByTimestamp(%v): --> <--", apiID)
 
 	api, err := p.fuzzer.model.GetAPI(req.Context(), uint(apiID))
 	if err != nil {
-		fmt.Printf("[Fuzzer] GetTests(%v): can't retrieve API (%v)", apiID, apiID)
+		fmt.Printf("[Fuzzer] GetShortReportByTimestamp(%v): can't retrieve API (%v)", apiID, apiID)
 		httpResponse(writer, http.StatusNotFound, EmptyJSON)
 		return
 	}
@@ -589,16 +591,16 @@ func (p *pluginFuzzerHTTPHandler) GetShortReportByTimestamp(writer http.Response
 	writer.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(writer).Encode(result)
 	if err != nil {
-		logging.Errorf("[Fuzzer] GetReport(%v): Failed to encode response, error=(%v)", apiID, err)
+		logging.Errorf("[Fuzzer] GetShortReportByTimestamp(%v): Failed to encode response, error=(%v)", apiID, err)
 	}
 }
 
 func (p *pluginFuzzerHTTPHandler) GetReport(writer http.ResponseWriter, req *http.Request, apiID int64, timestamp int64) {
-	logging.Debugf("[Fuzzer] GetReport(%v): -->", apiID)
+	logging.Debugf("[Fuzzer] GetReport(%v): --> <--", apiID)
 
 	api, err := p.fuzzer.model.GetAPI(req.Context(), uint(apiID))
 	if err != nil {
-		fmt.Printf("[Fuzzer] GetTests(%v): can't retrieve API (%v)", apiID, apiID)
+		fmt.Printf("[Fuzzer] GetReport(%v): can't retrieve API (%v)", apiID, apiID)
 		httpResponse(writer, http.StatusNotFound, EmptyJSON)
 		return
 	}
@@ -662,7 +664,7 @@ func (p *pluginFuzzerHTTPHandler) GetTestProgress(writer http.ResponseWriter, re
 
 // Start a test.
 func (p *pluginFuzzerHTTPHandler) StartTest(writer http.ResponseWriter, req *http.Request, apiID int64) {
-	logging.Debugf("[Fuzzer] StartTest(%v): -->  <--", apiID)
+	logging.Infof("[Fuzzer] StartTest(%v): --> <--", apiID)
 
 	// Decode the restapi.TestInput requesBody
 	body, err := ioutil.ReadAll(req.Body)
@@ -695,7 +697,7 @@ func (p *pluginFuzzerHTTPHandler) StartTest(writer http.ResponseWriter, req *htt
 		SpecsInfo: specsInfo,
 	}
 
-	timestamp, err := p.fuzzer.FuzzTarget(req.Context(), apiID, &fuzzingInput)
+	timestamp, err := p.fuzzer.StartFuzzing(req.Context(), apiID, &fuzzingInput)
 	if err != nil {
 		writer.Header().Set("Content-Type", "application/json")
 		//nolint: errorlint // no wrapped error here
@@ -730,7 +732,7 @@ func (p *pluginFuzzerHTTPHandler) StartTest(writer http.ResponseWriter, req *htt
 
 // Stop an ongoing test.
 func (p *pluginFuzzerHTTPHandler) StopTest(writer http.ResponseWriter, req *http.Request, apiID int64) {
-	logging.Debugf("[Fuzzer] StopTest(%v): -->  <--", apiID)
+	logging.Infof("[Fuzzer] StopTest(%v): --> <--", apiID)
 
 	// Set an "aborted" status
 	api, err := p.fuzzer.model.GetAPI(req.Context(), uint(apiID))

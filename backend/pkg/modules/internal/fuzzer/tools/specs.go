@@ -151,7 +151,6 @@ func FindRoute(router *routers.Router, verb string, uri string) (*routers.Route,
 		return nil, fmt.Errorf("can't convert (%v %v) to http request, err=(%v)", verb, uri, err)
 	}
 	req.Header.Set("Content-Type", "application/json") // Report this path in shortreport
-	logging.Debugf("[Fuzzer] findRoute(): ... req to find (%v %v)", verb, req)
 	route, _, err := (*router).FindRoute(req)
 	if err != nil {
 		return nil, fmt.Errorf("can't find route for (%v %v), err=(%v)", verb, uri, err)

@@ -14,5 +14,5 @@ rules:
   verbs: ["get", "list", "watch"]
 - apiGroups: [ "batch" ]
   resources: [ "jobs" ]
-  verbs: [ "create", "delete" ]
+  verbs: [ "create", "get", "delete" ]
 {{- end -}}
