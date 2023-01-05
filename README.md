@@ -186,6 +186,36 @@ Update [values.yaml](https://github.com/openclarity/apiclarity/blob/master/chart
 
 4. Open APIClarity UI in the browser: <http://localhost:8080/>
 
+## Database
+
+SQLite, for local testing, and PostgreSQL databases are supported.
+
+To choose your database type, use the `DATABASE_DRIVER` environment variable:
+
+* LOCAL: SQLite driver is used. By default, the the `db.db` SQlite file will be used.
+* POSTGRES: PostgreSQL driver is used. In that case you can specifiy other self-explanatory environment variables:
+  * DB_NAME
+  * DB_USER
+  * DB_PASS
+  * DB_HOST
+  * DB_PORT_NUMBER
+
+In any case, you can also specify the full DSN yourself, depending on your
+database type, by setting the `DB_DSN` environment variable.
+
+https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
+https://www.sqlite.org/c3ref/open.html#urifilenameexamples
+
+For example:
+
+    DATABASE_DRIVER="POSTGRES" DB_DSN="postgresql:///apiclarity?host=/tmp/apiclaritydb"
+
+    DATABASE_DRIVER="POSTGRES" DB_DSN="postgresql://user@localhost:5433/mydb?options=-c%20synchronous_commit%3Doff"
+
+    DATABASE_DRIVER="LOCAL" DB_DSN="file::memory:?cache=shared"
+
+    DATABASE_DRIVER="LOCAL" DB_DSN="file:/home/fred/data.db?vfs=unix-dotfile"
+
 ## Contributing
 
 Pull requests and bug reports are welcome.

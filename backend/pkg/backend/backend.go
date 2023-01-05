@@ -80,6 +80,7 @@ func CreateBackend(config *_config.Config, monitor *k8smonitor.Monitor, speculat
 func createDatabaseConfig(config *_config.Config) *_database.DBConfig {
 	return &_database.DBConfig{
 		DriverType:     config.DatabaseDriver,
+		DSN:            config.DBDSN,
 		EnableInfoLogs: config.EnableDBInfoLogs,
 		DBPassword:     config.DBPassword,
 		DBUser:         config.DBUser,
