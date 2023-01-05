@@ -25,11 +25,11 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/routers"
 	"github.com/ghodss/yaml"
+	logging "github.com/sirupsen/logrus"
 	"k8s.io/utils/strings/slices"
 
 	"github.com/openclarity/apiclarity/api/server/models"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
 )
 
 // FuzzerSpecInfo An object containing info about a spec.
@@ -151,7 +151,6 @@ func FindRoute(router *routers.Router, verb string, uri string) (*routers.Route,
 		return nil, fmt.Errorf("can't convert (%v %v) to http request, err=(%v)", verb, uri, err)
 	}
 	req.Header.Set("Content-Type", "application/json") // Report this path in shortreport
-	logging.Debugf("[Fuzzer] findRoute(): ... req to find (%v %v)", verb, req)
 	route, _, err := (*router).FindRoute(req)
 	if err != nil {
 		return nil, fmt.Errorf("can't find route for (%v %v), err=(%v)", verb, uri, err)

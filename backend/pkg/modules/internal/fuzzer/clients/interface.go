@@ -18,9 +18,10 @@ package clients
 import (
 	"errors"
 
+	logging "github.com/sirupsen/logrus"
+
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/config"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
 )
 
 type Client interface {
@@ -28,7 +29,7 @@ type Client interface {
 	StopFuzzingJob(apiID int64, complete bool) error
 }
 
-//nolint: ireturn,nolintlint
+// nolint: ireturn,nolintlint
 func NewClient(moduleConfig *config.Config, accessor core.BackendAccessor) (Client, error) {
 	if moduleConfig.GetDeploymentType() == config.DeploymentTypeDocker {
 		client, err := NewDockerClient(moduleConfig)
