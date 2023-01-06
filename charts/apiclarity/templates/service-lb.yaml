@@ -1,0 +1,18 @@
+{{- if and .Values.apiclarity.tls.enabled .Values.supportExternalTraceSource.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: apiclarity-external
+  namespace: '{{ .Release.Namespace }}'
+  labels:
+    {{ include "apiclarity.labels" . }}
+spec:
+  ports:
+    - name: https-external-authenticated-trace-server
+      port: 10443
+      protocol: TCP
+      targetPort: 10443
+  selector:
+    app: {{ include "apiclarity.name" . }}
+  type: LoadBalancer
+{{- end }}

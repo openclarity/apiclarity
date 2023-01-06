@@ -46,7 +46,7 @@ apiclarity:
   # notificationURLPrefix: example.local:8888/
 
   tls:
-    enabled: false
+    enabled: true
     # Secret that contains server tls key and cert
     tlsServerCertsSecretName: "apiclarity-tls"
     # TLS secret (tlsServerCertsSecretName) cert field name
@@ -266,4 +266,12 @@ APIClarityRuntimeFuzzing:
       cpu: "200m"
 
 # End of APIClarity Runtime Fuzzing Values
+#######################################################################################
+
+#######################################################################################
+## APIClarity External Trace Source Values
+
+supportExternalTraceSource:
+  enabled: true
+# End of APIClarity External Trace Source Values
 #######################################################################################
