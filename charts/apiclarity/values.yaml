@@ -272,6 +272,6 @@ APIClarityRuntimeFuzzing:
 ## APIClarity External Trace Source Values
 
 supportExternalTraceSource:
-  enabled: true
+  enabled: false
 # End of APIClarity External Trace Source Values
 #######################################################################################
