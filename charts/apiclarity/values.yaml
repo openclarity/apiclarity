@@ -46,7 +46,7 @@ apiclarity:
   # notificationURLPrefix: example.local:8888/
 
   tls:
-    enabled: true
+    enabled: false
     # Secret that contains server tls key and cert
     tlsServerCertsSecretName: "apiclarity-tls"
     # TLS secret (tlsServerCertsSecretName) cert field name
