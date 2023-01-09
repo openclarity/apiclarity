@@ -1,0 +1,6 @@
+apiVersion: v2
+name: kuma-plugin
+description: Configure Kuma dataplanes to send traces to APIClarity
+type: application
+version: latest
+appVersion: latest

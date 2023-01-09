@@ -1,0 +1,15 @@
+kuma:
+  # Kuma service to add proxy-template to
+  # Name of the service(s) that will be edit to enable APIClarity tracing
+  # See https://docs.konghq.com/mesh/latest/policies/proxy-template/
+  kumaMesh: "default"
+  kumaService: "*"
+
+apiclarity:
+  hostname: apiclarity-apiclarity.apiclarity
+  port: 9000
+  plugin:
+    config: |
+      {"trace_sampling_enabled": "false"}
+    sha256: "15f8bece72cbe63d91d4636f5c017f575da8fdd832cd12d1c113f1f5774c0dc3"
+    wasmFilterURI: "https://raw.githubusercontent.com/openclarity/wasm-filters/5f78e317945e06b899cefe83e4a1959b27af1445/bin/release/http-trace-filter.wasm"
