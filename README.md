@@ -228,7 +228,7 @@ TRACE_SOURCE_TOKEN=$(curl --http1.1 --insecure -s -H 'Content-Type: application/
 ```
 
 3. Receive the certificate
-To recieve the certificate, get the External-IP for the service named as apiclarity-external
+To receive the certificate, get the External-IP for the service named as apiclarity-external
 ```shell
 kubectl get services -n apiclarity
 ```
