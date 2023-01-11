@@ -186,6 +186,66 @@ Update [values.yaml](https://github.com/openclarity/apiclarity/blob/master/chart
 
 4. Open APIClarity UI in the browser: <http://localhost:8080/>
 
+## Enabling External Trace Sources Support
+Enabling external trace sources support, APIClarity can receive the trace sources from the entitites that are external to the K8s cluster. External trace sources such as Gateways, Load balancers, etc. can communicate with APIClarity to report APIs and send the traces. 
+
+The following section describes how to deploy APIClarity with the support for external trace sources
+1)	Add Helm Repo
+```shell
+helm repo add apiclarity https://openclarity.github.io/apiclarity
+```
+
+2)	Update values.yaml with 
+```shell
+Apiclarity -> tls -> enabled as true
+supportExternalTraceSource -> enabled as true
+```
+
+3)	Deploy APIClarity with the Helm enabling external traffic sources
+```shell
+helm install --values values.yaml --create-namespace apiclarity apiclarity/apiclarity -n apiclarity
+```
+
+4)	Port forward to APIClarity UI:
+```shell
+kubectl port-forward -n apiclarity svc/apiclarity-apiclarity 9999:8080
+```
+
+5)	Open APIClarity UI in the browser:
+```shell
+http://localhost:9999 
+```
+
+The following section describes how to register a new external trace source. And this section includes how to access the service, register a new trace source, and how to receive the token and certificate.
+1)	Port forward for service at 8443
+```shell
+kubectl port-forward -n apiclarity svc/apiclarity-apiclarity 8443:8443
+```
+
+2)	Register a new external trace source and receive the token 
+```shell
+TRACE_SOURCE_TOKEN=$(curl --http1.1 --insecure -s -H 'Content-Type: application/json' -d '{"name":"apigee_gateway","type":"APIGEE_X"}' https://localhost:8443/api/control/traceSources|jq -r '.token')
+```
+
+3) Receive the certificate
+To recieve the certificate, get the External-IP for the service named as apiclarity-external
+```shell
+kubectl get services -n apiclarity
+```
+Then, use the External-IP address with the following command, then extract the certificate with -----BEGIN CERTIFICATE----- and -----END CERTIFICATE----- and save to server.crt
+```shell
+openssl s_client -showcerts -connect <External-IP>:10443
+```
+
+Use the above extracted token at the step-2 and certificate at step-3 for configuring subsequent external trace sources.
+
+APIClarity can support with the following traffic sources and follow the instructions per required integration.
+
+* Apigee X Gateway
+  * [Integration instructions](https://github.com/openclarity/apiclarity/tree/master/plugins/gateway/apigeex)
+* BIG-IP LTM Load balancer
+  * [Integration instructions](https://github.com/openclarity/apiclarity/tree/master/plugins/gateway/f5-bigip)
+
 ## Contributing
 
 Pull requests and bug reports are welcome.
