@@ -1121,6 +1121,7 @@ components:
     TraceSourceType:
       enum:
       - APIGEE_X
+      - F5_BIG_IP
       - KONG_INTERNAL
       - TYK_INTERNAL
       type: string

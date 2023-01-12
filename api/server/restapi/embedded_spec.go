@@ -1513,6 +1513,7 @@ func init() {
       "type": "string",
       "enum": [
         "APIGEE_X",
+        "F5_BIG_IP",
         "KONG_INTERNAL",
         "TYK_INTERNAL"
       ]
@@ -4027,6 +4028,7 @@ func init() {
       "type": "string",
       "enum": [
         "APIGEE_X",
+        "F5_BIG_IP",
         "KONG_INTERNAL",
         "TYK_INTERNAL"
       ]
