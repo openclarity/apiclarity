@@ -29,6 +29,9 @@ const (
 	// TraceSourceTypeAPIGEEX captures enum value "APIGEE_X"
 	TraceSourceTypeAPIGEEX TraceSourceType = "APIGEE_X"
 
+	// TraceSourceTypeF5BIGIP captures enum value "F5_BIG_IP"
+	TraceSourceTypeF5BIGIP TraceSourceType = "F5_BIG_IP"
+
 	// TraceSourceTypeKONGINTERNAL captures enum value "KONG_INTERNAL"
 	TraceSourceTypeKONGINTERNAL TraceSourceType = "KONG_INTERNAL"
 
@@ -41,7 +44,7 @@ var traceSourceTypeEnum []interface{}
 
 func init() {
 	var res []TraceSourceType
-	if err := json.Unmarshal([]byte(`["APIGEE_X","KONG_INTERNAL","TYK_INTERNAL"]`), &res); err != nil {
+	if err := json.Unmarshal([]byte(`["APIGEE_X","F5_BIG_IP","KONG_INTERNAL","TYK_INTERNAL"]`), &res); err != nil {
 		panic(err)
 	}
 	for _, v := range res {
