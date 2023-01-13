@@ -337,4 +337,15 @@ entries:
     urls:
     - https://github.com/apiclarity/apiclarity/releases/download/apiclarity-v0.3.0-helm/apiclarity-v0.3.0.tgz
     version: v0.3.0
-generated: "2023-01-13T14:30:27.025101238Z"
+  kuma-plugin:
+  - apiVersion: v2
+    appVersion: v0.14.0
+    created: "2023-01-13T14:30:30.402971499Z"
+    description: Configure Kuma dataplanes to send traces to APIClarity
+    digest: 53b9c1f3132285fb6ee54f38b78ebb69790d97b8857cbd888f8c83834ea54e01
+    name: kuma-plugin
+    type: application
+    urls:
+    - https://github.com/openclarity/apiclarity/releases/download/kuma-plugin-v0.14.0/kuma-plugin-v0.14.0.tgz
+    version: v0.14.0
+generated: "2023-01-13T14:30:30.403008599Z"
