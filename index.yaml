@@ -2,6 +2,30 @@ apiVersion: v1
 entries:
   apiclarity:
   - apiVersion: v2
+    appVersion: v0.14.0
+    created: "2023-01-13T14:30:27.02461224Z"
+    dependencies:
+    - alias: apiclarity-postgresql
+      condition: apiclarity-postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 11.6.12
+    description: Charts for APIClarity deployment. Reconstruct OpenAPI Specifications
+      from real-time workload traffic seamlessly.
+    digest: 6a48d7eee790a8d4901e9541c583ac4d046fdc1f027dd63496f5b2e555a6a87e
+    home: https://apiclarity.io/
+    icon: https://github.com/openclarity/apiclarity/raw/master/API_clarity.svg
+    maintainers:
+    - name: API Clarity
+      url: https://apiclarity.io
+    name: apiclarity
+    sources:
+    - https://github.com/openclarity/apiclarity
+    type: application
+    urls:
+    - https://github.com/openclarity/apiclarity/releases/download/apiclarity-v0.14.0-helm/apiclarity-v0.14.0.tgz
+    version: v0.14.0
+  - apiVersion: v2
     appVersion: v0.13.0
     created: "2022-07-04T07:57:58.42190803Z"
     dependencies:
@@ -313,4 +337,4 @@ entries:
     urls:
     - https://github.com/apiclarity/apiclarity/releases/download/apiclarity-v0.3.0-helm/apiclarity-v0.3.0.tgz
     version: v0.3.0
-generated: "2022-07-04T07:57:58.422072536Z"
+generated: "2023-01-13T14:30:27.025101238Z"
