@@ -28,6 +28,18 @@ paths:
           description: 'Success'
           schema:
             $ref: '#/responses/Success'
+        '400':
+          description: 'Bad request'
+          schema:
+            $ref: '#/responses/BadRequest'
+        '401':
+          description: 'Unauthorized'
+          schema:
+            $ref: '#/responses/Unauthorized'
+        '500':
+          description: 'Internal error'
+          schema:
+            $ref: '#/responses/InternalError'
         default:
           $ref: '#/responses/UnknownError'
 
@@ -49,6 +61,7 @@ paths:
       summary: 'Allows a client to notify APIClarity about new APIs.'
       description: 'This allows a client (a gateway for example) to notify APIclarity about newly discovered APIs. If one of the APIs already exists, it is ignored.'
       parameters:
+        - $ref: '#/parameters/TraceSourceTokenHeader'
         - in: 'body'
           name: 'body'
           description: 'List of new discovered APIs'
@@ -144,6 +157,27 @@ definitions:
       message:
         type: 'string'
 
+  BadRequestResponse:
+    description: 'An object that is return in all cases of failures.'
+    type: 'object'
+    properties:
+      message:
+        type: 'string'
+
+  UnauthorizedResponse:
+    description: 'An object that is return in all cases of failures.'
+    type: 'object'
+    properties:
+      message:
+        type: 'string'
+
+  InternalErrorResponse:
+    description: 'An object that is return in all cases of failures.'
+    type: 'object'
+    properties:
+      message:
+        type: 'string'
+
   SuccessResponse:
     description: 'An object that is return in cases of success that return nothing.'
     type: 'object'
@@ -175,6 +209,18 @@ responses:
     description: 'success message'
     schema:
       $ref: '#/definitions/SuccessResponse'
+  BadRequest:
+    description: 'Bad request'
+    schema:
+      $ref: '#/definitions/BadRequestResponse'
+  Unauthorized:
+    description: 'Unauthorized'
+    schema:
+      $ref: '#/definitions/UnauthorizedResponse'
+  InternalError:
+    description: 'Internal error'
+    schema:
+      $ref: '#/definitions/InternalErrorResponse'
 
 parameters:
   TraceSourceTokenHeader:

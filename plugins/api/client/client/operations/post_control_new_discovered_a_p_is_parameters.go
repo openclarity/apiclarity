@@ -59,6 +59,12 @@ func NewPostControlNewDiscoveredAPIsParamsWithHTTPClient(client *http.Client) *P
 */
 type PostControlNewDiscoveredAPIsParams struct {
 
+	/* XTraceSourceToken.
+
+	   Optional header to authenticate the trace source
+	*/
+	XTraceSourceToken *string
+
 	/* Body.
 
 	   List of new discovered APIs
@@ -118,6 +124,17 @@ func (o *PostControlNewDiscoveredAPIsParams) SetHTTPClient(client *http.Client) 
 	o.HTTPClient = client
 }
 
+// WithXTraceSourceToken adds the xTraceSourceToken to the post control new discovered a p is params
+func (o *PostControlNewDiscoveredAPIsParams) WithXTraceSourceToken(xTraceSourceToken *string) *PostControlNewDiscoveredAPIsParams {
+	o.SetXTraceSourceToken(xTraceSourceToken)
+	return o
+}
+
+// SetXTraceSourceToken adds the xTraceSourceToken to the post control new discovered a p is params
+func (o *PostControlNewDiscoveredAPIsParams) SetXTraceSourceToken(xTraceSourceToken *string) {
+	o.XTraceSourceToken = xTraceSourceToken
+}
+
 // WithBody adds the body to the post control new discovered a p is params
 func (o *PostControlNewDiscoveredAPIsParams) WithBody(body PostControlNewDiscoveredAPIsBody) *PostControlNewDiscoveredAPIsParams {
 	o.SetBody(body)
@@ -136,6 +153,14 @@ func (o *PostControlNewDiscoveredAPIsParams) WriteToRequest(r runtime.ClientRequ
 		return err
 	}
 	var res []error
+
+	if o.XTraceSourceToken != nil {
+
+		// header param X-Trace-Source-Token
+		if err := r.SetHeaderParam("X-Trace-Source-Token", *o.XTraceSourceToken); err != nil {
+			return err
+		}
+	}
 	if err := r.SetBodyParam(o.Body); err != nil {
 		return err
 	}

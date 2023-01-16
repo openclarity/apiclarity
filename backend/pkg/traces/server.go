@@ -210,6 +210,7 @@ func (s *HTTPTracesServer) getHostsToTrace(params operations.GetHostsToTracePara
 }
 
 func (s *HTTPTracesServer) newDiscoveredAPIs(params operations.PostControlNewDiscoveredAPIsParams) middleware.Responder {
+	log.Infof("newDiscoveredAPIs was invoked")
 	traceSource := TraceSourceFromContext(params.HTTPRequest.Context())
 	hosts := params.Body.Hosts
 

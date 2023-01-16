@@ -29,6 +29,24 @@ func (o *PostTelemetryReader) ReadResponse(response runtime.ClientResponse, cons
 			return nil, err
 		}
 		return result, nil
+	case 400:
+		result := NewPostTelemetryBadRequest()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 401:
+		result := NewPostTelemetryUnauthorized()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 500:
+		result := NewPostTelemetryInternalServerError()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	default:
 		result := NewPostTelemetryDefault(response.Code())
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -62,6 +80,96 @@ func (o *PostTelemetryOK) GetPayload() interface{} {
 }
 
 func (o *PostTelemetryOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	// response payload
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewPostTelemetryBadRequest creates a PostTelemetryBadRequest with default headers values
+func NewPostTelemetryBadRequest() *PostTelemetryBadRequest {
+	return &PostTelemetryBadRequest{}
+}
+
+/* PostTelemetryBadRequest describes a response with status code 400, with default header values.
+
+Bad request
+*/
+type PostTelemetryBadRequest struct {
+	Payload interface{}
+}
+
+func (o *PostTelemetryBadRequest) Error() string {
+	return fmt.Sprintf("[POST /telemetry][%d] postTelemetryBadRequest  %+v", 400, o.Payload)
+}
+func (o *PostTelemetryBadRequest) GetPayload() interface{} {
+	return o.Payload
+}
+
+func (o *PostTelemetryBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	// response payload
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewPostTelemetryUnauthorized creates a PostTelemetryUnauthorized with default headers values
+func NewPostTelemetryUnauthorized() *PostTelemetryUnauthorized {
+	return &PostTelemetryUnauthorized{}
+}
+
+/* PostTelemetryUnauthorized describes a response with status code 401, with default header values.
+
+Unauthorized
+*/
+type PostTelemetryUnauthorized struct {
+	Payload interface{}
+}
+
+func (o *PostTelemetryUnauthorized) Error() string {
+	return fmt.Sprintf("[POST /telemetry][%d] postTelemetryUnauthorized  %+v", 401, o.Payload)
+}
+func (o *PostTelemetryUnauthorized) GetPayload() interface{} {
+	return o.Payload
+}
+
+func (o *PostTelemetryUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	// response payload
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewPostTelemetryInternalServerError creates a PostTelemetryInternalServerError with default headers values
+func NewPostTelemetryInternalServerError() *PostTelemetryInternalServerError {
+	return &PostTelemetryInternalServerError{}
+}
+
+/* PostTelemetryInternalServerError describes a response with status code 500, with default header values.
+
+Internal error
+*/
+type PostTelemetryInternalServerError struct {
+	Payload interface{}
+}
+
+func (o *PostTelemetryInternalServerError) Error() string {
+	return fmt.Sprintf("[POST /telemetry][%d] postTelemetryInternalServerError  %+v", 500, o.Payload)
+}
+func (o *PostTelemetryInternalServerError) GetPayload() interface{} {
+	return o.Payload
+}
+
+func (o *PostTelemetryInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	// response payload
 	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {

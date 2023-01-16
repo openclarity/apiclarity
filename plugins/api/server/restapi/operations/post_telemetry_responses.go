@@ -55,6 +55,132 @@ func (o *PostTelemetryOK) WriteResponse(rw http.ResponseWriter, producer runtime
 	}
 }
 
+// PostTelemetryBadRequestCode is the HTTP code returned for type PostTelemetryBadRequest
+const PostTelemetryBadRequestCode int = 400
+
+/*PostTelemetryBadRequest Bad request
+
+swagger:response postTelemetryBadRequest
+*/
+type PostTelemetryBadRequest struct {
+
+	/*
+	  In: Body
+	*/
+	Payload interface{} `json:"body,omitempty"`
+}
+
+// NewPostTelemetryBadRequest creates PostTelemetryBadRequest with default headers values
+func NewPostTelemetryBadRequest() *PostTelemetryBadRequest {
+
+	return &PostTelemetryBadRequest{}
+}
+
+// WithPayload adds the payload to the post telemetry bad request response
+func (o *PostTelemetryBadRequest) WithPayload(payload interface{}) *PostTelemetryBadRequest {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the post telemetry bad request response
+func (o *PostTelemetryBadRequest) SetPayload(payload interface{}) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *PostTelemetryBadRequest) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(400)
+	payload := o.Payload
+	if err := producer.Produce(rw, payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
+	}
+}
+
+// PostTelemetryUnauthorizedCode is the HTTP code returned for type PostTelemetryUnauthorized
+const PostTelemetryUnauthorizedCode int = 401
+
+/*PostTelemetryUnauthorized Unauthorized
+
+swagger:response postTelemetryUnauthorized
+*/
+type PostTelemetryUnauthorized struct {
+
+	/*
+	  In: Body
+	*/
+	Payload interface{} `json:"body,omitempty"`
+}
+
+// NewPostTelemetryUnauthorized creates PostTelemetryUnauthorized with default headers values
+func NewPostTelemetryUnauthorized() *PostTelemetryUnauthorized {
+
+	return &PostTelemetryUnauthorized{}
+}
+
+// WithPayload adds the payload to the post telemetry unauthorized response
+func (o *PostTelemetryUnauthorized) WithPayload(payload interface{}) *PostTelemetryUnauthorized {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the post telemetry unauthorized response
+func (o *PostTelemetryUnauthorized) SetPayload(payload interface{}) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *PostTelemetryUnauthorized) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(401)
+	payload := o.Payload
+	if err := producer.Produce(rw, payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
+	}
+}
+
+// PostTelemetryInternalServerErrorCode is the HTTP code returned for type PostTelemetryInternalServerError
+const PostTelemetryInternalServerErrorCode int = 500
+
+/*PostTelemetryInternalServerError Internal error
+
+swagger:response postTelemetryInternalServerError
+*/
+type PostTelemetryInternalServerError struct {
+
+	/*
+	  In: Body
+	*/
+	Payload interface{} `json:"body,omitempty"`
+}
+
+// NewPostTelemetryInternalServerError creates PostTelemetryInternalServerError with default headers values
+func NewPostTelemetryInternalServerError() *PostTelemetryInternalServerError {
+
+	return &PostTelemetryInternalServerError{}
+}
+
+// WithPayload adds the payload to the post telemetry internal server error response
+func (o *PostTelemetryInternalServerError) WithPayload(payload interface{}) *PostTelemetryInternalServerError {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the post telemetry internal server error response
+func (o *PostTelemetryInternalServerError) SetPayload(payload interface{}) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *PostTelemetryInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(500)
+	payload := o.Payload
+	if err := producer.Produce(rw, payload); err != nil {
+		panic(err) // let the recovery middleware deal with this
+	}
+}
+
 /*PostTelemetryDefault unknown error
 
 swagger:response postTelemetryDefault

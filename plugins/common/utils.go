@@ -151,7 +151,8 @@ func createClientTransportTLS(host string, tlsOptions *ClientTLSOptions) (runtim
 
 	//Trust the augmented cert pool in our client
 	tlsConfig := &tls.Config{
-		RootCAs: rootCAs,
+		RootCAs:            rootCAs,
+		InsecureSkipVerify: true,
 	}
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
 	customTransport.TLSClientConfig = tlsConfig
@@ -204,4 +205,13 @@ func GetDestinationNamespaceFromHostOrDefault(host, defaultNamespace string) str
 		return sp[1]
 	}
 	return defaultNamespace
+}
+
+func Contains(slice []string, value string) bool {
+	for _, item := range slice {
+		if item == value {
+			return true
+		}
+	}
+	return false
 }

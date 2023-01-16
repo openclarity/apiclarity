@@ -40,6 +40,9 @@ func init() {
         "summary": "Allows a client to notify APIClarity about new APIs.",
         "parameters": [
           {
+            "$ref": "#/parameters/TraceSourceTokenHeader"
+          },
+          {
             "description": "List of new discovered APIs",
             "name": "body",
             "in": "body",
@@ -119,6 +122,24 @@ func init() {
               "$ref": "#/responses/Success"
             }
           },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/responses/BadRequest"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/responses/Unauthorized"
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "schema": {
+              "$ref": "#/responses/InternalError"
+            }
+          },
           "default": {
             "$ref": "#/responses/UnknownError"
           }
@@ -128,6 +149,15 @@ func init() {
   },
   "definitions": {
     "ApiResponse": {
+      "description": "An object that is return in all cases of failures.",
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "BadRequestResponse": {
       "description": "An object that is return in all cases of failures.",
       "type": "object",
       "properties": {
@@ -189,6 +219,15 @@ func init() {
       "properties": {
         "hosts": {
           "$ref": "#/definitions/HostsList"
+        }
+      }
+    },
+    "InternalErrorResponse": {
+      "description": "An object that is return in all cases of failures.",
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
         }
       }
     },
@@ -254,6 +293,15 @@ func init() {
           "type": "string"
         }
       }
+    },
+    "UnauthorizedResponse": {
+      "description": "An object that is return in all cases of failures.",
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
     }
   },
   "parameters": {
@@ -265,10 +313,28 @@ func init() {
     }
   },
   "responses": {
+    "BadRequest": {
+      "description": "Bad request",
+      "schema": {
+        "$ref": "#/definitions/BadRequestResponse"
+      }
+    },
+    "InternalError": {
+      "description": "Internal error",
+      "schema": {
+        "$ref": "#/definitions/InternalErrorResponse"
+      }
+    },
     "Success": {
       "description": "success message",
       "schema": {
         "$ref": "#/definitions/SuccessResponse"
+      }
+    },
+    "Unauthorized": {
+      "description": "Unauthorized",
+      "schema": {
+        "$ref": "#/definitions/UnauthorizedResponse"
       }
     },
     "UnknownError": {
@@ -302,6 +368,12 @@ func init() {
         "summary": "Allows a client to notify APIClarity about new APIs.",
         "parameters": [
           {
+            "type": "string",
+            "description": "Optional header to authenticate the trace source",
+            "name": "X-Trace-Source-Token",
+            "in": "header"
+          },
+          {
             "description": "List of new discovered APIs",
             "name": "body",
             "in": "body",
@@ -399,6 +471,33 @@ func init() {
               }
             }
           },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "description": "Bad request",
+              "schema": {
+                "$ref": "#/definitions/BadRequestResponse"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "description": "Unauthorized",
+              "schema": {
+                "$ref": "#/definitions/UnauthorizedResponse"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal error",
+            "schema": {
+              "description": "Internal error",
+              "schema": {
+                "$ref": "#/definitions/InternalErrorResponse"
+              }
+            }
+          },
           "default": {
             "description": "unknown error",
             "schema": {
@@ -411,6 +510,15 @@ func init() {
   },
   "definitions": {
     "ApiResponse": {
+      "description": "An object that is return in all cases of failures.",
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "BadRequestResponse": {
       "description": "An object that is return in all cases of failures.",
       "type": "object",
       "properties": {
@@ -472,6 +580,15 @@ func init() {
       "properties": {
         "hosts": {
           "$ref": "#/definitions/HostsList"
+        }
+      }
+    },
+    "InternalErrorResponse": {
+      "description": "An object that is return in all cases of failures.",
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
         }
       }
     },
@@ -537,6 +654,15 @@ func init() {
           "type": "string"
         }
       }
+    },
+    "UnauthorizedResponse": {
+      "description": "An object that is return in all cases of failures.",
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
     }
   },
   "parameters": {
@@ -548,10 +674,28 @@ func init() {
     }
   },
   "responses": {
+    "BadRequest": {
+      "description": "Bad request",
+      "schema": {
+        "$ref": "#/definitions/BadRequestResponse"
+      }
+    },
+    "InternalError": {
+      "description": "Internal error",
+      "schema": {
+        "$ref": "#/definitions/InternalErrorResponse"
+      }
+    },
     "Success": {
       "description": "success message",
       "schema": {
         "$ref": "#/definitions/SuccessResponse"
+      }
+    },
+    "Unauthorized": {
+      "description": "Unauthorized",
+      "schema": {
+        "$ref": "#/definitions/UnauthorizedResponse"
       }
     },
     "UnknownError": {
