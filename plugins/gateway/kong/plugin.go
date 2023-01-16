@@ -33,8 +33,7 @@ import (
 )
 
 const (
-	hostnameSeparator = "."
-	MaxBodySize       = 1000 * 1000
+	MaxBodySize = 1000 * 1000
 )
 
 var (
@@ -88,13 +87,13 @@ func (conf Config) Access(kong *pdk.PDK) {
 
 func (conf Config) Response(kong *pdk.PDK) {
 	if apiclarityClient == nil {
-		_ = kong.Log.Err(fmt.Sprintf("ApiClarity Client does not exists"))
+		_ = kong.Log.Err("ApiClarity Client does not exists")
 		return
 	}
 
 	// First, manage new discovery APIs
-	if err := processNewDiscoveredApi(kong); err != nil {
-		_ = kong.Log.Err(fmt.Sprintf("Failed to processNewDiscoveredApi: '%v'", err))
+	if err := processNewDiscoveredAPI(kong); err != nil {
+		_ = kong.Log.Err(fmt.Sprintf("Failed to processNewDiscoveredAPI: '%v'", err))
 	}
 
 	if conf.TraceSamplingEnabled {
@@ -120,14 +119,14 @@ func (conf Config) Response(kong *pdk.PDK) {
 	_ = kong.Log.Info(fmt.Sprintf("Telemetry has been sent: %v", telemetry))
 }
 
-func processNewDiscoveredApi(kong *pdk.PDK) error {
+func processNewDiscoveredAPI(kong *pdk.PDK) error {
 	host, err := getHost(kong)
 	if err != nil {
-		return fmt.Errorf("failed to get routed service for processNewDiscoveredApi: %v", err)
+		return fmt.Errorf("failed to get routed service for processNewDiscoveredAPI: %v", err)
 	}
 	// Check for newDiscoveredApi
 	if !common.Contains(discoveredApis, host) {
-		appendNewDiscoveredApi(host)
+		appendNewDiscoveredAPI(host)
 		hosts := []string{host}
 		if err := apiclarityClient.PostNewDiscoveredAPIs(hosts); err != nil {
 			return fmt.Errorf("failed to send newDiscoveredApi request: %v", err)
@@ -137,7 +136,7 @@ func processNewDiscoveredApi(kong *pdk.PDK) error {
 	return nil
 }
 
-func appendNewDiscoveredApi(host string) {
+func appendNewDiscoveredAPI(host string) {
 	lock.RLock()
 	defer lock.RUnlock()
 
@@ -237,13 +236,11 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get response headers: %v", err)
 	}
-	host, port, namespace := parseKongHost(routedService.Host)
+	host, port, _ := parseKongHost(routedService.Host)
 
 	// Note by Axel. Currently, we populate Host with (host+namespace), and don't put namespace on DestinationNamespace because
 	// on an issue on the way we create a service in ApiClarity either with newDiscoveredApi either with Telemetry
-	if len(namespace) > 0 {
-		host = host + hostnameSeparator + namespace
-	}
+	// Must be fixed with PA-11655
 	telemetry := models.Telemetry{
 		DestinationAddress:   ":" + port, // No destination ip for now
 		DestinationNamespace: "",         // No namespace here for now as it is concatenated on 'host'
@@ -287,6 +284,7 @@ func getRequestTimeFromContext(kong *pdk.PDK) (int64, error) {
 }
 
 // KongHost format: <svc-name>.<namespace>.8000.svc.
+// nolint:unparam
 func parseKongHost(kongHost string) (host, port, namespace string) {
 	sp := strings.Split(kongHost, ".")
 
