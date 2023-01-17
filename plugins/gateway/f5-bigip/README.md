@@ -8,7 +8,7 @@ For more information about F5 BIG-IP LTM please visit: https://www.f5.com/produc
 
 * APIClarity backend is running and exposed externally through a publicly reachable URL
 * F5 BIG-IP is running
-* Another host (e.g. a Virtual Machine) able to run APIClarity Agent as docker container is runnin. This host must be reachable by F5 BIG-IP and must be able to reach APIclarity URL. Let us refer to this host as the `F5-Log-Collector`.
+* Another host (e.g. a Virtual Machine) able to run APIClarity Agent as docker container is running. This host must be reachable by F5 BIG-IP and must be able to reach APIclarity URL. Let us refer to this host as the `F5-Log-Collector`.
 
 ## Install Instructions
 1. **Prepare the bundle**
@@ -59,7 +59,7 @@ For more information about F5 BIG-IP LTM please visit: https://www.f5.com/produc
         dockerbuild.sh
         ```
    4. Launch the ApiClarityAgent:
-      * Go in the folder `ApiClarityAgent/deploy`
+      * Go in the folder `ApiClarityAgent/deploy/docker`
       * Execute:
         ```
         launch.sh
