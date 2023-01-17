@@ -152,7 +152,7 @@ func createClientTransportTLS(host string, tlsOptions *ClientTLSOptions) (runtim
 	//Trust the augmented cert pool in our client
 	tlsConfig := &tls.Config{
 		RootCAs:            rootCAs,
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: false,
 	}
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
 	customTransport.TLSClientConfig = tlsConfig
