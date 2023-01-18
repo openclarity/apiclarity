@@ -26,6 +26,7 @@ import (
 	"strconv"
 	"time"
 	"unsafe"
+	"sync"
 
 	"github.com/TykTechnologies/tyk/apidef"
 	"github.com/TykTechnologies/tyk/ctx"
@@ -33,10 +34,9 @@ import (
 	"github.com/TykTechnologies/tyk/user"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/openclarity/apiclarity/plugins/api/client/client/operations"
 	"github.com/openclarity/apiclarity/plugins/api/client/models"
 	"github.com/openclarity/apiclarity/plugins/common"
-	"github.com/openclarity/apiclarity/plugins/common/trace_sampling_client"
+	"github.com/openclarity/apiclarity/plugins/common/apiclarity_client"
 )
 
 var logger = log.Get()
@@ -45,28 +45,43 @@ var (
 	telemetryHost        string
 	gatewayNamespace     string
 	enableTLS            bool
-	traceSamplingHost    string
 	traceSamplingEnabled bool
-	TraceSamplingClient  *trace_sampling_client.Client
+	
+	token string
+	apiclarityClient *apiclarity_client.Client
+	discoveredApis   []string
+	lock             sync.RWMutex
 )
 
 //nolint:gochecknoinits
 func init() {
 	telemetryHost = os.Getenv("APICLARITY_HOST")
 	gatewayNamespace = os.Getenv("TYK_GATEWAY_NAMESPACE")
+	token = os.Getenv("TRACE_SOURCE_TOKEN")
+	enableTLS= false
 	if os.Getenv("ENABLE_TLS") == "true" {
 		enableTLS = true
+		if _, err := os.Stat(common.CACertFile); os.IsNotExist(err) {
+			logger.Errorf("Path %s does not exists", common.CACertFile)
+			return
+		}
 	}
 	if os.Getenv("TRACE_SAMPLING_ENABLED") == "true" {
-		traceSamplingHost = os.Getenv("TRACE_SAMPLING_HOST_NAME")
-		traceSamplingClient, err := trace_sampling_client.Create(false, traceSamplingHost, common.SamplingInterval)
+		traceSamplingEnabled = true
+	}
+		
+	if apiclarityClient == nil{
+		discoveredApis = []string{}
+		client, err := apiclarity_client.Create(enableTLS, telemetryHost, token, common.SamplingInterval)
 		if err != nil {
-			logger.Errorf("Failed to create trace sampling client: %v", err)
-		} else {
-			traceSamplingEnabled = true
-			TraceSamplingClient = traceSamplingClient
-			TraceSamplingClient.Start()
+			logger.Errorf("Failed to create ApiClarity client: %v", err)
+			return
 		}
+		apiclarityClient = client
+		if err := apiclarityClient.RefreshHostsToTrace(); err != nil {
+			logger.Errorf("Failed to get hosts to trace: %v", err)
+		}
+		apiclarityClient.Start()
 	}
 }
 
@@ -102,9 +117,15 @@ func ResponseSendTelemetry(_ http.ResponseWriter, res *http.Response, req *http.
 		logger.Error("Failed to get api definition")
 		return
 	}
-	if traceSamplingEnabled && TraceSamplingClient != nil {
+	if traceSamplingEnabled && apiclarityClient != nil {
 		host, port := common.GetHostAndPortFromURL(apiDefinition.Proxy.TargetURL, gatewayNamespace)
-		if !TraceSamplingClient.ShouldTrace(host, port) {
+
+		err := processNewDiscoveredAPI(host, port)
+		if err != nil {
+			logger.Errorf("Failed to processNewDiscoveredAPI: '%v'", err)
+		}
+
+		if !apiclarityClient.ShouldTrace(host, port) {
 			logger.Infof("Ignoring host: %v:%v", host, port)
 			return
 		}
@@ -116,25 +137,45 @@ func ResponseSendTelemetry(_ http.ResponseWriter, res *http.Response, req *http.
 		return
 	}
 
-	var tlsOptions *common.ClientTLSOptions
-	if enableTLS {
-		tlsOptions = &common.ClientTLSOptions{
-			RootCAFileName: common.CACertFile,
-		}
-	}
-	apiClient, err := common.NewTelemetryAPIClient(telemetryHost, tlsOptions)
-	if err != nil {
-		logger.Errorf("Failed to create new api client: %v", err)
-		return
-	}
-	params := operations.NewPostTelemetryParams().WithBody(telemetry)
-
-	_, err = apiClient.Operations.PostTelemetry(params)
+	err = apiclarityClient.PostTelemetry(telemetry)
 	if err != nil {
 		logger.Errorf("Failed to post telemetry: %v", err)
 		return
 	}
+
 	logger.Infof("Telemetry has been sent")
+}
+
+
+func processNewDiscoveredAPI(hostPart, port string) error {
+	if (len(hostPart)==0){
+		return fmt.Errorf("Host value is not available")
+	}
+
+	host := hostPart 
+
+	if (len(port)>0){
+		host = fmt.Sprintf("%s:%s", hostPart, port)
+	}
+
+	// Check for newDiscoveredApi
+	if !common.Contains(discoveredApis, host) {
+		appendNewDiscoveredAPI(host)
+		hosts := []string{host}
+		err := apiclarityClient.PostNewDiscoveredAPIs(hosts) 
+		if err != nil {
+			return fmt.Errorf("Failed to send newDiscoveredApi request: %v", err)
+		}
+		logger.Infof("Sent PostNewDiscoveredAPIs with success")
+	}
+	return nil
+}
+
+func appendNewDiscoveredAPI(host string) {
+	lock.RLock()
+	defer lock.RUnlock()
+
+	discoveredApis = append(discoveredApis, host)
 }
 
 func createTelemetry(res *http.Response, req *http.Request, apiDefinition *apidef.APIDefinition) (*models.Telemetry, error) {
