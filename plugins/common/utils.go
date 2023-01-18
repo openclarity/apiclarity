@@ -44,6 +44,7 @@ const (
 	RequestTimeContextKey    = "request_time"
 	SamplingInterval         = 10 * time.Second
 	MinimumSeparatedHostSize = 2
+	CACertFile               = "/etc/traces/certs/root-ca.crt"
 )
 
 func ReadBody(body io.ReadCloser) ([]byte, bool, error) {
@@ -90,8 +91,6 @@ func GetPathWithQuery(reqURL *url.URL) string {
 	}
 	return pathAndQuery
 }
-
-const CACertFile = "/etc/traces/certs/root-ca.crt"
 
 type ClientTLSOptions struct {
 	RootCAFileName string
@@ -151,8 +150,7 @@ func createClientTransportTLS(host string, tlsOptions *ClientTLSOptions) (runtim
 
 	//Trust the augmented cert pool in our client
 	tlsConfig := &tls.Config{
-		RootCAs:            rootCAs,
-		InsecureSkipVerify: false,
+		RootCAs: rootCAs,
 	}
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
 	customTransport.TLSClientConfig = tlsConfig

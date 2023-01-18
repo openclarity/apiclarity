@@ -55,14 +55,10 @@ func New() interface{} {
 
 func (conf Config) Access(kong *pdk.PDK) {
 	if conf.TraceSamplingEnabled && apiclarityClient == nil {
-		_ = kong.Log.Info(fmt.Sprintf("Host: '%v'", conf.Host))
-		_ = kong.Log.Info(fmt.Sprintf("TraceSamplingEnabled: '%v'", conf.TraceSamplingEnabled))
-		_ = kong.Log.Info(fmt.Sprintf("Token: '%v'", conf.Token))
-		_ = kong.Log.Info(fmt.Sprintf("SamplingInterval: '%v'", common.SamplingInterval))
 		discoveredApis = []string{}
 		if conf.EnableTLS {
-			if _, err := os.Stat("/etc/traces/certs"); os.IsNotExist(err) {
-				_ = kong.Log.Err("Path '/etc/traces/certs' does not exists")
+			if _, err := os.Stat(common.CACertFile); os.IsNotExist(err) {
+				_ = kong.Log.Err("'%v' does not exists", common.CACertFile)
 				return
 			}
 		}
@@ -131,7 +127,7 @@ func processNewDiscoveredAPI(kong *pdk.PDK) error {
 		if err := apiclarityClient.PostNewDiscoveredAPIs(hosts); err != nil {
 			return fmt.Errorf("failed to send newDiscoveredApi request: %v", err)
 		}
-		_ = kong.Log.Info("Sent PostNewDiscoveredAPIs with success")
+		_ = kong.Log.Debug("Sent PostNewDiscoveredAPIs with success")
 	}
 	return nil
 }
@@ -153,7 +149,7 @@ func shouldTrace(kong *pdk.PDK) (bool, error) {
 	if apiclarityClient.ShouldTrace(host, port) {
 		return true, nil
 	}
-	_ = kong.Log.Info("Ignoring host: %v:%v", host, port)
+	_ = kong.Log.Debug("Ignoring host: %v:%v", host, port)
 	return false, nil
 }
 
@@ -238,9 +234,6 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	}
 	host, port, _ := parseKongHost(routedService.Host)
 
-	// Note by Axel. Currently, we populate Host with (host+namespace), and don't put namespace on DestinationNamespace because
-	// on an issue on the way we create a service in ApiClarity either with newDiscoveredApi either with Telemetry
-	// Must be fixed with PA-11655
 	telemetry := models.Telemetry{
 		DestinationAddress:   ":" + port, // No destination ip for now
 		DestinationNamespace: "",         // No namespace here for now as it is concatenated on 'host'
