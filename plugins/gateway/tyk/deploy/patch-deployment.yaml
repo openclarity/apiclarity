@@ -30,8 +30,8 @@ spec:
           value: "{{ENABLE_TLS}}"
         - name: TRACE_SAMPLING_ENABLED
           value: "{{TRACE_SAMPLING_ENABLED}}"
-        - name: TRACE_SAMPLING_HOST_NAME
-          value: {{TRACE_SAMPLING_HOST_NAME}}
+        - name: TRACE_SOURCE_TOKEN
+          value: {{TRACE_SOURCE_TOKEN}}
       initContainers:
       - command:
         - cp
