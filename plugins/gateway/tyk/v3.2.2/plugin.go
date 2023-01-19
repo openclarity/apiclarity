@@ -24,9 +24,9 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"sync"
 	"time"
 	"unsafe"
-	"sync"
 
 	"github.com/TykTechnologies/tyk/apidef"
 	"github.com/TykTechnologies/tyk/ctx"
