@@ -33,6 +33,7 @@ import (
 	"github.com/TykTechnologies/tyk/log"
 	"github.com/TykTechnologies/tyk/user"
 	"github.com/go-openapi/strfmt"
+
 	"github.com/openclarity/apiclarity/plugins/api/client/models"
 	"github.com/openclarity/apiclarity/plugins/common"
 	"github.com/openclarity/apiclarity/plugins/common/apiclarity_client"
@@ -66,8 +67,7 @@ func init() {
 	}
 	if os.Getenv("TRACE_SAMPLING_ENABLED") == "true" {
 		traceSamplingEnabled = true
-	}
-		
+	}	
 	if apiclarityClient == nil {
 		discoveredApis = []string{}
 		client, err := apiclarity_client.Create(enableTLS, telemetryHost, token, common.SamplingInterval)
