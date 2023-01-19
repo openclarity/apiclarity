@@ -33,7 +33,6 @@ import (
 	"github.com/TykTechnologies/tyk/log"
 	"github.com/TykTechnologies/tyk/user"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/openclarity/apiclarity/plugins/api/client/models"
 	"github.com/openclarity/apiclarity/plugins/common"
 	"github.com/openclarity/apiclarity/plugins/common/apiclarity_client"
@@ -46,7 +45,7 @@ var (
 	gatewayNamespace     string
 	enableTLS            bool
 	traceSamplingEnabled bool
-	token		     string
+	token                string
 	apiclarityClient     *apiclarity_client.Client
 	discoveredApis       []string
 	lock                 sync.RWMutex
@@ -57,7 +56,7 @@ func init() {
 	telemetryHost = os.Getenv("APICLARITY_HOST")
 	gatewayNamespace = os.Getenv("TYK_GATEWAY_NAMESPACE")
 	token = os.Getenv("TRACE_SOURCE_TOKEN")
-	enableTLS= false
+	enableTLS = false
 	if os.Getenv("ENABLE_TLS") == "true" {
 		enableTLS = true
 		if _, err := os.Stat(common.CACertFile); os.IsNotExist(err) {
