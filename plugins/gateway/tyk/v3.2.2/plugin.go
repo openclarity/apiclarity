@@ -67,7 +67,7 @@ func init() {
 	}
 	if os.Getenv("TRACE_SAMPLING_ENABLED") == "true" {
 		traceSamplingEnabled = true
-	}	
+	}
 	if apiclarityClient == nil {
 		discoveredApis = []string{}
 		client, err := apiclarity_client.Create(enableTLS, telemetryHost, token, common.SamplingInterval)
@@ -84,6 +84,7 @@ func init() {
 }
 
 // Called during post phase.
+//
 //nolint:deadcode
 func PostGetAPIDefinition(_ http.ResponseWriter, r *http.Request) {
 	apiDefinition := ctx.GetDefinition(r)
@@ -106,6 +107,7 @@ func PostGetAPIDefinition(_ http.ResponseWriter, r *http.Request) {
 }
 
 // Called during response phase.
+//
 //nolint:deadcode
 func ResponseSendTelemetry(_ http.ResponseWriter, res *http.Response, req *http.Request) {
 	logger.Info("handling telemetry")
@@ -144,15 +146,14 @@ func ResponseSendTelemetry(_ http.ResponseWriter, res *http.Response, req *http.
 	logger.Infof("telemetry has been sent")
 }
 
-
 func processNewDiscoveredAPI(hostPart, port string) error {
-	if (len(hostPart)==0){
+	if len(hostPart) == 0 {
 		return fmt.Errorf("host value is not available")
 	}
 
-	host := hostPart 
+	host := hostPart
 
-	if (len(port)>0){
+	if len(port) > 0 {
 		host = fmt.Sprintf("%s:%s", hostPart, port)
 	}
 
@@ -160,7 +161,7 @@ func processNewDiscoveredAPI(hostPart, port string) error {
 	if !common.Contains(discoveredApis, host) {
 		appendNewDiscoveredAPI(host)
 		hosts := []string{host}
-		err := apiclarityClient.PostNewDiscoveredAPIs(hosts) 
+		err := apiclarityClient.PostNewDiscoveredAPIs(hosts)
 		if err != nil {
 			return fmt.Errorf("failed to send newDiscoveredApi request: %v", err)
 		}
