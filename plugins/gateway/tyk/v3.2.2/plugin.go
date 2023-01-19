@@ -62,7 +62,7 @@ func init() {
 	if os.Getenv("ENABLE_TLS") == "true" {
 		enableTLS = true
 		if _, err := os.Stat(common.CACertFile); os.IsNotExist(err) {
-			logger.Errorf("Path %s does not exists", common.CACertFile)
+			logger.Errorf("path %s does not exists", common.CACertFile)
 			return
 		}
 	}
@@ -74,12 +74,12 @@ func init() {
 		discoveredApis = []string{}
 		client, err := apiclarity_client.Create(enableTLS, telemetryHost, token, common.SamplingInterval)
 		if err != nil {
-			logger.Errorf("Failed to create ApiClarity client: %v", err)
+			logger.Errorf("failed to create ApiClarity client: %v", err)
 			return
 		}
 		apiclarityClient = client
 		if err := apiclarityClient.RefreshHostsToTrace(); err != nil {
-			logger.Errorf("Failed to get hosts to trace: %v", err)
+			logger.Errorf("failed to get hosts to trace: %v", err)
 		}
 		apiclarityClient.Start()
 	}
@@ -94,7 +94,7 @@ func PostGetAPIDefinition(_ http.ResponseWriter, r *http.Request) {
 	}
 
 	if apiDefinition == nil {
-		logger.Error("Failed to get api definition")
+		logger.Error("failed to get api definition")
 		return
 	}
 
@@ -110,11 +110,11 @@ func PostGetAPIDefinition(_ http.ResponseWriter, r *http.Request) {
 // Called during response phase.
 //nolint:deadcode
 func ResponseSendTelemetry(_ http.ResponseWriter, res *http.Response, req *http.Request) {
-	logger.Info("Handling telemetry")
+	logger.Info("handling telemetry")
 
 	apiDefinition := ctx.GetDefinition(req)
 	if apiDefinition == nil {
-		logger.Error("Failed to get api definition")
+		logger.Error("failed to get api definition")
 		return
 	}
 	if traceSamplingEnabled && apiclarityClient != nil {
@@ -122,34 +122,34 @@ func ResponseSendTelemetry(_ http.ResponseWriter, res *http.Response, req *http.
 
 		err := processNewDiscoveredAPI(host, port)
 		if err != nil {
-			logger.Errorf("Failed to processNewDiscoveredAPI: '%v'", err)
+			logger.Errorf("failed to processNewDiscoveredAPI: '%v'", err)
 		}
 
 		if !apiclarityClient.ShouldTrace(host, port) {
-			logger.Infof("Ignoring host: %v:%v", host, port)
+			logger.Infof("ignoring host: %v:%v", host, port)
 			return
 		}
 	}
 
 	telemetry, err := createTelemetry(res, req, apiDefinition)
 	if err != nil {
-		logger.Errorf("Failed to create telemetry: %v", err)
+		logger.Errorf("failed to create telemetry: %v", err)
 		return
 	}
 
 	err = apiclarityClient.PostTelemetry(telemetry)
 	if err != nil {
-		logger.Errorf("Failed to post telemetry: %v", err)
+		logger.Errorf("failed to post telemetry: %v", err)
 		return
 	}
 
-	logger.Infof("Telemetry has been sent")
+	logger.Infof("telemetry has been sent")
 }
 
 
 func processNewDiscoveredAPI(hostPart, port string) error {
 	if (len(hostPart)==0){
-		return fmt.Errorf("Host value is not available")
+		return fmt.Errorf("host value is not available")
 	}
 
 	host := hostPart 
@@ -164,9 +164,9 @@ func processNewDiscoveredAPI(hostPart, port string) error {
 		hosts := []string{host}
 		err := apiclarityClient.PostNewDiscoveredAPIs(hosts) 
 		if err != nil {
-			return fmt.Errorf("Failed to send newDiscoveredApi request: %v", err)
+			return fmt.Errorf("failed to send newDiscoveredApi request: %v", err)
 		}
-		logger.Infof("Sent PostNewDiscoveredAPIs with success")
+		logger.Infof("sent PostNewDiscoveredAPIs with success")
 	}
 	return nil
 }
