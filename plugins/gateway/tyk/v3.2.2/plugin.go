@@ -124,7 +124,7 @@ func ResponseSendTelemetry(_ http.ResponseWriter, res *http.Response, req *http.
 		}
 
 		if !apiclarityClient.ShouldTrace(host, port) {
-			logger.Infof("ignoring host: %v:%v", host, port)
+			logger.Infof("ignored host: %v:%v", host, port)
 			return
 		}
 	}
