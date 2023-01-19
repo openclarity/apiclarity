@@ -46,11 +46,10 @@ var (
 	gatewayNamespace     string
 	enableTLS            bool
 	traceSamplingEnabled bool
-	
-	token string
-	apiclarityClient *apiclarity_client.Client
-	discoveredApis   []string
-	lock             sync.RWMutex
+	token 				 string
+	apiclarityClient     *apiclarity_client.Client
+	discoveredApis       []string
+	lock             	 sync.RWMutex
 )
 
 //nolint:gochecknoinits
