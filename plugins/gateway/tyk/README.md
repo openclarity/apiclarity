@@ -11,6 +11,11 @@
    1. Script installation
       * Run the following script to add the plugin to your Tyk deployment.
       * The script will add an init container with the plugin image and will mount the plugin into the plugin to /plugins/tyk-plugin.so. 
+      * Set the TRACE_SOURCE_TOKEN
+        ```shell
+        TRACE_SOURCE_TOKEN=$(curl --http1.1 --insecure -s -H 'Content-Type: application/json' -d '{"name":"tyk-plugin","type":"TYK"}' https://localhost:8443/api/control/traceSources|jq -r '.token')
+        ```
+
       * Please set TYK_PROXY_CONTAINER_NAME, TYK_GATEWAY_DEPLOYMENT_NAME and TYK_GATEWAY_DEPLOYMENT_NAMESPACE accordingly:
 
        ```shell
@@ -56,7 +61,7 @@ curl -s -H "x-tyk-authorization: $TYK_ADMIN_KEY" http://$TYK_ADMIN_ADDRESS/tyk/a
 
 ```
 
-4. Hot reload Tyk:
+3. Hot reload Tyk:
 ```shell
 curl -s -H "x-tyk-authorization: $TYK_ADMIN_KEY" http://$TYK_ADMIN_ADDRESS/tyk/reload
 ```
