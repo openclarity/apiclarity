@@ -68,7 +68,7 @@ func init() {
 		traceSamplingEnabled = true
 	}
 		
-	if apiclarityClient == nil{
+	if apiclarityClient == nil {
 		discoveredApis = []string{}
 		client, err := apiclarity_client.Create(enableTLS, telemetryHost, token, common.SamplingInterval)
 		if err != nil {
