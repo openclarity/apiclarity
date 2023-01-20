@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: apiclarity-external
+  name: {{ include "apiclarity.name" . }}-external
   namespace: '{{ .Release.Namespace }}'
   labels:
     {{ include "apiclarity.labels" . }}

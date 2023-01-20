@@ -15,7 +15,7 @@ generate_self_signed_certs(){
     -keyout /tmp/${TLS_KEY_FILE_NAME} -out /tmp/${TLS_CERT_FILE_NAME} -subj "/CN=${SERVICE_NAME}" \
     -extensions san \
     -config <(echo "[req]"; echo "distinguished_name=req";
-              echo "[san]"; echo "subjectAltName=DNS:${SERVICE_NAME}.${SERVICE_NAMESPACE},DNS:${SERVICE_NAME}.${SERVICE_NAMESPACE}.svc,DNS:${SERVICE_NAME}.${SERVICE_NAMESPACE}.svc.cluster.local")
+              echo "[san]"; echo "subjectAltName=DNS:${SERVICE_NAME}.${SERVICE_NAMESPACE},DNS:${SERVICE_NAME}.${SERVICE_NAMESPACE}.svc,DNS:${SERVICE_NAME}.${SERVICE_NAMESPACE}.svc.cluster.local,DNS:${SERVICE_NAME}-external.${SERVICE_NAMESPACE}")
 
   # Create service TLS secret
   kubectl create secret generic ${TLS_SECRET_NAME} -n ${SERVICE_NAMESPACE} \
