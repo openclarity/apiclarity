@@ -16,7 +16,7 @@
 package clients
 
 const (
-	fuzzerContainerName = "scn-dast"
+	containerNamePrefix = "scn-fuzzer-"
 	jobNamePrefix       = "scn-fuzzer-"
 
 	uriEnvVar               = "URI"

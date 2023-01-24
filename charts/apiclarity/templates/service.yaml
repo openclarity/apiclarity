@@ -18,6 +18,8 @@ spec:
       port: 9443
       protocol: TCP
       targetPort: 9443
+{{- end }}
+{{- if and .Values.apiclarity.tls.enabled (not .Values.supportExternalTraceSource.enabled) }}
     - name: https-authenticated-trace-server
       port: 10443
       protocol: TCP

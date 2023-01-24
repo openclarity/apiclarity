@@ -21,8 +21,9 @@ import (
 	"fmt"
 	"time"
 
+	logging "github.com/sirupsen/logrus"
+
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/restapi"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/tools"
 )
@@ -99,7 +100,7 @@ func (m *Model) Init(ctx context.Context) error {
 
 func (m *Model) AddAPI(id uint, name string, port uint, service string) *API {
 	api := NewAPI(id, name, port, service)
-	logging.Logf("[model.AddAPI] Add new API %v", api)
+	logging.Infof("[model.AddAPI] Add new API %v", api)
 	m.db = append(m.db, api)
 	return &m.db[len(m.db)-1]
 }
@@ -114,7 +115,7 @@ func (m *Model) GetAPI(ctx context.Context, apiID uint) (*API, error) {
 		}
 	}
 
-	logging.Logf("[model.GetAPI] API %v not found, try to retrieve it from backend", apiID)
+	logging.Infof("[model.GetAPI] API %v not found, try to retrieve it from backend", apiID)
 
 	/*
 	* Try to retrieve it from backend
@@ -126,7 +127,7 @@ func (m *Model) GetAPI(ctx context.Context, apiID uint) (*API, error) {
 	}
 
 	newAPI := NewAPI(apiInfo.ID, apiInfo.Name, uint(apiInfo.Port), apiInfo.DestinationNamespace)
-	logging.Logf("[model.AddAPI] Add new API %v", newAPI)
+	logging.Infof("[model.AddAPI] Add new API %v", newAPI)
 	m.db = append(m.db, newAPI)
 	return &m.db[len(m.db)-1], nil
 }
@@ -175,10 +176,10 @@ func (m *Model) ReceiveFullReport(ctx context.Context, apiID uint, body []byte) 
 	var data restapi.FuzzingStatusAndReport
 	err := json.Unmarshal(body, &data)
 	if err != nil {
-		logging.Logf("Can't decode request body, error=%v", err)
+		logging.Infof("Can't decode request body, error=%v", err)
 		return fmt.Errorf("can't decode request body, error=%v", err)
 	}
-	logging.Logf("body=%v", data)
+	logging.Infof("body=%v", data)
 
 	/*
 	 * Add the new status to the last Test
@@ -189,7 +190,7 @@ func (m *Model) ReceiveFullReport(ctx context.Context, apiID uint, body []byte) 
 		return fmt.Errorf("API not found (%v)", apiID)
 	}
 
-	logging.Logf("[Fuzzer] ReceiveFullReport(): API_id (%v) => API (%v)", apiID, api)
+	logging.Infof("[Fuzzer] ReceiveFullReport(): API_id (%v) => API (%v)", apiID, api)
 	err = api.AddNewStatusReport(data)
 	if err != nil {
 		logging.Errorf("[Fuzzer] ReceiveFullReport(): Can't add new report, error=(%v)", err)
@@ -210,11 +211,11 @@ func dumpSlice(s []API) {
 	/*
 	* Debug only, dump the list of APIs
 	 */
-	logging.Logf("len=%d cap=%d", len(s), cap(s))
+	logging.Infof("len=%d cap=%d", len(s), cap(s))
 	for _, api := range s {
-		logging.Logf("... API {id(%v), name(%v), port(%d), fuzzed(%v), inFuzzing(%v), namespace(%v), tests(%v)}", api.ID, api.Name, api.Port, api.Fuzzed, api.InFuzzing, api.Namespace, len(api.TestsList))
+		logging.Infof("... API {id(%v), name(%v), port(%d), fuzzed(%v), inFuzzing(%v), namespace(%v), tests(%v)}", api.ID, api.Name, api.Port, api.Fuzzed, api.InFuzzing, api.Namespace, len(api.TestsList))
 		for _, testItem := range api.TestsList {
-			logging.Logf("... ... test {progress(%v), start(%v), lastReport(%d), vulns(%d/%d/%d/%d/%d)}",
+			logging.Infof("... ... test {progress(%v), start(%v), lastReport(%d), vulns(%d/%d/%d/%d/%d)}",
 				testItem.Test.Progress,
 				testItem.Test.Starttime,
 				testItem.Test.LastReportTime,

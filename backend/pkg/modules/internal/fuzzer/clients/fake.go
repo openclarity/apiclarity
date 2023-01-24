@@ -23,9 +23,10 @@ import (
 	"os"
 	"time"
 
+	logging "github.com/sirupsen/logrus"
+
 	globalapi "github.com/openclarity/apiclarity/api3/global"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/config"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
 )
 
 var staticFakeTest = `
@@ -48,9 +49,8 @@ type FakeClient struct {
 }
 
 func (c *FakeClient) TriggerFuzzingJob(apiID int64, endpoint string, securityItem string, timeBudget string) error {
-	logging.Logf("[Fuzzer][FakeClient] TriggerFuzzingJob(%v, %v, %v, %v):: -->", apiID, endpoint, securityItem, timeBudget)
+	logging.Infof("[Fuzzer][FakeClient] TriggerFuzzingJob(%v, %v, %v, %v):: --> <--", apiID, endpoint, securityItem, timeBudget)
 	go FakeTriggerFuzzingJob(context.TODO(), c.quitPipe, c.testFileName, uint(apiID), c.remoteHost)
-	logging.Logf("[Fuzzer][FakeClient] TriggerFuzzingJob():: <--")
 	return nil
 }
 
@@ -85,7 +85,7 @@ func FakeTriggerFuzzingJob(ctx context.Context, pipe chan bool, testFilename str
 	var testBytes []byte
 	testFile, err := os.Open(testFilename)
 	if err == nil {
-		logging.Logf("[Fuzzer][FakeClient] Use data from (%v)", testFilename)
+		logging.Infof("[Fuzzer][FakeClient] Use data from (%v)", testFilename)
 		defer testFile.Close()
 
 		testBytes, _ = ioutil.ReadAll(testFile)
@@ -106,10 +106,10 @@ func FakeTriggerFuzzingJob(ctx context.Context, pipe chan bool, testFilename str
 	for _, step := range fakeTest.Steps {
 		select {
 		case <-pipe:
-			logging.Logf("[Fuzzer][FakeClient] Interrupt the test")
+			logging.Infof("[Fuzzer][FakeClient] Interrupt the test")
 			return
 		default:
-			logging.Logf("[Fuzzer][FakeClient] inject data %v", step)
+			logging.Infof("[Fuzzer][FakeClient] inject data %v", step)
 			err = SendReport(ctx, apicClient, apiID, step)
 			if err != nil {
 				logging.Errorf("Failed to send report to (%v): %v", remoteHost, err)
@@ -119,7 +119,7 @@ func FakeTriggerFuzzingJob(ctx context.Context, pipe chan bool, testFilename str
 	}
 }
 
-//nolint: ireturn,nolintlint
+// nolint: ireturn,nolintlint
 func NewFakeClient(config *config.Config) (Client, error) {
 	p := &FakeClient{
 		testFileName: config.GetFakeFileName(),

@@ -267,3 +267,11 @@ APIClarityRuntimeFuzzing:
 
 # End of APIClarity Runtime Fuzzing Values
 #######################################################################################
+
+#######################################################################################
+## APIClarity External Trace Source Values
+
+supportExternalTraceSource:
+  enabled: false
+# End of APIClarity External Trace Source Values
+#######################################################################################

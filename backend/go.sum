@@ -1224,7 +1224,6 @@ gorm.io/driver/postgres v1.4.4/go.mod h1:whNfh5WhhHs96honoLjBAMwJGYEuA3m1hvgUbNX
 gorm.io/driver/sqlite v1.4.2 h1:F6vYJcmR4Cnh0ErLyoY8JSfabBGyR0epIGuhgHJuNws=
 gorm.io/driver/sqlite v1.4.2/go.mod h1:0Aq3iPO+v9ZKbcdiz8gLWRw5VOPcBOPUQJFLq5e2ecI=
 gorm.io/gorm v1.23.7/go.mod h1:l2lP/RyAtc1ynaTjFksBde/O8v9oOGIApu2/xRitmZk=
-gorm.io/gorm v1.24.0 h1:j/CoiSm6xpRpmzbFJsQHYj+I8bGYWLXVHeYEyyKlF74=
 gorm.io/gorm v1.24.0/go.mod h1:DVrVomtaYTbqs7gB/x2uVvqnXzv0nqjB396B8cG4dBA=
 gorm.io/gorm v1.24.2 h1:9wR6CFD+G8nOusLdvkZelOEhpJVwwHzpQOUM+REd6U0=
 gorm.io/gorm v1.24.2/go.mod h1:DVrVomtaYTbqs7gB/x2uVvqnXzv0nqjB396B8cG4dBA=

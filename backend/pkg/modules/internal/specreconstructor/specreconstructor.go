@@ -25,7 +25,6 @@ import (
 
 	oapicommon "github.com/openclarity/apiclarity/api3/common"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
-	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/fuzzer/logging"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/specreconstructor/restapi"
 )
 
@@ -138,7 +137,7 @@ func (c *specReconstructorPluginHTTPHandler) PostEnable(w http.ResponseWriter, r
 	var enable restapi.FeatureEnable
 	err = json.Unmarshal(body, &enable)
 	if err != nil {
-		logging.Errorf("Failed to decode the request body, error=(%v)", err)
+		log.Errorf("Failed to decode the request body, error=(%v)", err)
 		httpError(w, http.StatusInternalServerError, err)
 		return
 	}

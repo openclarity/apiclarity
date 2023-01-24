@@ -1,0 +1,79 @@
+apiVersion: kuma.io/v1alpha1
+kind: ProxyTemplate
+mesh: {{ .Values.kuma.kumaMesh }}
+metadata:
+  name: apiclarity-kuma-{{ .Values.kuma.kumaMesh }}
+spec:
+  selectors:
+    - match:
+        kuma.io/service: "{{ .Values.kuma.kumaService }}"
+  conf:
+    imports:
+      - default-proxy
+    modifications:
+      - httpFilter:
+          operation: addBefore
+          match:
+            name: "envoy.filters.http.router"
+            origin: "outbound"
+          value: |
+            name: "envoy.filters.http.wasm"
+            typedConfig:
+              "@type": "type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm"
+              config:
+                name: "apiclarity_plugin"
+                root_id: "apiclarity_trace_export"
+                vm_config:
+                  vm_id: "apiclarity_trace_export"
+                  runtime: "envoy.wasm.runtime.v8"
+                  code:
+                    remote:
+                      sha256: "{{ .Values.apiclarity.plugin.sha256 }}"
+                      http_uri:
+                        uri: "{{ .Values.apiclarity.plugin.wasmFilterURI }}"
+                        cluster: "github_com"
+                        timeout: "10s"
+                configuration:
+                  "@type": "type.googleapis.com/google.protobuf.StringValue"
+                  value: |
+                    {{ .Values.apiclarity.plugin.config }}
+
+      - cluster:
+          operation: add
+          value: |
+            name: github_com
+            type: STRICT_DNS
+            connect_timeout: 1s
+            dns_refresh_rate: 5s
+            dns_lookup_family: V4_ONLY
+            load_assignment:
+              cluster_name: github_com
+              endpoints:
+              - lb_endpoints:
+                - endpoint:
+                    address:
+                      socket_address:
+                        address: raw.githubusercontent.com
+                        port_value: 443
+            transport_socket:
+              name: envoy.transport_sockets.tls
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+                sni: "raw.githubusercontent.com"
+      - cluster:
+          operation: add
+          value: |
+            name: trace_analyzer
+            type: LOGICAL_DNS
+            connect_timeout: 0.5s
+            lb_policy: ROUND_ROBIN
+            load_assignment:
+              cluster_name: trace_analyzer
+              endpoints:
+                - lb_endpoints:
+                    - endpoint:
+                        address:
+                          socket_address:
+                            protocol: TCP
+                            address: "{{ .Values.apiclarity.hostname }}"
+                            port_value: {{ .Values.apiclarity.port }}
