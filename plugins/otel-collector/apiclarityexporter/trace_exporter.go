@@ -32,10 +32,11 @@ import (
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer/consumererror"
+	"go.opentelemetry.io/collector/exporter"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 )
 
-type exporter struct {
+type exporterObject struct {
 	config     *Config
 	logger     *zap.Logger
 	settings   component.TelemetrySettings
@@ -46,7 +47,7 @@ type exporter struct {
 }
 
 // Create new exporter.
-func newTracesExporter(oCfg *Config, set component.ExporterCreateSettings) (*exporter, error) {
+func newTracesExporter(oCfg *Config, set exporter.CreateSettings) (*exporterObject, error) {
 	if err := oCfg.Validate(); err != nil {
 		set.Logger.Error("configuration error", zap.Error(err))
 		return nil, err
@@ -56,7 +57,7 @@ func newTracesExporter(oCfg *Config, set component.ExporterCreateSettings) (*exp
 		set.BuildInfo.Description, set.BuildInfo.Version, runtime.GOOS, runtime.GOARCH)
 
 	// client construction is deferred to start
-	return &exporter{
+	return &exporterObject{
 		config:    oCfg,
 		logger:    set.Logger,
 		userAgent: userAgent,
@@ -64,7 +65,7 @@ func newTracesExporter(oCfg *Config, set component.ExporterCreateSettings) (*exp
 	}, nil
 }
 
-func (e *exporter) start(_ context.Context, host component.Host) error {
+func (e *exporterObject) start(_ context.Context, host component.Host) error {
 	// Add base path specific to endpoint b/c otel endpoint doesn't include path
 	urlInfo, err := url.Parse(e.config.HTTPClientSettings.Endpoint + apiclient.DefaultBasePath)
 	if err != nil {
@@ -87,7 +88,7 @@ func (e *exporter) start(_ context.Context, host component.Host) error {
 }
 
 // https://pkg.go.dev/go.opentelemetry.io/collector@v0.56.0/consumer#ConsumeTracesFunc
-func (e *exporter) pushTraces(ctx context.Context, td ptrace.Traces) error {
+func (e *exporterObject) pushTraces(ctx context.Context, td ptrace.Traces) error {
 	if e.service == nil {
 		return errors.New("cannot process traces: client is not initialized")
 	}
@@ -138,7 +139,7 @@ func (e *exporter) pushTraces(ctx context.Context, td ptrace.Traces) error {
 	return nil
 }
 
-func (e *exporter) export(ctx context.Context, actelemetry *apiclientmodels.Telemetry) error {
+func (e *exporterObject) export(ctx context.Context, actelemetry *apiclientmodels.Telemetry) error {
 	//e.logger.Debug("Preparing to make APIClarity telemetry request")
 
 	params := apiclientops.NewPostTelemetryParamsWithContext(ctx).WithBody(actelemetry).WithHTTPClient(e.client)

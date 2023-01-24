@@ -70,8 +70,8 @@ func createAPIInfo() *APIInfo {
 
 func createLabels() map[string]string {
 	return map[string]string{
-		apilabels.DataLineageUpstreamKey: "user-service:8080",
-		apilabels.PluginSourceKey:        "open-telemetry",
+		apilabels.DataLineageParentKey: "user-service:8080",
+		apilabels.PluginSourceKey:      "open-telemetry",
 	}
 }
 
@@ -103,7 +103,7 @@ func (db *Handler) CreateFakeData() {
 			}
 
 			db.APIEventsTable().CreateAPIEvent(apiEvent)
-			db.LabelsTable().CreateLabels(context.Background(), apiEvent.ID, createLabels())
+			db.LabelsTable().CreateLabels(context.Background(), apiEvent, createLabels())
 		}
 	}
 

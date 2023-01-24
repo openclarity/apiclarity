@@ -109,6 +109,7 @@ func (db *Handler) APIGatewaysTable() APIGatewaysTable {
 func (db *Handler) LabelsTable() LabelsTable {
 	return &LabelsTableHandler{
 		tx: db.DB.Table(labelTableName),
+		db: db.DB,
 	}
 }
 

@@ -28,7 +28,9 @@ import (
 	otelconfig "go.opentelemetry.io/collector/config"
 	"go.opentelemetry.io/collector/config/configcompression"
 	"go.opentelemetry.io/collector/config/confighttp"
+	"go.opentelemetry.io/collector/config/configopaque"
 	"go.opentelemetry.io/collector/config/configtls"
+	"go.opentelemetry.io/collector/exporter/exportertest"
 )
 
 func TestCreateDefaultConfig(t *testing.T) {
@@ -84,7 +86,7 @@ func TestCreateTracesExporter(t *testing.T) {
 				ExporterSettings: otelconfig.NewExporterSettings(component.NewID(typeStr)),
 				HTTPClientSettings: confighttp.HTTPClientSettings{
 					Endpoint: endpoint,
-					Headers: map[string]string{
+					Headers: map[string]configopaque.String{
 						"hdr1": "val1",
 						"hdr2": "val2",
 					},
@@ -146,7 +148,7 @@ func TestCreateTracesExporter(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			factory := NewFactory()
-			set := componenttest.NewNopExporterCreateSettings()
+			set := exportertest.NewNopCreateSettings()
 			consumer, err := factory.CreateTracesExporter(context.Background(), set, &tt.config)
 
 			if tt.mustFailOnCreate {

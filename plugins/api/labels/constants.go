@@ -17,7 +17,9 @@ package labels
 
 const (
 	//
-	DataLineageUpstreamKey = "data.lineage.upstream"
+	DataLineageParentKey = "data.lineage.parent"
+	DataLineageIDKey     = "data.lineage.id"
+	DataLineageChildKey  = "data.lineage.child"
 )
 
 const (

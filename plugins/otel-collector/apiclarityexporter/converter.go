@@ -51,7 +51,7 @@ func wrapAttributeError(logger *zap.Logger, msg, attrKey, attrValue string, err 
 	return fmt.Errorf("%s, attribute: %s, value: %s, error: %w", msg, attrKey, attrValue, err)
 }
 
-func (e *exporter) convertAddr(addr string) string {
+func (e *exporterObject) convertAddr(addr string) string {
 	//TODO: make it configurable to prefer IP or hostname
 	isIpAddr := net.ParseIP(addr) != nil
 	if isIpAddr && e.config.PreferHostNames {
@@ -88,7 +88,7 @@ func (e *exporter) convertAddr(addr string) string {
 	return addr
 }
 
-func (e *exporter) convertHost(addr string) string {
+func (e *exporterObject) convertHost(addr string) string {
 	if addr == "" {
 		return addr
 	}
@@ -109,7 +109,7 @@ func (e *exporter) convertHost(addr string) string {
 	}
 }
 
-func (e *exporter) parseResourceServerAttrs(actel *apiclientmodels.Telemetry, resource pcommon.Resource) bool {
+func (e *exporterObject) parseResourceServerAttrs(actel *apiclientmodels.Telemetry, resource pcommon.Resource) bool {
 	ok := true
 	resAttrs := resource.Attributes()
 	if ipAddr, ok := resAttrs.Get("ip"); ok {
@@ -135,7 +135,7 @@ func (e *exporter) parseResourceServerAttrs(actel *apiclientmodels.Telemetry, re
 	return ok
 }
 
-func (e *exporter) setTelemetryClientSpan(actel *apiclientmodels.Telemetry, resource pcommon.Resource, attrs pcommon.Map, logger *zap.Logger) error {
+func (e *exporterObject) setTelemetryClientSpan(actel *apiclientmodels.Telemetry, resource pcommon.Resource, attrs pcommon.Map, logger *zap.Logger) error {
 	//Set destination/server address
 	if peerName, ok := attrs.Get(string(semconv.NetPeerNameKey)); ok {
 		actel.DestinationAddress = e.convertAddr(peerName.AsString())
@@ -169,7 +169,7 @@ func (e *exporter) setTelemetryClientSpan(actel *apiclientmodels.Telemetry, reso
 	return nil
 }
 
-func (e *exporter) setTelemetryServerSpan(actel *apiclientmodels.Telemetry, resource pcommon.Resource, attrs pcommon.Map, logger *zap.Logger) error {
+func (e *exporterObject) setTelemetryServerSpan(actel *apiclientmodels.Telemetry, resource pcommon.Resource, attrs pcommon.Map, logger *zap.Logger) error {
 	//Set destination/server address
 	if serverNameAttr, ok := attrs.Get(string(semconv.HTTPServerNameKey)); ok {
 		actel.DestinationAddress = e.convertAddr(serverNameAttr.AsString())
@@ -209,7 +209,7 @@ func (e *exporter) setTelemetryServerSpan(actel *apiclientmodels.Telemetry, reso
 	return nil
 }
 
-func (e *exporter) datasetFromTelemetry(actel *apiclientmodels.Telemetry) string {
+func (e *exporterObject) datasetFromTelemetry(actel *apiclientmodels.Telemetry) string {
 	var datasetName string
 	apiName := actel.Request.Host
 	if apiName == "" {
@@ -228,7 +228,7 @@ func (e *exporter) datasetFromTelemetry(actel *apiclientmodels.Telemetry) string
 }
 
 // Process a single span into APIClarity telemetry
-func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.InstrumentationScope, span ptrace.Span) (*apiclientmodels.Telemetry, error) {
+func (e *exporterObject) processOTelSpan(resource pcommon.Resource, _ pcommon.InstrumentationScope, span ptrace.Span) (*apiclientmodels.Telemetry, error) {
 	/*
 		res.Attributes().Range(func(k string, v pcommon.Value) bool {
 			e.logger.Debug("Checking resource attributes",
@@ -274,6 +274,9 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 		SourceAddress:      "",
 		Request:            req,
 		Response:           resp,
+		Labels: map[string]string{
+			apilabels.DataLineageIDKey: span.SpanID().String(),
+		},
 	}
 
 	attrs := span.Attributes()
@@ -531,27 +534,23 @@ func (e *exporter) processOTelSpan(resource pcommon.Resource, _ pcommon.Instrume
 	}
 	actel.RequestID = idGen.String()
 
-	apiName := e.datasetFromTelemetry(actel)
-	if !e.datasetMap.PutDataset(span.SpanID(), apiName) {
-		e.logger.Warn("cannot cache span to API name",
+	if parentSpanID := span.ParentSpanID(); !parentSpanID.IsEmpty() {
+		e.logger.Info("found parent span ID in span",
 			zap.String("kind", span.Kind().String()),
 			zap.String("name", span.Name()),
 			zap.String("traceid", hex.EncodeToString(traceID[:])),
 			zap.String("spanid", span.SpanID().String()),
+			zap.String("parentspanid", parentSpanID.String()),
 		)
-	}
-
-	if parentSpanID := span.ParentSpanID(); !parentSpanID.IsEmpty() {
-		if parentDataset, found := e.datasetMap.GetDataset(parentSpanID); found {
-			actel.Labels[apilabels.DataLineageUpstreamKey] = parentDataset
-		} else {
-			e.logger.Debug("no parent span ID found in cache",
-				zap.String("kind", span.Kind().String()),
-				zap.String("name", span.Name()),
-				zap.String("traceid", hex.EncodeToString(traceID[:])),
-				zap.String("spanid", span.SpanID().String()),
-			)
-		}
+		actel.Labels[apilabels.DataLineageParentKey] = parentSpanID.String()
+	} else {
+		e.logger.Info("no parent span ID in span",
+			zap.String("kind", span.Kind().String()),
+			zap.String("name", span.Name()),
+			zap.String("traceid", hex.EncodeToString(traceID[:])),
+			zap.String("spanid", span.SpanID().String()),
+			zap.String("parentspanid", parentSpanID.String()),
+		)
 	}
 
 	return actel, nil

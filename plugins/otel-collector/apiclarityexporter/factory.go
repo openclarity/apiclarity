@@ -22,7 +22,9 @@ import (
 	"go.opentelemetry.io/collector/component"
 	otelconfig "go.opentelemetry.io/collector/config"
 	"go.opentelemetry.io/collector/config/confighttp"
+	"go.opentelemetry.io/collector/config/configopaque"
 	"go.opentelemetry.io/collector/consumer"
+	"go.opentelemetry.io/collector/exporter"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 	"go.uber.org/zap"
 )
@@ -35,14 +37,14 @@ const (
 )
 
 // NewFactory creates a factory for OTLP exporter.
-func NewFactory() component.ExporterFactory {
-	return component.NewExporterFactory(
+func NewFactory() exporter.Factory {
+	return exporter.NewFactory(
 		typeStr,
 		CreateDefaultConfig,
-		component.WithTracesExporter(CreateTracesExporter, stability))
+		exporter.WithTraces(CreateTracesExporter, stability))
 }
 
-func CreateDefaultConfig() component.ExporterConfig {
+func CreateDefaultConfig() component.Config {
 	return &Config{
 		ExporterSettings: otelconfig.NewExporterSettings(component.NewID(typeStr)),
 		RetrySettings:    exporterhelper.NewDefaultRetrySettings(),
@@ -50,7 +52,7 @@ func CreateDefaultConfig() component.ExporterConfig {
 		HTTPClientSettings: confighttp.HTTPClientSettings{
 			Endpoint: "",
 			Timeout:  30 * time.Second,
-			Headers:  map[string]string{},
+			Headers:  map[string]configopaque.String{},
 			// We almost read 0 bytes, so no need to tune ReadBufferSize.
 			WriteBufferSize: 512 * 1024,
 		},
@@ -62,8 +64,8 @@ func CreateDefaultConfig() component.ExporterConfig {
 
 func CreateTracesExporter(
 	ctx context.Context,
-	set component.ExporterCreateSettings,
-	cfg component.ExporterConfig,
+	set exporter.CreateSettings,
+	cfg component.Config,
 ) (component.TracesExporter, error) {
 	oCfg := cfg.(*Config)
 

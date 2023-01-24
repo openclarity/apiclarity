@@ -31,6 +31,7 @@ import (
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/component/componenttest"
 	"go.opentelemetry.io/collector/config/confighttp"
+	"go.opentelemetry.io/collector/exporter/exportertest"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 
 	servermodels "github.com/openclarity/apiclarity/plugins/api/server/models"
@@ -45,7 +46,7 @@ func TestInvalidConfigEndpoint(t *testing.T) {
 		},
 	}
 	f := NewFactory()
-	set := componenttest.NewNopExporterCreateSettings()
+	set := exportertest.NewNopCreateSettings()
 	_, err := f.CreateTracesExporter(context.Background(), set, config)
 	require.Error(t, err)
 }
@@ -58,7 +59,7 @@ func TestInvalidConfigNegativeTTL(t *testing.T) {
 		DatasetMapTTL: -1000,
 	}
 	f := NewFactory()
-	set := componenttest.NewNopExporterCreateSettings()
+	set := exportertest.NewNopCreateSettings()
 	_, err := f.CreateTracesExporter(context.Background(), set, config)
 	require.Error(t, err)
 }
@@ -71,7 +72,7 @@ func TestInvalidConfigNegativeSize(t *testing.T) {
 		DatasetMapSize: -1000,
 	}
 	f := NewFactory()
-	set := componenttest.NewNopExporterCreateSettings()
+	set := exportertest.NewNopCreateSettings()
 	_, err := f.CreateTracesExporter(context.Background(), set, config)
 	require.Error(t, err)
 }
@@ -85,7 +86,7 @@ func TestTraceInvalidUrl(t *testing.T) {
 
 	var err error
 	f := NewFactory()
-	set := componenttest.NewNopExporterCreateSettings()
+	set := exportertest.NewNopCreateSettings()
 	set.Logger, err = zap.NewDevelopment()
 	require.NoError(t, err)
 	t.Logf("Creating traces exporter with URL: %s", config.HTTPClientSettings.Endpoint)
@@ -132,7 +133,7 @@ func startTracesExporter(t *testing.T, baseURL string) component.TracesExporter 
 	cfg.RetrySettings.Enabled = false
 
 	var err error
-	set := componenttest.NewNopExporterCreateSettings()
+	set := exportertest.NewNopCreateSettings()
 	set.Logger, err = zap.NewDevelopment()
 	require.NoError(t, err)
 	t.Logf("Creating traces exporter with URL: %s", cfg.HTTPClientSettings.Endpoint)

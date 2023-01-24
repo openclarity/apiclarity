@@ -13,17 +13,42 @@ import (
 	"path"
 	"strings"
 
+	"github.com/deepmap/oapi-codegen/pkg/runtime"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/chi/v5"
+	externalRef0 "github.com/openclarity/apiclarity/api3/common"
 )
+
+// APILineage defines model for APILineage.
+type APILineage struct {
+	Children *[]APIOperation `json:"children,omitempty"`
+	Id       *APIOperation   `json:"id,omitempty"`
+	Parents  *[]APIOperation `json:"parents,omitempty"`
+}
+
+// APIOperation defines model for APIOperation.
+type APIOperation struct {
+	Id        *externalRef0.ApiID      `json:"id,omitempty"`
+	Operation *externalRef0.HttpMethod `json:"operation,omitempty"`
+	Path      *string                  `json:"path,omitempty"`
+}
 
 // Version defines model for Version.
 type Version struct {
 	Version string `json:"version"`
 }
 
+// GetLineageParams defines parameters for GetLineage.
+type GetLineageParams struct {
+	Operation *externalRef0.HttpMethod `form:"operation,omitempty" json:"operation,omitempty"`
+	Path      *string                  `form:"path,omitempty" json:"path,omitempty"`
+}
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Get the lineage for specified API ID
+	// (GET /lineage/{apiID})
+	GetLineage(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params GetLineageParams)
 	// Get the version of this Plugin
 	// (GET /version)
 	GetVersion(w http.ResponseWriter, r *http.Request)
@@ -37,6 +62,51 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// GetLineage operation middleware
+func (siw *ServerInterfaceWrapper) GetLineage(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetLineageParams
+
+	// ------------- Optional query parameter "operation" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "operation", r.URL.Query(), &params.Operation)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "operation", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "path" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "path", r.URL.Query(), &params.Path)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "path", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetLineage(w, r, apiID, params)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
 
 // GetVersion operation middleware
 func (siw *ServerInterfaceWrapper) GetVersion(w http.ResponseWriter, r *http.Request) {
@@ -167,6 +237,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	}
 
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/lineage/{apiID}", wrapper.GetLineage)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/version", wrapper.GetVersion)
 	})
 
@@ -176,11 +249,16 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/4SRsU7DMBCGX8U6GK0k0C1bQQJVYujUBTEY95pcldjGviBFld8d2UlIKwamnHRfzt/9",
-	"dwFte2cNGg5QXyDoFnuVywP6QNak0nnr0DNhbnyvDR4dQg2BPZkGYpTg8Wsgj0eo33/BD7mA9vOMmiEm",
-	"kszJphlHDNqT4zwStvvdc6c88Sj23dCQEdv9DiQwcYe3/aeXty3IVQeqoioeIEqwDo1yBDVsiqrYgASn",
-	"uM3y5ZV9g/xX4BVZcIti5oQ9CW4pzDaQh3uV4N1xwpeg0vLBWROmmB6rKn20NYwmP6Sc60jnf8tzmBym",
-	"wFN17/EENdyV60XK+Rzl8kQO7tb3cO2Ji2biwtD3yo//7xRjjD8BAAD//wRvfTYJAgAA",
+	"H4sIAAAAAAAC/6xUT2+bThD9Kmh+v+PKuE3VAzfkoAQpjVHj5hL5sIXBbAS7m92hkoX47tXyJ5BgR67a",
+	"S8Luzrx58+aNG0hVpZVESRaCBmxaYMW7zzCJ74REfkB30kZpNCSwe0sLUWYGpfsWhFV3+b/BHAL4z58g",
+	"/QHPD5N4q9FwEkpCy4COGiEAbgw/urPI/hRBczOS/gcMpgv18xlTchFvMhYSXMBYi/jaAak5ykcZt0T6",
+	"G1Khsr5DKlzGQMySEfJwhmpXKmggV6biBAEISV+/wGuokIQHNC52ViRoAGVdQfAEN9EOGNxG4TUwSLYP",
+	"7pT8cH+vo7toFwGDzfb+Ptq4q22yi7f3D8Bg9z3cuLck3G1uYc/ek2XwiMaeFPDX9LDs0OBLLQxmjtoY",
+	"uF807iKFzJXDyNCmRuheZje7TcmNoKM3mNhLyvogpBcmsZNFUIkn44BNzGC9Wq8+DSOUXAsI4Gq1Xl1B",
+	"P52uD7/sE/2Guym07u6A5P69Dj7OIIAbpKmG5oZXSGgsBE8NCFetGzgDyavOmd1M51KQqZENK3qh+Vo2",
+	"YL/UaI4T+GTJSwHn3jyHOjQwAb4f7N61Y7WStvfA5/W6+zlRklB2knGtS5F21Pxn29tjwrt000edl3ve",
+	"sqVTPJSZVkKSV455LQNbVxU3x35wHhU4vnq5Mp7VmIpcYOYM5fVSgz/z9GCBt8VGpCHOU7lHhbCDN4Et",
+	"HTOuz18K95FeY4kT4jzOeY4rdEadMz21bdv+DgAA///4hFDUZgYAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
@@ -220,6 +298,14 @@ func PathToRawSpec(pathToFile string) map[string]func() ([]byte, error) {
 		res[pathToFile] = rawSpec
 	}
 
+	pathPrefix := path.Dir(pathToFile)
+
+	for rawPath, rawFunc := range externalRef0.PathToRawSpec(path.Join(pathPrefix, "../../../../../api3/common/openapi.yaml")) {
+		if _, ok := res[rawPath]; ok {
+			// it is not possible to compare functions in golang, so always overwrite the old value
+		}
+		res[rawPath] = rawFunc
+	}
 	return res
 }
 

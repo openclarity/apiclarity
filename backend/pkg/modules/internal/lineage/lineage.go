@@ -17,11 +17,11 @@ package lineage
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 
+	"github.com/openclarity/apiclarity/backend/pkg/database"
+	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/common"
 	"github.com/openclarity/apiclarity/backend/pkg/modules/internal/core"
-	apilabels "github.com/openclarity/apiclarity/plugins/api/labels"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -51,13 +51,12 @@ func newModule(ctx context.Context, accessor core.BackendAccessor) (core.Module,
 			Description: ModuleDescription,
 		},
 	}
-	s.httpHandler = HandlerWithOptions(s, ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + ModuleName})
+	h := &httpHandler{
+		accessor: accessor,
+	}
+	s.httpHandler = HandlerWithOptions(h, ChiServerOptions{BaseURL: core.BaseHTTPPath + "/" + ModuleName})
 	log.Debugf("[%s] newModule():: <--", ModuleName)
 	return s, nil
-}
-
-func (c *controller) GetVersion(w http.ResponseWriter, r *http.Request) {
-	_ = json.NewEncoder(w).Encode(Version{Version: ModuleVersion})
 }
 
 func (p *controller) Info() core.ModuleInfo {
@@ -71,27 +70,72 @@ func (p *controller) HTTPHandler() http.Handler {
 func (p *controller) EventNotify(ctx context.Context, event *core.Event) {
 	apiEvent := event.APIEvent
 
-	log.Infof("[%s] APIEvent.ID=%d Path=%s Method=%s", ModuleName, apiEvent.ID, event.Telemetry.Request.Path, event.Telemetry.Request.Method)
-	labelMap, err := p.accessor.GetLabelsTable(ctx).GetLabels(ctx, apiEvent.ID)
+	log.Infof("[%s] APIEvent.ID=%d APIInfoID=%d Path=%s Method=%s", ModuleName, apiEvent.ID, apiEvent.APIInfoID, event.Telemetry.Request.Path, event.Telemetry.Request.Method)
+	labelMap, err := p.accessor.GetLabelsTable(ctx).GetLabelsByEventID(ctx, apiEvent.ID)
 	if err != nil {
-		log.Errorf("[%s] error in labels lookup for event: %d", ModuleName, apiEvent.ID)
+		log.Errorf("[%s] error in labels lookup for event %d: %v", ModuleName, apiEvent.ID, err)
 		return
 	} else if len(labelMap) == 0 {
 		log.Debugf("[%s] no labels found, skipping event: %d", ModuleName, apiEvent.ID)
 		return
 	}
+	for label, value := range labelMap {
+		log.Infof("[%s] label found, event: %d, apiID: %d, label: %s, value: %s", ModuleName, apiEvent.ID, apiEvent.APIInfoID, label, value)
+	}
+}
 
-	//Convert labels that we care about to API annotations
-	transferLabels := []string{
-		apilabels.DataLineageUpstreamKey,
+type httpHandler struct {
+	accessor core.BackendAccessor
+}
+
+func (h httpHandler) GetVersion(w http.ResponseWriter, r *http.Request) {
+	common.HTTPResponse(w, http.StatusOK, Version{Version: ModuleVersion})
+}
+
+func convertLabelsToAPIOperations(labels []database.Label) []APIOperation {
+	ids := make([]int64, len(labels))
+	operations := make([]APIOperation, len(labels))
+	for idx, _ := range labels {
+		ids[idx] = int64(labels[idx].APIInfoID)
+		operations[idx].Path = &labels[idx].Path
+		operations[idx].Id = &ids[idx]
+		operations[idx].Operation = &labels[idx].Method
 	}
-	for _, label := range transferLabels {
-		if value, found := labelMap[label]; found {
-			log.Debugf("[%s] found label: %s -> %s", ModuleName, label, value)
-			err = p.accessor.StoreAPIInfoAnnotations(ctx, ModuleName, apiEvent.APIInfoID, core.Annotation{Name: label, Annotation: []byte(value)})
-			if err != nil {
-				log.Errorf("[%s] error in APIInfoAnnotation lookup for event: %d, APIInfoID: %d", ModuleName, apiEvent.ID, apiEvent.APIInfoID)
-			}
-		}
+	return operations
+}
+
+func (h httpHandler) GetLineage(w http.ResponseWriter, r *http.Request, apiID int64, params GetLineageParams) {
+	lineageResponse := APILineage{
+		Id: &APIOperation{
+			Id:        &apiID,
+			Operation: params.Operation,
+			Path:      params.Path,
+		},
+		Children: nil,
+		Parents:  nil,
 	}
+
+	foundChildren, err := h.accessor.GetLabelsTable(r.Context()).GetLabelsLineageChildren(r.Context(), uint(apiID), params.Operation, params.Path)
+	if err != nil {
+		log.Errorf("[%s] error in children labels lookup for apiID %d: %v", ModuleName, apiID, err)
+	} else if len(foundChildren) == 0 {
+		log.Debugf("[%s] no children labels found, skipping apiID %d", ModuleName, apiID)
+	} else {
+		children := convertLabelsToAPIOperations(foundChildren)
+		lineageResponse.Children = &children
+	}
+
+	//Find parent
+	foundParents, err := h.accessor.GetLabelsTable(r.Context()).GetLabelsLineageParents(r.Context(), uint(apiID), params.Operation, params.Path)
+	if err != nil {
+		log.Errorf("[%s] error in parent labels lookup for apiID %d: %v", ModuleName, apiID, err)
+	} else if len(foundParents) == 0 {
+		log.Debugf("[%s] no parent labels found, skipping apiID %d", ModuleName, apiID)
+	} else {
+		parents := convertLabelsToAPIOperations(foundParents)
+		lineageResponse.Parents = &parents
+	}
+
+	//Encode
+	common.HTTPResponse(w, http.StatusOK, lineageResponse)
 }

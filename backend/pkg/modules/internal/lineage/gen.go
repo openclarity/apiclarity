@@ -15,4 +15,4 @@
 
 package lineage
 
-//go:generate go run github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.12.3 -generate chi-server,types,spec -package lineage -o lineage.gen.go openapi.yaml
+//go:generate go run github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.12.3 -generate chi-server,types,spec -package lineage -import-mapping ../../../../../api3/common/openapi.yaml:github.com/openclarity/apiclarity/api3/common -o lineage.gen.go openapi.yaml

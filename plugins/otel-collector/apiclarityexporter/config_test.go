@@ -27,9 +27,10 @@ import (
 	"go.opentelemetry.io/collector/component/componenttest"
 	otelconfig "go.opentelemetry.io/collector/config"
 	"go.opentelemetry.io/collector/config/confighttp"
+	"go.opentelemetry.io/collector/config/configopaque"
 	"go.opentelemetry.io/collector/config/configtls"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
-	"go.opentelemetry.io/collector/service/servicetest"
+	"go.opentelemetry.io/collector/otelcol/otelcoltest"
 )
 
 func TestLoadConfig(t *testing.T) {
@@ -40,7 +41,7 @@ func TestLoadConfig(t *testing.T) {
 	factories.Exporters[typeStr] = factory
 
 	// Bad config
-	cfg, err := servicetest.LoadConfigAndValidate(filepath.Join("testdata", "bad_empty_config.yaml"), factories)
+	cfg, err := otelcoltest.LoadConfigAndValidate(filepath.Join("testdata", "bad_empty_config.yaml"), factories)
 
 	require.Error(t, err)
 	require.NotNil(t, cfg)
@@ -49,7 +50,7 @@ func TestLoadConfig(t *testing.T) {
 	assert.Equal(t, e0, factory.CreateDefaultConfig())
 
 	// Good config
-	cfg, err = servicetest.LoadConfigAndValidate(filepath.Join("testdata", "config.yaml"), factories)
+	cfg, err = otelcoltest.LoadConfigAndValidate(filepath.Join("testdata", "config.yaml"), factories)
 
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
@@ -70,7 +71,7 @@ func TestLoadConfig(t *testing.T) {
 				QueueSize:    10,
 			},
 			HTTPClientSettings: confighttp.HTTPClientSettings{
-				Headers: map[string]string{
+				Headers: map[string]configopaque.String{
 					"can you have a . here?": "F0000000-0000-0000-0000-000000000000",
 					"header1":                "234",
 					"another":                "somevalue",

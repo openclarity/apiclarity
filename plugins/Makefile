@@ -3,7 +3,7 @@ DOCKER_REGISTRY ?= ghcr.io/openclarity
 VERSION ?= $(shell git rev-parse HEAD)
 DOCKER_TAG ?= ${VERSION}
 TYK_VERSION ?= v3.2.2
-OTEL_COLLECTOR_VERSION ?= 0.66.0
+OTEL_COLLECTOR_VERSION ?= 0.68.0
 
 .PHONY: docker
 docker: docker-kong docker-tyk docker-taper docker-otelcollector
