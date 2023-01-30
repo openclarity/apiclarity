@@ -36,30 +36,10 @@ spec:
                 configuration:
                   "@type": "type.googleapis.com/google.protobuf.StringValue"
                   value: |
-                    {{ .Values.apiclarity.plugin.config }}
-
-      - cluster:
-          operation: add
-          value: |
-            name: github_com
-            type: STRICT_DNS
-            connect_timeout: 1s
-            dns_refresh_rate: 5s
-            dns_lookup_family: V4_ONLY
-            load_assignment:
-              cluster_name: github_com
-              endpoints:
-              - lb_endpoints:
-                - endpoint:
-                    address:
-                      socket_address:
-                        address: raw.githubusercontent.com
-                        port_value: 443
-            transport_socket:
-              name: envoy.transport_sockets.tls
-              typed_config:
-                "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
-                sni: "raw.githubusercontent.com"
+                    {
+                      "trace_sampling_enabled": "{{ .Values.apiclarity.plugin.config.traceSamplingEnabled | ternary "true" "false"}}",
+                      "service_mesh": "kuma"
+                    }
       - cluster:
           operation: add
           value: |
@@ -77,3 +57,58 @@ spec:
                             protocol: TCP
                             address: "{{ .Values.apiclarity.hostname }}"
                             port_value: {{ .Values.apiclarity.port }}
+
+{{- $wasmURL := urlParse .Values.apiclarity.plugin.wasmFilterURI }}
+{{- $wasmHostPort := regexSplit ":" $wasmURL.host -1 }}
+{{- $wasmHostname := index $wasmHostPort 0 }}
+{{- $wasmPort := -1 }}
+{{- if eq (len $wasmHostPort) 2 }}
+  {{- $wasmPort = index $wasmHostPort 1 }}
+{{- else }}
+  {{- $wasmPort = eq $wasmURL.scheme "http" | ternary 80 443 }}
+{{- end }}
+
+      - cluster:
+          operation: add
+          value: |
+            name: wasm_file_server
+            type: STRICT_DNS
+            connect_timeout: 1s
+            dns_refresh_rate: 5s
+            dns_lookup_family: V4_ONLY
+            load_assignment:
+              cluster_name: wasm_file_server
+              endpoints:
+              - lb_endpoints:
+                - endpoint:
+                    address:
+                      socket_address:
+                        address: {{ $wasmHostname }}
+                        port_value: {{ $wasmPort }}
+            {{- if eq $wasmURL.scheme "https"}}
+            transport_socket:
+              name: envoy.transport_sockets.tls
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+                sni: "{{ $wasmHostname }}"
+            {{- end }}
+
+{{- if .Values.apiclarity.plugin.config.traceSamplingEnabled }}
+      - cluster:
+          operation: add
+          value: |
+            name: trace-sampling-manager
+            type: LOGICAL_DNS
+            connect_timeout: 0.5s
+            lb_policy: ROUND_ROBIN
+            load_assignment:
+              cluster_name: trace-sampling-manager
+              endpoints:
+                - lb_endpoints:
+                    - endpoint:
+                        address:
+                          socket_address:
+                            protocol: TCP
+                            address: "{{ .Values.apiclarity.hostname }}"
+                            port_value: 9990
+{{- end }}
