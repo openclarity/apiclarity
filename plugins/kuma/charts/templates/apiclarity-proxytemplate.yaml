@@ -31,7 +31,7 @@ spec:
                       sha256: "{{ .Values.apiclarity.plugin.sha256 }}"
                       http_uri:
                         uri: "{{ .Values.apiclarity.plugin.wasmFilterURI }}"
-                        cluster: "github_com"
+                        cluster: "wasm_file_server"
                         timeout: "10s"
                 configuration:
                   "@type": "type.googleapis.com/google.protobuf.StringValue"
