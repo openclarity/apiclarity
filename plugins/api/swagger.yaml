@@ -73,21 +73,20 @@ definitions:
   DiscoveredHostAPI:
     type: 'object'
     required:
-      - upstreamHost
+      - type, hostname, port, rootpath
     properties:
-      upstreamHost:
-        $ref: '#/definitions/HostAPI'
-      downstreamHost:
-        $ref: '#/definitions/HostAPI'
-      
-  HostAPI:
-    type: 'object'
-    properties:
+      type:
+        type: 'string'
+        enum: [downstream, upstream]
       hostname:
         type: 'string'
       port:
         type: 'string'
       rootpath:
+        type: 'string'
+      linked-upstream:
+        type: 'string'
+      linked-downstream:
         type: 'string'
 
   Telemetry:
