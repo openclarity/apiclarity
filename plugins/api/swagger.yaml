@@ -66,35 +66,21 @@ paths:
 
 definitions:
   DiscoveredAPI:
-    type: 'object'
-    properties:
-      upstreamAPIs:
-        type: 'array'
-        desscription: 'List of discovered APIs'
-        required: true
-        items:  
-          type: '#/definitions/DiscoveredHostAPI'
-      downstreamAPIs: 
-        type: 'array'
-        descrition: 'List of discovered APIst'
-        items:
-          type: '#/definitions/DiscoveredHostAPI'
-      associations:
-        type: 'array'
-        description: 'List of associations'
-        items:
-          type: 'object'
-          properties:
-            downstream:
-              type: '#/definitions/DiscoveredHostAPI'
-              description: 'Discovered Host with hostname, port and root path'
-            upstreams:
-              type: 'array'
-              desscription: 'List of asscoiated upstream hosts with hostname, port and root path'
-              items:
-                type: '#/definitions/DiscoveredHostAPI'
+    type: 'array'
+    items:  
+      $ref: '#/definitions/DiscoveredHostAPI'
                 
   DiscoveredHostAPI:
+    type: 'object'
+    required:
+      - upstreamHost
+    properties:
+      upstreamHost:
+        $ref: '#/definitions/HostAPI'
+      downstreamHost:
+        $ref: '#/definitions/HostAPI'
+      
+  HostAPI:
     type: 'object'
     properties:
       hostname:
