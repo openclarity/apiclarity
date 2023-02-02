@@ -20,11 +20,11 @@ const TabFuzzingTest = (props) => {
     const [displayDataConfig, setDisplayDataConfig] = useState({displayData: [], initialLoadDone: false});
     const {displayData, initialLoadDone} = displayDataConfig;
 
-    useEffect(() => {
+    useEffect(async () => {
         if (prevLoading && !loading && !error) {
-            setDisplayDataConfig(async () => ({displayData: await convertTestResponse(id, data)  , initialLoadDone: true}));
+            setDisplayDataConfig({displayData: await convertTestResponse(id, data)  , initialLoadDone: true});
         }
-    }, [prevLoading, loading, error, data, id]);
+    }, [prevLoading, loading, error, data]);
 
     if (!initialLoadDone) {
         return <Loader />;
