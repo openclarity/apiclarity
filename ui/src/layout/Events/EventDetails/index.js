@@ -80,7 +80,7 @@ const EventDetails = () => {
 const ModuleStatusIcon = (id, statusType) => {
     const tooltipId = `module-status-${id}`;
     // const {icon, tooltip, color} = MODULE_STATUS_TYPES_MAP[statusType] || MODULE_STATUS_TYPES_MAP['NO_STATUS'];
-    const {icon, tooltip, color, value} = MODULE_STATUS_TYPES_MAP[statusType] || {};
+    const {icon, color, value} = MODULE_STATUS_TYPES_MAP[statusType] || {};
     const isInfo = value === MODULE_STATUS_TYPES_MAP.ALERT_INFO.value;
 
     return (

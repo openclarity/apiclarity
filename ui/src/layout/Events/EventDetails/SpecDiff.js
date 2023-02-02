@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDiffViewer from 'react-diff-viewer';
+import ReactDiffViewer from 'react-diff-viewer-continued';
 import { useFetch } from 'hooks';
 import Loader from 'components/Loader';
 
