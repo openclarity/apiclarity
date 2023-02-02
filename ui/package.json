@@ -9,9 +9,8 @@
     "formik": "^2.2.9",
     "moment": "^2.29.3",
     "react": "^17.0.2",
-    "react-dates": "^21.8.0",
-    "react-datetime-picker": "^3.3.0",
-    "react-diff-viewer": "^3.1.1",
+    "react-datetime-picker": "^4.1.1",
+    "react-diff-viewer-continued": "^3.2.5",
     "react-dom": "^17.0.2",
     "react-dropzone": "^11.3.4",
     "react-router-dom": "^5.2.0",
@@ -33,6 +32,9 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "preinstall": "node ./preinstall.js"
+  },
+  "overrides": {
+    "nth-check": "^2.0.1"
   },
   "eslintConfig": {
     "extends": [

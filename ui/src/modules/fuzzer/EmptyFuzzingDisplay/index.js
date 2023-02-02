@@ -2,7 +2,6 @@ import React from 'react';
 import MessageImageDisplay from 'layout/Inventory/InventoryDetails/MessageImageDisplay';
 import MessageTextButton from 'components/MessageTextButton';
 // import { DEPLOYMNET_CLUSTERS_PAGE_PATH } from 'layout/Deployments/Clusters';
-import Button from 'components/Button';
 
 import newTestImage from 'utils/images/add_new.svg';
 import updateClusterImage from 'utils/images/select.svg';

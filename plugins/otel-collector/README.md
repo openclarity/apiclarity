@@ -17,7 +17,7 @@ The following settings are required:
 
 The following settings can be optionally configured:
 
-- `tls`: see [TLS Configuration Settings](../../config/configtls/README.md) for the full set of available options.
+- `tls`: see [here](./apiclarityexporter/testdata/config.yaml) for the full set of available options.
 - `timeout` (default = 30s): HTTP request time limit. For details see https://golang.org/pkg/net/http/#Client
 - `read_buffer_size` (default = 0): ReadBufferSize for HTTP client.
 - `write_buffer_size` (default = 512 * 1024): WriteBufferSize for HTTP client.
@@ -30,8 +30,8 @@ exporters:
     endpoint: https://example.com:4318/
 ```
 
-The full list of settings exposed for this exporter are documented [here](./config.go)
-with detailed sample configurations [here](./testdata/config.yaml).
+The full list of settings exposed for this exporter are documented [here](./apiclarityexporter/config.go)
+with detailed sample configurations [here](./apiclarityexporter/testdata/config.yaml).
 
 [contrib]: https://github.com/open-telemetry/opentelemetry-collector-releases/tree/main/distributions/otelcol-contrib
 

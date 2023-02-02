@@ -6,10 +6,16 @@ kuma:
   kumaService: "*"
 
 apiclarity:
+  # Where is installed APIClarity
   hostname: apiclarity-apiclarity.apiclarity
+  # Port where APIClarity is listenning for traces
   port: 9000
+
   plugin:
-    config: |
-      {"trace_sampling_enabled": "false"}
-    sha256: "15f8bece72cbe63d91d4636f5c017f575da8fdd832cd12d1c113f1f5774c0dc3"
-    wasmFilterURI: "https://raw.githubusercontent.com/openclarity/wasm-filters/5f78e317945e06b899cefe83e4a1959b27af1445/bin/release/http-trace-filter.wasm"
+    config:
+      # Do you want to enable the trace sampling manager ?
+      traceSamplingEnabled: false
+
+    # From github
+    sha256: "56835842030e03a2b4dcd6b6376c55a088781cbc0f3c2ab6284b74f852aec08b"
+    wasmFilterURI: "https://raw.githubusercontent.com/openclarity/wasm-filters/a7b4eb86a990a87d665f5dea6926f7216caba604/bin/release/http-trace-filter.wasm"

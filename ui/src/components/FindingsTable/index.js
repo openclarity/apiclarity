@@ -59,7 +59,7 @@ const FindingsTable = ({columns: userColumns=[], data={}, actionRow, url=''}) =>
                 const { severity } = row.original;
                 return <FindingsRisk severity={severity} />;
             }
-        }], []);
+        }], [userColumns]);
 
     return (
         <div className="findings-table-wrapper">
