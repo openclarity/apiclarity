@@ -49,6 +49,7 @@ paths:
       summary: 'Allows a client to notify APIClarity about new APIs.'
       description: 'This allows a client (a gateway for example) to notify APIclarity about newly discovered APIs. If one of the APIs already exists, it is ignored.'
       parameters:
+        - $ref: '#/parameters/TraceSourceTokenHeader'
         - in: 'body'
           name: 'body'
           description: 'List of new discovered APIs'
@@ -143,6 +144,7 @@ definitions:
     properties:
       message:
         type: 'string'
+
 
   SuccessResponse:
     description: 'An object that is return in cases of success that return nothing.'

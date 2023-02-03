@@ -44,6 +44,7 @@ const (
 	RequestTimeContextKey    = "request_time"
 	SamplingInterval         = 10 * time.Second
 	MinimumSeparatedHostSize = 2
+	CACertFile               = "/etc/traces/certs/root-ca.crt"
 )
 
 func ReadBody(body io.ReadCloser) ([]byte, bool, error) {
@@ -90,8 +91,6 @@ func GetPathWithQuery(reqURL *url.URL) string {
 	}
 	return pathAndQuery
 }
-
-const CACertFile = "/etc/traces/certs/root-ca.crt"
 
 type ClientTLSOptions struct {
 	RootCAFileName string
@@ -204,4 +203,13 @@ func GetDestinationNamespaceFromHostOrDefault(host, defaultNamespace string) str
 		return sp[1]
 	}
 	return defaultNamespace
+}
+
+func Contains(slice []string, value string) bool {
+	for _, item := range slice {
+		if item == value {
+			return true
+		}
+	}
+	return false
 }

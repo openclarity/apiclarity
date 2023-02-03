@@ -40,6 +40,9 @@ func init() {
         "summary": "Allows a client to notify APIClarity about new APIs.",
         "parameters": [
           {
+            "$ref": "#/parameters/TraceSourceTokenHeader"
+          },
+          {
             "description": "List of new discovered APIs",
             "name": "body",
             "in": "body",
@@ -301,6 +304,12 @@ func init() {
         "description": "This allows a client (a gateway for example) to notify APIclarity about newly discovered APIs. If one of the APIs already exists, it is ignored.",
         "summary": "Allows a client to notify APIClarity about new APIs.",
         "parameters": [
+          {
+            "type": "string",
+            "description": "Optional header to authenticate the trace source",
+            "name": "X-Trace-Source-Token",
+            "in": "header"
+          },
           {
             "description": "List of new discovered APIs",
             "name": "body",
