@@ -29,8 +29,8 @@ docker-tyk:
 	 cd -)
 
 .PHONY: docker-otelcollector
-docker-otelcollector: Dockerfile.otel-collector
-	@DOCKER_BUILDKIT=1 docker build \
+docker-otelcollector: ../Dockerfile.otel-collector
+	@cd .. ; DOCKER_BUILDKIT=1 docker build \
 	  --file Dockerfile.otel-collector \
 	  --build-arg OTEL_COLLECTOR_VERSION=${OTEL_COLLECTOR_VERSION} \
 	  -t ${DOCKER_REGISTRY}/otel-apiclarityexporter:${DOCKER_TAG} .

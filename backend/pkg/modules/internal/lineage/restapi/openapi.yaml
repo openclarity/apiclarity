@@ -1,0 +1,95 @@
+openapi: 3.0.3
+info:
+  title: APIClarity Lineage
+  version: 0.0.1
+  description: APIClarity Lineage Plugin API
+paths:
+  /version:
+    get:
+      operationId: GetVersion
+      summary: Get the version of this Plugin
+      description: Get the version of this Plugin
+      responses:
+        '200':
+          description: Version of the Plugin
+          content:
+            application/json:
+              schema:
+                $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ModuleVersion'
+
+  /lineage/{apiID}:
+    get:
+      operationId: GetLineage
+      summary: Get the lineage for specified API ID
+      parameters:
+        - name: apiID
+          in: path
+          required: true
+          schema:
+            $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID'
+        - name: operation
+          in: query
+          schema:
+            $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/HttpMethod'
+        - name: path
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: API endpoint lineage
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APILineage'
+
+  /lineage/extended:
+    post:
+      operationId: PostLineageExtended
+      summary: Update extended lineage metadata.
+      requestBody:
+        content:
+          "application/json":
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/LabelRelationship'
+      responses:
+        '200':
+          description: Successful update of extended lineage data.
+components:
+  schemas:
+    APIOperation:
+      type: object
+      required: [id]
+      properties:
+        id:
+          $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/ApiID'
+        path:
+          type: string
+        operation:
+          $ref: '../../../../../../api3/common/openapi.yaml#/components/schemas/HttpMethod'
+    APILineage:
+      type: object
+      required: [id]
+      properties:
+        id:
+          $ref: '#/components/schemas/APIOperation'
+        parents:
+          type: array
+          items:
+            $ref: '#/components/schemas/APIOperation'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/APIOperation'
+    LabelRelationship:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+        parent:
+          type: string
+        child:
+          type: string

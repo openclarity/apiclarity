@@ -8,6 +8,8 @@ require (
 	github.com/go-openapi/runtime v0.24.1
 	github.com/go-openapi/strfmt v0.21.2
 	github.com/gofrs/uuid v4.0.0+incompatible
+	github.com/openclarity/apiclarity/api3 v0.0.0
+	github.com/openclarity/apiclarity/backend v0.0.0
 	github.com/openclarity/apiclarity/plugins/api v0.0.0
 	github.com/stretchr/testify v1.8.1
 	go.opentelemetry.io/collector v0.68.0
@@ -66,6 +68,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
+	github.com/openclarity/trace-sampling-manager/api v0.0.0-20220503091058-2730f5ebad2c // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -108,4 +111,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
+replace github.com/openclarity/apiclarity/api3 v0.0.0 => ./../../../api3
 replace github.com/openclarity/apiclarity/plugins/api v0.0.0 => ./../../api
+replace github.com/openclarity/apiclarity/backend v0.0.0 => ./../../../backend

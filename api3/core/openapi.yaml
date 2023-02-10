@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 1.0.0
+  version: 1.1.0
   title: APIClarity APIs
 paths:
   /features:
@@ -943,7 +943,7 @@ components:
         application/json:
           schema:
             $ref: "../common/openapi.yaml#/components/schemas/ApiResponse"
-  schemas: 
+  schemas:
     APIClarityFeatureList:
       type: 'object'
       description: List of APIClarity features and for each feature the list of API hosts (in the form 'host:port') the feature requires to get trace for

@@ -243,7 +243,7 @@ func (e *exporterObject) processOTelSpan(resource pcommon.Resource, _ pcommon.In
 	e.logger.Info("Converting span",
 		zap.String("kind", span.Kind().String()),
 		zap.String("name", span.Name()),
-		zap.String("traceid", hex.EncodeToString(traceID[:])),
+		zap.String("traceid", traceID.String()),
 		zap.Int("attributes.length", span.Attributes().Len()),
 	)
 

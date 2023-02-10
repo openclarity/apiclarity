@@ -29,6 +29,7 @@ import (
 const (
 	Bfla              APIClarityFeatureEnum = "bfla"
 	Fuzzer            APIClarityFeatureEnum = "fuzzer"
+	Lineage           APIClarityFeatureEnum = "lineage"
 	SpecDiffer        APIClarityFeatureEnum = "spec_differ"
 	Specdiffs         APIClarityFeatureEnum = "specdiffs"
 	Specreconstructor APIClarityFeatureEnum = "specreconstructor"
@@ -187,6 +188,20 @@ type APIGateway struct {
 
 // APIGatewayType defines model for APIGatewayType.
 type APIGatewayType string
+
+// APILineage defines model for APILineage.
+type APILineage struct {
+	Children *[]APIOperation `json:"children,omitempty"`
+	Id       APIOperation    `json:"id"`
+	Parents  *[]APIOperation `json:"parents,omitempty"`
+}
+
+// APIOperation defines model for APIOperation.
+type APIOperation struct {
+	Id        externalRef0.ApiID       `json:"id"`
+	Operation *externalRef0.HttpMethod `json:"operation,omitempty"`
+	Path      *string                  `json:"path,omitempty"`
+}
 
 // Annotation defines model for Annotation.
 type Annotation struct {
@@ -403,6 +418,13 @@ type K8sObjectRef struct {
 	Name       string `json:"name"`
 	Namespace  string `json:"namespace"`
 	Uid        string `json:"uid"`
+}
+
+// LabelRelationship defines model for LabelRelationship.
+type LabelRelationship struct {
+	Child  *string `json:"child,omitempty"`
+	Id     string  `json:"id"`
+	Parent *string `json:"parent,omitempty"`
 }
 
 // OperationEnum defines model for OperationEnum.
@@ -983,6 +1005,15 @@ type FuzzerStartTestJSONBody = TestInput
 // FuzzerPostUpdateStatusJSONBody defines parameters for FuzzerPostUpdateStatus.
 type FuzzerPostUpdateStatusJSONBody = FuzzingStatusAndReport
 
+// LineagePostLineageExtendedJSONBody defines parameters for LineagePostLineageExtended.
+type LineagePostLineageExtendedJSONBody = []LabelRelationship
+
+// LineageGetLineageParams defines parameters for LineageGetLineage.
+type LineageGetLineageParams struct {
+	Operation *externalRef0.HttpMethod `form:"operation,omitempty" json:"operation,omitempty"`
+	Path      *string                  `form:"path,omitempty" json:"path,omitempty"`
+}
+
 // TraceanalyzerGetApiFindingsParams defines parameters for TraceanalyzerGetApiFindings.
 type TraceanalyzerGetApiFindingsParams struct {
 	// Should findings include sensitive data ?
@@ -1017,6 +1048,9 @@ type FuzzerStartTestJSONRequestBody = FuzzerStartTestJSONBody
 
 // FuzzerPostUpdateStatusJSONRequestBody defines body for FuzzerPostUpdateStatus for application/json ContentType.
 type FuzzerPostUpdateStatusJSONRequestBody = FuzzerPostUpdateStatusJSONBody
+
+// LineagePostLineageExtendedJSONRequestBody defines body for LineagePostLineageExtended for application/json ContentType.
+type LineagePostLineageExtendedJSONRequestBody = LineagePostLineageExtendedJSONBody
 
 func (t AuthorizationScheme) AsBasicAuth() (BasicAuth, error) {
 	var body BasicAuth
@@ -1339,6 +1373,17 @@ type ClientInterface interface {
 
 	// FuzzergetVersion request
 	FuzzergetVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// LineagePostLineageExtended request with any body
+	LineagePostLineageExtendedWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	LineagePostLineageExtended(ctx context.Context, body LineagePostLineageExtendedJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// LineageGetLineage request
+	LineageGetLineage(ctx context.Context, apiID externalRef0.ApiID, params *LineageGetLineageParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// LineageGetVersion request
+	LineageGetVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// SpecDifferStartDiffer request
 	SpecDifferStartDiffer(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2084,6 +2129,54 @@ func (c *Client) FuzzerPostUpdateStatus(ctx context.Context, apiID externalRef0.
 
 func (c *Client) FuzzergetVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewFuzzergetVersionRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) LineagePostLineageExtendedWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLineagePostLineageExtendedRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) LineagePostLineageExtended(ctx context.Context, body LineagePostLineageExtendedJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLineagePostLineageExtendedRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) LineageGetLineage(ctx context.Context, apiID externalRef0.ApiID, params *LineageGetLineageParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLineageGetLineageRequest(c.Server, apiID, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) LineageGetVersion(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewLineageGetVersionRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -5372,6 +5465,143 @@ func NewFuzzergetVersionRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewLineagePostLineageExtendedRequest calls the generic LineagePostLineageExtended builder with application/json body
+func NewLineagePostLineageExtendedRequest(server string, body LineagePostLineageExtendedJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewLineagePostLineageExtendedRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewLineagePostLineageExtendedRequestWithBody generates requests for LineagePostLineageExtended with any type of body
+func NewLineagePostLineageExtendedRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/modules/lineage/lineage/extended")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewLineageGetLineageRequest generates requests for LineageGetLineage
+func NewLineageGetLineageRequest(server string, apiID externalRef0.ApiID, params *LineageGetLineageParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "apiID", runtime.ParamLocationPath, apiID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/modules/lineage/lineage/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	queryValues := queryURL.Query()
+
+	if params.Operation != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "operation", runtime.ParamLocationQuery, *params.Operation); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Path != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "path", runtime.ParamLocationQuery, *params.Path); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewLineageGetVersionRequest generates requests for LineageGetVersion
+func NewLineageGetVersionRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/modules/lineage/version")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewSpecDifferStartDifferRequest generates requests for SpecDifferStartDiffer
 func NewSpecDifferStartDifferRequest(server string, apiID externalRef0.ApiID) (*http.Request, error) {
 	var err error
@@ -5867,6 +6097,17 @@ type ClientWithResponsesInterface interface {
 
 	// FuzzergetVersion request
 	FuzzergetVersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*FuzzergetVersionResponse, error)
+
+	// LineagePostLineageExtended request with any body
+	LineagePostLineageExtendedWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LineagePostLineageExtendedResponse, error)
+
+	LineagePostLineageExtendedWithResponse(ctx context.Context, body LineagePostLineageExtendedJSONRequestBody, reqEditors ...RequestEditorFn) (*LineagePostLineageExtendedResponse, error)
+
+	// LineageGetLineage request
+	LineageGetLineageWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *LineageGetLineageParams, reqEditors ...RequestEditorFn) (*LineageGetLineageResponse, error)
+
+	// LineageGetVersion request
+	LineageGetVersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*LineageGetVersionResponse, error)
 
 	// SpecDifferStartDiffer request
 	SpecDifferStartDifferWithResponse(ctx context.Context, apiID externalRef0.ApiID, reqEditors ...RequestEditorFn) (*SpecDifferStartDifferResponse, error)
@@ -7121,6 +7362,71 @@ func (r FuzzergetVersionResponse) StatusCode() int {
 	return 0
 }
 
+type LineagePostLineageExtendedResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r LineagePostLineageExtendedResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r LineagePostLineageExtendedResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type LineageGetLineageResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *APILineage
+}
+
+// Status returns HTTPResponse.Status
+func (r LineageGetLineageResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r LineageGetLineageResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type LineageGetVersionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *externalRef0.ModuleVersion
+}
+
+// Status returns HTTPResponse.Status
+func (r LineageGetVersionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r LineageGetVersionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type SpecDifferStartDifferResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7819,6 +8125,41 @@ func (c *ClientWithResponses) FuzzergetVersionWithResponse(ctx context.Context, 
 		return nil, err
 	}
 	return ParseFuzzergetVersionResponse(rsp)
+}
+
+// LineagePostLineageExtendedWithBodyWithResponse request with arbitrary body returning *LineagePostLineageExtendedResponse
+func (c *ClientWithResponses) LineagePostLineageExtendedWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*LineagePostLineageExtendedResponse, error) {
+	rsp, err := c.LineagePostLineageExtendedWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLineagePostLineageExtendedResponse(rsp)
+}
+
+func (c *ClientWithResponses) LineagePostLineageExtendedWithResponse(ctx context.Context, body LineagePostLineageExtendedJSONRequestBody, reqEditors ...RequestEditorFn) (*LineagePostLineageExtendedResponse, error) {
+	rsp, err := c.LineagePostLineageExtended(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLineagePostLineageExtendedResponse(rsp)
+}
+
+// LineageGetLineageWithResponse request returning *LineageGetLineageResponse
+func (c *ClientWithResponses) LineageGetLineageWithResponse(ctx context.Context, apiID externalRef0.ApiID, params *LineageGetLineageParams, reqEditors ...RequestEditorFn) (*LineageGetLineageResponse, error) {
+	rsp, err := c.LineageGetLineage(ctx, apiID, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLineageGetLineageResponse(rsp)
+}
+
+// LineageGetVersionWithResponse request returning *LineageGetVersionResponse
+func (c *ClientWithResponses) LineageGetVersionWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*LineageGetVersionResponse, error) {
+	rsp, err := c.LineageGetVersion(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseLineageGetVersionResponse(rsp)
 }
 
 // SpecDifferStartDifferWithResponse request returning *SpecDifferStartDifferResponse
@@ -9624,6 +9965,74 @@ func ParseFuzzergetVersionResponse(rsp *http.Response) (*FuzzergetVersionRespons
 	return response, nil
 }
 
+// ParseLineagePostLineageExtendedResponse parses an HTTP response from a LineagePostLineageExtendedWithResponse call
+func ParseLineagePostLineageExtendedResponse(rsp *http.Response) (*LineagePostLineageExtendedResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &LineagePostLineageExtendedResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseLineageGetLineageResponse parses an HTTP response from a LineageGetLineageWithResponse call
+func ParseLineageGetLineageResponse(rsp *http.Response) (*LineageGetLineageResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &LineageGetLineageResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest APILineage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseLineageGetVersionResponse parses an HTTP response from a LineageGetVersionWithResponse call
+func ParseLineageGetVersionResponse(rsp *http.Response) (*LineageGetVersionResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &LineageGetVersionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest externalRef0.ModuleVersion
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseSpecDifferStartDifferResponse parses an HTTP response from a SpecDifferStartDifferWithResponse call
 func ParseSpecDifferStartDifferResponse(rsp *http.Response) (*SpecDifferStartDifferResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
@@ -10002,6 +10411,15 @@ type ServerInterface interface {
 	// Get the version of this Module
 	// (GET /modules/fuzzer/version)
 	FuzzergetVersion(w http.ResponseWriter, r *http.Request)
+	// Update extended lineage metadata.
+	// (POST /modules/lineage/lineage/extended)
+	LineagePostLineageExtended(w http.ResponseWriter, r *http.Request)
+	// Get the lineage for specified API ID
+	// (GET /modules/lineage/lineage/{apiID})
+	LineageGetLineage(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID, params LineageGetLineageParams)
+	// Get the version of this Plugin
+	// (GET /modules/lineage/version)
+	LineageGetVersion(w http.ResponseWriter, r *http.Request)
 	// Start Differ for an API
 	// (POST /modules/spec_differ/{apiID}/start)
 	SpecDifferStartDiffer(w http.ResponseWriter, r *http.Request, apiID externalRef0.ApiID)
@@ -12362,6 +12780,87 @@ func (siw *ServerInterfaceWrapper) FuzzergetVersion(w http.ResponseWriter, r *ht
 	handler.ServeHTTP(w, r.WithContext(ctx))
 }
 
+// LineagePostLineageExtended operation middleware
+func (siw *ServerInterfaceWrapper) LineagePostLineageExtended(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.LineagePostLineageExtended(w, r)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// LineageGetLineage operation middleware
+func (siw *ServerInterfaceWrapper) LineageGetLineage(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "apiID" -------------
+	var apiID externalRef0.ApiID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "apiID", runtime.ParamLocationPath, chi.URLParam(r, "apiID"), &apiID)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "apiID", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params LineageGetLineageParams
+
+	// ------------- Optional query parameter "operation" -------------
+	if paramValue := r.URL.Query().Get("operation"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "operation", r.URL.Query(), &params.Operation)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "operation", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "path" -------------
+	if paramValue := r.URL.Query().Get("path"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "path", r.URL.Query(), &params.Path)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "path", Err: err})
+		return
+	}
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.LineageGetLineage(w, r, apiID, params)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// LineageGetVersion operation middleware
+func (siw *ServerInterfaceWrapper) LineageGetVersion(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.LineageGetVersion(w, r)
+	})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
 // SpecDifferStartDiffer operation middleware
 func (siw *ServerInterfaceWrapper) SpecDifferStartDiffer(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -12845,6 +13344,15 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/modules/fuzzer/version", wrapper.FuzzergetVersion)
 	})
 	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/modules/lineage/lineage/extended", wrapper.LineagePostLineageExtended)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/modules/lineage/lineage/{apiID}", wrapper.LineageGetLineage)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/modules/lineage/version", wrapper.LineageGetVersion)
+	})
+	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/modules/spec_differ/{apiID}/start", wrapper.SpecDifferStartDiffer)
 	})
 	r.Group(func(r chi.Router) {
@@ -12872,7 +13380,7 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+w9a2/jOJJ/hdAdsDOAN+nZnT0sAtwHt+2kvZ04PtuZ2d1GEDAWbXNbpjQilYw7yH8/",
+	"H4sIAAAAAAAC/+w9a2/jOJJ/hdAdsDOAN+nZnT0sAtwHt+2kvZ04PtuZ2d1GEDAWbXNbpjQilbQnyH8/",
 	"8CVREiVRthOnM/7UHYuPYlWxXiwWn7x5uI5Cggij3tmTF8EYrhFDsfgLBihmQ3qOA4Zi/oOP6DzGEcMh",
 	"8c68Lv8MPmPigy/dy8FkdjccnV+DMAbyr1+7k9Gt1/Ewb/xbguKN1/EIXCPvTA79BVP+nc5XaA35+Jih",
 	"tZj5v2O08M68k5PTebheh+Q0jBCBET7ZwHXwX6cZ0KeyMz0VwEzRA4ox2wxIsvaeOx7bRGKyOIYb7/m5",
@@ -12883,7 +13391,7 @@ var swaggerSpec = []string{
 	"FhPsnV05hFJaP3c4mAwTyMEcjpuInGu8C7ULszbSvDjxLsQ3xhqHeV3bMDVvvqdVy5nbrFtNvsvKEfFn",
 	"eG3hzgHxAcNrBMIFYCsENBQ2kPQgTirKhwz9mcnm5d2yhAw9wo3UhXmILuQnMOxrMPJqMutaB4dFkawg",
 	"HcfhA/aRP43QvB79hcYl2qvx78MwQJDo8SdoHhLK4mTOHCcp9XCciTft48WicQLd0GnckDK7zcC/ADGo",
-	"nTVETwd6GCywRmwVNhoPstU+TddPjEVXYlTrTong0rJNxnCJAEnW9yh22SlikJbsyftM8TfL5Ffwd7xO",
+	"nTVETwd6GCywRmwVNhoPstU+TddPjEVXYlTrTong0rJNxnCJAEnW9yh22SlikJbsyftM8e+Wya/gN7xO",
 	"1kAsutF2S8epm38th/TO/vah460xkX/81LEDxlZutgxvubstw0dxM2TEfA6GDG83dIEd7wa1g1hX0+wi",
 	"y/kQrvaLmM7JfonCuGLviy8VvCY/tdn2kYPijXbUtpGbio1216uR0hFjTv1+47pyrXdZYWyqDbfJLV12",
 	"g8CHfKTq6dR3c3wfLWASMO9sAQOKOjYdFKMHjB4rneT0885+Ml2Fj6OQdCNctQSjhQOPm4vg/mYfx3Y/",
@@ -12894,102 +13402,106 @@ var swaggerSpec = []string{
 	"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",
-	"Auh1vEXy7RsSxk6E5nc+XizSv/gfVP3fsGAFmQTJIIHBhve+teC0BOgltkU4LjMeKrAZFXy24HsWzlcp",
-	"87wq41GbteDGF1ZK28jZF2g+eypAoI5udjgeWYRcy2pjxdfTOC2HA9XIqxpEPXgFv4qTuC4hIRMy0LJW",
-	"zotTIXyb4Pp4ftlVLfOh3c9/p9dy0oYR0oYTtJBjMMSdpRsqdUctVsy2zx0P/c5QTGBgc0U63hrTNWTz",
-	"FfKn8zBC1N5K2uJbgl8giIFHAzgLJLeSMireWx0Iflzh+QpgCvRgwQag36OQckeqOx7S0sbx86K6JBaw",
-	"b4vBaRVchOOG4N8SJKKfAPuIMLzY8KkhUKFomzRn4VdEcpba/YZZ5T5Tp0YNG1thQ+6kAspVYFaMVMH/",
-	"Zvezp1QAz/712et4n69HF55sNhj80y5J061jkRK5b6WuXzHxrR80uksfqEossFuV5sqxry2njgmGMYSa",
-	"34qWOnGQSig3yZvNXRJYnBmY3J95xprxnwHikglkwFMwDxPC7EELc+1yVOvCIjzT/AeD4HrhnX1pgD9h",
-	"qzDG3wQEU/4j+gi5adcp4uUr2lhp9gCDBDUTTJ7Ry8Zl0IVIMEG5Cn0UlIkTIBgTPrxVmvGWGVnd6Fea",
-	"9FoPYiMot0ZmDvt2qtsV0ZAOkIO2ky3MStYSkN3Ex4hIW6+wJ1Vb5NtxhIh/l1CVeeSmjQt6p4iTej30",
-	"9e/0LtxKNwaQpo61i9trOmR2Mf8ocdxe2ReImOGwY+I7p/UMWIoTu5F4FDK8UJ6bdT+3sMj4ls6Nx7d3",
-	"u21RtUez7WJhxYxJt9yMKZ9b+E6eEFplkggdW70fuKQ7+EcqJK1m7mQrVCM3UlZKWKERMNcIa25ASp99",
-	"DaNISbZMjHuVCR3ie8f7CCme8ykq2Tht0PE+IhijuHZos8lzal5tRkZyChe0BDnolmzqRnbTC2pqmAPv",
-	"1o5dob9KzOhkbZmD5VJmcuq30tqydi97xwRwK0xtG+FjcjcRmr1l4lCaJnpiuM4fu9Nhr3sz+yQNt9n1",
-	"58GI03bQnQwm8i8OHGYBh64Ek01ualGXsxD5j3fTWXcy82SLu8tBdzIaCotR/N0fzAa9mfGDaDCzmpGG",
-	"NDXmGF3fTceDntfxjLEvBxfD2fCqOxt4HW96Mx0Pe8Prm+nd1aA/vLnK//ZpePHJPl+2L/ZvCkWQ0scw",
-	"tsserhgqDNwCI6UtO9mIdtMot3H3v57UZ6mHVzazQ9gvOLIFm9qOKhzdQd+PEbWLYumcmvzyj18FM/Id",
-	"oLyXu3/e9a5H05urweRu2Lefg5X8BjVwDgCxCLxYlIH39aHLzkc23KKZImQJI85WSB4UsBVkQhzwWcEj",
-	"pIB3AhQJae9mBmWKcdckGYIeuSVbhneEHgE3ZcF/aEiAmtoCShj49gGuA99pAK3Ji1k5bKUjqwJRKEBr",
-	"ZPpOBhdxixuvEWVwHZWHYgXMYyrh4qifiwMS/wQkFPkABjQEUH1+QDGVDqejaVp2HFpQpdKdSDmqk7Fp",
-	"hvWMgIbNomwYwxHJY8im2c4x8ZVtUhtwyaPWFgZXA2UKyoyud6pDBQX2g9mZWnnIEbTTIMb0a3ks/mv1",
-	"WBPexyZUdIPzrEsF1naOMegpjFmHop9zwGF0z1coJutIZuZWRwSXKn5pLFjEJuwxiMKSqXXNybdvmCwn",
-	"SKTiMGSxf3pJHCPCgAz+gxipZKJ2obyFgVx7UJ8zOpXbegUpuEeIyDn5LnBC/AQ+pms11s+ljw35lWEt",
-	"AclLAprDOgfPBdxMvVY40nb/CFGmBVnNriixQROv5PzIPJ5kA8DgEqQxk/KZicEPu9xvGg8t201zgTj7",
-	"saByhZcrRNN7UVsKed3bjGRtN5TU4F3ia17gOgNRRnsiwmjBsPgsA5CAhVIPpkAIyQH8hJNZyEnOBKbq",
-	"S7OttNQsj4f4cLA5uGlSOA/1rTm+lSPqOWxsNSXcpFEEN0EI7VasPomv+ihSt2zhqCTG9ogqiu9bbK+x",
-	"VOj1i5/BZe3GwnKP5le9d7a2a/MZXOoU81QLGT+VbMr2Ud4KSWNgNP2xYo/bD14MUOzcietFn/SIu8SX",
-	"XcqoWch2QApkcSYtOVSaHAUmjcNlwZkyuC1Op4C+j/n4MBjn+jtjUAj0UuqHVmdyonTpOaTYcEGdwrE5",
-	"jFnjMlSfPZp7WCLktrR1iphvopFLKMeM0vSvRwOv4w0mk+uJ1/GGo7vx5PpiMphOK4Gx8XouJm47pf9F",
-	"+SH7OX/jH2gEK6yCxOrGF4MawsMWU6cHdNmwHRNmm6eR7kONcI1QGEVx+MBH8BHZiIHEDyIQr36V/7eF",
-	"g0xLrozGdD/onIdS/yZrNAjnFcaL/qJ8XMBU4LYmAm3abSAd2W5vVlNLKc8WNq4pqVmjiWei1EJI4/PH",
-	"hPiBJSTrQwYtkYEI/pYgwD8CmfOTxCiNksbw0eZE8pE6dREkVxSIDjqryk0yTedhjAa/Y2bKJt35bo0o",
-	"td4supIfwBI/iMRwxCAOKID3YSIjQOh3LlBTqabXKmcBqrs1saA62jHJ0AfSZkDacf8LchEMrYnTwZpC",
-	"awakWZc01CaIfWtlH8Uf9UxkGiF5NqpLGiiMkVG3hSj/OJxNhxefZl7Hm3Uvr6dex7seD0b9kfhfd3rX",
-	"HXUv/zUdcDl/MRn35N//Fn/zz7NJtzcwf+yOh3fnN//mf9gRMtVIK5HWxmstljK96fW4Cup4o8Hs1+vJ",
-	"57vz7vDyZsJV1ez6+u5S5oOMu5Pp4E7rrovBaDAZ9tKmBsw2cGxQr7gFiigbGxaKLe/zHlHB+lpxc3MC",
-	"EhCSZSg4Vrod5VS1/vaJan11zFUB19iAxPB80mt0P30w79F9aIhrGeaYSPdm1rzxdMvpSUXbAgSm7/U/",
-	"P+flg8o6b3a2MiDsxpLMbuWUAykiqg2mlMxV1qwx3MTuZ+2DmHv3Wg5Dqh0MY931qkn3cK2qXAulfzoA",
-	"8y23KSscpch0Q6vigcstfTLunj7n3D83P8xkYJplV5TZt4Zr1V0daj/5ccm9ld2LsFWnpaZTHjTHI1u4",
-	"OMGbGicU2fms8GLGk+tfhv1B3+t4k0HvejSdTW56s0HfamrPlNGZR6W4D1DJj92UuzABc0hFcF9eIcio",
-	"OTCHsB0V7V+Ip/rq7UjwjveQBATF8B4H2MVz/6XQ3LThZ4ha9wT//RO0W+37ENE5C7WMB8vRgw3CIYkS",
-	"i5bRN/0ADAKAeZsskYIKkQcrLAmVLtDyUF36h1Fz3xTmPm9tjWHIcW7rFpx1dskskesXw9rTSf7vZtj7",
-	"LK6RnndvLmfif4OxKUXzM3sVW15vlcOKtJKhKURbZpO8DeiUMkph+xWzVWYzvbrgDKAGaeYmzURKggrz",
-	"xWiO8IM6UdyDdDuAKZ5FRp3trCxw+P4VASbLq9BPApSmiOU5tDse0iHpwfmqIu32oTJGWZB+WVKFOWaV",
-	"NNz5XF0s+q0cqssVWZZqRHjzi22NVhsifynzkEt6RB6SeYwZnlffdAgXgPOqgZCe7mHja+7AuQ/1ibe2",
-	"DROEj+6jXIaP1kHWyMc2VVs1zpVsbxuq9jJIeSQHnsknp2ii8hZYB7J1Gmh2wVFdnEq5x/vp5MPJB3Ww",
-	"xjWed+b9VfxkJC6c6kqb4q8lEtIyPf0a+t6Zd4FYN23UyZU4rUhUzJqcZpffq5So0ViXI3NoKuoxObYT",
-	"tZMc2haLjjp00VU9XJpmtUfcYCnU4nToVCjA5YQeo46Sc/vsJr5jl1J1Bsd+haoXjr0KxUNcaFMua9Cy",
-	"VyuU2Io4tOp22apbsVpMqz6tFmYvQNm+47aT5mpAbtO11cTlon0umLVVm3Hs1759O7a01VFx7Nd+p1rK",
-	"/LjIxVxJbfcOMsn2tlBe4y8fPrSqqlFhlFbWHpBXQSlQZQSW+AERmZQcQ7JEHbAQ65D5H1xVnQDRO0Bk",
-	"yVZgnVAG7hEIwkcUp2VGAAuBURJwl5w4pfC2u+GqrrVWLU7WWZDr2/7qa7kQyTSZz0UAoJPVz7JzQUrq",
-	"01wZFVG7JFmvYbyR1o1BKfExs4lOn8TPQ//ZyToayMZlI6lcP1jeEa6qiIrSgXYqibYru+/CUa9LuEq6",
-	"nUZGzVd9DcSVkONi3yNhU1S8MoGBpqO8peFLECpoHhdL8LYl/MQ6wJH6B6N+jqIWFkir9jdQOWvX1pHV",
-	"1eAP55uWXybYq39afBugTZdWZmZVwX73ru2NTfsDDi40aulRRFu5EZYq5m4dq8qTO3KUflXkdQ1jaRQi",
-	"X0Ss8ubjQWxgkRza1gTOL2LHAi+vJk1xKv9EUWVqEZTjkBYlpco4/Rj6m5dXNPkKY+WSiK+i7SRLvDhZ",
-	"euIeap4yMr++pNjkfj1dxOH6E6cQ8cfqbMtF3XXFZi/0basCxZMAjjJwd5Fie+bIPFOrto/qqPbzh58P",
-	"W0eT03rYB6OQgfMwIf4+d7hgEcBZRD7vIKIKghglbnoSbZ9PjXqAznzUTQv0tTahhr53GPO1KFVeQd4K",
-	"liWLUBJELb6SENq/uaOPcLlE8YleuDNZUiNCDvAPKi9THoJEedwKcx0TWRFA7d/DqMDUieS7MKtSsMAB",
-	"qiFNzvnYnj55W+1IpCoi5X29VpTiDWkrokxFj+9Gkl1HiHQjLKF+5T0j7yiatOHgCjEn8K4y8Pj/8QLP",
-	"OeWaSJWLzkmeDJBMRcmTri9+t1PPdJ6+H0oqStWZCnsm5g2hXCsVImk2onU8lX9Z8AwS9sIUeC03I4ay",
-	"espz3kFjcYLK7sZPrwlMjeHajiMtF6YKY4tqNzDAvkoqhThQBab3wW1d3xfeuo+Z4q9t5EMpkrutkCgF",
-	"So6SollSWKKu7WiYLJeIMuRPxBs/7RRzoe93RK484IcwmlJSxRqGEon0s0vcBRT3rQ0iuQWGJmqEbr5/",
-	"W0Kl7z+9rgooQO2kCd7fTu9GUbCRVSoVPhTLABaqKmnydnaJvVKeuqFwiU5XmKUlaGr2uGj8Sbd9K8mE",
-	"7VLztsiys78p59Cz7lW4Y3rfMb3vmN53TO/7ftL7djXGdnkjWOucciXwV4kFgxXWVdMeMVthwq1oFIjS",
-	"uiJpbsExl961Mk8Xc6lpHFdxGJyqh0pqg1092fZCN93rGa8JgP2Yd5nN6/rWkX45pqlcezr0AY5S9fLm",
-	"IVngZcKJlIJTe6hqI8dO1m4jFm2Hpz+90Eyvc1IKAUGP6Ss91h1x+pS+J//cHC0oEOUi9xR9DnE/W8pe",
-	"vLFzRf2+EgkZWOzzcFHiyngf6bnjKnVqMPrhlVhRowUTea6hKgS+b5JxrbO0L7yd05XuJnmtOd1vBD32",
-	"MZ2HD1xPibtnRuSgWAQdi0v74SMFEMwDjAgDP6TcJF/j+x2uowD9yB1PEjK8EBfa5upumyyeRdBjsAF+",
-	"OqvIvTkBwwUISVo2WuTjwCBG0N/IUlu0AzADmAK8JGGM/BOzwGNRPI9Ky9peTheKbobqaqtdXRaW1VGH",
-	"cPwT70ngGp3ph9sdHzkx66QVa7HJunjlN9BEgTLCONIpUvXEOPmIcSH+pLFkmFyrTTv/IaIqBVbPsXSv",
-	"yNKSi6Uy8yFd3Ycw9tPISp2B19etdWTllSIqB8ngEAukr5grlwiMVpDlNIAMUZbWF3Im0aXR73DukHZs",
-	"FekP4RJJBGa53LQS1euQshsq3z1zxvOV7nQ4JHcjfEifk6NNli8Qakxg13yAtgqV57rNyxpslmd86/BS",
-	"Wl7hxd5DPvMrULsWpTTo6f0igJx3dc1HeRrWN2+QFcxA+lXmTuhK96o4orEoOXZHrKk7Hp6AIbeV1ogw",
-	"5IP7jVyjbFSybT4uAiiD70ZV14KWsNxVkdWg6m6qbF0mylA1Dp0NBTRFhGKGHw6jgtIHBKxKqCsIBtIH",
-	"BVTt0/x+PpyvIYQEiLMWxe2UMp844ZWL4eyWcpWsAahe+L61sHzpjT8L55eEjSxAQzmTWh4JVDx4WG69",
-	"fUk5aHmO0VU5vClmKnBHXRzseyH5C8TmrNR+/YyjBvJ+f+zWQhjpdAfhn1dkuTVzaDctWn9wTSpm/C1B",
-	"4qaOmjJ9E6x6zpL/bh9JLWXncb7+nfaEM3yD28F1EF/zneyOIJzD4M9b7BHxEsNOG6Qv33I47o7j7niH",
-	"u4OhuViACJ/tulHUYOJo/r0Yu0djpD0rhdHeOCmMjoz0x2KkAMGYYLLch0i6VGO9DYlUoTJJfCcCcNSz",
-	"6McD10o5suEexFnGhUdp9kdjoxhRGS/cJYo0EYMcOecPxTlUlzLfPuAsq6G/56jzx/PLrlzl++QPkTB7",
-	"+oRryjZy+i8Rk8UKXWjt5pjv3fCoOooSgHcJCZl6prYiv0y0EynHAOZa245TUdZYXAnKOoijII5b49lC",
-	"Jzc6I8XpU0qBZ0fLQFXjuzbfBt87oTrWUYqvVddu76qr+saDp0dF8HKhGuO9BOsBu2Zv1U4mCmIKrqoP",
-	"zJeI/ZK+WfHKZJNg6ektiPrFXAfSy7Bv6co1N6JWvpt+qoQA8mmE5o25DBPEYoQfkCk/cleH5cGyfIqu",
-	"A37+8HNWCQmEbIXiR0zLJDkXsFwgLfGqrnB/Zzp6LxVYdP4oE++MbJHXnB9OvDGkHx+y5Hna6wgY6cs5",
-	"NnTjhxI7St6rYMi3k1qTsaWRG3JMrjkm17RMrrGxOf8n9WrMt7OsjC4flJLP3+U3VgXH5t5Se8++juXl",
-	"uEpTaJEEIKPz60tSFD/gOcrfBfnbTjqlNQxDwlBMYABsWaXVXKbFd53gznF09jTb/vg5e3r4/XOzfqTu",
-	"yMuH5+XsyMV6+6kdL4vW6tW+d5kElz3wur/bQJUTqbdu22yTV2VR9QT3R+iDicT1ca++8F5V51IVWzWM",
-	"wA9zSOYo+BFAECeEiBtwjls3jN7OznW8vHzcAN/FBnDlS5cNIW2vdEs8pY92O8R1oH4e2IzmyOujWDrM",
-	"mFGQPQNeabC9EWOts9XDvhYgzSU7vO5S+ST67QtrRONJ6uZgkj2WY+GBVhGcav47pas6r2D/XCjsaYmO",
-	"j5uZ0f7Ila/GlQ4+TRNbYlTBFIVylQpR7qxaPE4uHywkFHEVapRYoOpqN6fMPIlj8X6REthiPJNs/Mfa",
-	"6OISMX0g/aJyofAYuIUIPbWWPNj5pVWcQtSgAdO6KJggeLtTh8DkFZMXfnjEbMUJI9nkx/pgwvuOis3U",
-	"RtpCAaAGPLfaX0nkQ4akEehO5gBSBmRXdR5t0jkhPorBQr7qX03kG2Pql9xc5xIQOVGX+NVSbgIfdYg7",
-	"jXDbNXA7BFSQ4w3wt90LU+XEBZfd7ELlcUjLZN5/RKOOwk0lZV0ds3x95h0pb9mIez5DT3XXfk/Rreh/",
-	"2ZPyHLK4IXHn48UCxe2if33RxyBVuQaRLsmhQoDyv8f0xe8wa6UYuCoR34WpGsNULVkqjI4c9S44ykb6",
-	"PEOJexGQwGDzxvIlZiZgx5okx7SJPaZNNDJ906WCHHOKuwNviT2dQvryxsN3QV5dUTQIZJymTOk68qJC",
-	"9rN++7tGtHF+EiQGXTUKMAYoBoqQyguvl1+lJGwXLlGQ7hiQc3k6wIdzhvb3BoqdBxpS0NPPtiJ7RfwT",
-	"8zF/O+VbWd0GvSmmtaZSjrTyDJ7/ovseraZ3YIdXsoMbwzVa5NuzWxgdue2d2eh1zMZbo/hBEzeJA+9M",
-	"vKXjPd8+/38AAAD//1SM9l5T5AAA",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

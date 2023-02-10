@@ -25,7 +25,8 @@ import (
 
 	openapiclient "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	apiclient "github.com/openclarity/apiclarity/plugins/api/client/client"
+	backendclient "github.com/openclarity/apiclarity/api3/global"
+	pluginclient "github.com/openclarity/apiclarity/plugins/api/client/client"
 	apiclientops "github.com/openclarity/apiclarity/plugins/api/client/client/operations"
 	apiclientmodels "github.com/openclarity/apiclarity/plugins/api/client/models"
 	"go.uber.org/zap"
@@ -37,13 +38,14 @@ import (
 )
 
 type exporterObject struct {
-	config     *Config
-	logger     *zap.Logger
-	settings   component.TelemetrySettings
-	userAgent  string
-	client     *http.Client
-	service    *apiclient.APIClarityPluginsTelemetriesAPI
-	datasetMap *TraceDatasetMap
+	config        *Config
+	logger        *zap.Logger
+	settings      component.TelemetrySettings
+	userAgent     string
+	client        *http.Client
+	service       *pluginclient.APIClarityPluginsTelemetriesAPI
+	backendClient *backendclient.Client
+	//datasetMap  *TraceDatasetMap
 }
 
 // Create new exporter.
@@ -67,7 +69,7 @@ func newTracesExporter(oCfg *Config, set exporter.CreateSettings) (*exporterObje
 
 func (e *exporterObject) start(_ context.Context, host component.Host) error {
 	// Add base path specific to endpoint b/c otel endpoint doesn't include path
-	urlInfo, err := url.Parse(e.config.HTTPClientSettings.Endpoint + apiclient.DefaultBasePath)
+	urlInfo, err := url.Parse(e.config.HTTPClientSettings.Endpoint + pluginclient.DefaultBasePath)
 	if err != nil {
 		return fmt.Errorf("HTTP endpoint must be a valid URL: %w", err)
 	}
@@ -76,12 +78,23 @@ func (e *exporterObject) start(_ context.Context, host component.Host) error {
 		return fmt.Errorf("cannot create HTTP client: %w", err)
 	}
 	runtime := openapiclient.NewWithClient(urlInfo.Host, urlInfo.Path, []string{urlInfo.Scheme}, e.client)
-	e.service = apiclient.New(runtime, strfmt.Default)
+	e.service = pluginclient.New(runtime, strfmt.Default)
 	//e.logger.Debug("started client for telemetry", zap.String("url", urlInfo.String()), zap.String("endpoint", e.config.Endpoint))
 
-	e.datasetMap, err = NewTraceDatasetMap(e.config.DatasetMapSize, e.config.DatasetMapTTL)
+	/*
+		e.datasetMap, err = NewTraceDatasetMap(e.config.DatasetMapSize, e.config.DatasetMapTTL)
+		if err != nil {
+			return fmt.Errorf("cannot create dataset map with size: %d and ttl: %s", e.config.DatasetMapSize, e.config.DatasetMapTTL.String())
+		}
+	*/
+
+	urlInfo, err = url.Parse(e.config.HTTPClientSettings.Endpoint)
 	if err != nil {
-		return fmt.Errorf("cannot create dataset map with size: %d and ttl: %s", e.config.DatasetMapSize, e.config.DatasetMapTTL.String())
+		return fmt.Errorf("HTTP endpoint must be a valid URL: %w", err)
+	}
+	e.backendClient, err = backendclient.NewClient(urlInfo.String(), backendclient.WithHTTPClient(e.client))
+	if err != nil {
+		return fmt.Errorf("Cannot create APIClarity client: %w", err)
 	}
 
 	return nil
@@ -93,6 +106,7 @@ func (e *exporterObject) pushTraces(ctx context.Context, td ptrace.Traces) error
 		return errors.New("cannot process traces: client is not initialized")
 	}
 
+	//TODO: collect the telemetry and send in one request. Requires updating APIClarity to support.
 	rspans := td.ResourceSpans()
 	for i := 0; i < rspans.Len(); i++ {
 		rspan := rspans.At(i)
@@ -125,6 +139,19 @@ func (e *exporterObject) pushTraces(ctx context.Context, td ptrace.Traces) error
 				if perr != nil {
 					return consumererror.NewPermanent(perr)
 				} else if actel == nil {
+					if parentSpanID := span.ParentSpanID(); !parentSpanID.IsEmpty() {
+						e.logger.Debug("Pushing span parent relationship",
+							zap.String("kind", span.Kind().String()),
+							zap.String("name", span.Name()),
+							zap.String("traceid", span.TraceID().String()),
+							zap.String("spanid", span.SpanID().String()),
+							zap.String("parentspanid", parentSpanID.String()),
+						)
+						perr = e.pushParentRelationship(ctx, span.SpanID().String(), parentSpanID.String())
+						if perr != nil {
+							return consumererror.NewPermanent(perr)
+						}
+					}
 					continue
 				}
 
@@ -134,6 +161,26 @@ func (e *exporterObject) pushTraces(ctx context.Context, td ptrace.Traces) error
 				}
 			}
 		}
+	}
+
+	return nil
+}
+
+func (e *exporterObject) pushParentRelationship(ctx context.Context, spanID string, parentSpanID string) error {
+	//e.logger.Debug("Preparing to make APIClarity telemetry request")
+	body := make([]backendclient.LabelRelationship, 1)
+	body[0] = backendclient.LabelRelationship{
+		Id:     spanID,
+		Parent: &parentSpanID,
+	}
+
+	_, err := e.backendClient.LineagePostLineageExtended(ctx, body)
+	if err != nil {
+		formattedErr := fmt.Errorf("failed to post extended lineage: %w", err)
+		e.logger.Error("Failed to post extended lineage",
+			zap.Error(err),
+		)
+		return formattedErr
 	}
 
 	return nil

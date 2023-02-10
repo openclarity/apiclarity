@@ -52,6 +52,7 @@ type LabelsTable interface {
 	DeleteLabels(ctx context.Context, eventID uint) error
 	GetLabelsLineageChildren(ctx context.Context, apiID uint, method *models.HttpMethod, path *string) ([]Label, error)
 	GetLabelsLineageParents(ctx context.Context, apiID uint, method *models.HttpMethod, path *string) ([]Label, error)
+	ReplaceLabelMatching(ctx context.Context, key string, currentValue string, newValue string) (int64, error)
 }
 
 // Yep, this is nonsense due generating packages from multiple specs.
@@ -142,6 +143,13 @@ func (l *LabelsTableHandler) DeleteLabels(ctx context.Context, eventID uint) err
 		WithContext(ctx).
 		Delete(&Label{}).
 		Error
+}
+
+func (l *LabelsTableHandler) ReplaceLabelMatching(ctx context.Context, key string, currentValue string, newValue string) (int64, error) {
+	result := l.tx.Where(Label{Key: key, Value: currentValue}).
+		WithContext(ctx).
+		Update("value", newValue)
+	return result.RowsAffected, result.Error
 }
 
 func (l *LabelsTableHandler) GetLabelsLineageChildren(ctx context.Context, apiID uint, method *models.HttpMethod, path *string) ([]Label, error) {

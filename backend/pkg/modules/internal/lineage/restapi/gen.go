@@ -13,12 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package lineage
+package restapi
 
-type Config struct {
-}
-
-func GetConfig() *Config {
-	config := Config{}
-	return &config
-}
+//go:generate go run github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.12.3 -config oapi-codegen.config openapi.yaml

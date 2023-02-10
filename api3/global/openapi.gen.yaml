@@ -384,6 +384,7 @@ components:
       enum:
       - bfla
       - fuzzer
+      - lineage
       - spec_differ
       - specdiffs
       - specreconstructor
@@ -453,6 +454,32 @@ components:
       - KONG
       - APIGEEX
       type: string
+    APILineage:
+      properties:
+        children:
+          items:
+            $ref: '#/components/schemas/APIOperation'
+          type: array
+        id:
+          $ref: '#/components/schemas/APIOperation'
+        parents:
+          items:
+            $ref: '#/components/schemas/APIOperation'
+          type: array
+      required:
+      - id
+      type: object
+    APIOperation:
+      properties:
+        id:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+        operation:
+          $ref: ../common/openapi.yaml#/components/schemas/HttpMethod
+        path:
+          type: string
+      required:
+      - id
+      type: object
     Annotation:
       properties:
         annotation:
@@ -829,6 +856,17 @@ components:
       - name
       - namespace
       - apiVersion
+      type: object
+    LabelRelationship:
+      properties:
+        child:
+          type: string
+        id:
+          type: string
+        parent:
+          type: string
+      required:
+      - id
       type: object
     OperationEnum:
       enum:
@@ -2351,6 +2389,57 @@ paths:
                 $ref: '#/components/schemas/Version'
           description: Version of the Module
       summary: Get the version of this Module
+  /modules/lineage/lineage/{apiID}:
+    get:
+      operationId: lineageGetLineage
+      parameters:
+      - in: path
+        name: apiID
+        required: true
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/ApiID
+      - in: query
+        name: operation
+        schema:
+          $ref: ../common/openapi.yaml#/components/schemas/HttpMethod
+      - in: query
+        name: path
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APILineage'
+          description: API endpoint lineage
+      summary: Get the lineage for specified API ID
+  /modules/lineage/lineage/extended:
+    post:
+      operationId: lineagePostLineageExtended
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: '#/components/schemas/LabelRelationship'
+              type: array
+      responses:
+        "200":
+          description: Successful update of extended lineage data.
+      summary: Update extended lineage metadata.
+  /modules/lineage/version:
+    get:
+      description: Get the version of this Plugin
+      operationId: lineageGetVersion
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: ../common/openapi.yaml#/components/schemas/ModuleVersion
+          description: Version of the Plugin
+      summary: Get the version of this Plugin
   /modules/spec_differ/{apiID}/start:
     post:
       description: Start Differ for an API.

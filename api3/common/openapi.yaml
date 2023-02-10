@@ -1,5 +1,5 @@
 paths: {}
-info: 
+info:
   title: "Common Schemas for ApiClarity"
   version: "1.0"
 openapi: 3.0.2

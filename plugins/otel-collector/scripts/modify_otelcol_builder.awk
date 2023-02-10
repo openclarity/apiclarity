@@ -12,5 +12,6 @@
 END {
     print "\nreplaces:\n",
         " - github.com/openclarity/apiclarity/plugins/otel-collector/apiclarityexporter v0.0.0 => ./otel-collector/apiclarityexporter\n",
-        " - github.com/openclarity/apiclarity/plugins/api v0.0.0 => ./api\n";
+        " - github.com/openclarity/apiclarity/plugins/api v0.0.0 => ./api\n",
+        " - github.com/openclarity/apiclarity/api3 v0.0.0 => ./api3\n";
 }
