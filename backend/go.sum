@@ -601,8 +601,8 @@ github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1y
 github.com/onsi/gomega v1.14.0/go.mod h1:cIuvLEne0aoVhAgh/O6ac0Op8WWw9H6eYCriF+tEHG0=
 github.com/onsi/gomega v1.15.0 h1:WjP/FQ/sk43MRmnEcT+MlDw2TFvkrXlprrPST/IudjU=
 github.com/onsi/gomega v1.15.0/go.mod h1:cIuvLEne0aoVhAgh/O6ac0Op8WWw9H6eYCriF+tEHG0=
-github.com/openclarity/speculator v0.2.0 h1:FFAI5s8d1SlIkj474qpdCPnb9pVbOmYfDlxJm8jfHi4=
-github.com/openclarity/speculator v0.2.0/go.mod h1:oaNhO8FQkC05J1YDwrudXTZHDOJLFKjCeKjq94dZK+I=
+github.com/openclarity/speculator v0.3.0 h1:/RKKwsgknkA3/9o0Bini5s80bdqnB5/VJR4i9v4kzsY=
+github.com/openclarity/speculator v0.3.0/go.mod h1:oaNhO8FQkC05J1YDwrudXTZHDOJLFKjCeKjq94dZK+I=
 github.com/openclarity/trace-sampling-manager/api v0.0.0-20221102085432-8b13cda89225 h1:VNC2Q4Jq2CdTAB+ybTgAq3qdFtB72Ubd7Z59GXsadhw=
 github.com/openclarity/trace-sampling-manager/api v0.0.0-20221102085432-8b13cda89225/go.mod h1:Uu4QcN+EcNvtjs9gLfAk2edIMxBCCbz16wJq7I/f6ds=
 github.com/openclarity/trace-sampling-manager/manager v0.0.0-20221102085432-8b13cda89225 h1:595J8F5ekCS4gMSmMYWIqXbojQZTSDk5JK4TUcOc0FI=
