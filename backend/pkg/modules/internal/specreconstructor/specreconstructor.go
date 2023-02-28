@@ -92,7 +92,7 @@ func httpResponse(writer http.ResponseWriter, statusCode int, data interface{}) 
 }
 
 func (c *specReconstructorPluginHTTPHandler) PostAPIIDStart(w http.ResponseWriter, r *http.Request, apiID int64) {
-	log.Debugf("Called PostApiIdStart(%v)", apiID)
+	log.Infof("Called PostApiIdStart(%v)", apiID)
 
 	component := ModuleName
 
@@ -108,7 +108,7 @@ func (c *specReconstructorPluginHTTPHandler) PostAPIIDStart(w http.ResponseWrite
 }
 
 func (c *specReconstructorPluginHTTPHandler) PostAPIIDStop(w http.ResponseWriter, r *http.Request, apiID int64) {
-	log.Debugf("Called PostApiIdStop(%v)", apiID)
+	log.Infof("Called PostApiIdStop(%v)", apiID)
 
 	component := ModuleName
 
@@ -124,7 +124,7 @@ func (c *specReconstructorPluginHTTPHandler) PostAPIIDStop(w http.ResponseWriter
 }
 
 func (c *specReconstructorPluginHTTPHandler) PostEnable(w http.ResponseWriter, r *http.Request) {
-	log.Debugf("Called PostEnable()")
+	log.Infof("Called PostEnable()")
 
 	// Decode the restapi.TestInput requesBody
 	body, err := ioutil.ReadAll(r.Body)
@@ -133,7 +133,7 @@ func (c *specReconstructorPluginHTTPHandler) PostEnable(w http.ResponseWriter, r
 		httpError(w, http.StatusBadRequest, err)
 		return
 	}
-	log.Debugf(string(body))
+	log.Infof(string(body))
 	var enable restapi.FeatureEnable
 	err = json.Unmarshal(body, &enable)
 	if err != nil {
