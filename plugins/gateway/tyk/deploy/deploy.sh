@@ -42,4 +42,8 @@ else
   deploymentPatch=`cat "${DIR}/patch-deployment.yaml" | sed "s/{{ENABLE_TLS}}/$EnableTLS/g" |  sed '/# {{CERT VOLUME START}}/,/# {{CERT VOLUME END}}/d' | sed '/# {{CERT MOUNT START}}/,/# {{CERT MOUNT END}}/d'  | sed "s/{{TYK_PROXY_CONTAINER_NAME}}/$TykProxyContainerName/g" | sed "s/{{UPSTREAM_TELEMETRY_HOST_NAME}}/$UpstreamTelemetryHostNameWithPort/g" | sed "s/{{TRACE_SOURCE_TOKEN}}/$TraceSourceToken/g" | sed "s/{{TRACE_SAMPLING_ENABLED}}/$TraceSamplingEnabled/g"`
 fi
 
+StagedDeployment=$(kubectl get deployments.apps -n ${TykGatewayDeploymentNamespace} ${TykGatewayDeploymentName} -o yaml)
+RevisionVersion=$(echo "$StagedDeployment" | grep 'deployment.kubernetes.io/revision: "' | sed -n -e 's/^.*revision: //p' | sed 's/\"//' | sed 's/\"//')
+kubectl create configmap -n $TykGatewayDeploymentNamespace tyksnapshot --from-literal data="$RevisionVersion"
+
 kubectl patch deployments.apps -n ${TykGatewayDeploymentNamespace} ${TykGatewayDeploymentName} --patch "$deploymentPatch"
