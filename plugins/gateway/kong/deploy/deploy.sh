@@ -45,5 +45,9 @@ fi
 
 cat "${DIR}/kongPlugin.yaml" | sed "s/{{TRACE_SOURCE_TOKEN}}/$TraceSourceToken/g" | sed "s/{{UPSTREAM_TELEMETRY_HOST}}/$UpstreamTelemetryHostNameWithPort/g" | sed "s/{{TRACE_SAMPLING_ENABLED}}/$TraceSamplingEnabled/g" | sed "s/{{ENABLE_TLS}}/$EnableTLS/g" | kubectl -n ${KongGatewayIngressNamespace} apply -f -
 
+StagedDeployment=$(kubectl get deployments.apps -n ${KongGatewayDeploymentNamespace} ${KongGatewayDeploymentName} -o yaml)
+RevisionVersion=$(echo "$StagedDeployment" | grep 'deployment.kubernetes.io/revision: "' | sed -n -e 's/^.*revision: //p' | sed 's/\"//' | sed 's/\"//')
+kubectl create configmap -n $KongGatewayDeploymentNamespace kongsnapshot --from-literal data="$RevisionVersion"
+
 kubectl patch deployments.apps -n ${KongGatewayDeploymentNamespace} ${KongGatewayDeploymentName} --patch "$deploymentPatch"
 kubectl patch ingresses.networking.k8s.io -n ${KongGatewayIngressNamespace} ${KongGatewayIngressName} --patch "$(cat ${DIR}/patch-ingress.yaml)"
