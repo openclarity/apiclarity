@@ -5,9 +5,7 @@ KongGatewayDeploymentNamespace="${KONG_GATEWAY_DEPLOYMENT_NAMESPACE:-default}"
 KongGatewayIngressName="${KONG_GATEWAY_INGRESS_NAME:-demo}"
 KongGatewayIngressNamespace="${KONG_GATEWAY_INGRESS_NAMESPACE:-default}"
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-
-kubectl patch ingresses.networking.k8s.io -n ${KongGatewayIngressNamespace} ${KongGatewayIngressName} --patch "$(cat ${DIR}/patch-ingress-remove-annotation.yaml)"
+kubectl annotate ingress.networking.k8s.io ${KongGatewayIngressName} -n ${KongGatewayIngressNamespace} konghq.com/plugins-
 
 PreviousRevisionVersion=$(kubectl get configmaps -n $KongGatewayDeploymentNamespace kongsnapshot -o "jsonpath={.data.data}")
 kubectl rollout undo deployment/${KongGatewayDeploymentName} -n ${KongGatewayDeploymentNamespace} --to-revision=${PreviousRevisionVersion}
