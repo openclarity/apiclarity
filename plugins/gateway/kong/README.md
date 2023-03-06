@@ -101,7 +101,7 @@ If you just want to try it out with a demo application, and you don't have kong 
         * Please set all env variables accordingly:
 
         ```shell
-        KONG_PROXY_CONTAINER_NAME=<name> \
+       KONG_PROXY_CONTAINER_NAME=<name> \
        KONG_GATEWAY_DEPLOYMENT_NAME=<name> \
        KONG_GATEWAY_DEPLOYMENT_NAMESPACE=<namespace> \
        KONG_GATEWAY_INGRESS_NAME=<name> \
@@ -138,3 +138,17 @@ This can result in a loss of actual Client IP address, as Kong will get the IP a
 as the Client IP address.
 
 [This](https://docs.konghq.com/kubernetes-ingress-controller/2.1.x/guides/preserve-client-ip/) guide lays out different methods of solving this problem.
+
+### Instructions to uninstall the Kong plugin 
+
+Run the following script to remove the plugin from your Kong deployment. The script will rollback to Kong deployment previous pre-plugin state and remove all the supporting resources created during the deployment. 
+
+  Please set all env variables accordingly:
+    
+  ```shell
+       KONG_PROXY_CONTAINER_NAME=<name> \
+       KONG_GATEWAY_DEPLOYMENT_NAME=<name> \
+       KONG_GATEWAY_DEPLOYMENT_NAMESPACE=<namespace> \
+       KONG_GATEWAY_INGRESS_NAME=<name> \
+       KONG_GATEWAY_INGRESS_NAMESPACE=<namespace> ./deploy/undeploy.sh
+  ```
