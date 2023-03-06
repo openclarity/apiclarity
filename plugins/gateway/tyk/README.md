@@ -92,3 +92,13 @@ This can result in a loss of actual Client IP address, as Tyk will get the IP ad
 as the Client IP address.
 
 [This](https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip) guide lays out different methods of solving this problem.
+
+### Instructions to uninstall the Tyk plugin 
+
+Run the following script to remove the plugin from your Tyk deployment. The script will rollback to Tyk deployment previous pre-plugin state and remove all the supporting resources created during the deployment. 
+
+  Please set TYK_PROXY_CONTAINER_NAME, TYK_GATEWAY_DEPLOYMENT_NAME and TYK_GATEWAY_DEPLOYMENT_NAMESPACE accordingly:
+    
+  ```shell
+    TYK_PROXY_CONTAINER_NAME=<name> TYK_GATEWAY_DEPLOYMENT_NAME=<name> TYK_GATEWAY_DEPLOYMENT_NAMESPACE=<namespace> ./deploy/undeploy.sh
+  ```
