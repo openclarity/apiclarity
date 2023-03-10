@@ -98,7 +98,7 @@ definitions:
         type: 'string'
         format: 'uuid'
       traceSourceName:
-        description: 'API name'
+        description: 'Trace source name'
         type: 'string'
 
   ApiInfoWithType:
