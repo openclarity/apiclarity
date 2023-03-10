@@ -40,6 +40,9 @@ type APIInfo struct {
 	// Trace Source ID which created this API. Null UUID 0 means it has been created by APIClarity (from the UI for example)
 	// Format: uuid
 	TraceSourceID strfmt.UUID `json:"traceSourceId,omitempty"`
+
+	// traceSourceName
+	TraceSourceName string `json:"traceSourceName,omitempty"`
 }
 
 // Validate validates this Api info
