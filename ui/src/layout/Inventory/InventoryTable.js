@@ -16,6 +16,12 @@ const InventoryTable = ({basePath, type, filters, refreshTimestamp}) => {
             width: 30
         },
         {
+            Header: 'Trace Source',
+            id: "traceSourceName",
+            accessor: "traceSourceName",
+            width: 30
+        },
+        {
             Header: 'Provided Spec',
             id: "hasProvidedSpec",
             Cell: ({row}) => {
