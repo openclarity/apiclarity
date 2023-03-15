@@ -97,9 +97,6 @@ definitions:
         description: 'Trace Source ID which created this API. Null UUID 0 means it has been created by APIClarity (from the UI for example)'
         type: 'string'
         format: 'uuid'
-      traceSourceName:
-        description: 'Trace source name'
-        type: 'string'
 
   ApiInfoWithType:
     type: 'object'
