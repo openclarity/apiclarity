@@ -17,8 +17,16 @@ const InventoryTable = ({basePath, type, filters, refreshTimestamp}) => {
         },
         {
             Header: 'Trace Source',
-            id: "traceSourceName",
-            accessor: "traceSourceName",
+            id: "traceSource",
+            Cell: ({row}) => {
+                const {traceSourceName, traceSourceType} = row.original;
+
+                return (
+                    <div>
+                        {traceSourceName} - <b>{traceSourceType}</b>
+                    </div>
+                )
+            },
             width: 30
         },
         {
