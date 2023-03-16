@@ -1,0 +1,16 @@
+@import "utils/scss_variables.module.scss";
+
+.trace-source-table-page-container {
+  padding: 1rem;
+
+  .trace-sources-type-cell {
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 19px;
+    display: flex;
+    align-items: center;
+
+    color: $color-grey-dark;
+  }
+}

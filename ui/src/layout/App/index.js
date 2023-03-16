@@ -5,32 +5,47 @@ import IconTemplates from 'components/Icon/IconTemplates';
 import Notification from 'components/Notification';
 import Dashboard from 'layout/Dashboard';
 import Inventory from 'layout/Inventory';
+import TraceSources from 'layout/TraceSources';
 import Events from 'layout/Events';
 import Reviewer from 'layout/Reviewer';
 import { NotificationProvider, useNotificationState, useNotificationDispatch, removeNotification } from 'context/NotificationProvider'; 
 import brandImage from 'utils/images/brand.svg';
+import Paths from '../../Path'
 
 import './app.scss';
 
+const {
+    ROOT_PATH,
+    INVENTORY_ROOT_PATH,
+    EVENTS_ROOT_PATH,
+    TRACE_SOURCES_ROOT_PATH,
+    REVIEWER_ROOT_PATH
+} = Paths
+
 const ROUTES = [
 	{
-		path: "/",
+		path: ROOT_PATH,
         exact: true,
 		component: Dashboard,
         icon: ICON_NAMES.DASHBOARD
 	},
 	{
-		path: "/inventory",
+		path: INVENTORY_ROOT_PATH,
 		component: Inventory,
         icon: ICON_NAMES.INVENTORY
 	},
+    {
+		path: TRACE_SOURCES_ROOT_PATH,
+		component: TraceSources,
+        icon: ICON_NAMES.TRACE_SOURCE
+	},
 	{
-		path: "/events",
+		path: EVENTS_ROOT_PATH,
 		component: Events,
         icon: ICON_NAMES.EVENTS
 	},
     {
-		path: "/reviewer",
+		path: REVIEWER_ROOT_PATH,
 		component: Reviewer,
         noLink: true
 	}

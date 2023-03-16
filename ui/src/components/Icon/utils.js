@@ -2,6 +2,7 @@ export const ICON_NAMES = {
     ADD: "add",
     COLUMNS: "columns",
     DASHBOARD: "dashboard",
+    TRACE_SOURCE: "trace-source",
     INVENTORY: "inventory",
     EVENTS: "events",
     EXCLAMATION_MARK_ROUND: "exclamation-mark-round",
