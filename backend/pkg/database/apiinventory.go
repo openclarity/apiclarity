@@ -99,7 +99,7 @@ func APIInfoFromDB(apiInfo *APIInfo) *models.APIInfo {
 		DestinationNamespace: apiInfo.DestinationNamespace,
 		TraceSourceID:        strfmt.UUID(apiInfo.TraceSource.UID.String()),
 		TraceSourceName:      apiInfo.TraceSource.Name,
-		TraceSourceName:      apiInfo.TraceSource.Type,
+		TraceSourceType:      apiInfo.TraceSource.Type,
 	}
 }
 
