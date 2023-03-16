@@ -43,6 +43,9 @@ type APIInfo struct {
 
 	// traceSourceName
 	TraceSourceName string `json:"traceSourceName,omitempty"`
+
+	// traceSourceName
+	TraceSourceType string `json:"traceSourceType,omitempty"`
 }
 
 // Validate validates this Api info
