@@ -82,25 +82,31 @@ const Table = (props) => {
     innerRowComponent: InnerRowComponent,
   } = props;
 
+  const [{ loading, data, error }, fetchData] = useFetch(url, {
+    loadOnMount: false,
+    formatFetchedData,
+  });
+  const fetchedData = !!formatFetchedData ? formatFetchedData(data) : data;
+  const dataJson = JSON.stringify(fetchedData || []);
+  const externalDataJson = JSON.stringify(externalData);
+  const tableData = useMemo(
+    () => (!!url ? JSON.parse(dataJson) : JSON.parse(externalDataJson)),
+    [url, dataJson, externalDataJson]
+  );
   const defaultSortBy = useMemo(
     () => defaultSortByItems || [],
     [defaultSortByItems]
   );
+
   const defaultColumn = React.useMemo(
     () => ({
-      minWidth: 30,
+      minWidth: 30, // minWidth is only used as a limit for resizing,
       width: 100,
     }),
     []
   );
 
-  const [{ loading, data, error }, fetchData] = useFetch(url, {
-    loadOnMount: false,
-    formatFetchedData,
-  });
-  const tableData = !!url ? data : externalData;
-  const { items, total } = tableData || {};
-  const tableItems = useMemo(() => items || [], [items]);
+  console.log(tableData)
 
   const {
     getTableProps,
@@ -119,7 +125,7 @@ const Table = (props) => {
     {
       columns,
       getRowId: (rowData, rowIndex) => (!!rowData.id ? rowData.id : rowIndex),
-      data: tableItems,
+      data: tableData,
       defaultColumn,
       initialState: {
         pageIndex: 0,
@@ -285,7 +291,9 @@ const Table = (props) => {
       : []
   ).filter((item) => !isNull(item));
 
-  const resultsTotalText = isUndefined(total) ? "" : `Showing ${total} entries`;
+  const resultsTotalText = isUndefined(tableData.total)
+    ? ""
+    : `Showing ${tableData.total} entries`;
 
   return (
     <div className="table-wrapper">
@@ -314,7 +322,7 @@ const Table = (props) => {
           displayName={paginationItemsName}
           gotoPage={gotoPage}
           loading={loading}
-          total={total}
+          total={tableData?.total || 0}
           page={page}
         />
       )}

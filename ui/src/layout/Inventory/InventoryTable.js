@@ -72,6 +72,11 @@ const InventoryTable = ({basePath, type, filters, refreshTimestamp}) => {
             onLineClick={({id}) => history.push(`${basePath}/${type}/${id}`)}
             noResultsTitle={`${type.toLowerCase()} APIs`}
             refreshTimestamp={refreshTimestamp}
+            formatFetchedData={(data) => {
+                const { items } = data || {};
+
+                return items || [];
+            }}
         />
     )
 }
