@@ -42,6 +42,11 @@ const TraceSourceTable = ({ filters, refreshTimestamp }) => {
       }}
       noResultsTitle={`No Trace Sources`}
       refreshTimestamp={refreshTimestamp}
+      formatFetchedData={(data) => {
+        const { trace_sources } = data || {};
+
+        return trace_sources || [];
+      }}
     />
   );
 };
