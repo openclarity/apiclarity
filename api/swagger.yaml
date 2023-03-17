@@ -100,6 +100,9 @@ definitions:
       traceSourceName:
         description: 'Trace source name'
         type: 'string'
+      traceSourceType:
+        description: 'Trace source type'
+        type: 'string'
 
   ApiInfoWithType:
     type: 'object'

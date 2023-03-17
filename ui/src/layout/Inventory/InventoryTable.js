@@ -17,8 +17,16 @@ const InventoryTable = ({basePath, type, filters, refreshTimestamp}) => {
         },
         {
             Header: 'Trace Source',
-            id: "traceSourceName",
-            accessor: "traceSourceName",
+            id: "traceSource",
+            Cell: ({row}) => {
+                const {traceSourceName, traceSourceType} = row.original;
+
+                return (
+                    <div>
+                        {traceSourceName} - {traceSourceType}
+                    </div>
+                )
+            },
             width: 30
         },
         {
@@ -64,6 +72,11 @@ const InventoryTable = ({basePath, type, filters, refreshTimestamp}) => {
             onLineClick={({id}) => history.push(`${basePath}/${type}/${id}`)}
             noResultsTitle={`${type.toLowerCase()} APIs`}
             refreshTimestamp={refreshTimestamp}
+            formatFetchedData={(data) => {
+                const { items } = data || {};
+
+                return items || [];
+            }}
         />
     )
 }
