@@ -48,16 +48,19 @@ const Table = props => {
         hideColumnControl=true, noResultsTitle="API", refreshTimestamp, withPagination=true, data: externalData, withMultiSelect=false, onRowSelect,
            markedRowIds=[], innerRowComponent: InnerRowComponent} = props;
 
-    const defaultSortBy = useMemo(() => defaultSortByItems || [], [defaultSortByItems]);
     const defaultColumn = React.useMemo(() => ({
         minWidth: 30,
         width: 100
     }), []);
 
     const [{loading, data, error}, fetchData] = useFetch(url, {loadOnMount: false, formatFetchedData});
-    const tableData = !!url ? data : externalData;
+
+    const fetchedData = !!formatFetchedData ? formatFetchedData(data) : data;
+    const dataJson = JSON.stringify(fetchedData || []);
+    const externalDataJson = JSON.stringify(externalData);
+    const tableData = useMemo(() => !!url ? JSON.parse(dataJson) : JSON.parse(externalDataJson), [url, dataJson, externalDataJson]);
+    const defaultSortBy = useMemo(() => defaultSortByItems || [], [defaultSortByItems]);
     const {items, total} = tableData || {};
-    const tableItems = useMemo(() => items || [], [items]);
 
     const {
         getTableProps,
@@ -80,7 +83,7 @@ const Table = props => {
     } = useTable({
             columns,
             getRowId: (rowData, rowIndex) => !!rowData.id ? rowData.id : rowIndex,
-            data: tableItems,
+            data: items || tableData,
             defaultColumn,
             initialState: {
                 pageIndex: 0,

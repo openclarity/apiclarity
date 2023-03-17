@@ -16,15 +16,19 @@ const TraceSourceTable = ({ filters, refreshTimestamp }) => {
         Cell: ({ row }) => {
           const { type } = row.original;
 
-          const { label, typeLabel } = TRACES_TYPES[type];
+          if (type) {
+            const { label, typeLabel } = TRACES_TYPES[type];
 
-          return (
-            <div className="trace-sources-type-cell">
-              <span>
-                {typeLabel} | <b>{label}</b>
-              </span>
-            </div>
-          );
+            return (
+              <div className="trace-sources-type-cell">
+                <span>
+                  {typeLabel} | <b>{label}</b>
+                </span>
+              </div>
+            );
+          } else {
+            return <></>
+          }
         },
       },
     ],
@@ -43,6 +47,7 @@ const TraceSourceTable = ({ filters, refreshTimestamp }) => {
       noResultsTitle={`No Trace Sources`}
       refreshTimestamp={refreshTimestamp}
       formatFetchedData={(data) => {
+        console.log(data)
         const { trace_sources } = data || {};
 
         return trace_sources || [];
