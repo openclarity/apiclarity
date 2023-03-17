@@ -23,7 +23,7 @@ const InventoryTable = ({basePath, type, filters, refreshTimestamp}) => {
 
                 return (
                     <div>
-                        {traceSourceName} - <b>{traceSourceType}</b>
+                        {traceSourceName} - {traceSourceType}
                     </div>
                 )
             },
