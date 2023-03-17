@@ -47,7 +47,6 @@ const TraceSourceTable = ({ filters, refreshTimestamp }) => {
       noResultsTitle={`No Trace Sources`}
       refreshTimestamp={refreshTimestamp}
       formatFetchedData={(data) => {
-        console.log(data)
         const { trace_sources } = data || {};
 
         return trace_sources || [];
