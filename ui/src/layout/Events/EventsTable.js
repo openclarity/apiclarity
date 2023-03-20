@@ -136,6 +136,11 @@ const EventsTable = ({filters, refreshTimestamp}) => {
             onLineClick={({id}) => history.push(`${path}/${id}`)}
             noResultsTitle="API events"
             refreshTimestamp={refreshTimestamp}
+            formatFetchedData={(data) => {
+                const { items } = data || {};
+
+                return items || [];
+            }}
         />
     )
 }
