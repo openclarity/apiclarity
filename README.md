@@ -245,6 +245,10 @@ APIClarity can support with the following traffic sources and follow the instruc
   * [Integration instructions](https://github.com/openclarity/apiclarity/tree/master/plugins/gateway/apigeex)
 * BIG-IP LTM Load balancer
   * [Integration instructions](https://github.com/openclarity/apiclarity/tree/master/plugins/gateway/f5-bigip)
+* Kong
+  * [Integration instructions](https://github.com/openclarity/apiclarity/tree/master/plugins/gateway/kong)
+* Tyk
+  * [Integration instructions](https://github.com/openclarity/apiclarity/tree/master/plugins/gateway/tyk)
 
 ## Contributing
 
