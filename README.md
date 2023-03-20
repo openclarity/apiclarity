@@ -237,9 +237,10 @@ Then, use the External-IP address with the following command, then extract the c
 openssl s_client -showcerts -connect <External-IP>:10443
 ```
 
-Use the above extracted token at the step-2 and certificate at step-3 for configuring subsequent external trace sources.
+Use the above extracted token at the step-2 and certificate at step-3 for configuring subsequent external trace sources such as Apigee X Gateway and BIG-IP LTM Load balancer
 
-APIClarity can support with the following traffic sources and follow the instructions per required integration.
+## Supported Trace Sources
+APIClarity can support with the following trace sources and follow the instructions per required integration.
 
 * Apigee X Gateway
   * [Integration instructions](https://github.com/openclarity/apiclarity/tree/master/plugins/gateway/apigeex)
