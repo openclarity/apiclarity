@@ -106,8 +106,6 @@ const Table = (props) => {
     []
   );
 
-  console.log(tableData)
-
   const {
     getTableProps,
     getTableBodyProps,
@@ -125,7 +123,7 @@ const Table = (props) => {
     {
       columns,
       getRowId: (rowData, rowIndex) => (!!rowData.id ? rowData.id : rowIndex),
-      data: tableData,
+      data: tableData || [],
       defaultColumn,
       initialState: {
         pageIndex: 0,
