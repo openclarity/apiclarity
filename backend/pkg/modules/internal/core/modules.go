@@ -17,7 +17,6 @@ package core
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -241,7 +240,7 @@ func (b *accessor) Notify(ctx context.Context, modName string, apiID uint, n not
 
 func (b *accessor) EnableTraces(ctx context.Context, modName string, apiID uint) error {
 	if !b.traceSamplingEnabled {
-		return errors.New("trace sampling is not enabled")
+		return nil
 	}
 	if err := b.samplingManager.AddHostToTrace(modName, uint32(apiID)); err != nil {
 		return fmt.Errorf("failed to add API %v to trace: %v", apiID, err)
