@@ -78,7 +78,7 @@ const FindingsTable = ({columns: userColumns=[], data={}, actionRow, url=''}) =>
                 formatFetchedData={(data) => {
                     const { items } = data || {};
 
-                    return {items,  total: items?.length} || {}
+                    return { items: items || [],  total: items?.length || 0 }
                 }}
                 /* noResultsTitle={`findings for API '${inventoryName}'`} */
             />
