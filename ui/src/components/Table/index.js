@@ -98,8 +98,6 @@ const Table = (props) => {
     [defaultSortByItems]
   );
 
-  console.log(tableData)
-
   const defaultColumn = React.useMemo(
     () => ({
       minWidth: 30, // minWidth is only used as a limit for resizing,
