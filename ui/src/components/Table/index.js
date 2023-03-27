@@ -98,6 +98,8 @@ const Table = (props) => {
     [defaultSortByItems]
   );
 
+  console.log(tableData)
+
   const defaultColumn = React.useMemo(
     () => ({
       minWidth: 30, // minWidth is only used as a limit for resizing,
@@ -123,7 +125,7 @@ const Table = (props) => {
     {
       columns,
       getRowId: (rowData, rowIndex) => (!!rowData.id ? rowData.id : rowIndex),
-      data: tableData || [],
+      data: tableData?.items || [],
       defaultColumn,
       initialState: {
         pageIndex: 0,
