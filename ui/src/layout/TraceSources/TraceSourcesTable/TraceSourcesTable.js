@@ -49,7 +49,7 @@ const TraceSourceTable = ({ filters, refreshTimestamp }) => {
       formatFetchedData={(data) => {
         const { trace_sources } = data || {};
 
-        return trace_sources || [];
+        return { items:trace_sources || [], total: trace_sources?.length || 0 }
       }}
     />
   );

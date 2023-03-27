@@ -139,7 +139,7 @@ const EventsTable = ({filters, refreshTimestamp}) => {
             formatFetchedData={(data) => {
                 const { items } = data || {};
 
-                return items || [];
+                return { items: items || [],  total: items?.length || 0 }
             }}
         />
     )

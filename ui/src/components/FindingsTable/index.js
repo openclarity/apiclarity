@@ -75,6 +75,11 @@ const FindingsTable = ({columns: userColumns=[], data={}, actionRow, url=''}) =>
                 defaultSortBy={[{ id: "name", desc: true }]}
                 innerRowComponent={FindingsInnerTable}
                 withPagination={false}
+                formatFetchedData={(data) => {
+                    const { items } = data || {};
+
+                    return { items: items || [],  total: items?.length || 0 }
+                }}
                 /* noResultsTitle={`findings for API '${inventoryName}'`} */
             />
         </div>
