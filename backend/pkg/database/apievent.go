@@ -271,6 +271,10 @@ func (a *APIEventsTableHandler) GetAPIEventsWithAnnotations(ctx context.Context,
 		sortDir = "ASC"
 	}
 
+	if query.Limit != 0 {
+		tx = tx.Limit(query.Limit)
+	}
+
 	if err := tx.Offset(query.Offset).
 		Order(fmt.Sprintf("%s %s", query.Order, sortDir)).
 		WithContext(ctx).
