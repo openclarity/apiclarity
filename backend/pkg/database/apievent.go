@@ -272,7 +272,6 @@ func (a *APIEventsTableHandler) GetAPIEventsWithAnnotations(ctx context.Context,
 	}
 
 	if err := tx.Offset(query.Offset).
-		Limit(query.Limit).
 		Order(fmt.Sprintf("%s %s", query.Order, sortDir)).
 		WithContext(ctx).
 		Find(&events).Error; err != nil {
