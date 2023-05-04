@@ -85,6 +85,9 @@ docker-plugins: ## Build plugins Docker image
 push-docker-plugins: ## Build and Push plugins Docker image
 	$(MAKE) push-docker -C plugins
 
+.PHONY: push-docker
+push-docker: push-docker-backend push-docker-plugins
+
 .PHONY: test
 test: ## Run Unit Tests
 	@(cd backend && go test ./pkg/...)
