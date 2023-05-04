@@ -355,6 +355,7 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 		}
 	}
 	if b.speculators.Get(traceSourceID).HasApprovedSpec(specKey) {
+		log.Infof("************** path=%v ", path)
 		reconstructedPathID, err = b.speculators.Get(traceSourceID).GetPathID(specKey, path, _spec.SpecSourceReconstructed)
 		if err != nil {
 			return fmt.Errorf("failed to get path id of reconstructed spec: %v", err)
