@@ -49,6 +49,7 @@ func buildTrace(method, path, src, dest, userid string) *bfladetector.CompositeT
 		DetectedUser:   &bfladetector.DetectedUser{ID: userid},
 		Event: &core.Event{
 			APIEvent: &database.APIEvent{
+				//ReconstructedPathID: "test",
 				ProvidedPathID: "test",
 				Method:         models.HTTPMethod(method),
 				Path:           path,
@@ -69,12 +70,15 @@ func buildTrace(method, path, src, dest, userid string) *bfladetector.CompositeT
 
 func getAPIInfoWithTags(method string, path string) *database.APIInfo {
 	apiInfo := database.APIInfo{
+		//HasReconstructedSpec: true,
 		HasProvidedSpec: true,
 	}
 
 	if method != "" && path != "" {
 		apiInfo.ProvidedSpecInfo = fmt.Sprintf(`{"tags":[ {"name": "default-tag", "methodAndPathList":[{"pathId":"test","path":%q, "method": %q}]}]}`, path, method)
 		apiInfo.ProvidedSpec = fmt.Sprintf(`{"swagger": "2.0","info": {"title": "","version": ""},"paths": {%q: {%q: {"responses": {"200": {"description": ""}}}}}}`, path, method)
+		//apiInfo.ReconstructedSpecInfo = fmt.Sprintf(`{"tags":[ {"name": "default-tag", "methodAndPathList":[{"pathId":"test","path":%q, "method": %q}]}]}`, path, method)
+		//apiInfo.ReconstructedSpec = fmt.Sprintf(`{"swagger": "2.0","info": {"title": "","version": ""},"paths": {%q: {%q: {"responses": {"200": {"description": ""}}}}}}`, path, method)
 	}
 	return &apiInfo
 }

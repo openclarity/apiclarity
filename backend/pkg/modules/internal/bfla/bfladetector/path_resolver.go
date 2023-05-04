@@ -45,6 +45,7 @@ func ParseSpecInfo(apiInfo *database.APIInfo) ([]*models.SpecTag, error) {
 }
 
 func ResolvePath(tags []*models.SpecTag, event *database.APIEvent) (path string, tagNames []string, err error) {
+	log.Infof("Resolve Path - providedPathID=%v resolvedPathId:%v", event.ProvidedPathID, event.ReconstructedPathID)
 	if event.ProvidedPathID != "" {
 		path, tagNames, err = resolvePathFromPathIDAndMethod(tags, event.ProvidedPathID, string(event.Method))
 	} else if event.ReconstructedPathID != "" {
