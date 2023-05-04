@@ -346,6 +346,8 @@ func (b *Backend) handleHTTPTrace(ctx context.Context, trace *pluginsmodels.Tele
 
 	var providedPathID string
 	var reconstructedPathID string
+
+	log.Infof("********** hasProvided=%v hasApproved=%v", b.speculators.Get(traceSourceID).HasProvidedSpec(specKey), b.speculators.Get(traceSourceID).HasApprovedSpec(specKey))
 	if b.speculators.Get(traceSourceID).HasProvidedSpec(specKey) {
 		providedPathID, err = b.speculators.Get(traceSourceID).GetPathID(specKey, path, _spec.SpecSourceProvided)
 		if err != nil {
