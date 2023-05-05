@@ -10,8 +10,8 @@ The process consists of two phases
  2. Detection phase
 
 ## Learning
-The learning phase begins upon user request or it can be configured to start as soon as a user uploads or reconstructs a spec for a given API.
-By default, the learning lasts for 100 API calls (for an API), the learning can be stopped, reset or prolonged for a longer period.
+The learning phase begins upon user request. Once the learning is in progress the user can stop it (and after that resume it).
+
 
 ![img.png](../../assets/bfla/images/img_1.png)
 
