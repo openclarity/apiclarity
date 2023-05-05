@@ -2,6 +2,30 @@ apiVersion: v1
 entries:
   apiclarity:
   - apiVersion: v2
+    appVersion: v0.14.5
+    created: "2023-05-05T10:11:34.584950047Z"
+    dependencies:
+    - alias: apiclarity-postgresql
+      condition: apiclarity-postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 11.6.12
+    description: Charts for APIClarity deployment. Reconstruct OpenAPI Specifications
+      from real-time workload traffic seamlessly.
+    digest: 9d25917bc5c330efb314782bd49e1eb3ab25d7cb08932c2ae561a795eca3c2da
+    home: https://apiclarity.io/
+    icon: https://github.com/openclarity/apiclarity/raw/master/API_clarity.svg
+    maintainers:
+    - name: API Clarity
+      url: https://apiclarity.io
+    name: apiclarity
+    sources:
+    - https://github.com/openclarity/apiclarity
+    type: application
+    urls:
+    - https://github.com/openclarity/apiclarity/releases/download/apiclarity-v0.14.5-helm/apiclarity-v0.14.5.tgz
+    version: v0.14.5
+  - apiVersion: v2
     appVersion: v0.14.4
     created: "2023-03-30T15:07:14.261970865Z"
     dependencies:
@@ -484,4 +508,4 @@ entries:
     urls:
     - https://github.com/openclarity/apiclarity/releases/download/kuma-plugin-v0.14.0/kuma-plugin-v0.14.0.tgz
     version: v0.14.0
-generated: "2023-03-30T15:07:17.341016709Z"
+generated: "2023-05-05T10:11:34.585116657Z"
