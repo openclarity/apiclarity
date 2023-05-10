@@ -2,7 +2,8 @@ FROM golang:1.18-alpine3.14 AS otelcol
 
 RUN apk add --update --no-cache gcc g++
 ARG OTEL_COLLECTOR_VERSION=0.60.0
-ADD https://github.com/open-telemetry/opentelemetry-collector/releases/download/v${OTEL_COLLECTOR_VERSION}/ocb_${OTEL_COLLECTOR_VERSION}_linux_amd64 /usr/local/bin/ocb
+ARG TARGETARCH TARGETOS
+ADD https://github.com/open-telemetry/opentelemetry-collector/releases/download/v${OTEL_COLLECTOR_VERSION}/ocb_${OTEL_COLLECTOR_VERSION}_${TARGETOS}_${TARGETARCH} /usr/local/bin/ocb
 RUN chmod 755 /usr/local/bin/ocb
 
 WORKDIR /otelcol-build

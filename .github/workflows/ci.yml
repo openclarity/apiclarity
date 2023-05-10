@@ -26,6 +26,13 @@ jobs:
     - name: Verify spec aggregation and code generation
       run: make api3-verify
 
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v1
+
+    - name: Set up Docker Buildx
+      id: buildx
+      uses: docker/setup-buildx-action@v1
+
     - name: Check licenses
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -34,8 +41,66 @@ jobs:
     - name: Run verification
       run: make check
 
-    - name: Build Docker image
-      run: make docker
+    - name: Get current timestamp
+      id: timestamp
+      run: echo "::set-output name=timestamp::$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+
+    - name: Build APIClarity
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        tags: ghcr.io/apiclarity/apiclarity:${{ github.sha }}
+        file: Dockerfile
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache
+        build-args: |
+          VERSION=${{ github.sha }}
+          BUILD_TIMESTAMP=${{ steps.timestamp.outputs.timestamp }}
+          COMMIT_HASH=${{ github.sha }}
+
+    - name: Build Kong plugin
+      uses: docker/build-push-action@v2
+      with:
+        context: plugins
+        platforms: linux/amd64,linux/arm64
+        tags: ghcr.io/apiclarity/kong-plugin:${{ github.sha }}
+        file: plugins/Dockerfile.kong
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache
+
+    - name: Fix Tyk Plugin API dep
+      id: tyk-dep
+      run: |
+        cd plugins/gateway/tyk/v3.2.2
+        go mod edit -replace github.com/apiclarity/apiclarity/plugins/api@v0.0.0=./../api
+        go mod edit -replace github.com/apiclarity/apiclarity/plugins/common@v0.0.0=./../common
+
+    - name: Build Tyk plugin
+      uses: docker/build-push-action@v2
+      with:
+        context: plugins
+        platforms: linux/amd64 # tykio/tyk-plugin-compiler does not currently support other architectures
+        tags: ghcr.io/apiclarity/tyk-plugin-v3.2.2:${{ github.sha }}
+        file: plugins/Dockerfile.tyk.v3.2.2
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache
+
+    - name: Undo Tyk Plugin API dep change
+      id: undo-tyk-dep
+      run: git checkout -- plugins/gateway/tyk/v3.2.2/go.mod
+
+    - name: Build passive taper
+      uses: docker/build-push-action@v2
+      with:
+        context: plugins
+        platforms: linux/amd64,linux/arm64
+        tags: ghcr.io/apiclarity/passive-taper:${{ github.sha }}
+        file: plugins/Dockerfile.taper
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache
+        build-args: |
+          VERSION=${{ github.sha }}
 
   lint_chart:
     name: Lint Helm Chart
