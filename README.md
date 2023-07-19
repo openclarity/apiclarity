@@ -24,7 +24,7 @@ In the following a brief description of the modules currently implemented:
 - [**BFLA Detector**](./backend/pkg/modules/internal/bfla/README.md) This module detects potential Broken Function Level Authorization. In particular it observes the API interactions and build an authorization model that captures what clients are supposed to be authorized to make the various API calls. Based on such authorization model it then signals violations which may represent potential issues in the API authorization procedures.
 - **Fuzzer** This module actively tests API endpoints based on their specification attempting in discovering security issues in the API server implementation.
 
-## High level architecture
+## High Level Architecture
 
 ![High level architecture](diagram.png "High level architecture")
 
