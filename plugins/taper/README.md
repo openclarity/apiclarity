@@ -12,4 +12,4 @@ helm show values apiclarity/apiclarity > values.yaml
 ```shell
 helm upgrade --values values.yaml --create-namespace apiclarity apiclarity/apiclarity -n apiclarity --install
 ```
-* An APIClarity Tap DaemonSet will we deployed to your cluster and will tap the provided namesapces.
+* An APIClarity Tap DaemonSet will we deployed to your cluster and will tap the provided namespaces.
