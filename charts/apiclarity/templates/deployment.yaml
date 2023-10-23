@@ -61,7 +61,7 @@ spec:
             - name: DB_NAME
               value: {{ index .Values "apiclarity-postgresql" "auth" "database" }}
             - name: DB_HOST
-              value: "{{ include "apiclarity.name" . }}-postgresql"
+              value: "{{ index .Values "apiclarity-postgresql" "host" "endpoint" | default (printf "%s-postgresql" (include "apiclarity.name" .)) }}"
             - name: DB_PORT_NUMBER
               value: "5432"
             - name: DB_USER

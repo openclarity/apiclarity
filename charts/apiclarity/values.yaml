@@ -132,6 +132,10 @@ apiclarity-postgresql:
   auth:
     existingSecret: apiclarity-postgresql-secret
     database: apiclarity
+  
+  ## Setup external database
+  host:
+    endpoint: ""
 
   ## Enable security context
   containerSecurityContext:
