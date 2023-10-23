@@ -108,7 +108,7 @@ apiclarity:
 ## APIClarity Postgres Values
 
 apiclarity-postgresql:
-  enabled: false
+  enabled: true
 
   ## Specify posgtresql image
   # image:
