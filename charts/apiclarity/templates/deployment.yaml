@@ -20,6 +20,7 @@ spec:
         sidecar.istio.io/inject: "false"
     spec:
       serviceAccountName: {{ include "apiclarity.serviceAccountName" . }}
+      {{- if index .Values "apiclarity-postgresql" "enabled" -}}
       initContainers:
         - name: '{{ include "apiclarity.name" . }}-wait-for-db'
           image: {{ index .Values "apiclarity-postgresql" "image" "registry" | default "docker.io" }}/{{ index .Values "apiclarity-postgresql" "image" "repository" | default "bitnami/postgresql" }}:{{ index .Values "apiclarity-postgresql" "image" "tag" | default "14.4.0-debian-11-r4" }}
@@ -29,6 +30,7 @@ spec:
             runAsUser: 1001
           resources:
           {{- toYaml .Values.apiclarity.initResources | nindent 12 }}
+      {{- end}}
       containers:
         - name: apiclarity
           image: '{{ .Values.global.docker.registry }}/apiclarity:{{ .Values.apiclarity.docker.imageTag }}'

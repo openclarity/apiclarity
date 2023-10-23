@@ -108,7 +108,7 @@ apiclarity:
 ## APIClarity Postgres Values
 
 apiclarity-postgresql:
-  enabled: true
+  enabled: false
 
   ## Specify posgtresql image
   # image:
@@ -133,8 +133,9 @@ apiclarity-postgresql:
     existingSecret: apiclarity-postgresql-secret
     database: apiclarity
   
-  ## Setup external database
+  ## Setup external
   host:
+    ## NOTE: If you are using postgresql on container keep the filed empty
     endpoint: ""
 
   ## Enable security context
