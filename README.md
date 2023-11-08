@@ -8,7 +8,7 @@
 
 APIClarity is a modular tool that addresses several aspects of API Security, focusing specifically on [OpenAPI](https://spec.openapis.org/oas/latest.html) based APIs.
 
-APIClarity is the tool responsible for API Security in the [Openclarity platform](https://openclarity.io).
+APIClarity is the tool responsible for API Security in the [OpenClarity platform](https://openclarity.io).
 
 APIClarity approaches API Security in 2 different ways:
 - Captures all API traffic in a given environment and performs a set of security analysis to discover all potential security problems with detected APIs
@@ -72,7 +72,7 @@ APIClarity can support with the following trace sources and follow the instructi
 
 ## Getting started
 
-To get started, see the [APIClarity documentation on the Openclarity site](https://openclarity.io/docs/apiclarity/getting-started/).
+To get started, see the [APIClarity documentation on the OpenClarity site](https://openclarity.io/docs/apiclarity/getting-started/).
 
 ## Contributing
 
