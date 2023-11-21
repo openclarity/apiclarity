@@ -21,7 +21,7 @@ spec:
 # {{CERT MOUNT END}}
         env:
         - name: KONG_PLUGINS
-          value: bundled,kong-plugin
+          value: bundled, kong-plugin
         - name: KONG_PLUGINSERVER_NAMES
           value: kong-plugin
         - name: KONG_PLUGINSERVER_KONG_PLUGIN_START_CMD
