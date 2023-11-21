@@ -59,6 +59,7 @@ If you just want to try it out with a demo application, and you don't have kong 
        KONG_GATEWAY_INGRESS_NAME=catalogue \
        KONG_GATEWAY_INGRESS_NAMESPACE=sock-shop \
        UPSTREAM_TELEMETRY_HOST_NAME=apiclarity-apiclarity.apiclarity:9000 \
+       TRACE_SOURCE_TOKEN=<use one created with external trace_source>
        deploy/deploy.sh
     ```
     * Note: If you installed Kong using helm, the deployment name might be different. Please change the KONG_GATEWAY_DEPLOYMENT_NAME env var accordingly.
