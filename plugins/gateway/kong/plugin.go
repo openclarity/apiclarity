@@ -232,13 +232,16 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	}
 	host, port, _ := parseKongHost(routedService.Host)
 
+	encodedReqBody := strfmt.Base64(reqBody)
+	encodedRespBody := strfmt.Base64(resBody)
+
 	telemetry := models.Telemetry{
 		DestinationAddress:   ":" + port, // No destination ip for now
 		DestinationNamespace: "",         // No namespace here for now as it is concatenated on 'host'
 		Request: &models.Request{
 			Common: &models.Common{
 				TruncatedBody: truncatedBodyReq,
-				Body:          strfmt.Base64(reqBody),
+				Body:          encodedReqBody,
 				Headers:       createHeaders(reqHeaders),
 				Version:       fmt.Sprintf("%f", version),
 				Time:          requestTime,
@@ -251,7 +254,7 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 		Response: &models.Response{
 			Common: &models.Common{
 				TruncatedBody: truncatedBodyRes,
-				Body:          strfmt.Base64(resBody),
+				Body:          encodedRespBody,
 				Headers:       createHeaders(resHeaders),
 				Version:       fmt.Sprintf("%f", version),
 				Time:          responseTime,
