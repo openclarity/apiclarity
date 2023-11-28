@@ -25,8 +25,6 @@ import (
 
 	"github.com/Kong/go-pdk"
 	"github.com/Kong/go-pdk/server"
-	"github.com/go-openapi/strfmt"
-
 	"github.com/openclarity/apiclarity/plugins/api/client/models"
 	"github.com/openclarity/apiclarity/plugins/common"
 	"github.com/openclarity/apiclarity/plugins/common/apiclarity_client"
@@ -195,7 +193,7 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	}
 	if len(reqBody) > MaxBodySize {
 		_ = kong.Log.Info("Request body is too long, ignoring")
-		reqBody = ""
+		reqBody = []byte("")
 		truncatedBodyReq = true
 	}
 	resBody, err := kong.ServiceResponse.GetRawBody()
@@ -268,7 +266,7 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 }
 
 func getRequestTimeFromContext(kong *pdk.PDK) (int64, error) {
-	requestTime, err := kong.Ctx.GetSharedInt(common.RequestTimeContextKey)
+	requestTime, err := kong.Ctx.GetSharedFloat(common.RequestTimeContextKey)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get request time from shared context: %v", err)
 	}
