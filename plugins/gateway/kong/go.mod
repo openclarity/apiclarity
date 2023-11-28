@@ -6,7 +6,6 @@ require (
 	github.com/Kong/go-pdk v0.10.0
 	github.com/openclarity/apiclarity/plugins/api v0.0.0
 	github.com/openclarity/apiclarity/plugins/common v0.0.0
-	github.com/go-openapi/strfmt v0.21.7
 )
 
 replace github.com/openclarity/apiclarity/plugins/api v0.0.0 => ./../../api

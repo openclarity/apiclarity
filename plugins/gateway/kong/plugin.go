@@ -17,14 +17,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/Kong/go-pdk"
+	"github.com/Kong/go-pdk/server"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/Kong/go-pdk"
-	"github.com/Kong/go-pdk/server"
 
 	"github.com/openclarity/apiclarity/plugins/api/client/models"
 	"github.com/openclarity/apiclarity/plugins/common"
