@@ -25,6 +25,7 @@ import (
 
 	"github.com/Kong/go-pdk"
 	"github.com/Kong/go-pdk/server"
+	"github.com/go-openapi/strfmt"
 	"github.com/openclarity/apiclarity/plugins/api/client/models"
 	"github.com/openclarity/apiclarity/plugins/common"
 	"github.com/openclarity/apiclarity/plugins/common/apiclarity_client"
