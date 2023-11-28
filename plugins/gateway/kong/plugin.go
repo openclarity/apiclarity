@@ -195,7 +195,7 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	}
 	if len(reqBody) > MaxBodySize {
 		_ = kong.Log.Info("Request body is too long, ignoring")
-		reqBody = ""
+		reqBody = []byte("")
 		truncatedBodyReq = true
 	}
 	resBody, err := kong.ServiceResponse.GetRawBody()
@@ -234,13 +234,16 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 	}
 	host, port, _ := parseKongHost(routedService.Host)
 
+	encodedReqBody := strfmt.Base64(reqBody)
+	encodedRespBody := strfmt.Base64(resBody)
+
 	telemetry := models.Telemetry{
 		DestinationAddress:   ":" + port, // No destination ip for now
 		DestinationNamespace: "",         // No namespace here for now as it is concatenated on 'host'
 		Request: &models.Request{
 			Common: &models.Common{
 				TruncatedBody: truncatedBodyReq,
-				Body:          strfmt.Base64(reqBody),
+				Body:          encodedReqBody,
 				Headers:       createHeaders(reqHeaders),
 				Version:       fmt.Sprintf("%f", version),
 				Time:          requestTime,
@@ -253,7 +256,7 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 		Response: &models.Response{
 			Common: &models.Common{
 				TruncatedBody: truncatedBodyRes,
-				Body:          strfmt.Base64(resBody),
+				Body:          encodedRespBody,
 				Headers:       createHeaders(resHeaders),
 				Version:       fmt.Sprintf("%f", version),
 				Time:          responseTime,
@@ -268,7 +271,7 @@ func createTelemetry(kong *pdk.PDK) (*models.Telemetry, error) {
 }
 
 func getRequestTimeFromContext(kong *pdk.PDK) (int64, error) {
-	requestTime, err := kong.Ctx.GetSharedInt(common.RequestTimeContextKey)
+	requestTime, err := kong.Ctx.GetSharedFloat(common.RequestTimeContextKey)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get request time from shared context: %v", err)
 	}
