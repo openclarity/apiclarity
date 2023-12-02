@@ -1,8 +1,14 @@
 # APIClarity
 
-![APIClarity](API_clarity.svg "APIClarity")
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://docs.openclarity.io/img/footer-logos/OC_logo_H_1C_white.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://docs.openclarity.io/img/color-logo/logo.svg">
+  <img alt="Openclarity logo" src="https://docs.openclarity.io/img/color-logo/logo.svg" width="50%">
+</picture>
 
 APIClarity is a modular tool that addresses several aspects of API Security, focusing specifically on [OpenAPI](https://spec.openapis.org/oas/latest.html) based APIs.
+
+APIClarity is the tool responsible for API Security in the [OpenClarity platform](https://openclarity.io).
 
 APIClarity approaches API Security in 2 different ways:
 - Captures all API traffic in a given environment and performs a set of security analysis to discover all potential security problems with detected APIs
@@ -28,9 +34,7 @@ In the following a brief description of the modules currently implemented:
 
 ![High level architecture](diagram.png "High level architecture")
 
-## Getting started
-
-### Supported traffic source integrations
+## Supported traffic source integrations
 
 APIClarity supports integrating with the following traffic sources. Install APIClarity and follow the instructions per required integration.
 
@@ -54,191 +58,6 @@ APIClarity supports integrating with the following traffic sources. Install APIC
 The integrations (plugins) for the supported traffic sources above are located in the [plugins directory within the codebase](https://github.com/openclarity/apiclarity/tree/master/plugins) and implement the [plugins API](https://github.com/openclarity/apiclarity/tree/master/plugins/api) to export the API events to APIClarity. To enable and configure the supported traffic sources, please check the ```trafficSource:``` section in [Helm values](https://github.com/openclarity/apiclarity/blob/master/charts/apiclarity/values.yaml).
 Contributions of integrations with additional traffic sources are more than welcome!
 
-### Install APIClarity in a K8s cluster using Helm:
-
-1. Add Helm repo
-
-   ```shell
-   helm repo add apiclarity https://openclarity.github.io/apiclarity
-   ```
-
-2. Save APIClarity default chart values
-
-    ```shell
-    helm show values apiclarity/apiclarity > values.yaml
-    ```
-
-3. Update `values.yaml` with the required traffic source values
-
-4. Deploy APIClarity with Helm for the selected traffic source
-
-   ```shell
-   helm install --values values.yaml --create-namespace apiclarity apiclarity/apiclarity -n apiclarity
-   ```
-
-5. Port forward to APIClarity UI:
-
-   ```shell
-   kubectl port-forward -n apiclarity svc/apiclarity-apiclarity 9999:8080
-   ```
-
-6. Open APIClarity UI in the browser: <http://localhost:9999/>
-7. Generate some traffic in the traced applications and check the APIClarity UI :)
-
-### Uninstall APIClarity from a K8s cluster using Helm:
-
-1. Helm uninstall
-
-   ```shell
-   helm uninstall apiclarity -n apiclarity
-   ```
-
-2. Clean resources
-
-    By default, Helm will not remove the PVCs and PVs for the StatefulSets. Run the following command to delete them all:
-
-    ```shell
-    kubectl delete pvc -l app.kubernetes.io/instance=apiclarity -n apiclarity
-    ```
-
-## Configurations
-
-The file [values.yaml](https://github.com/openclarity/apiclarity/blob/master/charts/apiclarity/values.yaml) is used to deploy and configure APIClarity on your cluster via Helm.
-[This ConfigMap](https://github.com/openclarity/apiclarity/blob/master/charts/apiclarity/templates/configmap.yaml) is used to define the list of headers to ignore when reconstructing the spec.
-
-## Testing with a demo application
-
-A good demo application to try APIClarity with is the [Sock Shop Demo](https://microservices-demo.github.io/).
-
-To deploy the Sock Shop Demo, follow these steps:
-
-1. Create the `sock-shop` namespace and enable Istio injection:
-
-   ```shell
-   kubectl create namespace sock-shop
-   kubectl label namespaces sock-shop istio-injection=enabled
-   ```
-
-2. Deploy the Sock Shop Demo to your cluster:
-
-   ```shell
-   kubectl apply -f https://raw.githubusercontent.com/microservices-demo/microservices-demo/master/deploy/kubernetes/complete-demo.yaml
-   ```
-
-3. Deploy APIClarity in the `sock-shop` namespace (e.g. Istio service-mesh traffic source):
-
-   ```shell
-   helm repo add apiclarity https://openclarity.github.io/apiclarity
-   ```
-
-   ```shell
-   helm install --set 'trafficSource.envoyWasm.enabled=true' --set 'trafficSource.envoyWasm.namespaces={sock-shop}' --create-namespace apiclarity apiclarity/apiclarity -n apiclarity
-   ```
-
-4. Port forward to Sock Shop's front-end service to access the Sock Shop Demo App:
-
-   ```shell
-   kubectl port-forward -n sock-shop svc/front-end 7777:80
-   ```
-
-   Open the Sock Shop Demo App UI in the browser (<http://localhost:7777/>) and run
-   some transactions to generate data to review on the APIClarity dashboard.
-
-## Building
-
-### Building from source:
-
-Build and push the image to your repo:
-
-```shell
-DOCKER_IMAGE=<your docker registry>/apiclarity DOCKER_TAG=<your tag> make push-docker
-```
-
-Update [values.yaml](https://github.com/openclarity/apiclarity/blob/master/charts/apiclarity/values.yaml) accordingly.
-
-## Running locally with demo data
-
-1. Build UI & backend locally as described above:
-
-   ```shell
-   make ui && make backend
-   ```
-
-2. Copy the built site:
-
-   ```shell
-   cp -r ./ui/build ./site
-   ```
-
-3. Run backend and frontend locally using demo data:
-
-   Note: You might need to delete the old local state file and local db:
-
-   ```shell
-   rm state.gob; rm db.db
-   ```
-
-   ```shell
-   DATABASE_DRIVER=LOCAL K8S_LOCAL=true FAKE_TRACES=true FAKE_TRACES_PATH=./backend/pkg/test/trace_files \
-   ENABLE_DB_INFO_LOGS=true ./backend/bin/backend run
-   ```
-   Note: this command requires a proper KUBECONFIG in your environment when __K8S_LOCAL=true__ is used. If you want to run without k8s, use __ENABLE_K8S=false__ instead.
-
-4. Open APIClarity UI in the browser: <http://localhost:8080/>
-
-## Enabling External Trace Sources Support
-Enabling external trace sources support, APIClarity can receive the trace sources from the entitites that are external to the K8s cluster. External trace sources such as Gateways, Load balancers, etc. can communicate with APIClarity to report APIs and send the traces. 
-
-The following section describes how to deploy APIClarity with the support for external trace sources
-1.	Add Helm Repo
-```shell
-helm repo add apiclarity https://openclarity.github.io/apiclarity
-```
-
-2.	Update values.yaml with 
-```shell
-Apiclarity -> tls -> enabled as true
-supportExternalTraceSource -> enabled as true
-```
-
-3.	Deploy APIClarity with the Helm enabling external traffic sources
-```shell
-helm install --values values.yaml --create-namespace apiclarity apiclarity/apiclarity -n apiclarity
-```
-
-4.	Port forward to APIClarity UI:
-```shell
-kubectl port-forward -n apiclarity svc/apiclarity-apiclarity 9999:8080
-```
-
-5.	Open APIClarity UI in the browser:
-```shell
-http://localhost:9999 
-```
-
-The following section describes how to register a new external trace source. And this section includes how to access the service, register a new trace source, and how to receive the token and certificate.
-1.	Port forward for service at 8443
-```shell
-kubectl port-forward -n apiclarity svc/apiclarity-apiclarity 8443:8443
-```
-
-2.	Register a new external trace source and receive the token 
-```shell
-TRACE_SOURCE_TOKEN=$(curl --http1.1 --insecure -s -H 'Content-Type: application/json' -d '{"name":"apigee_gateway","type":"APIGEE_X"}' https://localhost:8443/api/control/traceSources|jq -r '.token')
-```
-
-3. Receive the certificate
-To receive the certificate, get the External-IP for the service named as apiclarity-external
-```shell
-kubectl get services -n apiclarity
-```
-Then, use the External-IP address with the following command, then extract the certificate with -----BEGIN CERTIFICATE----- and -----END CERTIFICATE----- and save to server.crt
-```shell
-openssl s_client -showcerts -connect <External-IP>:10443
-```
-
-Use the above extracted token at the step-2 and certificate at step-3 for configuring subsequent external trace sources such as Apigee X Gateway and BIG-IP LTM Load balancer
-
 ## Supported Trace Sources
 APIClarity can support with the following trace sources and follow the instructions per required integration.
 
@@ -250,6 +69,10 @@ APIClarity can support with the following trace sources and follow the instructi
   * [Integration instructions](https://github.com/openclarity/apiclarity/tree/master/plugins/gateway/kong)
 * Tyk
   * [Integration instructions](https://github.com/openclarity/apiclarity/tree/master/plugins/gateway/tyk)
+
+## Getting started
+
+To get started, see the [APIClarity documentation on the OpenClarity site](https://openclarity.io/docs/apiclarity/getting-started/).
 
 ## Contributing
 
