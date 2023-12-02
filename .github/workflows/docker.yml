@@ -20,6 +20,9 @@ jobs:
         with:
           submodules: true
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
@@ -46,6 +49,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
+          platforms: linux/amd64,linux/arm64
           tags: ghcr.io/openclarity/apiclarity:latest
           file: Dockerfile
           push: true
@@ -60,6 +64,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: plugins
+          platforms: linux/amd64,linux/arm64
           tags: ghcr.io/openclarity/kong-plugin:latest
           file: plugins/Dockerfile.kong
           push: true
@@ -77,6 +82,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: plugins
+          platforms: linux/amd64 # tykio/tyk-plugin-compiler does not currently support other architectures
           tags: ghcr.io/openclarity/tyk-plugin-v3.2.2:latest
           file: plugins/Dockerfile.tyk.v3.2.2
           push: true
@@ -87,6 +93,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: plugins
+          platforms: linux/amd64,linux/arm64
           tags: ghcr.io/openclarity/passive-taper:latest
           file: plugins/Dockerfile.taper
           push: true

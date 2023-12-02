@@ -86,6 +86,9 @@ jobs:
           git tag --annotate --message "Tag for release $tag" "$tag"
           git push origin "refs/tags/$tag"
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
@@ -112,6 +115,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
+          platforms: linux/amd64,linux/arm64
           tags: ghcr.io/openclarity/apiclarity:${{ github.event.inputs.version }}
           file: Dockerfile
           push: true
@@ -126,6 +130,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: plugins
+          platforms: linux/amd64,linux/arm64
           tags: ghcr.io/openclarity/kong-plugin:${{ github.event.inputs.version }}
           file: plugins/Dockerfile.kong
           push: true
@@ -143,6 +148,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: plugins
+          platforms: linux/amd64 # tykio/tyk-plugin-compiler does not currently support other architectures
           tags: ghcr.io/openclarity/tyk-plugin-v3.2.2:${{ github.event.inputs.version }}
           file: plugins/Dockerfile.tyk.v3.2.2
           push: true
@@ -157,6 +163,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: plugins
+          platforms: linux/amd64,linux/arm64
           tags: ghcr.io/openclarity/passive-taper:${{ github.event.inputs.version }}
           file: plugins/Dockerfile.taper
           push: true

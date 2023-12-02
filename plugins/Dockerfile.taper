@@ -1,33 +1,52 @@
-FROM golang:1.16.6-alpine AS builder
+## Common build steps for plugins
+# Cross-compilation tools
+FROM --platform=$BUILDPLATFORM tonistiigi/xx AS xx
 
-# Set necessary environment variables needed for our image.
-ENV CGO_ENABLED=1 GOOS=linux GOARCH=amd64
+FROM --platform=$BUILDPLATFORM golang:1.16.6-alpine AS builder
 
-RUN apk add libpcap-dev gcc g++ make bash
+# Copy cross-compilation tools
+COPY --from=xx / /
+
+# To optimize caching and multi-architecture we try to get in as much upfront
+# work as possible before branching out using our actual source
+WORKDIR /plugins/api
+COPY api/go.* ./
+RUN go mod download
+
+WORKDIR /plugins/common
+COPY common/go.* ./
+RUN go mod download
 
 WORKDIR /plugins
-
 COPY api ./api
 COPY common ./common
 
-WORKDIR /plugins/taper
+## Taper plugin build steps
+# Cache optimization: Avoid go module downloads unless go.mod/go.sum changed
+WORKDIR /plugins/taper/extensions/http
+COPY taper/extensions/http/go.* ./
+RUN go mod download
 
+WORKDIR /plugins/taper
 COPY taper/go.* ./
 RUN go mod download
 
-ARG VERSION
+ARG TARGETPLATFORM VERSION
 COPY taper .
-RUN go build -ldflags="-s -w \
+RUN apk add --no-cache clang lld
+RUN xx-apk add --no-cache binutils-gold gcc libpcap-dev musl-dev
+ENV CGO_ENABLED=1
+RUN export QEMU_LD_PREFIX=/$(xx-info) && xx-go build -ldflags="-s -w \
      -X 'github.com/openclarity/apiclarity/plugins/taper/version.Version=${VERSION}'" -o agent .
 
 WORKDIR /plugins/taper/extensions/http
 
 COPY taper/extensions/http .
-RUN go build -buildmode=plugin -o ../http.so .
+RUN export QEMU_LD_PREFIX=/$(xx-info) && xx-go build -buildmode=plugin -o ../http.so .
 
 FROM alpine:3.14
 
-RUN apk add bash libpcap-dev tcpdump
+RUN apk add --no-cache bash libpcap tcpdump
 WORKDIR /app
 
 # Copy binary and config files from /build to root folder of scratch container.

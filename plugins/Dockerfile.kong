@@ -1,28 +1,39 @@
-FROM golang:1.17.8-alpine3.14 AS builder
+## Common build steps for plugins
+# Cross-compilation tools
+FROM --platform=$BUILDPLATFORM tonistiigi/xx AS xx
 
-## Note: this Dockerfile will only be built from the plugins context
+FROM --platform=$BUILDPLATFORM golang:1.17.8-alpine3.14 AS builder
 
-RUN apk add --update --no-cache gcc g++
+# Copy cross-compilation tools
+COPY --from=xx / /
 
-WORKDIR /plugins
-COPY api ./api
+# To optimize caching and multi-architecture we try to get in as much upfront
+# work as possible before branching out using our actual source
+WORKDIR /plugins/api
+COPY api/go.* ./
+RUN go mod download
 
 WORKDIR /plugins/common
-
 COPY common/go.* ./
 RUN go mod download
 
-COPY common ./
+WORKDIR /plugins
+COPY api ./api
+COPY common ./common
 
+## Kong plugin build steps
 WORKDIR /plugins/gateway/kong
-COPY gateway/kong/go.* ./
 
+# Cache optimization: Avoid go module downloads unless go.mod/go.sum changed
+COPY gateway/kong/go.* ./
 RUN go mod download
 
 COPY gateway/kong .
 
 # Build the plugin.
-RUN go build -o bin/kong-plugin plugin.go
+ARG TARGETPLATFORM
+ENV CGO_ENABLED=0
+RUN xx-go build -o bin/kong-plugin plugin.go
 
 FROM busybox
 COPY --from=builder ["/plugins/gateway/kong/bin/kong-plugin", "/kong-plugin"]

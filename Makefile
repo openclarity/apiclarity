@@ -67,7 +67,8 @@ docker:	docker-backend docker-plugins
 docker-backend: ## Build Docker image
 	@(echo "Building backend docker image ..." )
 	@(cd backend)
-	docker build --build-arg VERSION=${VERSION} \
+	docker buildx build --load \
+		--build-arg VERSION=${VERSION} \
 		--build-arg BUILD_TIMESTAMP=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") \
 		--build-arg COMMIT_HASH=$(shell git rev-parse HEAD) \
 		-t ${DOCKER_IMAGE}:${DOCKER_TAG} .
