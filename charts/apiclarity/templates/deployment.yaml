@@ -20,6 +20,7 @@ spec:
         sidecar.istio.io/inject: "false"
     spec:
       serviceAccountName: {{ include "apiclarity.serviceAccountName" . }}
+      {{- if index .Values "apiclarity-postgresql" "enabled" -}}
       initContainers:
         - name: '{{ include "apiclarity.name" . }}-wait-for-db'
           image: {{ index .Values "apiclarity-postgresql" "image" "registry" | default "docker.io" }}/{{ index .Values "apiclarity-postgresql" "image" "repository" | default "bitnami/postgresql" }}:{{ index .Values "apiclarity-postgresql" "image" "tag" | default "14.4.0-debian-11-r4" }}
@@ -29,6 +30,7 @@ spec:
             runAsUser: 1001
           resources:
           {{- toYaml .Values.apiclarity.initResources | nindent 12 }}
+      {{- end}}
       containers:
         - name: apiclarity
           image: '{{ .Values.global.docker.registry }}/apiclarity:{{ .Values.apiclarity.docker.imageTag }}'
@@ -61,7 +63,7 @@ spec:
             - name: DB_NAME
               value: {{ index .Values "apiclarity-postgresql" "auth" "database" }}
             - name: DB_HOST
-              value: "{{ include "apiclarity.name" . }}-postgresql"
+              value: "{{ index .Values "apiclarity-postgresql" "host" "endpoint" | default (printf "%s-postgresql" (include "apiclarity.name" .)) }}"
             - name: DB_PORT_NUMBER
               value: "5432"
             - name: DB_USER

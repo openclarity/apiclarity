@@ -132,6 +132,11 @@ apiclarity-postgresql:
   auth:
     existingSecret: apiclarity-postgresql-secret
     database: apiclarity
+  
+  ## Setup external
+  host:
+    ## NOTE: If you are using postgresql on container keep the field empty
+    endpoint: ""
 
   ## Enable security context
   containerSecurityContext:
