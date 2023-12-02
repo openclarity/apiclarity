@@ -16,8 +16,10 @@
 package rest
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-openapi/loads"
 	"github.com/go-openapi/runtime/middleware"
@@ -209,6 +211,9 @@ func CreateRESTServer(config *ServerConfig) (*Server, error) {
 
 	// Enhance the default handler with modules apis handlers
 	newHandler.Handle("/api/modules/", config.ModulesManager.HTTPHandler())
+	newHandler.HandleFunc("/plugins/wasm/http-trace-filter.wasm", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeContent(w, r, "http-trace-filter.wasm", time.Time{}, bytes.NewReader(wasmPluginBinary))
+	})
 	newHandler.Handle("/", origHandler)
 	server.SetHandler(newHandler)
 	s.server = server

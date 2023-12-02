@@ -31,18 +31,21 @@ ui: ## Build UI
 	@(cd ui; npm i ; npm run build; )
 	@ls -l ui/build
 
+.PHONY: copy_wasm
+copy_wasm: backend/pkg/rest/http-trace-filter.wasm ## Copy the wasm filter binary file to the APIClarity source code to be emmbeded as a resource
+	cp wasm-filters/bin/release/http-trace-filter.wasm backend/pkg/rest/http-trace-filter.wasm
 .PHONY: backend
-backend: ## Build Backend
+backend: copy_wasm ## Build Backend
 	@(echo "Building Backend ..." )
 	@(cd backend && go build --tags=json1 -o bin/backend cmd/backend/main.go && ls -l bin/)
 
 .PHONY: backend_linux
-backend_linux: ## Build Backend Linux
+backend_linux: copy_wasm ## Build Backend Linux
 	@(echo "Building Backend linux..." )
 	@(cd backend && GOOS=linux go build --tags=json1 -o bin/backend_linux cmd/backend/main.go && ls -l bin/)
 
 .PHONY: backend_test
-backend_test: ## Build Backend test
+backend_test: copy_wasm ## Build Backend test
 	@(echo "Building Backend test ..." )
 	@(cd backend && go build --tags=json1 -o bin/backend_test cmd/test/main.go && ls -l bin/)
 
