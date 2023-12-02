@@ -100,6 +100,22 @@ Contributions of integrations with additional traffic sources are more than welc
     ```shell
     kubectl delete pvc -l app.kubernetes.io/instance=apiclarity -n apiclarity
     ```
+## Install using docker compose
+
+```
+docker-compose build
+docker compose up
+```
+
+Bring up Clarity UI via
+
+http://localhost:8080
+
+You can now send telemetry events to
+
+http://localhost:9000/api/telemetry
+
+See (plugins/api/swagger.yaml)[https://github.com/openclarity/apiclarity/plugins/api/swagger.yaml] For documentation on how to send requests to this API
 
 ## Configurations
 

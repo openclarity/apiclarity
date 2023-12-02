@@ -1,0 +1,40 @@
+version: '2'
+
+services:
+    apiclarity:
+        entrypoint: /app/backend run
+        build:
+            dockerfile: Dockerfile
+        ports:
+            - "8080:8080"
+            - "9000:9000"
+        environment:
+            - DB_PASS=mysecretpassword
+            - DB_USER=myuser
+            - DB_HOST=db
+            - DB_NAME=apidb
+            - DB_PORT_NUMBER=5432
+            - ENABLE_K8S=false
+            - ENABLE_DB_INFO_LOGS=false
+            - BACKEND_REST_PORT=8080
+            - HTTP_TRACES_PORT=9000
+            - TRACE_SAMPLING_ENABLED=false
+            - BFLA_AUTOMATIC_LEARNING_AND_DETECTION=true
+            - STATE_BACKUP_FILE_NAME=
+            - DEBUG=true
+        depends_on:
+            postgres:
+                condition: service_healthy
+    postgres:
+        image: postgres
+        hostname: db
+        restart: always
+        environment:
+            - POSTGRES_PASSWORD=mysecretpassword
+            - POSTGRES_USER=myuser
+            - POSTGRES_DB=apidb
+        healthcheck:
+            test: [ "CMD", "pg_isready", "-q", "-d", "apidb", "-U", "myuser" ]
+            interval: 2s
+            timeout: 5s
+            retries: 5    
