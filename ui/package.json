@@ -34,7 +34,10 @@
     "preinstall": "node ./preinstall.js"
   },
   "overrides": {
-    "nth-check": "^2.0.1"
+    "nth-check": "^2.0.1",
+    "react-scripts": {
+      "jest": "^29.7.0"
+    }
   },
   "eslintConfig": {
     "extends": [
