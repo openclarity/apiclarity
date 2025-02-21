@@ -27,6 +27,7 @@ from real-time workload traffic seamlessly.
 ## High level architecture
 
 ![High level architecture](diagram.jpg "High level architecture")
+This is a bug
 
 
 ## Getting started
